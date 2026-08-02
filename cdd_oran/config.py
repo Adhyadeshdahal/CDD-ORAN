@@ -59,9 +59,11 @@ class PlannerConfig:
 @dataclass(frozen=True)
 class ExperimentConfig:
     seed: int
+    mitigation_seed: int
     environment: Literal["EnvironmentI", "EnvironmentII"]
     model_kind: Literal["cdl", "mlp"]
     param_ranges: Literal["train", "ood"]
+    evaluation_param_ranges: Literal["train", "ood"]
     num_steps: int
     device: str
     deterministic: bool
@@ -98,9 +100,11 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
 
     return ExperimentConfig(
         seed=values["seed"],
+        mitigation_seed=values.get("mitigation_seed", values["seed"]),
         environment=values["environment"],
         model_kind=values["model_kind"],
         param_ranges=values["param_ranges"],
+        evaluation_param_ranges=values.get("evaluation_param_ranges", values["param_ranges"]),
         num_steps=values["num_steps"],
         device=device,
         deterministic=values.get("deterministic", False),

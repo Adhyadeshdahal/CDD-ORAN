@@ -47,6 +47,11 @@ def main(
     if run_dir is None:
         raise ValueError("An experiment run directory is required")
 
+    cfg = replace(
+        cfg,
+        seed=cfg.mitigation_seed,
+        param_ranges=cfg.evaluation_param_ranges,
+    )
     seed_everything(cfg.seed, cfg.deterministic)
     run_dir = Path(run_dir)
     checkpoint_path = run_dir / "checkpoint.pt"

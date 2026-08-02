@@ -31,7 +31,7 @@ def update_kpi4(prev_params, prev_kpis):
 
 def _param_ranges(cfg):
     if cfg.param_ranges == "ood":
-        return [(0, 300), (0, 300), (0, 3), (0, 3), (0, 3), (0, 3), (0, 3)]
+        return [(-10, 310), (-10, 310), (-5, 8), (-7, 10), (-10, 13), (0, 3), (-3, 6)]
     return [(0, 300), (0, 300), (0, 3), (0, 3), (0, 3), (0, 3), (0, 3)]
 
 

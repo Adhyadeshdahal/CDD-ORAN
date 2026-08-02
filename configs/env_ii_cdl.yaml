@@ -1,8 +1,10 @@
-seed: 0
+seed: 45
+mitigation_seed: 0
 environment: EnvironmentII
 model_kind: cdl
-param_ranges: ood
-num_steps: 10
+param_ranges: train
+evaluation_param_ranges: ood
+num_steps: 30
 device: auto
 deterministic: false
 model:
@@ -31,5 +33,5 @@ planner:
     temperature: 0.6
     noise_sigma: 0.1
   mcts:
-    n_simulations: 3
+    n_simulations: 3000
     ucb_c: 1.5
