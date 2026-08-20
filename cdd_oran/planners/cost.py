@@ -20,6 +20,8 @@ def risk_adjust(kpis, stds, direction: int, kappa: float):
     """
     if kappa == 0.0 or stds is None:
         return kpis
+    # Sign assumes one KPI direction per xApp (true for all current envs); a mixed
+    # xApp would need a per-KPI sign vector here instead of a single scalar.
     sign = -1.0 if direction == 0 else 1.0
     return kpis + sign * kappa * stds
 

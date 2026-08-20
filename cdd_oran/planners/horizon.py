@@ -108,6 +108,9 @@ class RecedingHorizonCEM(Planner):
         for _ in range(self.n_horizon):
             dist = self.model.predict_next_state(state, action_batch)
             next_kpis = dist.sample()
+            # Risk-depth limit: the kappa shift uses THIS step's one-step aleatoric
+            # std only. Sampling variance from earlier steps fed forward is not
+            # propagated into std, so multi-step pessimism is a lower bound.
             total = total + discount * score_batch(
                 next_kpis, xapps, weights, scaling_term, self.device,
                 dist.stddev, self.risk_kappa,

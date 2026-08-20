@@ -52,21 +52,32 @@ def collect_transitions(env, policy, n):
 def cmi_on_resample(model, s, a, s_next, idx, batch_size):
     """Recompute the CMI matrix on a bootstrap resample (frozen predictor).
 
-    Uses the model's existing ``update_mask`` step-CMI path but disables the
-    training-time EMA decay (``eval_tau``) so each resample yields a fresh,
-    unscaled mean CMI over its batches. ``_eval_cmi_acc`` therefore holds the
-    raw sum of step CMI, and ``mask_CMI`` is left untouched.
+    Uses the model's existing ``update_mask`` step-CMI path but keeps the EMA
+    from firing, so ``_eval_cmi_acc`` holds the raw sum of step CMI and
+    ``mask_CMI`` is left untouched.
+
+    Scale: the returned CMI is multiplied by ``(1 - model.eval_tau)`` so it
+    matches training's steady-state ``mask_CMI`` scale. Training applies that
+    factor in the EMA update (``mask_CMI = (1 - eval_tau) * avg_cmi``, see
+    ``CDL.update_mask``), and the calibrated ``cmi_threshold`` lives on that
+    scale. Without the factor the resample CMI is ~100x larger (eval_tau=0.99),
+    so a fixed threshold over-selects and the selection frequencies saturate.
+
+    Only full batches are used (the partial tail batch is dropped) so uneven
+    batch sizes do not bias the per-batch mean.
     """
     device = model.device
     s_pair = torch.stack([s[idx], s_next[idx]], dim=1).to(device)
     a_r = a[idx].to(device)
-    n_batches = (len(idx) + batch_size - 1) // batch_size
+    n_batches = len(idx) // batch_size  # full batches only -> equal-weight mean
+    if n_batches == 0:  # pool smaller than one batch: fall back to the single partial batch
+        n_batches = 1
     model._eval_cmi_acc.zero_()
     for i in range(n_batches):
         model._eval_step_count = 0  # keep the EMA from firing; accumulate step CMI only
         batch = slice(i * batch_size, (i + 1) * batch_size)
         model.update_mask(s_pair[batch], a_r[batch])
-    cmi = (model._eval_cmi_acc / n_batches).cpu().detach().numpy()
+    cmi = ((1.0 - model.eval_tau) * (model._eval_cmi_acc / n_batches)).cpu().detach().numpy()
     model._eval_cmi_acc.zero_()
     return cmi
 
@@ -153,11 +164,21 @@ def edge_stability(run_dir, B=50, n_transitions=2048, pi=0.5, seed=0, device=Non
 
 
 def _self_check():
-    """Deterministic stub: strong edge frequency ~1.0, pure noise stays low."""
+    """Deterministic stub on the TRAINING CMI scale: strong edge frequency ~1.0,
+    pure noise stays low.
+
+    The stub emits raw step CMI on the same ~100x scale the real model produces
+    (strong ~80, noise ~2) and thresholds at a training-scale ``cmi_threshold``
+    (0.16). The noise edge's RAW mean (~0.4) is ABOVE that threshold, so it is
+    rejected ONLY because ``cmi_on_resample`` applies the ``(1 - eval_tau)``
+    scaling (0.4 -> 0.004). Drop the scaling and the noise assert fails -- the
+    check now guards the scale fix, not just an 0.8-vs-0.5 gap.
+    """
     fd = 3
     pool = 256
     batch_size = 32
     n_strong = 204  # 80% of the pool
+    threshold = 0.16  # training-scale calibrated threshold
 
     s = torch.zeros(pool, fd)
     s[:n_strong, 0] = 1.0
@@ -176,8 +197,9 @@ def _self_check():
 
         def update_mask(self, s_batch, a_batch):
             strong = s_batch[:, 0, 0].mean().item()
-            self._eval_cmi_acc[0, 1] += strong
-            self._eval_cmi_acc[0, 2] += (1.0 - strong) * 0.2
+            # Raw step CMI on the model's real (unscaled) magnitude:
+            self._eval_cmi_acc[0, 1] += strong * 80.0  # strong true edge
+            self._eval_cmi_acc[0, 2] += (1.0 - strong) * 2.0  # noise edge
             self._eval_step_count += 1
             if self._eval_step_count >= self.eval_steps:
                 avg = self._eval_cmi_acc / self.eval_steps
@@ -195,17 +217,19 @@ def _self_check():
         for _ in range(50):
             idx = rng.integers(0, pool, size=pool)
             cmi = cmi_on_resample(model, s, a, s_next, idx, batch_size)
-            freq += binary_graph_from_cmi(cmi, 0.5)
+            freq += binary_graph_from_cmi(cmi, threshold)
         return freq / 50
 
     first = run(0)
     second = run(0)
     assert np.array_equal(first, second), "selection is not deterministic under a fixed seed"
     assert first[0, 1] > 0.95, f"strong edge frequency {first[0, 1]:.3f} should be ~1.0"
+    # This only holds when the (1 - eval_tau) scaling is applied; unscaled the
+    # noise mean (~0.4) exceeds 0.16 and would be selected every time.
     assert first[0, 2] < 0.05, f"noise edge frequency {first[0, 2]:.3f} should stay low"
     print(
         f"edge_stability self-check passed: strong ~{first[0, 1]:.3f}, "
-        f"noise {first[0, 2]:.3f}, deterministic"
+        f"noise {first[0, 2]:.3f}, deterministic (training-scale threshold {threshold})"
     )
 
 

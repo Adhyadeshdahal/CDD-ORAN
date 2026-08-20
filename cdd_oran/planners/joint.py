@@ -109,6 +109,9 @@ class JointMultiNCPPlanner(Planner):
             next_stds = dist.stddev
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed forward -> next NCP sees the shift
+        # Risk-depth limit: only the FINAL hop's std is risk-adjusted below.
+        # Intermediate NCP hops feed unadjusted sampled KPIs forward, so joint
+        # pessimism reflects last-hop aleatoric std only.
         return score_batch(
             next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa
         )
