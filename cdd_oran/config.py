@@ -54,13 +54,14 @@ class PlannerConfig:
     cem: CEMConfig
     mppi: MPPIConfig
     mcts: MCTSConfig
+    joint: bool = False
 
 
 @dataclass(frozen=True)
 class ExperimentConfig:
     seed: int
     mitigation_seed: int
-    environment: Literal["EnvironmentI", "EnvironmentII"]
+    environment: Literal["EnvironmentI", "EnvironmentII", "EnvironmentIII"]
     model_kind: Literal["cdl", "mlp"]
     param_ranges: Literal["train", "ood"]
     evaluation_param_ranges: Literal["train", "ood"]
@@ -123,6 +124,7 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             cem=CEMConfig(**values["planner"]["cem"]),
             mppi=MPPIConfig(**values["planner"]["mppi"]),
             mcts=MCTSConfig(**values["planner"]["mcts"]),
+            joint=values["planner"].get("joint", False),
         ),
     )
 
