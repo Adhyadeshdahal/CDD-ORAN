@@ -43,6 +43,12 @@ def build_parser():
         "--graph-run",
         help="Required for MLP runs: trained CDL run supplying the causal graph checkpoint",
     )
+    evaluate.add_argument(
+        "--graph-override",
+        choices=("causal", "full", "correlation"),
+        default="causal",
+        help="Ablate the inference graph structure: causal (default), full (dense), correlation",
+    )
     _add_log_level(evaluate)
 
     viz = commands.add_parser("viz", help="Visualize an experiment run")
@@ -102,7 +108,13 @@ def main(argv=None):
             graph_cfg = _load_run_config(args.graph_run, None) if args.graph_run else None
             from cdd_oran.experiments.evaluate import main as evaluate
 
-            return evaluate(cfg, run_dir=args.run, graph_run=args.graph_run, graph_cfg=graph_cfg)
+            return evaluate(
+                cfg,
+                run_dir=args.run,
+                graph_run=args.graph_run,
+                graph_cfg=graph_cfg,
+                graph_override=args.graph_override,
+            )
 
         if args.command == "sweep":
             run_sweep(args.config, args.seeds, args.set, args.tag, args.graph_sweep)

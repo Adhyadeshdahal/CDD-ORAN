@@ -20,8 +20,10 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+import torch
 from torch.utils.tensorboard import SummaryWriter
 
+from cdd_oran.analysis.graph_baselines import build_override_graph, collect_transitions
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
 from cdd_oran.conflicts import (
     compute_utility,
@@ -43,6 +45,7 @@ def main(
     run_dir=None,
     graph_run=None,
     graph_cfg=None,
+    graph_override="causal",
 ):
     if run_dir is None:
         raise ValueError("An experiment run directory is required")
@@ -78,6 +81,16 @@ def main(
         if not graph_checkpoint.exists():
             raise FileNotFoundError(f"Graph checkpoint not found: {graph_checkpoint}")
         cdl.load_model(graph_checkpoint)
+
+    if graph_override != "causal":
+        transitions = None
+        if graph_override == "correlation":
+            transitions = collect_transitions(get_env(cfg), cfg.model.batch_size, act_dim)
+        override = build_override_graph(graph_override, cdl, env, transitions)
+        action_col = torch.ones((override.shape[0], 1), dtype=torch.bool, device=override.device)
+        full_graph = torch.cat([override, action_col], dim=1)
+        cdl.get_binary_graph = lambda threshold=None, g=full_graph: g
+        logger.info("Graph override active: %s (%d edges)", graph_override, int(override.sum()))
 
     algorithms = get_planners(cfg, model, env)
     utility_fns = env.get_utility_fns()
