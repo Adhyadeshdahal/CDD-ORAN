@@ -1,12 +1,25 @@
-from typing import cast
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Normal
+from torch.func import functional_call, vmap
 
 from cdd_oran.models.base import CausalModel
+
+
+def masked_max_from_top_two(features):
+    """Return each single-source-ablated max pool without materializing masks."""
+    values, indices = torch.topk(features, k=2, dim=2)
+    largest = values[:, :, 0, :]
+    second = values[:, :, 1, :]
+    largest_indices = indices[:, :, 0, :]
+    drop_indices = torch.arange(features.shape[2], device=features.device).view(-1, 1, 1, 1)
+    return torch.where(
+        largest_indices.unsqueeze(0) == drop_indices,
+        second.unsqueeze(0),
+        largest.unsqueeze(0),
+    )
 
 
 class MLP(nn.Module):
@@ -48,11 +61,11 @@ class StatePredictor(nn.Module):
         feats.append(self.action_feature_extractor(a))
         return torch.stack(feats, dim=1)
 
-    def head(self, feats):
+    def head(self, feats, pooled=False):
         """
         feats: (..., state_dim+1, feature_dim) -> mu (..., 1), std (..., 1)
         """
-        h, _ = feats.max(dim=-2)
+        h = feats if pooled else feats.max(dim=-2).values
 
         out = self.predictor(h)
         mu = out[..., 0:1]
@@ -61,14 +74,28 @@ class StatePredictor(nn.Module):
 
         return mu, std
 
-    def forward(self, s, a, mask=None):
+    def forward(
+        self,
+        s,
+        a,
+        mask=None,
+        features=None,
+        return_features=False,
+        pooled_features=None,
+    ):
         """
         s:    (bs, state_dim)
         a:    (bs, action_dim)
         mask: (bs, state_dim+1) bool
         returns: mu (bs, 1), std (bs, 1)
         """
-        feats = self.features(s, a)
+        if pooled_features is not None:
+            return self.head(pooled_features, pooled=True)
+
+        feats = self.features(s, a) if features is None else features
+
+        if return_features:
+            return feats
 
         if mask is not None:
             feats = feats.masked_fill(mask.unsqueeze(-1), float("-inf"))
@@ -114,12 +141,67 @@ class CDL(CausalModel):
             ]
         ).to(self.device)
 
-        self.opt = optim.Adam(self.models.parameters(), lr=lr)
+        prototype = self.models[0]
+        parameter_names = tuple(dict(prototype.named_parameters()))
+        parameter_maps = [dict(model.named_parameters()) for model in self.models]
+        self._parameter_names = parameter_names
+        self._parameter_refs = tuple(
+            tuple(parameters[name] for parameters in parameter_maps) for name in parameter_names
+        )
+
+        def forward_one(parameters, model_features, model_pooled, s, a, mask, return_features):
+            return functional_call(
+                prototype,
+                parameters,
+                (s, a, mask, model_features, return_features, model_pooled),
+            )
+
+        self._vmap_parameters = vmap(
+            forward_one,
+            in_dims=(0, None, None, None, None, None, None),
+        )
+        self._vmap_features = vmap(
+            forward_one,
+            in_dims=(0, 0, None, None, None, None, None),
+        )
+        self._vmap_pooled_drop = vmap(
+            forward_one,
+            in_dims=(0, None, 1, None, None, None, None),
+        )
+
+        optimizer_kwargs = {"fused": True} if self.device.type == "cuda" else {}
+        self.opt = optim.Adam(self.models.parameters(), lr=lr, **optimizer_kwargs)
 
         fd = state_dim
         self.mask_CMI = torch.zeros(fd, fd + 1, device=self.device)
         self._eval_cmi_acc = torch.zeros(fd, fd + 1, device=self.device)
         self._eval_step_count = 0
+
+    def _stacked_parameters(self):
+        return {
+            name: torch.stack(parameters)
+            for name, parameters in zip(self._parameter_names, self._parameter_refs, strict=True)
+        }
+
+    def _batched_forward(
+        self,
+        parameters,
+        s=None,
+        a=None,
+        mask=None,
+        features=None,
+        features_in_dim=None,
+        pooled_features=None,
+        pooled_in_dim=None,
+        return_features=False,
+    ):
+        if pooled_in_dim is not None:
+            forward = self._vmap_pooled_drop
+        elif features_in_dim == 0:
+            forward = self._vmap_features
+        else:
+            forward = self._vmap_parameters
+        return forward(parameters, features, pooled_features, s, a, mask, return_features)
 
     def _nll(self, mu, std, target):
         return -Normal(mu, std).log_prob(target)
@@ -131,8 +213,6 @@ class CDL(CausalModel):
         fd = self.state_dim
 
         self.opt.zero_grad()
-        total_loss = 0.0
-
         # a_batch[:, 0] is param_id — the param that was changed
         # bias: drop the changed param more often so model learns to predict without it
         changed_param_ids = a_batch[:, 0].long()  # (bs,) which param changed
@@ -145,53 +225,61 @@ class CDL(CausalModel):
         drop_idx = torch.where(use_informed, informed_drop, random_drop)
         mask = F.one_hot(drop_idx, fd + 1).bool()
 
-        for j in range(fd):
-            target = s_tp1[:, j : j + 1]
-            model = self.models[j]
-            model.train()
+        self.models.train()
+        parameters = self._stacked_parameters()
+        feats = self._batched_forward(
+            parameters,
+            s_t,
+            a_batch,
+            features=None,
+            features_in_dim=None,
+            return_features=True,
+        )
+        mu, std = self._batched_forward(parameters, features=feats, features_in_dim=0)
+        targets = s_tp1.transpose(0, 1).unsqueeze(-1)
+        full_loss = self._nll(mu, std, targets).mean()
 
-            mu, std = model(s_t, a_batch)
-            full_loss = self._nll(mu, std, target).mean()
-
-            mu_m, std_m = model(s_t, a_batch, mask=mask)
-            masked_loss = self._nll(mu_m, std_m, target).mean()
-
-            total_loss += full_loss + masked_loss
-
-        loss = total_loss / fd
+        masked_feats = feats.masked_fill(mask.unsqueeze(0).unsqueeze(-1), float("-inf"))
+        mu_m, std_m = self._batched_forward(
+            parameters,
+            features=masked_feats,
+            features_in_dim=0,
+        )
+        masked_loss = self._nll(mu_m, std_m, targets).mean()
+        loss = full_loss + masked_loss
         loss.backward()
         nn.utils.clip_grad_norm_(self.models.parameters(), self.grad_clip)
         self.opt.step()
 
-        return loss.item()
+        return loss.detach()
 
     def update_mask(self, s_batch, a_batch):
         s_t = s_batch[:, 0]
         s_tp1 = s_batch[:, 1]
-        fd = self.state_dim
-
-        step_cmi = torch.zeros(fd, fd + 1, device=self.device)
-
-        # All fd+1 single-input ablations share one feature extraction and run as a
-        # single batched head pass. Same arithmetic as one masked forward per input.
-        drop_one = torch.eye(fd + 1, dtype=torch.bool, device=self.device)
-        drop_one = drop_one.view(fd + 1, 1, fd + 1, 1)  # (fd+1, 1, fd+1, 1)
 
         with torch.no_grad():
-            for j in range(fd):
-                target = s_tp1[:, j : j + 1]
-                model = cast(StatePredictor, self.models[j])
-                model.eval()
+            self.models.eval()
+            parameters = self._stacked_parameters()
+            feats = self._batched_forward(
+                parameters,
+                s_t,
+                a_batch,
+                features=None,
+                features_in_dim=None,
+                return_features=True,
+            )
+            mu, std = self._batched_forward(parameters, features=feats, features_in_dim=0)
+            targets = s_tp1.transpose(0, 1).unsqueeze(-1)
+            full_nll = self._nll(mu, std, targets)
 
-                feats = model.features(s_t, a_batch)  # (bs, fd+1, feature_dim)
-                mu, std = model.head(feats)
-                full_nll = self._nll(mu, std, target)  # (bs, 1)
-
-                ablated = feats.unsqueeze(0).masked_fill(drop_one, float("-inf"))
-                mu_m, std_m = model.head(ablated)  # (fd+1, bs, 1)
-                masked_nll = self._nll(mu_m, std_m, target)
-
-                step_cmi[j] = (masked_nll - full_nll).mean(dim=(1, 2))
+            pooled = masked_max_from_top_two(feats)
+            mu_m, std_m = self._batched_forward(
+                parameters,
+                pooled_features=pooled,
+                pooled_in_dim=1,
+            )
+            masked_nll = self._nll(mu_m, std_m, targets.unsqueeze(1))
+            step_cmi = (masked_nll - full_nll.unsqueeze(1)).mean(dim=(2, 3))
 
         self._eval_cmi_acc += step_cmi
         self._eval_step_count += 1
@@ -199,7 +287,7 @@ class CDL(CausalModel):
         if self._eval_step_count >= self.eval_steps:
             avg_cmi = self._eval_cmi_acc / self.eval_steps
             self.mask_CMI = self.eval_tau * self.mask_CMI + (1 - self.eval_tau) * avg_cmi
-            self._eval_cmi_acc = torch.zeros(fd, fd + 1, device=self.device)
+            self._eval_cmi_acc.zero_()
             self._eval_step_count = 0
 
     def get_causal_graph(self):
@@ -215,22 +303,33 @@ class CDL(CausalModel):
         return graph
 
     def predict_next_state(self, s, a):
-        bs = s.shape[0]
         s = s.to(self.device)
         a = a.to(self.device)
-        mus, stds = [], []
         with torch.no_grad():
-            for j in range(self.kpi_start, self.state_dim):
-                self.models[j].eval()
-                graph_mask = self.get_binary_graph()[j, :].clone()  # (fd+1,)
-                graph_mask[j] = True  # always include self
-                graph_mask[-1] = True  # always include action
-                mask = graph_mask.unsqueeze(0).expand(bs, -1).bool().to(self.device)
-                mu, std = self.models[j](s, a, ~mask)
-                mus.append(mu)
-                stds.append(std)
-        mu = torch.cat(mus, dim=1)
-        std = torch.cat(stds, dim=1)
+            self.models.eval()
+            parameters = self._stacked_parameters()
+            feats = self._batched_forward(
+                parameters,
+                s,
+                a,
+                features=None,
+                features_in_dim=None,
+                return_features=True,
+            )
+            targets = torch.arange(self.kpi_start, self.state_dim, device=self.device)
+            parameters = {name: value[targets] for name, value in parameters.items()}
+            feats = feats[targets]
+            graph_mask = self.get_binary_graph()[targets].clone()
+            graph_mask[torch.arange(len(targets), device=self.device), targets] = True
+            graph_mask[:, -1] = True
+            masked_feats = feats.masked_fill(~graph_mask.unsqueeze(1).unsqueeze(-1), float("-inf"))
+            mu, std = self._batched_forward(
+                parameters,
+                features=masked_feats,
+                features_in_dim=0,
+            )
+        mu = mu.squeeze(-1).transpose(0, 1)
+        std = std.squeeze(-1).transpose(0, 1)
         return Normal(mu, std)
 
     def evaluate_predictions(self, s, a, s_1):
@@ -273,6 +372,10 @@ class CDL(CausalModel):
         for i, model in enumerate(self.models):
             model.load_state_dict(state["models_state_dict"][i])
         self.opt.load_state_dict(state["optimizer_state_dict"])
+        if self.device.type == "cuda":
+            for group in self.opt.param_groups:
+                group["fused"] = True
+                group["foreach"] = None
         self.mask_CMI = state["mask_CMI"]
         self._eval_cmi_acc = state["eval_cmi_acc"]
         self._eval_step_count = state["eval_step_count"]

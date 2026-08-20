@@ -95,7 +95,7 @@ class MLPInference(WorldModel):
         nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
         self.opt.step()
 
-        return loss.item()
+        return loss.detach()
 
     def predict_next_state(self, s, a):
         """

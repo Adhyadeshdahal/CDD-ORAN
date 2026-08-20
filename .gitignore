@@ -28,3 +28,5 @@ sweeps/
 !conflict_resolution_techniques.png
 
 runs/*
+
+.tmp/

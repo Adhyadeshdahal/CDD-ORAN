@@ -71,7 +71,9 @@ def build_env(env_name: str):
 
     # Seed before construction: Param.__init__ draws from np.random.
     seed_all(BASE_SEED)
-    env = get_env(replace(DEFAULT_CONFIG, environment=env_name))
+    # Preserve the legacy fixtures independently from paper configuration changes.
+    legacy_ranges = "train" if env_name == "EnvironmentI" else "ood"
+    env = get_env(replace(DEFAULT_CONFIG, environment=env_name, seed=0, param_ranges=legacy_ranges))
     env.reset()
     return env
 

@@ -4,7 +4,6 @@ from typing import Any
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
 from torch.utils.tensorboard import SummaryWriter
 
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
@@ -18,26 +17,40 @@ from cdd_oran.utils.seeding import seed_everything
 logger = logging.getLogger(__name__)
 
 
-class ReplayBufferDataset(Dataset):
-    def __init__(self, state_dim, action_dim):
+class ReplayBuffer:
+    def __init__(self, capacity, state_dim, action_dim, device):
+        self.capacity = capacity
+        self.device = torch.device(device)
         self.state_dim = state_dim
         self.action_dim = action_dim
-        self.data = []
+        # Transitions originate in the CPU-only environment. Keep them contiguous
+        # there and move one sampled batch to the training device.
+        self.data = torch.empty((capacity, 2 * state_dim + action_dim))
+        self.size = 0
+        self._next_index = 0
 
     def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        s, a, s_next = self.data[index]
-        return s, a, s_next
+        return self.size
 
     def add(self, s, a, s_next):
-        self.data.append((s, a, s_next))
+        row = self.data[self._next_index]
+        row[: self.state_dim].copy_(torch.as_tensor(s, dtype=torch.float32))
+        row[self.state_dim : self.state_dim + self.action_dim].copy_(
+            torch.as_tensor(a, dtype=torch.float32)
+        )
+        row[self.state_dim + self.action_dim :].copy_(
+            torch.as_tensor(s_next, dtype=torch.float32)
+        )
+        self._next_index = (self._next_index + 1) % self.capacity
+        self.size = min(self.size + 1, self.capacity)
 
     def sample(self, batch_size):
-        idx = np.random.randint(0, len(self.data), size=batch_size)
-        s, a, s_next = zip(*(self.data[i] for i in idx), strict=True)
-        return torch.stack(s), torch.tensor(a), torch.stack(s_next)
+        idx = torch.randint(self.size, (batch_size,))
+        batch = self.data[idx]
+        if self.device.type != "cpu":
+            batch = batch.to(self.device)
+        action_end = self.state_dim + self.action_dim
+        return batch[:, : self.state_dim], batch[:, self.state_dim : action_end], batch[:, action_end:]
 
 
 def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
@@ -61,10 +74,31 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
         model.load_model(checkpoint_path)
         logger.info("Resumed from checkpoint: %s", checkpoint_path)
 
-    train_buffer = ReplayBufferDataset(state_dim, action_dim)
-    test_buffer = ReplayBufferDataset(state_dim, action_dim)
+    train_buffer = ReplayBuffer(cfg.train.total_steps, state_dim, action_dim, cfg.device)
+    test_buffer = ReplayBuffer(cfg.train.total_steps, state_dim, action_dim, cfg.device)
     obs = env.reset()
-    loss = 0.0
+    expected_device = torch.device(cfg.device)
+    parameter_device = next(model.models.parameters()).device
+    if parameter_device.type != expected_device.type or (
+        expected_device.index is not None and parameter_device.index != expected_device.index
+    ):
+        raise RuntimeError(
+            f"Model is on {parameter_device}, but config requested {expected_device}"
+        )
+    logger.info(
+        "Training device=%s parameter_device=%s torch=%s CUDA=%s",
+        expected_device,
+        parameter_device,
+        torch.__version__,
+        torch.version.cuda,
+    )
+    if cfg.device.startswith("cuda"):
+        if not torch.cuda.is_available():
+            raise RuntimeError(f"CUDA device requested but unavailable: {cfg.device}")
+        logger.info(
+            "GPU=%s",
+            torch.cuda.get_device_name(parameter_device),
+        )
     episode_reward = 0
     episode_rewards = []
     metrics: dict[str, Any] = {"prediction_mse": None}
@@ -93,19 +127,15 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
 
         for _ in range(cfg.train.inference_gradient_steps):
             s, a, s_next = train_buffer.sample(cfg.model.batch_size)
-            s = s.float().to(cfg.device)
-            s_next = s_next.float().to(cfg.device)
-            a = a.float().reshape(-1, action_dim).to(cfg.device)
-            s_pair = torch.stack([s, s_next], dim=1).to(cfg.device)
+            a = a.reshape(-1, action_dim)
+            s_pair = torch.stack([s, s_next], dim=1)
             loss = model.train_step(s_pair, a)
 
         if cfg.model_kind == "cdl":
             if step % (cfg.train.eval_steps * cfg.train.inference_gradient_steps) == 0:
                 s, a, s_next = train_buffer.sample(cfg.model.batch_size)
-                s = s.float().to(cfg.device)
-                s_next = s_next.float().to(cfg.device)
-                a = a.float().reshape(-1, action_dim).to(cfg.device)
-                s_pair = torch.stack([s, s_next], dim=1).to(cfg.device)
+                a = a.reshape(-1, action_dim)
+                s_pair = torch.stack([s, s_next], dim=1)
                 model.update_mask(s_pair, a)
 
         if step % cfg.train.plot_freq == 0:
@@ -113,9 +143,9 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
                 if len(test_buffer) >= cfg.train.test_batch_size:
                     s_b, a_b, s_1b = test_buffer.sample(cfg.train.test_batch_size)
                     s_b, a_b, s_1b = (
-                        s_b.float().to(cfg.device),
-                        a_b.float().reshape(-1, action_dim).to(cfg.device),
-                        s_1b.float().to(cfg.device),
+                        s_b,
+                        a_b.reshape(-1, action_dim),
+                        s_1b,
                     )
                     mse = model.evaluate_predictions(s_b, a_b, s_1b)
                     metrics["prediction_mse"] = mse
@@ -149,7 +179,7 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
                 logger.info(
                     "Step %d loss=%.4f precision=%s recall=%s f1=%s accuracy=%s edges=%s",
                     step,
-                    loss,
+                    loss.item(),
                     precision,
                     recall,
                     f1,
@@ -160,9 +190,9 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
             elif len(test_buffer) > cfg.train.test_batch_size:
                 s_b, a_b, s_1b = test_buffer.sample(cfg.train.test_batch_size)
                 s_b, a_b, s_1b = (
-                    s_b.float().to(cfg.device),
-                    a_b.float().reshape(-1, action_dim).to(cfg.device),
-                    s_1b.float().to(cfg.device),
+                    s_b,
+                    a_b.reshape(-1, action_dim),
+                    s_1b,
                 )
                 mse = model.evaluate_predictions(s_b, a_b, s_1b)
                 metrics["prediction_mse"] = mse
@@ -175,9 +205,9 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
     if metrics["prediction_mse"] is None and test_buffer:
         s_b, a_b, s_1b = test_buffer.sample(min(len(test_buffer), cfg.train.test_batch_size))
         s_b, a_b, s_1b = (
-            s_b.float().to(cfg.device),
-            a_b.float().reshape(-1, action_dim).to(cfg.device),
-            s_1b.float().to(cfg.device),
+            s_b,
+            a_b.reshape(-1, action_dim),
+            s_1b,
         )
         metrics["prediction_mse"] = model.evaluate_predictions(s_b, a_b, s_1b)
 

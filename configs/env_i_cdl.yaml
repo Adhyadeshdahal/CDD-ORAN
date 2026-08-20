@@ -9,7 +9,7 @@ device: auto
 deterministic: false
 model:
   lr: 0.001
-  cmi_threshold: 0.2
+  cmi_threshold: 0.16
   eval_tau: 0.99
   grad_clip: 10.0
   generative_fc_dims: [64, 64]
