@@ -93,19 +93,17 @@ class JointMultiNCPPlanner(Planner):
     def _joint_cost(self, s0, param_ids, samples, xapps, weights, scaling_term):
         n = samples.shape[0]
         num_params = self.env.num_params
+        # Predict from the UNMODIFIED s0 + the joint action; between NCP applications
+        # feed only predicted KPIs forward. Do NOT overwrite the param slots with the
+        # applied NCP value -- CDL is trained on (pre-action state, action), so that
+        # double-counts the action and is OOD.
         state = s0.unsqueeze(0).expand(n, -1).clone()
         next_kpis = None
         for k, pi in enumerate(param_ids):
-            lo_p, hi_p = self.env.paramThresholds[pi]
-            bins = samples[:, k, 0].float()
-            idxs = samples[:, k, 1].float()
-            raw = (lo_p + (hi_p - lo_p) * (bins / (self.num_bins - 1)) + idxs).clamp(lo_p, hi_p)
-            norm = torch.zeros_like(raw) if hi_p == lo_p else (raw - lo_p) / (hi_p - lo_p)
             pi_col = torch.full((n, 1), pi, dtype=torch.float32, device=self.device)
             action_batch = torch.cat([pi_col, samples[:, k, :].float()], dim=1)
-            state = state.clone()
-            state[:, pi] = norm
             next_kpis = self.model.predict_next_state(state, action_batch).sample()
+            state = state.clone()
             state[:, num_params:] = next_kpis  # feed forward -> next NCP sees the shift
         return score_batch(next_kpis, xapps, weights, scaling_term, self.device)
 

@@ -29,24 +29,29 @@ def collect_transitions(env, num, act_dim):
 
 
 def _correlation_graph(causal, transitions, num_params, device):
-    """|Pearson corr| between s_t NCPs and s_{t+1} KPIs, top-K rank-matched to causal."""
+    """|Pearson corr| of each s_t feature (NCP or KPI) vs each s_{t+1} KPI, top-K
+    rank-matched to the FULL causal edge set (NCP->KPI + KPI->KPI).
+
+    Both blocks are scored so the correlation baseline can express KPI->KPI edges
+    (e.g. Env III K0->K4, K4->K5) instead of being handicapped to NCP->KPI only.
+    """
     st = transitions[:, 0].to(device).float()
     stp1 = transitions[:, 1].to(device).float()
-    ncp = st[:, :num_params]  # (N, P)
-    kpi_next = stp1[:, num_params:]  # (N, K)
-    ncp_c = ncp - ncp.mean(0, keepdim=True)
-    kpi_c = kpi_next - kpi_next.mean(0, keepdim=True)
-    num = kpi_c.t() @ ncp_c  # (K, P)
-    den = kpi_c.pow(2).sum(0).sqrt().unsqueeze(1) * ncp_c.pow(2).sum(0).sqrt().unsqueeze(0)
-    corr = (num / (den + 1e-8)).abs()  # (K, P)
-
     sd = causal.shape[0]
-    n_edges = int(causal[num_params:, :num_params].sum().item())  # rank-match causal edge count
+    src = st  # (N, sd) every feature is a candidate source (NCP + KPI)
+    kpi_next = stp1[:, num_params:]  # (N, K) KPI targets
+    src_c = src - src.mean(0, keepdim=True)
+    kpi_c = kpi_next - kpi_next.mean(0, keepdim=True)
+    num = kpi_c.t() @ src_c  # (K, sd)
+    den = kpi_c.pow(2).sum(0).sqrt().unsqueeze(1) * src_c.pow(2).sum(0).sqrt().unsqueeze(0)
+    corr = (num / (den + 1e-8)).abs()  # (K, sd)
+
+    n_edges = int(causal[num_params:, :].sum().item())  # full causal edge count (both blocks)
     graph = torch.zeros((sd, sd), dtype=torch.bool, device=device)
     n_edges = min(n_edges, corr.numel())
     if n_edges > 0:
         flat = torch.topk(corr.flatten(), n_edges).indices
-        graph[num_params + flat // num_params, flat % num_params] = True
+        graph[num_params + flat // sd, flat % sd] = True
     return graph
 
 
@@ -55,7 +60,8 @@ def build_override_graph(kind, cdl, env, transitions=None):
 
     - ``causal``: the trained CDL thresholded graph (unchanged).
     - ``full``: dense, every feature a parent (tests whether sparsity matters).
-    - ``correlation``: non-causal |Pearson corr| structure, edge count matched to causal.
+    - ``correlation``: non-causal |Pearson corr| structure, edge count matched to the
+      FULL causal edge set (NCP->KPI + KPI->KPI).
     """
     device = cdl.device
     causal = cdl.get_binary_graph()[:, :-1].bool()
@@ -72,15 +78,17 @@ def build_override_graph(kind, cdl, env, transitions=None):
 
 
 def _demo():
-    """Self-check: full sets all NCP->KPI edges; correlation rank-matches causal count."""
+    """Self-check: full sets all NCP->KPI edges; correlation rank-matches the FULL
+    causal edge set (NCP->KPI + KPI->KPI) and targets KPI rows only."""
     import types
 
-    sd, num_params = 5, 3  # 3 NCPs, 2 KPIs
+    sd, num_params = 5, 3  # 3 NCPs, 2 KPIs (cols/rows 3,4)
     torch.manual_seed(0)
     graph = torch.zeros((sd, sd + 1), dtype=torch.bool)
     graph[3, 0] = True
     graph[4, 1] = True
     graph[4, 2] = True  # 3 causal NCP->KPI edges
+    graph[4, 3] = True  # 1 causal KPI->KPI edge (K0 -> K1)
     cdl = types.SimpleNamespace(
         device=torch.device("cpu"), get_binary_graph=lambda threshold=None: graph
     )
@@ -89,13 +97,11 @@ def _demo():
     full = build_override_graph("full", cdl, env)
     assert full[num_params:, :num_params].all(), "full must set all NCP->KPI edges"
 
-    causal_edges = int(graph[:, :-1][num_params:, :num_params].sum())
+    causal_edges = int(graph[:, :-1][num_params:, :].sum())  # both blocks
     transitions = torch.randn(64, 2, sd)
     corr = build_override_graph("correlation", cdl, env, transitions)
-    assert int(corr[num_params:, :num_params].sum()) == causal_edges, "must rank-match causal count"
-    assert corr[:num_params].sum() == 0 and corr[num_params:, num_params:].sum() == 0, (
-        "correlation edges must live only in the NCP->KPI block"
-    )
+    assert int(corr[num_params:, :].sum()) == causal_edges, "must rank-match full causal count"
+    assert corr[:num_params].sum() == 0, "correlation edges must target KPI rows only"
     print("graph_baselines self-check OK")
 
 

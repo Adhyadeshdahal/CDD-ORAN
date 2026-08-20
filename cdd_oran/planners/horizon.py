@@ -90,18 +90,15 @@ class RecedingHorizonCEM(Planner):
     def _rollout_cost(self, s0, pi, samples, xapps, weights, scaling_term):
         n = samples.shape[0]
         num_params = self.env.num_params
-        lo_p, hi_p = self.env.paramThresholds[pi]
-
-        bins = samples[:, 0].float()
-        idxs = samples[:, 1].float()
-        raw = (lo_p + (hi_p - lo_p) * (bins / (self.num_bins - 1)) + idxs).clamp(lo_p, hi_p)
-        norm = torch.zeros_like(raw) if hi_p == lo_p else (raw - lo_p) / (hi_p - lo_p)
 
         pi_col = torch.full((n, 1), pi, dtype=torch.float32, device=self.device)
         action_batch = torch.cat([pi_col, samples.float()], dim=1)
 
+        # Predict from the UNMODIFIED s0 + action (exactly as the H=1 base does);
+        # later steps feed only predicted KPIs back and hold the NCP params fixed.
+        # Do NOT inject the action's post-value into the state -- CDL is trained on
+        # (pre-action state, action), so injecting it double-counts and is OOD.
         state = s0.unsqueeze(0).expand(n, -1).clone()
-        state[:, pi] = norm  # apply the held NCP once, then hold it
         total = torch.zeros(n, device=self.device)
         discount = 1.0
         for _ in range(self.n_horizon):
