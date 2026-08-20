@@ -21,6 +21,7 @@ class ModelBasedMPPI(Planner):
         n_samples,
         temperature,
         noise_sigma,
+        risk_kappa: float = 0.0,
     ):
         self.model = model
         self.env = env
@@ -33,6 +34,7 @@ class ModelBasedMPPI(Planner):
         self.n_samples = n_samples
         self.temperature = temperature
         self.noise_sigma = noise_sigma
+        self.risk_kappa = risk_kappa
         self.device = model.device
 
     def act(
@@ -84,7 +86,10 @@ class ModelBasedMPPI(Planner):
 
         next_kpis_batch = next_state_batch
 
-        costs = score_batch(next_kpis_batch, xapps, w, tau, self.device)
+        costs = score_batch(
+            next_kpis_batch, xapps, w, tau, self.device,
+            next_state_dist.stddev, self.risk_kappa,
+        )
 
         log_weights = -costs / self.temperature
         log_weights -= log_weights.max()  # numerical stability

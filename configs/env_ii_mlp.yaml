@@ -24,6 +24,7 @@ train:
   test_batch_size: 10
 planner:
   n_horizon: 1
+  risk_kappa: 0.0
   cem:
     n_candidate: 256
     n_top: 128

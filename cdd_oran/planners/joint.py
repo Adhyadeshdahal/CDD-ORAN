@@ -20,7 +20,8 @@ from cdd_oran.planners.cost import score_batch
 
 
 class JointMultiNCPPlanner(Planner):
-    def __init__(self, model, env, n_candidate=256, n_top=64, n_iter=10):
+    def __init__(self, model, env, n_candidate=256, n_top=64, n_iter=10, risk_kappa: float = 0.0):
+        self.risk_kappa = risk_kappa
         self.model = model
         self.env = env
         self.action_space = env.action_space
@@ -99,13 +100,18 @@ class JointMultiNCPPlanner(Planner):
         # double-counts the action and is OOD.
         state = s0.unsqueeze(0).expand(n, -1).clone()
         next_kpis = None
+        next_stds = None
         for k, pi in enumerate(param_ids):
             pi_col = torch.full((n, 1), pi, dtype=torch.float32, device=self.device)
             action_batch = torch.cat([pi_col, samples[:, k, :].float()], dim=1)
-            next_kpis = self.model.predict_next_state(state, action_batch).sample()
+            dist = self.model.predict_next_state(state, action_batch)
+            next_kpis = dist.sample()
+            next_stds = dist.stddev
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed forward -> next NCP sees the shift
-        return score_batch(next_kpis, xapps, weights, scaling_term, self.device)
+        return score_batch(
+            next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa
+        )
 
 
 def _self_check():

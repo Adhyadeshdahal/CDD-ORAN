@@ -8,21 +8,25 @@ from cdd_oran.planners.qacm import QACM
 
 
 def get_planners(cfg: ExperimentConfig, model, env):
-    qacm = QACM(model=model, env=env)
-    cem = ModelBasedCEM(model=model, env=env, **vars(cfg.planner.cem))
-    mppi = ModelBasedMPPI(model=model, env=env, **vars(cfg.planner.mppi))
-    mcts = ModelBasedMCTS(model=model, env=env, **vars(cfg.planner.mcts))
+    kappa = getattr(cfg.planner, "risk_kappa", 0.0)
+    qacm = QACM(model=model, env=env, risk_kappa=kappa)
+    cem = ModelBasedCEM(model=model, env=env, risk_kappa=kappa, **vars(cfg.planner.cem))
+    mppi = ModelBasedMPPI(model=model, env=env, risk_kappa=kappa, **vars(cfg.planner.mppi))
+    mcts = ModelBasedMCTS(model=model, env=env, risk_kappa=kappa, **vars(cfg.planner.mcts))
     planners = [qacm, cem, mppi, mcts]
     # New planners are appended AFTER the original four so the shared RNG stream the
     # four consume is unchanged -> their H=1 results stay bit-reproducible.
     if cfg.planner.n_horizon > 1:
         planners.append(
             RecedingHorizonCEM(
-                model=model, env=env, n_horizon=cfg.planner.n_horizon, **vars(cfg.planner.cem)
+                model=model, env=env, n_horizon=cfg.planner.n_horizon,
+                risk_kappa=kappa, **vars(cfg.planner.cem),
             )
         )
     if getattr(cfg.planner, "joint", False):
-        planners.append(JointMultiNCPPlanner(model=model, env=env, **vars(cfg.planner.cem)))
+        planners.append(
+            JointMultiNCPPlanner(model=model, env=env, risk_kappa=kappa, **vars(cfg.planner.cem))
+        )
     return planners
 
 

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from cdd_oran.planners.base import Planner
-from cdd_oran.planners.cost import weighted_distance
+from cdd_oran.planners.cost import risk_adjust, weighted_distance
 
 
 class MCTSNode:
@@ -33,7 +33,9 @@ class ModelBasedMCTS(Planner):
         env,
         n_simulations,
         ucb_c,
+        risk_kappa: float = 0.0,
     ):
+        self.risk_kappa = risk_kappa
         self.model = model
         self.env = env
         self.xapps = env.xapps
@@ -139,11 +141,16 @@ class ModelBasedMCTS(Planner):
         # Model returns KPI portion only
         next_state = next_state_dist.sample().squeeze(0)
         kpis = next_state.cpu().detach().numpy()
+        stds = (
+            next_state_dist.stddev.squeeze(0).cpu().detach().numpy()
+            if self.risk_kappa != 0.0
+            else None
+        )
 
         cost_vec = np.zeros(len(xapps))
         sat_vec = np.zeros(len(xapps))
         for i, xapp in enumerate(xapps):
-            u = xapp.compute_utility(kpis)
+            u = xapp.compute_utility(risk_adjust(kpis, stds, xapp.direction, self.risk_kappa))
             d, s = weighted_distance(xapp, u)
             cost_vec[i] = w[i] * d * tau
             sat_vec[i] = s

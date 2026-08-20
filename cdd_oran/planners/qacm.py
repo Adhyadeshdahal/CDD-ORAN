@@ -2,11 +2,12 @@ import numpy as np
 import torch
 
 from cdd_oran.planners.base import Planner
-from cdd_oran.planners.cost import weighted_distance
+from cdd_oran.planners.cost import risk_adjust, weighted_distance
 
 
 class QACM(Planner):
-    def __init__(self, model, env):
+    def __init__(self, model, env, risk_kappa: float = 0.0):
+        self.risk_kappa = risk_kappa
         self.model = model
         self.env = env
         self.xapps = env.xapps
@@ -53,12 +54,19 @@ class QACM(Planner):
                 # Model returns KPI portion only
                 next_state = next_state_dist.sample().squeeze(0)
                 next_kpis = next_state.cpu().numpy()
+                stds = (
+                    next_state_dist.stddev.squeeze(0).cpu().numpy()
+                    if self.risk_kappa != 0.0
+                    else None
+                )
 
                 cost = np.zeros(len(xapps))
                 s = np.zeros(len(xapps))
 
                 for i, xapp in enumerate(xapps):
-                    u_i = self.compute_utility(xapp, next_kpis)
+                    u_i = self.compute_utility(
+                        xapp, risk_adjust(next_kpis, stds, xapp.direction, self.risk_kappa)
+                    )
                     d_i, s_i = self.obtain_weighted_distance(xapp, u_i)
                     cost[i] = w[i] * d_i * tau
                     s[i] = s_i

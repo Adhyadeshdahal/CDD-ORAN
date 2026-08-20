@@ -5,7 +5,9 @@ from cdd_oran.planners.cost import score_batch
 
 
 class ModelBasedCEM(Planner):
-    def __init__(self, model, env, n_candidate: int, n_top: int, n_iter: int):
+    def __init__(
+        self, model, env, n_candidate: int, n_top: int, n_iter: int, risk_kappa: float = 0.0
+    ):
         self.model = model
         self.env = env
         self.xapps = env.xapps
@@ -16,6 +18,7 @@ class ModelBasedCEM(Planner):
         self.n_candidate = n_candidate
         self.n_top = n_top
         self.n_iter = n_iter
+        self.risk_kappa = risk_kappa
         self.device = model.device
 
     def act(
@@ -51,8 +54,12 @@ class ModelBasedCEM(Planner):
             pi_col = torch.full((self.n_candidate, 1), pi, dtype=torch.long, device=self.device)
             action_batch = torch.cat([pi_col, samples], dim=1).float()
             s_batch = s0.unsqueeze(0).expand(self.n_candidate, -1).float()
-            next_kpis_batch = self.model.predict_next_state(s_batch, action_batch).sample()
-            scores = score_batch(next_kpis_batch, xapps, weights, scaling_term, self.device)
+            dist = self.model.predict_next_state(s_batch, action_batch)
+            next_kpis_batch = dist.sample()
+            scores = score_batch(
+                next_kpis_batch, xapps, weights, scaling_term, self.device,
+                dist.stddev, self.risk_kappa,
+            )
             elites = samples[torch.argsort(scores)[: self.n_top]].float()
             mu = elites.mean(dim=0)
             std = elites.std(dim=0).clamp(min=1.0)

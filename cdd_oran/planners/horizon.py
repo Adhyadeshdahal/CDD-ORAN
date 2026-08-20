@@ -17,9 +17,13 @@ from cdd_oran.planners.cost import score_batch
 
 
 class RecedingHorizonCEM(Planner):
-    def __init__(self, model, env, n_horizon, n_candidate, n_top, n_iter, gamma=0.9):
+    def __init__(
+        self, model, env, n_horizon, n_candidate, n_top, n_iter, gamma=0.9, risk_kappa: float = 0.0
+    ):
+        self.risk_kappa = risk_kappa
         self.base = ModelBasedCEM(
-            model=model, env=env, n_candidate=n_candidate, n_top=n_top, n_iter=n_iter
+            model=model, env=env, n_candidate=n_candidate, n_top=n_top, n_iter=n_iter,
+            risk_kappa=risk_kappa,
         )
         self.model = model
         self.env = env
@@ -102,9 +106,11 @@ class RecedingHorizonCEM(Planner):
         total = torch.zeros(n, device=self.device)
         discount = 1.0
         for _ in range(self.n_horizon):
-            next_kpis = self.model.predict_next_state(state, action_batch).sample()
+            dist = self.model.predict_next_state(state, action_batch)
+            next_kpis = dist.sample()
             total = total + discount * score_batch(
-                next_kpis, xapps, weights, scaling_term, self.device
+                next_kpis, xapps, weights, scaling_term, self.device,
+                dist.stddev, self.risk_kappa,
             )
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed predicted KPIs forward

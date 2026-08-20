@@ -55,6 +55,7 @@ class PlannerConfig:
     mppi: MPPIConfig
     mcts: MCTSConfig
     joint: bool = False
+    risk_kappa: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -125,6 +126,7 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             mppi=MPPIConfig(**values["planner"]["mppi"]),
             mcts=MCTSConfig(**values["planner"]["mcts"]),
             joint=values["planner"].get("joint", False),
+            risk_kappa=values["planner"].get("risk_kappa", 0.0),
         ),
     )
 
