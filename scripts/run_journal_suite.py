@@ -20,10 +20,15 @@ Usage:
 import argparse
 import json
 import subprocess
+import sys
 import time
 from pathlib import Path
 
 import yaml
+
+# Run as a script (python scripts/run_journal_suite.py) puts scripts/ on sys.path, not
+# the repo root, so the in-process stats/emit imports of cdd_oran would fail. Add it.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 ENVS = ["EnvironmentI", "EnvironmentII", "EnvironmentIII"]
 CONFIG_CDL = {
@@ -201,6 +206,7 @@ class Suite:
         self.recovery = {}
         self.world_models = {}
         self.mitigation = {}
+        self.satisfaction = {}
         self.risk_sweep = {}
         self.stats_rows = []
         self.any_failed = False
@@ -306,12 +312,15 @@ class Suite:
         stage = 3
         for env in self.args.envs:
             self.mitigation[env] = {}
+            self.satisfaction[env] = {}
             for seed in self.args.seeds:
                 self.mitigation[env][seed] = {}
+                self.satisfaction[env][seed] = {}
                 cdl_run = self._run_dir(env, "cdl", seed)
                 mlp_run = self._run_dir(env, "mlp", seed)
                 for mseed in self.args.mitigation_seeds:
                     self.mitigation[env][seed][mseed] = {}
+                    self.satisfaction[env][seed][mseed] = {}
                     for override in self.args.graph_overrides:
                         cdl_cfg = _variant_config(
                             cdl_run, {"mitigation_seed": mseed}, f"mit-{mseed}", self.args.device
@@ -333,6 +342,10 @@ class Suite:
                             self._set_mitigation(
                                 (env, seed, mseed, override, "cdl"),
                                 self._planner_utilities(cdl_run),
+                            )
+                            self._set_satisfaction(
+                                (env, seed, mseed, override, "cdl"),
+                                self._run_satisfaction(cdl_run),
                             )
                         mlp_cfg = _variant_config(
                             mlp_run, {"mitigation_seed": mseed}, f"mit-{mseed}", self.args.device
@@ -357,6 +370,10 @@ class Suite:
                                 (env, seed, mseed, override, "mlp"),
                                 self._planner_utilities(mlp_run),
                             )
+                            self._set_satisfaction(
+                                (env, seed, mseed, override, "mlp"),
+                                self._run_satisfaction(mlp_run),
+                            )
 
     def _planner_utilities(self, run_dir):
         metrics = _read_json(Path(run_dir) / "metrics.json")
@@ -366,6 +383,24 @@ class Suite:
     def _set_mitigation(self, key, utilities):
         env, seed, mseed, override, model_kind = key
         self.mitigation[env][seed][mseed].setdefault(override, {})[model_kind] = utilities
+
+    def _run_satisfaction(self, run_dir):
+        """Per-planner satisfaction rate from the run's v2 utilities.json (no env needed).
+
+        Calls stats.satisfaction_rate (do not reimplement). Returns {} for a v1 file or
+        a missing utilities.json, so old runs degrade gracefully.
+        """
+        path = Path(run_dir) / "utilities.json"
+        if not path.exists():
+            return {}
+        from cdd_oran.analysis import stats as stats_module
+
+        result = stats_module.satisfaction_rate(str(path))
+        return result.get("satisfaction", {}) if result.get("ok") else {}
+
+    def _set_satisfaction(self, key, rates):
+        env, seed, mseed, override, model_kind = key
+        self.satisfaction[env][seed][mseed].setdefault(override, {})[model_kind] = rates
 
     # ---- Stage 4: risk sweep (evaluate CDL over planner.risk_kappa) ----
     def risk_sweep(self):
@@ -393,7 +428,7 @@ class Suite:
                     if self._do(stage, f"risk kappa={kappa} {env} seed {seed}", argv):
                         self.risk_sweep[env][seed][kappa] = self._planner_utilities(cdl_run)
 
-    # ---- Stage 5: stats (in-process, existing stats module) ----
+    # ---- Stage 5: stats (in-process, existing stats module — robust seed-based recipe) ----
     def stats(self):
         import numpy as np
 
@@ -402,6 +437,9 @@ class Suite:
         for env in self.args.envs:
             cdl_by_planner: dict[str, dict] = {}
             mlp_by_planner: dict[str, dict] = {}
+            # satisfaction samples per planner per model, pooled across (seed, mseed).
+            sat_cdl: dict[str, list] = {}
+            sat_mlp: dict[str, list] = {}
             for seed in self.args.seeds:
                 for mseed in self.args.mitigation_seeds:
                     causal = (
@@ -410,19 +448,55 @@ class Suite:
                     cdl = causal.get("cdl", {})
                     mlp = causal.get("mlp", {})
                     for planner in sorted(set(cdl) & set(mlp)):
+                        # One paired scalar per (seed, mseed): the run's mean utility.
                         cdl_by_planner.setdefault(planner, {})[(seed, mseed)] = cdl[planner]
                         mlp_by_planner.setdefault(planner, {})[(seed, mseed)] = mlp[planner]
+                    # Satisfaction: read from the persisted v2 utilities.json (no env needed).
+                    for planner, rate in (
+                        self.satisfaction.get(env, {})
+                        .get(seed, {})
+                        .get(mseed, {})
+                        .get("causal", {})
+                        .get("cdl", {})
+                        .items()
+                    ):
+                        sat_cdl.setdefault(planner, []).append(rate)
+                    for planner, rate in (
+                        self.satisfaction.get(env, {})
+                        .get(seed, {})
+                        .get(mseed, {})
+                        .get("causal", {})
+                        .get("mlp", {})
+                        .items()
+                    ):
+                        sat_mlp.setdefault(planner, []).append(rate)
             for planner, pairs in sorted(cdl_by_planner.items()):
                 keys = sorted(pairs)
                 cdl_vals = np.array([pairs[key] for key in keys], dtype=float)
                 mlp_vals = np.array([mlp_by_planner[planner][key] for key in keys], dtype=float)
-                self.stats_rows.append(
-                    {
-                        "environment": env,
-                        "planner": planner,
-                        **stats_module.compare(cdl_vals, mlp_vals, seed=self.args.seed),
-                    }
-                )
+                row = {
+                    "environment": env,
+                    "planner": planner,
+                    # Robust, seed-based recipe (report 23): paired diff + CI, Wilcoxon,
+                    # Cliff's delta, P(CDL>MLP), plus Cohen's d kept as secondary.
+                    **stats_module.compare_seeds(cdl_vals, mlp_vals, seed=self.args.seed),
+                    "satisfaction_cdl": (
+                        float(np.mean(sat_cdl[planner])) if sat_cdl.get(planner) else None
+                    ),
+                    "satisfaction_mlp": (
+                        float(np.mean(sat_mlp[planner])) if sat_mlp.get(planner) else None
+                    ),
+                }
+                self.stats_rows.append(row)
+
+        # Family-wide multiple-comparison correction over every (env, planner) cell.
+        pvals = [row["wilcoxon"]["p_value"] for row in self.stats_rows]
+        if pvals:
+            holm = stats_module.holm_correction(pvals)
+            bh = stats_module.bh_fdr(pvals)  # kept available for the wider exploratory grid
+            for row, p_holm, p_bh in zip(self.stats_rows, holm, bh, strict=True):
+                row["wilcoxon_p_holm"] = float(p_holm)
+                row["wilcoxon_p_bh"] = float(p_bh)
 
     # ---- Stage 6: emit summary + markdown table ----
     def emit(self):
@@ -436,6 +510,7 @@ class Suite:
             "recovery": self.recovery,
             "world_models": self.world_models,
             "mitigation": self.mitigation,
+            "satisfaction": self.satisfaction,
             "risk_sweep": self.risk_sweep,
             "stats": self.stats_rows,
             "steps": [step.to_dict() for step in self.steps],
@@ -453,20 +528,35 @@ class Suite:
         lines.append(f"Environments: {self.args.envs}")
         lines.append("")
         if self.stats_rows:
-            lines.append("## CDL vs MLP utilities (causal graph), paired by mitigation seed")
+            lines.append("## CDL vs MLP (causal graph) - robust, seed-based recipe")
             lines.append("")
             lines.append(
-                "| env | planner | n | CDL mean | MLP mean | diff [95% CI] | Wilcoxon p | Cohen's d |"
+                "Replication unit: independent seeds (paired per-seed mean utility). "
+                "Lead with the paired diff + CI, Cliff's delta, P(CDL>MLP) and satisfaction; "
+                "Cohen's d is secondary (assumption-bound: normality of paired diffs). "
+                "Wilcoxon p is Holm-adjusted across all (env, planner) cells."
             )
-            lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+            lines.append("")
+            lines.append(
+                "| env | planner | n | diff [95% CI] | Cliff's delta (label) | P(CDL>MLP) | "
+                "sat CDL | sat MLP | Wilcoxon p (Holm) | Cohen's d (secondary) |"
+            )
+            lines.append(
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+            )
             for row in self.stats_rows:
                 ci = row["ci_low"], row["ci_high"]
-                w = row["wilcoxon"]
+                p_holm = row.get("wilcoxon_p_holm", row["wilcoxon"]["p_value"])
+                sat_cdl = row.get("satisfaction_cdl")
+                sat_mlp = row.get("satisfaction_mlp")
                 lines.append(
-                    f"| {row['environment']} | {row['planner']} | {row['n_pairs']} | "
-                    f"{row['cdl_mean']:.4f} | {row['mlp_mean']:.4f} | "
+                    f"| {row['environment']} | {row['planner']} | {row['n_seeds']} | "
                     f"{row['mean_diff']:.4f} [{ci[0]:.4f}, {ci[1]:.4f}] | "
-                    f"{w['p_value']:.4f} | {row['cohens_d']:.4f} |"
+                    f"{row['cliffs_delta']:.3f} ({row['cliffs_label']}) | "
+                    f"{row['prob_cdl_gt_mlp']:.3f} | "
+                    f"{'-' if sat_cdl is None else f'{sat_cdl:.3f}'} | "
+                    f"{'-' if sat_mlp is None else f'{sat_mlp:.3f}'} | "
+                    f"{p_holm:.4f} | {row['cohens_d']:.4f} |"
                 )
             lines.append("")
         if self.recovery:
@@ -547,6 +637,12 @@ def build_parser():
     parser.add_argument(
         "--dry-run", action="store_true", help="Print the full command plan and exit"
     )
+    parser.add_argument(
+        "--emit-selftest",
+        action="store_true",
+        help="Feed synthetic seed arrays + a synthetic v2 utilities dict through the "
+        "stats/emit code and print the resulting table.md (no training).",
+    )
     parser.add_argument("--seeds", default=None, help="Comma-separated training seeds")
     parser.add_argument(
         "--mitigation-seeds",
@@ -594,6 +690,9 @@ def main(argv=None):
     args.kappas = [float(value) for value in args.kappa.split(",")]
     args.graph_overrides = [value.strip() for value in args.graph_overrides.split(",")]
 
+    if args.emit_selftest:
+        return _emit_selftest(args)
+
     suite = Suite(args)
     counts = suite._counts()
     profile = "FULL" if args.full else "DEFAULT"
@@ -639,6 +738,69 @@ def main(argv=None):
             print(f"         error: {step.error}")
 
     return 1 if suite.any_failed else 0
+
+
+def _emit_selftest(args):
+    """No-training check: synthetic seed arrays + a synthetic v2 utilities dict driven
+    through the real stats functions and the emit table builder."""
+    import os
+    import tempfile
+
+    import numpy as np
+
+    from cdd_oran.analysis import stats as stats_module
+
+    # Synthetic v2 utilities.json -> per-planner satisfaction via stats (no env).
+    v2 = {
+        "version": 2,
+        "algorithm_names": ["QACM", "ModelBasedMPPI"],
+        "steps": [
+            {"step": 0, "panels": [
+                {"conflict_xapp_ids": [0, 1],
+                 "planner_satisfied": {"QACM": [1, 1], "ModelBasedMPPI": [1, 0]}},
+            ]},
+        ],
+    }
+    fd, tmp_path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as handle:
+            json.dump(v2, handle)
+        sat = stats_module.satisfaction_rate(tmp_path)
+    finally:
+        os.remove(tmp_path)
+    assert sat["ok"] and sat["source"] == "planner_satisfied (v2)", sat
+
+    # Synthetic paired per-seed means (CDL clearly above MLP) through compare_seeds.
+    cdl = np.array([0.90, 0.92, 0.88])
+    mlp = np.array([0.61, 0.59, 0.63])
+    rows = []
+    for env, planner in [("EnvironmentI", "QACM"), ("EnvironmentI", "ModelBasedMPPI")]:
+        row = {
+            "environment": env,
+            "planner": planner,
+            **stats_module.compare_seeds(cdl, mlp, seed=args.seed),
+            "satisfaction_cdl": sat["satisfaction"].get(planner),
+            "satisfaction_mlp": 0.5,
+        }
+        rows.append(row)
+    holm = stats_module.holm_correction([r["wilcoxon"]["p_value"] for r in rows])
+    bh = stats_module.bh_fdr([r["wilcoxon"]["p_value"] for r in rows])
+    for row, p_holm, p_bh in zip(rows, holm, bh, strict=True):
+        row["wilcoxon_p_holm"] = float(p_holm)
+        row["wilcoxon_p_bh"] = float(p_bh)
+
+    suite = Suite(args)
+    suite.stats_rows = rows
+    table = suite._markdown_table()
+
+    for column in ("diff [95% CI]", "Cliff's delta (label)", "P(CDL>MLP)",
+                   "sat CDL", "sat MLP", "Wilcoxon p (Holm)", "Cohen's d (secondary)"):
+        assert column in table, f"missing recipe column: {column}"
+    assert "0.500" in table  # satisfaction_mlp rendered
+    print(table)
+    print("emit self-test OK: recipe columns present, stats via stats.py (no training)")
+    return 0
 
 
 def _dry_cfg(run_dir, suffix):
@@ -746,10 +908,17 @@ def _dry_run(stages, suite, args):
                     )
     if 5 in stages:
         print(
-            "stats: in-process call to cdd_oran.analysis.stats.compare (paired CDL vs MLP per planner)"
+            "stats: in-process cdd_oran.analysis.stats - compare_seeds per (env, planner) "
+            "[paired diff+CI, Wilcoxon, Cliff's delta, P(CDL>MLP), Cohen's d], "
+            "holm_correction over the family (bh_fdr kept), and satisfaction_rate per run "
+            "(v2 planner_satisfied, averaged across seeds)"
         )
     if 6 in stages:
-        print(f"emit: write {args.out}/summary.json and {args.out}/table.md")
+        print(
+            f"emit: write {args.out}/summary.json and {args.out}/table.md "
+            "(recipe columns: diff+CI, Cliff's delta, P(CDL>MLP), sat CDL/MLP, "
+            "Wilcoxon p Holm-adjusted, Cohen's d secondary)"
+        )
 
 
 if __name__ == "__main__":
