@@ -98,7 +98,10 @@ def main(
     KPI_THRESHOLDS, MEAN_STD_KPIS = env.get_thresholds_stds()
     algorithm_names = [algo.name for algo in algorithms]
     utilities_data = {
-        "version": 1,
+        # v2 adds per-panel `conflict_xapp_ids` and per-planner `planner_satisfied`
+        # (0/1 per conflicting xApp) so satisfaction is readable with no env access.
+        # All v1 fields are preserved; old readers ignore the new keys.
+        "version": 2,
         "environment": cfg.environment,
         "model_kind": cfg.model_kind,
         "algorithm_names": algorithm_names,
@@ -163,6 +166,9 @@ def main(
                 "algo_names": algorithm_names,
                 "algo_actions": [],
                 "planner_utilities": {},
+                # v2: xApp ids aligned to each planner_utilities/planner_satisfied list.
+                "conflict_xapp_ids": [xid for xid in conflict_xapp_ids if xid < len(utility_fns)],
+                "planner_satisfied": {},
             }
 
             num_xapps = len(xapps_in_conflict)
@@ -187,13 +193,24 @@ def main(
                 panel["algo_actions"].append(float(raw_val))
 
                 planner_values = []
+                satisfied_values = []
                 for xid in conflict_xapp_ids:
                     if xid >= len(utility_fns):
                         continue
                     u = compute_utility(utility_fns[xid], raw_params, param_id, raw_val)
                     step_utilities[algo.name].append(u)
                     planner_values.append(u)
+                    # Same satisfied rule as cost.weighted_distance, persisted so
+                    # satisfaction analysis needs no env: dir 0 satisfied iff
+                    # u >= norm_threshold, dir 1 iff u <= norm_threshold.
+                    xapp = env.xapps[xid]
+                    norm_threshold = (xapp.threshold - xapp.mean) / xapp.std
+                    satisfied = (
+                        u >= norm_threshold if xapp.direction == 0 else u <= norm_threshold
+                    )
+                    satisfied_values.append(int(satisfied))
                 panel["planner_utilities"][algo.name] = planner_values
+                panel["planner_satisfied"][algo.name] = satisfied_values
 
                 if primary_xapp_id < len(utility_fns):
                     logger.info(

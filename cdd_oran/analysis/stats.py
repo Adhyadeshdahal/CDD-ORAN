@@ -242,30 +242,58 @@ def satisfaction_rate(
       norm_thresholds: {xapp_id: (threshold - mean) / std}
     both obtainable from the env (env.xapps[i].direction / .threshold / .mean / .std).
 
-    Without them, returns {"ok": False, "missing": [...]} naming the gap, so
-    evaluate.py can be extended to emit a per-xApp `satisfied` (or `direction` +
-    `norm_threshold`) field. With them, returns {"ok": True, "satisfaction": {planner:
-    rate}, "n_evaluations": {planner: count}}.
+    RESOLUTION ORDER:
+      1. v2 files (version >= 2) persist `planner_satisfied` per panel -- a 0/1 list
+         per conflicting xApp, computed by evaluate.py with the SAME rule as
+         cost.weighted_distance. Read directly, no env needed.
+      2. v1 files with directions= and norm_thresholds= supplied from the env:
+         recompute the indicator from `planner_utilities`.
+      3. v1 files with neither: return {"ok": False, "missing": [...]} naming the gap.
+
+    On success returns {"ok": True, "satisfaction": {planner: rate},
+    "n_evaluations": {planner: count}, "source": ...}.
     """
     with open(utilities_json_path, encoding="utf-8") as handle:
         data = json.load(handle)
 
+    # 1. v2 fast path: satisfied indicators are already persisted per planner.
+    if int(data.get("version", 1)) >= 2:
+        hits2: dict[str, int] = {}
+        total2: dict[str, int] = {}
+        for step in data.get("steps", []):
+            for panel in step.get("panels", []):
+                for planner, flags in panel.get("planner_satisfied", {}).items():
+                    total2[planner] = total2.get(planner, 0) + len(flags)
+                    hits2[planner] = hits2.get(planner, 0) + int(sum(flags))
+        satisfaction2 = {
+            planner: (hits2.get(planner, 0) / n if n else float("nan"))
+            for planner, n in total2.items()
+        }
+        return {
+            "ok": True,
+            "satisfaction": satisfaction2,
+            "n_evaluations": total2,
+            "source": "planner_satisfied (v2)",
+        }
+
+    # 3. v1 with no env inputs: report exactly what is missing rather than guess.
     if directions is None or norm_thresholds is None:
         return {
             "ok": False,
             "missing": [
-                "per-xApp `direction` (minimise/maximise) -- absent from utilities.json",
+                "per-xApp `direction` (minimise/maximise) -- absent from v1 utilities.json",
                 "per-xApp `norm_threshold` = (threshold - mean)/std -- only per-KPI "
-                "values and no xApp->KPI mapping are stored",
+                "values and no xApp->KPI mapping are stored in v1",
             ],
             "note": (
-                "utilities.json v%s lacks the satisfaction inputs; pass directions= and "
-                "norm_thresholds= from the env, or extend evaluate.py to persist a "
-                "per-xApp `satisfied` field." % str(data.get("version"))
+                "utilities.json v%s lacks the satisfaction inputs; re-run evaluate.py "
+                "(v2 persists `planner_satisfied`), or pass directions= and "
+                "norm_thresholds= from the env." % str(data.get("version"))
             ),
             "planners": list(data.get("algorithm_names", [])),
         }
 
+    # 2. v1 fallback: recompute from utilities using env-supplied direction/threshold.
     hits: dict[str, int] = {}
     total: dict[str, int] = {}
     skipped = 0
@@ -293,6 +321,7 @@ def satisfaction_rate(
         "satisfaction": satisfaction,
         "n_evaluations": total,
         "skipped_xapp_evaluations": skipped,
+        "source": "recomputed from utilities + env (v1)",
     }
 
 
@@ -389,6 +418,36 @@ def _demo() -> None:
         got = satisfaction_rate(run_files[0], directions, norm_thresholds)
         assert got["ok"] is True, got
         assert all(0.0 <= v <= 1.0 for v in got["satisfaction"].values()), got
+
+    # v2 fast path: persisted planner_satisfied is read directly, no env needed.
+    import os
+    import tempfile
+
+    v2 = {
+        "version": 2,
+        "algorithm_names": ["QACM", "CEM"],
+        "steps": [
+            {"step": 0, "panels": [
+                {"conflict_xapp_ids": [0, 1],
+                 "planner_satisfied": {"QACM": [1, 0], "CEM": [1, 1]}},
+                {"conflict_xapp_ids": [2], "planner_satisfied": {"QACM": [1], "CEM": [0]}},
+            ]},
+        ],
+    }
+    fd, tmp_path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as handle:
+            json.dump(v2, handle)
+        res = satisfaction_rate(tmp_path)
+        assert res["ok"] is True and res["source"] == "planner_satisfied (v2)", res
+        assert all(0.0 <= v <= 1.0 for v in res["satisfaction"].values()), res
+        # QACM: 2 of 3 satisfied -> 2/3; CEM: 2 of 3 -> 2/3.
+        assert abs(res["satisfaction"]["QACM"] - 2 / 3) < 1e-9, res
+        assert abs(res["satisfaction"]["CEM"] - 2 / 3) < 1e-9, res
+        assert res["n_evaluations"] == {"QACM": 3, "CEM": 3}, res
+    finally:
+        os.remove(tmp_path)
 
     print("stats.py self-check passed")
 
