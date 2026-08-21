@@ -64,7 +64,7 @@ class PlannerConfig:
 class ExperimentConfig:
     seed: int
     mitigation_seed: int
-    environment: Literal["EnvironmentI", "EnvironmentII", "EnvironmentIII"]
+    environment: Literal["EnvironmentI", "EnvironmentII", "EnvironmentIII", "EnvironmentIV"]
     model_kind: Literal["cdl", "mlp"]
     param_ranges: Literal["train", "ood"]
     evaluation_param_ranges: Literal["train", "ood"]
