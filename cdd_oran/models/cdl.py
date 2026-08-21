@@ -118,10 +118,13 @@ class CDL(CausalModel):
         device,
         node_names,
         eval_steps=10,
+        interv_weight=1.0,
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.cmi_threshold = cmi_threshold
+        # Interventional-CMI reweight. 1.0 = OFF (no-op, bit-identical to baseline).
+        self.interv_weight = interv_weight
         self.eval_tau = eval_tau
         self.eval_steps = eval_steps
         self.grad_clip = grad_clip
@@ -279,7 +282,23 @@ class CDL(CausalModel):
                 pooled_in_dim=1,
             )
             masked_nll = self._nll(mu_m, std_m, targets.unsqueeze(1))
-            step_cmi = (masked_nll - full_nll.unsqueeze(1)).mean(dim=(2, 3))
+            # diff: (fd_child, fd+1_source, bs, 1) per-sample per-source CMI contribution.
+            diff = masked_nll - full_nll.unsqueeze(1)
+            if self.interv_weight != 1.0:
+                # A do() on NCP param_id is strong evidence for its param_id -> KPI
+                # edges. Upweight the intervened SOURCE column of each sample before
+                # the batch mean. param_id (a_batch[:, 0]) is always an NCP column, so
+                # only NCP->KPI edges are affected; KPI->KPI recovery is unchanged.
+                changed = a_batch[:, 0].long()  # (bs,) intervened source column
+                n_sources = diff.shape[1]  # fd + 1
+                columns = torch.arange(n_sources, device=self.device).unsqueeze(1)  # (fd+1, 1)
+                weight = torch.where(
+                    columns == changed.unsqueeze(0),  # (fd+1, bs)
+                    torch.tensor(self.interv_weight, device=self.device, dtype=diff.dtype),
+                    torch.tensor(1.0, device=self.device, dtype=diff.dtype),
+                )
+                diff = diff * weight.view(1, n_sources, changed.shape[0], 1)
+            step_cmi = diff.mean(dim=(2, 3))
 
         self._eval_cmi_acc += step_cmi
         self._eval_step_count += 1
@@ -379,3 +398,74 @@ class CDL(CausalModel):
         self.mask_CMI = state["mask_CMI"]
         self._eval_cmi_acc = state["eval_cmi_acc"]
         self._eval_step_count = state["eval_step_count"]
+
+
+def _self_check():
+    """Verify the interventional-CMI reweight in ``update_mask``:
+
+    - ``interv_weight=1.0`` is a bit-identical no-op (two builds agree exactly).
+    - ``interv_weight=w`` scales ONLY the intervened source column and leaves
+      every other column bit-identical. With a constant intervened column c0,
+      the accumulated CMI on c0 is exactly ``w x`` the baseline (every sample of
+      that column is weighted), proving the reweight raises the intervened edges.
+    """
+    state_dim, action_dim, kpi_start = 5, 3, 3  # sources 0..2 = NCP, 3..4 = KPI
+    c0 = 1  # constant intervened NCP source column (< kpi_start)
+
+    def build(w):
+        torch.manual_seed(0)  # identical predictor init across builds
+        return CDL(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            kpi_start=kpi_start,
+            feature_fc_dims=[8],
+            generative_fc_dims=[8],
+            lr=1e-3,
+            cmi_threshold=0.1,
+            eval_tau=0.99,
+            grad_clip=10.0,
+            device="cpu",
+            node_names=None,
+            eval_steps=10,
+            interv_weight=w,
+        )
+
+    torch.manual_seed(1)
+    bs = 16
+    s_batch = torch.randn(bs, 2, state_dim)
+    a_batch = torch.randint(0, state_dim, (bs, action_dim)).float()
+    a_batch[:, 0] = float(c0)  # every sample intervenes on column c0
+
+    base = build(1.0)
+    base.update_mask(s_batch, a_batch)
+    base_acc = base._eval_cmi_acc.clone()
+
+    identical = build(1.0)
+    identical.update_mask(s_batch, a_batch)
+    assert torch.equal(identical._eval_cmi_acc, base_acc), "weight=1.0 is not a no-op"
+
+    w = 5.0
+    up = build(w)
+    up.update_mask(s_batch, a_batch)
+    up_acc = up._eval_cmi_acc
+
+    other = [c for c in range(state_dim + 1) if c != c0]
+    assert torch.equal(up_acc[:, other], base_acc[:, other]), (
+        "non-intervened source columns changed under reweight"
+    )
+    assert torch.allclose(up_acc[:, c0], w * base_acc[:, c0]), (
+        "intervened column not scaled by interv_weight"
+    )
+    assert not torch.equal(up_acc[:, c0], base_acc[:, c0]) or torch.all(base_acc[:, c0] == 0), (
+        "intervened column unchanged despite reweight"
+    )
+
+    print(
+        "cdl interventional-CMI self-check passed: "
+        f"weight=1.0 bit-identical; weight={w} scales only column {c0} "
+        f"(x{w}), other columns unchanged"
+    )
+
+
+if __name__ == "__main__":
+    _self_check()

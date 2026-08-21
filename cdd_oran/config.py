@@ -16,6 +16,8 @@ class ModelConfig:
     generative_fc_dims: tuple[int, ...]
     feature_fc_dims: tuple[int, ...]
     batch_size: int
+    # Interventional-CMI reweight (CDL only). 1.0 = OFF, bit-identical to baseline.
+    interv_weight: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -118,6 +120,7 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             generative_fc_dims=tuple(cast(list[int], values["model"]["generative_fc_dims"])),
             feature_fc_dims=tuple(cast(list[int], values["model"]["feature_fc_dims"])),
             batch_size=cast(int, values["model"]["batch_size"]),
+            interv_weight=cast(float, values["model"].get("interv_weight", 1.0)),
         ),
         train=TrainConfig(**values["train"]),
         planner=PlannerConfig(

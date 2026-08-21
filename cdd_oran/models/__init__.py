@@ -27,7 +27,7 @@ def get_model(cfg: ExperimentConfig, env):
         "node_names": node_names(env),
     }
     if cfg.model_kind == "cdl":
-        return CDL(**model_kwargs)
+        return CDL(**model_kwargs, interv_weight=cfg.model.interv_weight)
     if cfg.model_kind == "mlp":
         return MLPInference(**model_kwargs)
     raise ValueError(f"Unsupported model kind: {cfg.model_kind}")
