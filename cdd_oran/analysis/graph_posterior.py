@@ -329,7 +329,9 @@ class GraphPosterior:
         ``calibration_scores`` is used when the labelled calibration environment has a
         different posterior score matrix than this target posterior. Refuse to report
         in-sample metrics: target labels must be supplied separately as
-        ``evaluation_labels``.
+        ``evaluation_labels``. When calibration and evaluation runs share an environment,
+        this is within-environment score-to-label calibration, not held-out structural
+        coverage or graph-topology generalization.
         """
         if evaluation_labels is None:
             raise ValueError("evaluation_labels is required; calibration metrics must be held out")
@@ -360,6 +362,48 @@ class GraphPosterior:
             node_names=self.node_names,
             calibrator=calibrator,
             meta={**self.meta, "calibrated": True},
+        )
+
+    @property
+    def is_calibrated(self):
+        """True only if this posterior carries an explicit calibrated=True flag (set by
+        ``apply_calibrator``). P2 requires this before consuming the artifact."""
+        return bool(self.meta.get("calibrated", False))
+
+    # ---- artifact persistence (review blocker #2) --------------------------- #
+    def save(self, path):
+        """Serialize the held-out-CALIBRATED posterior artifact to JSON: marginals + the
+        fitted isotonic knots + metadata (incl. the ``calibrated`` flag and node layout).
+        P2's boundary loads this and rejects any posterior that is not calibrated."""
+        payload = {
+            "edge_probs": self.edge_probs.tolist(),
+            "node_names": self.node_names,
+            "calibrator": (
+                {"x": self.calibrator.x_.tolist(), "y": self.calibrator.y_.tolist()}
+                if self.calibrator is not None
+                else None
+            ),
+            "meta": self.meta,
+        }
+        Path(path).write_text(json.dumps(payload, indent=2))
+        return path
+
+    @classmethod
+    def load(cls, path):
+        """Load a posterior artifact written by ``save``. Restores the fitted calibrator and
+        the ``calibrated`` metadata flag; does NOT touch any RNG."""
+        payload = json.loads(Path(path).read_text())
+        calibrator = None
+        cal = payload.get("calibrator")
+        if cal is not None:
+            calibrator = IsotonicCalibrator()
+            calibrator.x_ = np.asarray(cal["x"], dtype=float)
+            calibrator.y_ = np.asarray(cal["y"], dtype=float)
+        return cls(
+            np.asarray(payload["edge_probs"], dtype=float),
+            node_names=payload.get("node_names"),
+            calibrator=calibrator,
+            meta=payload.get("meta") or {},
         )
 
     def _labels(self, labels):
@@ -494,13 +538,20 @@ def main(argv=None):
     p.add_argument(
         "--calibration-run",
         action="append",
-        help="Separate labelled run used only to fit calibration (repeatable)",
+        help=(
+            "Separate labelled run used only to fit within-environment calibration "
+            "(repeatable; not structural coverage)"
+        ),
     )
     p.add_argument("--B", type=int, default=50)
     p.add_argument("--n-transitions", type=int, default=2048)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default=None)
     p.add_argument("--out", help="Write the calibration summary + marginals JSON here")
+    p.add_argument(
+        "--save-posterior",
+        help="Write the CALIBRATED posterior artifact (GraphPosterior.save) here for P2 to load",
+    )
     p.add_argument("--self-check", action="store_true", help="Run the synthetic check and exit")
     args = p.parse_args(argv)
     if args.self_check:
@@ -576,6 +627,15 @@ def main(argv=None):
     print(json.dumps({"meta": post.meta, "calibration": summary}, indent=2, default=_jsonable))
     if args.out:
         Path(args.out).write_text(json.dumps(payload, indent=2, default=_jsonable))
+    if args.save_posterior:
+        # `calibrated` carries meta calibrated=True from apply_calibrator; save it as the
+        # artifact P2 consumes. Its node layout comes from the target run's env.
+        calibrated.node_names = [f"param{i}" for i in range(env.num_params)] + [
+            kpi.name for kpi in env.kpis
+        ]
+        calibrated.meta = {**calibrated.meta, "calibration_runs": summary["calibration_runs"]}
+        calibrated.save(args.save_posterior)
+        print(f"calibrated posterior artifact written to {args.save_posterior}")
     return 0
 
 

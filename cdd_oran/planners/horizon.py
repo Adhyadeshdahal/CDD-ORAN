@@ -14,16 +14,21 @@ import torch
 from cdd_oran.planners.base import Planner
 from cdd_oran.planners.cem import ModelBasedCEM
 from cdd_oran.planners.cost import score_batch
+from cdd_oran.planners.ensemble import EnsembleAggregator, fixed_structures, member_count
 
 
 class RecedingHorizonCEM(Planner):
     def __init__(
-        self, model, env, n_horizon, n_candidate, n_top, n_iter, gamma=0.9, risk_kappa: float = 0.0
+        self, model, env, n_horizon, n_candidate, n_top, n_iter, gamma=0.9, risk_kappa: float = 0.0,
+        aggregator: EnsembleAggregator | None = None,
     ):
         self.risk_kappa = risk_kappa
+        self.aggregator = aggregator or EnsembleAggregator()
+        self.last_disagreement = 0.0
+        self.last_ood = False
         self.base = ModelBasedCEM(
             model=model, env=env, n_candidate=n_candidate, n_top=n_top, n_iter=n_iter,
-            risk_kappa=risk_kappa,
+            risk_kappa=risk_kappa, aggregator=self.aggregator,
         )
         self.model = model
         self.env = env
@@ -50,6 +55,7 @@ class RecedingHorizonCEM(Planner):
         scaling_term,
     ):
         # ponytail: H=1 delegates to the baseline -> bit-identical, no RNG reasoning.
+        # (base.act already fixes one structure set for its own decision.)
         if self.n_horizon <= 1:
             return self.base.act(
                 current_state,
@@ -58,7 +64,22 @@ class RecedingHorizonCEM(Planner):
                 weights_per_xapps,
                 scaling_term,
             )
+        # H>1: fix ONE structure set for the whole multi-step decision (all candidates +
+        # every rollout step share it); a fresh set is drawn on the next act.
+        with fixed_structures(self.model):
+            return self._act_horizon(
+                current_state, conflict_param_index, xapps_under_conflict,
+                weights_per_xapps, scaling_term,
+            )
 
+    def _act_horizon(
+        self,
+        current_state,
+        conflict_param_index,
+        xapps_under_conflict,
+        weights_per_xapps,
+        scaling_term,
+    ):
         s0 = current_state.to(self.device).float()
         pi = conflict_param_index
         max_index = self.action_space[pi + 2]
@@ -93,27 +114,48 @@ class RecedingHorizonCEM(Planner):
 
     def _rollout_cost(self, s0, pi, samples, xapps, weights, scaling_term):
         n = samples.shape[0]
-        num_params = self.env.num_params
-
         pi_col = torch.full((n, 1), pi, dtype=torch.float32, device=self.device)
         action_batch = torch.cat([pi_col, samples.float()], dim=1)
 
-        # Predict from the UNMODIFIED s0 + action (exactly as the H=1 base does);
-        # later steps feed only predicted KPIs back and hold the NCP params fixed.
-        # Do NOT inject the action's post-value into the state -- CDL is trained on
-        # (pre-action state, action), so injecting it double-counts and is OOD.
+        m = member_count(self.model)
+        if m == 1:
+            return self._rollout_member(s0, action_batch, n, None, xapps, weights, scaling_term)
+        # Roll EACH member's own trajectory forward and aggregate the per-member RETURNS
+        # (never averaging transitions across members).
+        per_member = torch.stack(
+            [
+                self._rollout_member(s0, action_batch, n, j, xapps, weights, scaling_term)
+                for j in range(m)
+            ],
+            dim=0,
+        )  # (m, n)
+        disagreement = per_member.std(dim=0)
+        self.last_disagreement = float(disagreement.mean())
+        self.last_ood = self.aggregator.ood(disagreement)
+        combined = self.aggregator.combine(per_member)
+        if self.aggregator.disagreement_penalty:
+            combined = combined + self.aggregator.disagreement_penalty * disagreement
+        return combined
+
+    def _rollout_member(self, s0, action_batch, n, member, xapps, weights, scaling_term):
+        """Discounted rollout cost for ONE member (``member=None`` = single model, the exact
+        pre-Phase-3 path). Predicts from the UNMODIFIED s0 + action; later steps feed only
+        predicted KPIs back and hold the NCP params fixed (CDL is trained on pre-action
+        state + action, so injecting the post-value would double-count / go OOD)."""
+        num_params = self.env.num_params
         state = s0.unsqueeze(0).expand(n, -1).clone()
         total = torch.zeros(n, device=self.device)
         discount = 1.0
         for _ in range(self.n_horizon):
             dist = self.model.predict_next_state(state, action_batch)
-            next_kpis = dist.sample()
-            # Risk-depth limit: the kappa shift uses THIS step's one-step aleatoric
-            # std only. Sampling variance from earlier steps fed forward is not
-            # propagated into std, so multi-step pessimism is a lower bound.
+            sample = dist.sample()
+            if member is None:
+                next_kpis, std = sample, dist.stddev
+            else:
+                next_kpis, std = sample[member], dist.stddev[member]
+            # Risk-depth limit: the kappa shift uses THIS step's one-step aleatoric std only.
             total = total + discount * score_batch(
-                next_kpis, xapps, weights, scaling_term, self.device,
-                dist.stddev, self.risk_kappa,
+                next_kpis, xapps, weights, scaling_term, self.device, std, self.risk_kappa,
             )
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed predicted KPIs forward

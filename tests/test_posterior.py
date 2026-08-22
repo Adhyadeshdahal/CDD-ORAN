@@ -212,3 +212,36 @@ def test_from_bootstrap_preserves_asymmetric_child_parent_alignment(monkeypatch)
     assert post.marginals()[0, 2] == 0.8
     assert post.marginals()[2, 1] == 0.9
     assert post.meta["environment"] == "EnvironmentI"
+
+
+def test_calibrated_posterior_save_load_roundtrip_and_flag(tmp_path):
+    """Artifact for P2 (review blocker #2): save/load preserves marginals, node layout and
+    the fitted isotonic knots, and carries an explicit calibrated flag."""
+    post, gt = _tiny_posterior()
+    heldout = gt.copy()
+    heldout[1, 0] = 0.0
+    calibrated, _ = post.calibrate(gt, evaluation_labels=heldout)
+    assert calibrated.is_calibrated
+
+    path = tmp_path / "posterior.json"
+    calibrated.save(path)
+    loaded = GraphPosterior.load(path)
+
+    assert loaded.is_calibrated
+    np.testing.assert_allclose(loaded.marginals(), calibrated.marginals())
+    assert loaded.node_names == calibrated.node_names
+    assert loaded.calibrator is not None
+    np.testing.assert_allclose(loaded.calibrator.x_, calibrated.calibrator.x_)
+    np.testing.assert_allclose(loaded.calibrator.y_, calibrated.calibrator.y_)
+    # Sampling still works from the loaded artifact.
+    graph = loaded.sample(np.random.default_rng(0))
+    assert graph.shape == (post.n_nodes, post.n_nodes)
+
+
+def test_raw_posterior_is_not_flagged_calibrated(tmp_path):
+    """A raw (uncalibrated) posterior must round-trip as NOT calibrated so P2 can reject it."""
+    post, _ = _tiny_posterior()
+    assert not post.is_calibrated
+    path = tmp_path / "raw.json"
+    post.save(path)
+    assert not GraphPosterior.load(path).is_calibrated

@@ -16,6 +16,8 @@ Pipeline
 import hashlib
 import json
 import logging
+import random
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -43,6 +45,39 @@ from cdd_oran.utils.runs import read_metrics, write_metrics
 from cdd_oran.utils.seeding import seed_everything
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def preserve_probe_rng(model):
+    """Run the residual probe without perturbing any RNG the planners depend on.
+
+    Snapshots python/numpy/torch GLOBAL RNG *and* the posterior sampler's PRIVATE numpy
+    Generator (``model.sampler.rng``), restoring all of them on exit. The probe draws a
+    structure (advancing the sampler) and reseeds/consumes env randomness; without this the
+    planners would see a different structure sequence with vs without the diagnostic
+    (review v2 BLOCKER A)."""
+    global_snapshot = (
+        random.getstate(),
+        np.random.get_state(),
+        torch.get_rng_state(),
+        torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+    )
+    sampler = getattr(model, "sampler", None)
+    sampler_state = (
+        sampler.rng.bit_generator.state
+        if sampler is not None and hasattr(sampler, "rng")
+        else None
+    )
+    try:
+        yield
+    finally:
+        random.setstate(global_snapshot[0])
+        np.random.set_state(global_snapshot[1])
+        torch.set_rng_state(global_snapshot[2])
+        if global_snapshot[3] is not None:
+            torch.cuda.set_rng_state_all(global_snapshot[3])
+        if sampler_state is not None:
+            sampler.rng.bit_generator.state = sampler_state
 
 
 def _planner_seed(base_seed, global_step, conflict_index, planner_name):
@@ -81,11 +116,46 @@ def main(
 
     env = get_env(cfg)
     act_dim = env.get_action_dim()
-    model = get_model(cfg, env)
+    sampler = None
+    run_manifest = None
+    if cfg.model_kind == "cdl" and cfg.model.dynamics_mode == "structure_conditioned":
+        from cdd_oran.models import (
+            make_structure_sampler,
+            verify_checkpoint_manifest,
+            verify_run_artifacts,
+        )
+
+        # Self-contained run (review v2 MAJOR): read + hash-verify the STAGED artifacts and
+        # build from those copies, never the external source paths. Fail loudly if missing/changed.
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+        run_manifest, resolved = verify_run_artifacts(
+            run_dir, env=env, environment=cfg.environment
+        )
+        # Inspect the checkpoint binding before constructing or sampling the posterior.
+        verify_checkpoint_manifest(checkpoint_path, run_manifest)
+        cfg = replace(
+            cfg,
+            model=replace(
+                cfg.model,
+                posterior_artifact=resolved["posterior"],
+                enumeration_graph=resolved["enumeration_graph"],
+            ),
+        )
+        sampler = make_structure_sampler(cfg, seed=cfg.seed, env=env)
+    model = get_model(cfg, env, sampler=sampler)
 
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
     model.load_model(checkpoint_path)
+
+    if run_manifest is not None:
+        # Keep a post-load exact check as a defense-in-depth assertion. The pre-construction
+        # check above is the safety gate that prevents a mismatched sampler from being used.
+        if getattr(model, "artifact_manifest", None) != run_manifest:
+            raise ValueError(
+                "checkpoint artifact manifest does not exactly match the staged run manifest"
+            )
 
     if cfg.model_kind == "cdl":
         cdl = model
@@ -137,6 +207,40 @@ def main(
             len(removed),
             ", ".join(spec for spec, _, _ in removed),
         )
+
+    # Phase 2 residual diagnostics on a FIXED probe bank (structure_conditioned only),
+    # so runs are comparable and the report never depends on planner-induced states.
+    residual_report = None
+    if getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned":
+        # Compute the probe under SAVED/RESTORED RNG state (review MAJOR #7): the probe
+        # reseeds and consumes env randomness, so snapshot python/numpy/torch RNG first and
+        # restore it afterward -- the real evaluation trajectory (env resets under CRN) is
+        # then byte-identical to a run without the diagnostic.
+        # preserve_probe_rng also snapshots the posterior sampler's PRIVATE numpy Generator
+        # (review v2 BLOCKER A): residual_diagnostics draws a structure and would otherwise
+        # advance that generator, shifting the planners' structure sequence.
+        with preserve_probe_rng(model):
+            seed_everything(cfg.seed, cfg.deterministic)
+            probe = collect_transitions(get_env(cfg), cfg.model.batch_size, act_dim)
+            s_probe = probe[:, 0].to(cfg.device)
+            a_probe = torch.zeros(s_probe.shape[0], act_dim, device=cfg.device)
+            diag = model.residual_diagnostics(s_probe, a_probe)
+            residual_report = {
+                "fraction_per_kpi": [float(x) for x in diag["fraction_per_kpi"]],
+                "fraction_aggregate": float(diag["fraction_aggregate"]),
+                "fraction_max_member": float(diag["fraction_max_member"]),
+                "abs_mean_residual": [float(x) for x in diag["abs_mean_residual"]],
+                "signed_mean_residual": [float(x) for x in diag["signed_mean_residual"]],
+                "alert": bool(diag["alert"]),
+                "alert_fraction": diag["alert_fraction"],
+            }
+        if diag["alert"]:
+            logger.warning(
+                "Residual contribution fraction %.3f exceeds alert threshold %.3f "
+                "(possible MLP collapse)",
+                residual_report["fraction_aggregate"],
+                diag["alert_fraction"],
+            )
 
     algorithms = get_planners(cfg, model, env)
     utility_fns = env.get_utility_fns()
@@ -316,6 +420,9 @@ def main(
             for name, values in all_utilities.items()
         }
     }
+    if residual_report is not None:
+        metrics["evaluation"]["residual"] = residual_report
+        utilities_data["residual"] = residual_report
     write_metrics(run_dir, metrics)
     (run_dir / "utilities.json").write_text(json.dumps(utilities_data, indent=2))
     logger.info("Evaluation metrics saved to %s", run_dir / "metrics.json")

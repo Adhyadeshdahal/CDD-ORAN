@@ -60,19 +60,62 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
     ground_truth_causal_graph = env.true_adj_matrix
     run_dir = create_run_dir(cfg) if run_dir is None else run_dir
     checkpoint_path = run_dir / "checkpoint.pt"
-    writer = SummaryWriter(run_dir / "tensorboard")
-
     state_dim = env.get_state_dim()
     action_dim = env.action_dim
 
     random_policy = RandomPolicy(action_dim=env.action_dim, action_space=env.action_space)
-    model = get_model(cfg, env)
+    sampler = None
+    artifact_manifest = None
+    if cfg.model_kind == "cdl" and cfg.model.dynamics_mode == "structure_conditioned":
+        from dataclasses import replace as _replace
+
+        from cdd_oran.models import (
+            make_structure_sampler,
+            stage_run_artifacts,
+            verify_checkpoint_manifest,
+            verify_run_artifacts,
+        )
+
+        if resume:
+            if not checkpoint_path.exists():
+                raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+            # Resume is bound to the artifacts already staged with this run. Never recopy
+            # mutable external paths over them before checking the old checkpoint.
+            artifact_manifest, resolved = verify_run_artifacts(
+                run_dir, env=env, environment=cfg.environment
+            )
+            verify_checkpoint_manifest(checkpoint_path, artifact_manifest)
+        else:
+            # Fresh runs stage and validate external artifacts before constructing the sampler.
+            artifact_manifest = stage_run_artifacts(cfg, run_dir, env=env)
+            resolved = {
+                "posterior": str(run_dir / "artifacts" / "posterior.json"),
+                "enumeration_graph": str(run_dir / "artifacts" / "enumeration_graph.json"),
+            }
+        cfg = _replace(
+            cfg,
+            model=_replace(
+                cfg.model,
+                posterior_artifact=resolved["posterior"],
+                enumeration_graph=resolved["enumeration_graph"],
+            ),
+        )
+        # Load the calibrated posterior artifact (pure I/O, no online bootstrap, no global RNG
+        # mutation -- review blocker #4). Then reseed explicitly so P2 model init + data gen
+        # start from cfg.seed regardless of the load.
+        sampler = make_structure_sampler(cfg, seed=cfg.seed, env=env)
+        seed_everything(cfg.seed, cfg.deterministic)
+    model = get_model(cfg, env, sampler=sampler)
+    if artifact_manifest is not None:
+        model.artifact_manifest = artifact_manifest  # persisted in the checkpoint
 
     if resume:
         if not checkpoint_path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
         model.load_model(checkpoint_path)
         logger.info("Resumed from checkpoint: %s", checkpoint_path)
+
+    writer = SummaryWriter(run_dir / "tensorboard")
 
     train_buffer = ReplayBuffer(cfg.train.total_steps, state_dim, action_dim, cfg.device)
     test_buffer = ReplayBuffer(cfg.train.total_steps, state_dim, action_dim, cfg.device)
@@ -131,7 +174,9 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
             s_pair = torch.stack([s, s_next], dim=1)
             loss = model.train_step(s_pair, a)
 
-        if cfg.model_kind == "cdl":
+        # Hard-mask CMI estimation. The structure_conditioned default draws its structures
+        # from the injected P1 sampler, so it does not run the legacy CMI update here.
+        if cfg.model_kind == "cdl" and getattr(model, "dynamics_mode", "hard_mask") == "hard_mask":
             if step % (cfg.train.eval_steps * cfg.train.inference_gradient_steps) == 0:
                 s, a, s_next = train_buffer.sample(cfg.model.batch_size)
                 a = a.reshape(-1, action_dim)
@@ -186,6 +231,36 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
                     accuracy,
                     pred.sum(),
                 )
+
+                # Phase 2 residual reporting (structure_conditioned only): contribution
+                # fraction is the anti-collapse measurement, reported at every eval.
+                if (
+                    getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned"
+                    and len(test_buffer) >= cfg.train.test_batch_size
+                ):
+                    # Reuse the SAME held-out batch as the MSE report above (review MINOR #8),
+                    # so prediction error and residual fraction are directly comparable.
+                    diag = model.residual_diagnostics(s_b, a_b)
+                    frac = float(diag["fraction_aggregate"])
+                    writer.add_scalar("Residual/fraction", frac, step)
+                    writer.add_scalar("Residual/abs", float(diag["abs_mean_residual"].mean()), step)
+                    metrics["residual"] = {
+                        "fraction_per_kpi": [float(x) for x in diag["fraction_per_kpi"]],
+                        "fraction_aggregate": frac,
+                        "fraction_max_member": float(diag["fraction_max_member"]),
+                        "abs_mean_residual": [float(x) for x in diag["abs_mean_residual"]],
+                        "signed_mean_residual": [float(x) for x in diag["signed_mean_residual"]],
+                        "alert": bool(diag["alert"]),
+                        "alert_fraction": diag["alert_fraction"],
+                    }
+                    if diag["alert"]:
+                        logger.warning(
+                            "Residual contribution fraction %.3f exceeds alert threshold "
+                            "%.3f (possible MLP collapse; tune the bound/penalty, do NOT "
+                            "loosen it to chase utility)",
+                            frac,
+                            diag["alert_fraction"],
+                        )
 
             elif len(test_buffer) > cfg.train.test_batch_size:
                 s_b, a_b, s_1b = test_buffer.sample(cfg.train.test_batch_size)

@@ -1,12 +1,13 @@
 import torch
 
 from cdd_oran.planners.base import Planner
-from cdd_oran.planners.cost import score_batch
+from cdd_oran.planners.ensemble import EnsembleAggregator, fixed_structures, robust_score_batch
 
 
 class ModelBasedCEM(Planner):
     def __init__(
-        self, model, env, n_candidate: int, n_top: int, n_iter: int, risk_kappa: float = 0.0
+        self, model, env, n_candidate: int, n_top: int, n_iter: int, risk_kappa: float = 0.0,
+        aggregator: EnsembleAggregator | None = None,
     ):
         self.model = model
         self.env = env
@@ -19,9 +20,20 @@ class ModelBasedCEM(Planner):
         self.n_top = n_top
         self.n_iter = n_iter
         self.risk_kappa = risk_kappa
+        self.aggregator = aggregator or EnsembleAggregator()
+        self.last_disagreement = 0.0
+        self.last_ood = False
         self.device = model.device
 
-    def act(
+    def act(self, current_state, conflict_param_index, xapps_under_conflict, weights_per_xapps, scaling_term):
+        # Draw ONE structure set for this decision; all candidates/iters below share it.
+        with fixed_structures(self.model):
+            return self._act(
+                current_state, conflict_param_index, xapps_under_conflict,
+                weights_per_xapps, scaling_term,
+            )
+
+    def _act(
         self,
         current_state,
         conflict_param_index,
@@ -54,12 +66,13 @@ class ModelBasedCEM(Planner):
             pi_col = torch.full((self.n_candidate, 1), pi, dtype=torch.long, device=self.device)
             action_batch = torch.cat([pi_col, samples], dim=1).float()
             s_batch = s0.unsqueeze(0).expand(self.n_candidate, -1).float()
-            dist = self.model.predict_next_state(s_batch, action_batch)
-            next_kpis_batch = dist.sample()
-            scores = score_batch(
-                next_kpis_batch, xapps, weights, scaling_term, self.device,
-                dist.stddev, self.risk_kappa,
+            # Robust score over ensemble members (m=1 -> byte-identical to score_batch).
+            scores, disagreement = robust_score_batch(
+                self.model, s_batch, action_batch, xapps, weights, scaling_term,
+                self.device, self.risk_kappa, self.aggregator,
             )
+            self.last_disagreement = float(disagreement.mean())
+            self.last_ood = self.aggregator.ood(disagreement)
             elites = samples[torch.argsort(scores)[: self.n_top]].float()
             mu = elites.mean(dim=0)
             std = elites.std(dim=0).clamp(min=1.0)

@@ -17,11 +17,18 @@ import torch
 
 from cdd_oran.planners.base import Planner
 from cdd_oran.planners.cost import score_batch
+from cdd_oran.planners.ensemble import EnsembleAggregator, fixed_structures, member_count
 
 
 class JointMultiNCPPlanner(Planner):
-    def __init__(self, model, env, n_candidate=256, n_top=64, n_iter=10, risk_kappa: float = 0.0):
+    def __init__(
+        self, model, env, n_candidate=256, n_top=64, n_iter=10, risk_kappa: float = 0.0,
+        aggregator: EnsembleAggregator | None = None,
+    ):
         self.risk_kappa = risk_kappa
+        self.aggregator = aggregator or EnsembleAggregator()
+        self.last_disagreement = 0.0
+        self.last_ood = False
         self.model = model
         self.env = env
         self.action_space = env.action_space
@@ -49,7 +56,14 @@ class JointMultiNCPPlanner(Planner):
         )
         return actions[0]
 
-    def act_joint(
+    def act_joint(self, current_state, param_ids, xapps_under_conflict, weights_per_xapps, scaling_term):
+        # One structure set for the whole joint decision (all candidates + every NCP hop).
+        with fixed_structures(self.model):
+            return self._act_joint(
+                current_state, param_ids, xapps_under_conflict, weights_per_xapps, scaling_term,
+            )
+
+    def _act_joint(
         self,
         current_state,
         param_ids,
@@ -92,12 +106,35 @@ class JointMultiNCPPlanner(Planner):
         return out
 
     def _joint_cost(self, s0, param_ids, samples, xapps, weights, scaling_term):
+        m = member_count(self.model)
+        if m == 1:
+            return self._joint_cost_member(
+                s0, param_ids, samples, None, xapps, weights, scaling_term
+            )
+        # Apply the joint NCP sequence under EACH member and aggregate the per-member
+        # RETURNS (never averaging transitions across members).
+        per_member = torch.stack(
+            [
+                self._joint_cost_member(s0, param_ids, samples, j, xapps, weights, scaling_term)
+                for j in range(m)
+            ],
+            dim=0,
+        )  # (m, n)
+        disagreement = per_member.std(dim=0)
+        self.last_disagreement = float(disagreement.mean())
+        self.last_ood = self.aggregator.ood(disagreement)
+        combined = self.aggregator.combine(per_member)
+        if self.aggregator.disagreement_penalty:
+            combined = combined + self.aggregator.disagreement_penalty * disagreement
+        return combined
+
+    def _joint_cost_member(self, s0, param_ids, samples, member, xapps, weights, scaling_term):
+        """Joint cost for ONE member (``member=None`` = single model, the exact pre-Phase-3
+        path). Predicts from the UNMODIFIED s0 + the joint action; between NCP applications
+        feed only predicted KPIs forward (no param-slot overwrite -- that double-counts the
+        action and is OOD)."""
         n = samples.shape[0]
         num_params = self.env.num_params
-        # Predict from the UNMODIFIED s0 + the joint action; between NCP applications
-        # feed only predicted KPIs forward. Do NOT overwrite the param slots with the
-        # applied NCP value -- CDL is trained on (pre-action state, action), so that
-        # double-counts the action and is OOD.
         state = s0.unsqueeze(0).expand(n, -1).clone()
         next_kpis = None
         next_stds = None
@@ -105,13 +142,14 @@ class JointMultiNCPPlanner(Planner):
             pi_col = torch.full((n, 1), pi, dtype=torch.float32, device=self.device)
             action_batch = torch.cat([pi_col, samples[:, k, :].float()], dim=1)
             dist = self.model.predict_next_state(state, action_batch)
-            next_kpis = dist.sample()
-            next_stds = dist.stddev
+            sample = dist.sample()
+            if member is None:
+                next_kpis, next_stds = sample, dist.stddev
+            else:
+                next_kpis, next_stds = sample[member], dist.stddev[member]
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed forward -> next NCP sees the shift
         # Risk-depth limit: only the FINAL hop's std is risk-adjusted below.
-        # Intermediate NCP hops feed unadjusted sampled KPIs forward, so joint
-        # pessimism reflects last-hop aleatoric std only.
         return score_batch(
             next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa
         )

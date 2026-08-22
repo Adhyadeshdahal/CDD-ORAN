@@ -5,6 +5,11 @@ import torch
 
 from cdd_oran.planners.base import Planner
 from cdd_oran.planners.cost import risk_adjust, weighted_distance
+from cdd_oran.planners.ensemble import (
+    EnsembleAggregator,
+    fixed_structures,
+    robust_returns_from_dist,
+)
 
 
 class MCTSNode:
@@ -34,6 +39,7 @@ class ModelBasedMCTS(Planner):
         n_simulations,
         ucb_c,
         risk_kappa: float = 0.0,
+        aggregator: EnsembleAggregator | None = None,
     ):
         self.risk_kappa = risk_kappa
         self.model = model
@@ -46,8 +52,19 @@ class ModelBasedMCTS(Planner):
         self.ucb_c = ucb_c
         self.device = model.device
         self.name = "ModelBasedMCTS"
+        self.aggregator = aggregator or EnsembleAggregator()
+        self.last_disagreement = 0.0
+        self.last_ood = False
 
-    def act(
+    def act(self, current_state, conflict_param_index, xapps_under_conflict, weights_per_xapps, scaling_term):
+        # One structure set per decision; every tree simulation/rollout shares it.
+        with fixed_structures(self.model):
+            return self._act(
+                current_state, conflict_param_index, xapps_under_conflict,
+                weights_per_xapps, scaling_term,
+            )
+
+    def _act(
         self,
         current_state,
         conflict_param_index,
@@ -138,7 +155,16 @@ class ModelBasedMCTS(Planner):
         )
 
         next_state_dist = self.model.predict_next_state(s0.unsqueeze(0).float(), action_tensor)
-        # Model returns KPI portion only
+        if next_state_dist.mean.ndim == 3:
+            # Ensemble (m>1): robust aggregation over per-member returns.
+            scores, disagreement = robust_returns_from_dist(
+                next_state_dist, xapps, w, tau, self.model.device,
+                self.risk_kappa, self.aggregator,
+            )
+            self.last_disagreement = float(disagreement.mean())
+            self.last_ood = self.aggregator.ood(disagreement)
+            return float(scores.reshape(-1)[0])
+        # Model returns KPI portion only (m=1: unchanged manual scoring).
         next_state = next_state_dist.sample().squeeze(0)
         kpis = next_state.cpu().detach().numpy()
         stds = (

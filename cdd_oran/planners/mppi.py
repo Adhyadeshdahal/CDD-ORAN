@@ -1,7 +1,7 @@
 import torch
 
 from cdd_oran.planners.base import Planner
-from cdd_oran.planners.cost import score_batch
+from cdd_oran.planners.ensemble import EnsembleAggregator, fixed_structures, robust_score_batch
 
 
 class ModelBasedMPPI(Planner):
@@ -22,6 +22,7 @@ class ModelBasedMPPI(Planner):
         temperature,
         noise_sigma,
         risk_kappa: float = 0.0,
+        aggregator: EnsembleAggregator | None = None,
     ):
         self.model = model
         self.env = env
@@ -35,9 +36,19 @@ class ModelBasedMPPI(Planner):
         self.temperature = temperature
         self.noise_sigma = noise_sigma
         self.risk_kappa = risk_kappa
+        self.aggregator = aggregator or EnsembleAggregator()
+        self.last_disagreement = 0.0
+        self.last_ood = False
         self.device = model.device
 
-    def act(
+    def act(self, current_state, conflict_param_index, xapps_under_conflict, weights_per_xapps, scaling_term):
+        with fixed_structures(self.model):
+            return self._act(
+                current_state, conflict_param_index, xapps_under_conflict,
+                weights_per_xapps, scaling_term,
+            )
+
+    def _act(
         self,
         current_state,
         conflict_param_index,
@@ -81,15 +92,13 @@ class ModelBasedMPPI(Planner):
         action_batch = torch.cat([pi_col, samples], dim=1).float()
 
         s_batch = s0.unsqueeze(0).expand(self.n_samples, -1).float()
-        next_state_dist = self.model.predict_next_state(s_batch, action_batch)
-        next_state_batch = next_state_dist.sample()
-
-        next_kpis_batch = next_state_batch
-
-        costs = score_batch(
-            next_kpis_batch, xapps, w, tau, self.device,
-            next_state_dist.stddev, self.risk_kappa,
+        # Robust score over ensemble members (m=1 -> byte-identical to score_batch).
+        costs, disagreement = robust_score_batch(
+            self.model, s_batch, action_batch, xapps, w, tau,
+            self.device, self.risk_kappa, self.aggregator,
         )
+        self.last_disagreement = float(disagreement.mean())
+        self.last_ood = self.aggregator.ood(disagreement)
 
         log_weights = -costs / self.temperature
         log_weights -= log_weights.max()  # numerical stability
