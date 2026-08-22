@@ -14,6 +14,7 @@ Pipeline
 """
 
 import hashlib
+import copy
 import json
 import logging
 import random
@@ -30,6 +31,12 @@ from cdd_oran.analysis.graph_baselines import (
     build_override_graph,
     collect_transitions,
     remove_edges,
+)
+from cdd_oran.analysis.counterfactual_metrics import (
+    autoregressive_rollout_rmse,
+    counterfactual_action_response_error,
+    decision_regret,
+    one_step_mse,
 )
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
 from cdd_oran.conflicts import (
@@ -94,6 +101,240 @@ def _planner_seed(base_seed, global_step, conflict_index, planner_name):
     return int.from_bytes(hashlib.sha256(key).digest()[:4], "big")
 
 
+def _counterfactual_seed(base_seed, global_step, conflict_index, planner_name, horizon, role):
+    """Stable seed namespace for opt-in P5 collection; never shares planner seeds."""
+    key = (
+        f"{base_seed}|{global_step}|{conflict_index}|{planner_name}|"
+        f"counterfactual|{horizon}|{role}"
+    ).encode()
+    return int.from_bytes(hashlib.sha256(key).digest()[:4], "big")
+
+
+def _latent_kpis(env):
+    return np.asarray([kpi.compute_utility_value() for kpi in env.kpis], dtype=np.float32)
+
+
+def _latent_state_tensor(env, device):
+    params = []
+    for param in env.params:
+        low, high = param.get_threshold()
+        value = param.get_param()
+        params.append((value - low) / (high - low) if high != low else 1.0)
+    return torch.as_tensor(np.asarray(params + _latent_kpis(env)), dtype=torch.float32, device=device)
+
+
+def _reference_action(env, param_id, raw_value):
+    """Encode the nearest valid action to the current raw parameter value."""
+    best = None
+    max_index = int(env.action_space[param_id + 2])
+    for bin_id in range(int(env.num_bins)):
+        for index in range(max_index + 1):
+            candidate = [int(param_id), bin_id, index]
+            distance = abs(float(env.action_to_param(candidate)[1]) - float(raw_value))
+            key = (distance, bin_id, index)
+            if best is None or key < best[0]:
+                best = (key, candidate)
+    if best is None:
+        raise ValueError(f"no valid action found for parameter {param_id}")
+    return best[1]
+
+
+def _prediction_mean(model, state, action, structures=None):
+    states = state.reshape(1, -1) if state.ndim == 1 else state
+    predictions = []
+    for member, member_state in enumerate(states):
+        action_t = torch.as_tensor(action, dtype=torch.float32, device=member_state.device).reshape(1, -1)
+        if structures is None:
+            dist = model.predict_next_state(member_state.reshape(1, -1), action_t)
+        else:
+            dist = model.predict_next_state(
+                member_state.reshape(1, -1), action_t, structures=structures
+            )
+        mean = dist.mean if hasattr(dist, "mean") else dist
+        mean = torch.as_tensor(mean, dtype=torch.float32)
+        if mean.ndim == 2:
+            member_mean = mean[0]
+        elif mean.ndim == 3 and mean.shape[1] == 1:
+            member_mean = mean[min(member, mean.shape[0] - 1), 0]
+        else:
+            raise ValueError(
+                "model prediction must be (1, k) or (m, 1, k); "
+                f"got {tuple(mean.shape)}"
+            )
+        predictions.append(member_mean.detach().cpu().numpy())
+    return np.asarray(predictions, dtype=float)
+
+
+def collect_counterfactual_trajectory(
+    model,
+    planner,
+    env,
+    state_t,
+    first_action,
+    param_id,
+    xapps_under_conflict,
+    weights_per_xapps,
+    scaling_term,
+    raw_params,
+    utility_fns,
+    global_step,
+    conflict_index,
+    base_seed,
+    *,
+    planner_name=None,
+    horizon=3,
+    gamma=1.0,
+):
+    """Collect one opt-in, isolated P5 trajectory and score it per member.
+
+    # ponytail: the collector intentionally uses latent targets and a deep-copied env;
+    # this keeps the normal noisy evaluator state and its neutral-action transition
+    # untouched while making the post-hoc target reproducible.
+    """
+    if horizon <= 0:
+        raise ValueError("counterfactual horizon must be positive")
+    planner_name = planner_name or getattr(planner, "name", planner.__class__.__name__)
+    true_env = copy.deepcopy(env)
+    device = state_t.device
+    observed_state = state_t.detach().clone()
+
+    structures = None
+    if getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned":
+        count = int(getattr(model, "predict_members", 1))
+        structures = model._sample_structures(count, device)
+        member_structures = structures.detach().cpu().numpy()
+    else:
+        member_structures = []
+        count = 1
+    pred_states = observed_state.reshape(1, -1).repeat(count, 1)
+
+    action_rows = []
+    reference_rows = []
+    true_action_kpis = []
+    true_reference_kpis = []
+    predicted_action_kpis = []
+    predicted_reference_kpis = []
+    one_step_predictions = []
+    oracle_actions = []
+    oracle_costs = []
+    planner_costs = []
+    regrets = []
+    utility_regrets = []
+    current_true_state = observed_state
+    action = list(first_action)
+
+    # Utility functions are full-environment indexed in evaluate.py; the pure helper
+    # consumes only the xApps participating in this planner's objective.
+    env_xapp_indices = [env.xapps.index(xapp) for xapp in xapps_under_conflict]
+    aligned_utility_fns = [utility_fns[index] for index in env_xapp_indices]
+
+    for step in range(horizon):
+        if step > 0:
+            p5_seed = _counterfactual_seed(
+                base_seed, global_step, conflict_index, planner_name, step, "action"
+            )
+            torch.manual_seed(p5_seed)
+            np.random.seed(p5_seed)
+            action = planner.act(
+                current_state=current_true_state.clone().detach(),
+                conflict_param_index=param_id,
+                xapps_under_conflict=xapps_under_conflict,
+                weights_per_xapps=list(weights_per_xapps),
+                scaling_term=scaling_term,
+            )
+        action = [int(value) for value in action]
+        raw_current = float(true_env.params[param_id].get_param())
+        raw_params_for_regret = [param.get_param() for param in true_env.params]
+        reference = _reference_action(true_env, param_id, raw_current)
+
+        reference_env = copy.deepcopy(true_env)
+        reference_env.step(reference)
+        reference_kpi = _latent_kpis(reference_env)
+        true_env.step(action)
+        action_kpi = _latent_kpis(true_env)
+
+        pred_action = _prediction_mean(model, pred_states, action, structures)
+        pred_reference = _prediction_mean(model, pred_states, reference, structures)
+        one_step = _prediction_mean(model, current_true_state, action, structures)
+
+        action_rows.append(action)
+        reference_rows.append(reference)
+        true_action_kpis.append(action_kpi)
+        true_reference_kpis.append(reference_kpi)
+        predicted_action_kpis.append(pred_action)
+        predicted_reference_kpis.append(pred_reference)
+        one_step_predictions.append(one_step)
+
+        current_regret = decision_regret(
+            raw_params_for_regret,
+            param_id,
+            np.linspace(*env.params[param_id].get_threshold(), num=101),
+            aligned_utility_fns,
+            xapps_under_conflict,
+            weights_per_xapps,
+            planner_value=float(env.action_to_param(action)[1]),
+            scaling_term=scaling_term,
+        )
+        oracle_actions.append(current_regret["oracle_action"])
+        oracle_costs.append(current_regret["oracle_cost"])
+        planner_costs.append(current_regret["planner_cost"])
+        regrets.append(current_regret["decision_regret"])
+        utility_regrets.append(current_regret["utility_regrets"])
+
+        # Feed each model member its own prediction. Never average transitions.
+        next_pred_states = pred_states.clone()
+        next_pred_states[:, env.num_params :] = torch.as_tensor(
+            pred_action, dtype=torch.float32, device=device
+        )
+        pred_states = next_pred_states
+        current_true_state = _latent_state_tensor(true_env, device)
+
+    arre = counterfactual_action_response_error(
+        np.asarray(predicted_action_kpis).transpose(1, 0, 2),
+        np.asarray(predicted_reference_kpis).transpose(1, 0, 2),
+        np.asarray(true_action_kpis),
+        np.asarray(true_reference_kpis),
+        gamma=gamma,
+    )
+    rmse = autoregressive_rollout_rmse(
+        np.asarray(predicted_action_kpis).transpose(1, 0, 2),
+        np.asarray(true_action_kpis),
+        gamma=gamma,
+    )
+    mse = one_step_mse(
+        np.asarray(one_step_predictions).transpose(1, 0, 2),
+        np.asarray(true_action_kpis),
+    )
+    return {
+        "initial_state_observed": observed_state.detach().cpu().numpy(),
+        "initial_params_raw": np.asarray(raw_params, dtype=float),
+        "actions": np.asarray(action_rows, dtype=int),
+        "reference_actions": np.asarray(reference_rows, dtype=int),
+        "true_kpis": np.asarray(true_action_kpis),
+        "true_reference_kpis": np.asarray(true_reference_kpis),
+        "predicted_kpis": np.asarray(predicted_action_kpis).transpose(1, 0, 2),
+        "predicted_reference_kpis": np.asarray(predicted_reference_kpis).transpose(1, 0, 2),
+        "member_structures": member_structures,
+        "one_step_mse_per_member": mse["per_member"],
+        "cf_arre_per_member": arre["per_member"],
+        "cf_rmse_per_member": rmse["per_member"],
+        "one_step_mse": mse["mean"],
+        "cf_arre": arre["mean"],
+        "cf_arre_max_member": arre["max_member"],
+        "cf_rmse": rmse["mean"],
+        "cf_rmse_max_member": rmse["max_member"],
+        "oracle_action": oracle_actions,
+        "oracle_cost": oracle_costs,
+        "planner_cost": planner_costs,
+        "decision_regret": float(np.mean(regrets)),
+        "decision_regret_per_horizon": np.asarray(regrets),
+        "utility_regrets": np.asarray(utility_regrets),
+        "oracle_grid_points": 101,
+        "horizon": int(horizon),
+        "gamma": float(gamma),
+    }
+
+
 def main(
     cfg: ExperimentConfig = DEFAULT_CONFIG,
     run_dir=None,
@@ -101,10 +342,13 @@ def main(
     graph_cfg=None,
     graph_override="causal",
     corrupt_edges=None,
+    counterfactual_horizon=0,
+    counterfactual_gamma=1.0,
 ):
     if run_dir is None:
         raise ValueError("An experiment run directory is required")
 
+    training_seed = cfg.seed
     cfg = replace(
         cfg,
         seed=cfg.mitigation_seed,
@@ -269,6 +513,7 @@ def main(
 
     env.reset()
     all_utilities: dict[str, list[float]] = {algo.name: [] for algo in algorithms}
+    counterfactual_records = []
 
     for global_step in range(cfg.num_steps):
         state_dict = env.get_state()
@@ -373,6 +618,48 @@ def main(
                 panel["planner_utilities"][algo.name] = planner_values
                 panel["planner_satisfied"][algo.name] = satisfied_values
 
+                if counterfactual_horizon:
+                    with preserve_probe_rng(model):
+                        counterfactual = collect_counterfactual_trajectory(
+                            model=model,
+                            planner=algo,
+                            env=env,
+                            state_t=state_t,
+                            first_action=action,
+                            param_id=param_id,
+                            xapps_under_conflict=xapps_in_conflict,
+                            weights_per_xapps=weights.tolist(),
+                            scaling_term=10,
+                            raw_params=raw_params,
+                            utility_fns=utility_fns,
+                            global_step=global_step,
+                            conflict_index=conflict_index,
+                            base_seed=cfg.seed,
+                            planner_name=algo.name,
+                            horizon=int(counterfactual_horizon),
+                            gamma=float(counterfactual_gamma),
+                        )
+                    counterfactual.update(
+                        {
+                            "environment": cfg.environment,
+                            "training_seed": int(training_seed),
+                            "mitigation_seed": int(cfg.mitigation_seed),
+                            "planner": algo.name,
+                            "global_step": int(global_step),
+                            "conflict_index": int(conflict_index),
+                            "param_id": int(param_id),
+                            "metric_version": "p5-v1",
+                            "targets": "latent_noiseless_kpi_utility",
+                            "pairing_key": [
+                                cfg.environment,
+                                int(cfg.mitigation_seed),
+                                int(global_step),
+                                int(conflict_index),
+                            ],
+                        }
+                    )
+                    counterfactual_records.append(counterfactual)
+
                 if primary_xapp_id < len(utility_fns):
                     logger.info(
                         "%s x%d->p%d action=%.4f utility(primary)=%.4f",
@@ -423,7 +710,41 @@ def main(
     if residual_report is not None:
         metrics["evaluation"]["residual"] = residual_report
         utilities_data["residual"] = residual_report
+    if counterfactual_horizon:
+        metrics["evaluation"]["counterfactual"] = {
+            "enabled": True,
+            "horizon": int(counterfactual_horizon),
+            "gamma": float(counterfactual_gamma),
+            "n_records": len(counterfactual_records),
+            "metric_version": "p5-v1",
+            "targets": "latent_noiseless_kpi_utility",
+        }
+        counterfactual_payload = {
+            "version": 1,
+            "metadata": {
+                "environment": cfg.environment,
+                "training_seed": int(training_seed),
+                "mitigation_seed": int(cfg.mitigation_seed),
+                "horizon": int(counterfactual_horizon),
+                "gamma": float(counterfactual_gamma),
+                "state_bank_id": None,
+                "metric_version": "p5-v1",
+                "targets": "latent_noiseless_kpi_utility",
+            },
+            "records": counterfactual_records,
+        }
+        (run_dir / "counterfactuals.json").write_text(
+            json.dumps(counterfactual_payload, indent=2, default=_json_default), encoding="utf-8"
+        )
     write_metrics(run_dir, metrics)
     (run_dir / "utilities.json").write_text(json.dumps(utilities_data, indent=2))
     logger.info("Evaluation metrics saved to %s", run_dir / "metrics.json")
     return 0
+
+
+def _json_default(value):
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, (np.floating, np.integer)):
+        return value.item()
+    raise TypeError(f"not JSON serializable: {type(value)!r}")
