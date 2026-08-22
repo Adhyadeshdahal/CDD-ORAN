@@ -77,6 +77,68 @@ def build_override_graph(kind, cdl, env, transitions=None):
     raise ValueError(f"Unknown graph override: {kind}")
 
 
+def _node_index(token, env):
+    """State index of an edge endpoint written the way ``envs/env_i.py`` names it.
+
+    ``P<n>`` is a 1-based NCP (``P1`` -> column 0, matching ``prev_params[0]``);
+    ``KPI<n>`` / ``K<n>`` is a 1-based KPI (``KPI1`` -> row ``num_params``, matching
+    ``kpi1`` / ``prev_kpis[0]``). Returns the index into the ``get_binary_graph()``
+    ``[:, :-1]`` block.
+    """
+    token = token.strip().upper()
+    state_dim = env.num_params + env.num_kpis
+    if token.startswith("KPI"):
+        number, kind = token[3:], "kpi"
+    elif token.startswith("K"):
+        number, kind = token[1:], "kpi"
+    elif token.startswith("P"):
+        number, kind = token[1:], "ncp"
+    else:
+        raise ValueError(f"Cannot parse edge endpoint {token!r}; expected P<n>, KPI<n> or K<n>")
+    if not number.isdigit() or int(number) < 1:
+        raise ValueError(f"Edge endpoint {token!r} needs a 1-based index (e.g. P2, KPI1)")
+    index = int(number) - 1
+    node = index if kind == "ncp" else env.num_params + index
+    if not 0 <= node < state_dim:
+        raise ValueError(f"Edge endpoint {token!r} is out of range for this environment")
+    return node
+
+
+def parse_edge_spec(spec, env):
+    """Parse one edge into ``(child_row, parent_col)`` in the ``graph[child, parent]``
+    layout that ``get_binary_graph`` and ``detect_conflict_edges`` read.
+
+    Accepts child<-parent (``KPI1<-P2``) and parent->child (``P2->KPI1``); both name
+    the same graph cell. This is the same orientation as ``env.true_adj_matrix``,
+    where ``[num_params + kpi_index, param_index]`` marks a true edge.
+    """
+    if "<-" in spec:
+        child, parent = spec.split("<-", 1)
+    elif "->" in spec:
+        parent, child = spec.split("->", 1)
+    else:
+        raise ValueError(f"Edge {spec!r} needs '<-' or '->' (e.g. 'KPI1<-P2' or 'P2->KPI1')")
+    return _node_index(child, env), _node_index(parent, env)
+
+
+def remove_edges(graph, specs, env):
+    """Return a COPY of a binary graph with each named edge removed (set False).
+
+    ``graph`` is a bool tensor in the ``get_binary_graph()`` layout (``(state_dim,
+    state_dim)`` or ``(state_dim, state_dim + 1)`` with a trailing action column).
+    Only the ``[child, parent]`` cell is cleared; the action column is untouched.
+    Returns ``(corrupted_graph, removed)`` where ``removed`` lists
+    ``(spec, child_row, parent_col)`` for the handoff/log.
+    """
+    corrupted = graph.clone()
+    removed = []
+    for spec in specs:
+        child, parent = parse_edge_spec(spec, env)
+        corrupted[child, parent] = False
+        removed.append((spec.strip(), child, parent))
+    return corrupted, removed
+
+
 def _demo():
     """Self-check: full sets all NCP->KPI edges; correlation rank-matches the FULL
     causal edge set (NCP->KPI + KPI->KPI) and targets KPI rows only."""

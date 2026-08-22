@@ -13,6 +13,7 @@ Pipeline
      - Conflict count per step
 """
 
+import hashlib
 import json
 import logging
 from dataclasses import replace
@@ -23,7 +24,11 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from cdd_oran.analysis.graph_baselines import build_override_graph, collect_transitions
+from cdd_oran.analysis.graph_baselines import (
+    build_override_graph,
+    collect_transitions,
+    remove_edges,
+)
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
 from cdd_oran.conflicts import (
     compute_utility,
@@ -40,12 +45,27 @@ from cdd_oran.utils.seeding import seed_everything
 logger = logging.getLogger(__name__)
 
 
+def _planner_seed(base_seed, global_step, conflict_index, planner_name):
+    """Stable per-(step, conflict, planner) seed for common random numbers (CRN).
+
+    Reseeding the global torch/numpy RNG with this before each ``planner.act`` call
+    guarantees the SAME conflict gets the SAME random draws at every corruption level
+    k: because the conflict population is fixed (see below) and each unit of planning
+    work is seeded from its own coordinates rather than from the shared global stream,
+    dropping/re-ordering conflicts can no longer reassign samples to later conflicts.
+    Utility differences across k then reflect the corrupted world-model mask alone.
+    """
+    key = f"{base_seed}|{global_step}|{conflict_index}|{planner_name}".encode()
+    return int.from_bytes(hashlib.sha256(key).digest()[:4], "big")
+
+
 def main(
     cfg: ExperimentConfig = DEFAULT_CONFIG,
     run_dir=None,
     graph_run=None,
     graph_cfg=None,
     graph_override="causal",
+    corrupt_edges=None,
 ):
     if run_dir is None:
         raise ValueError("An experiment run directory is required")
@@ -92,6 +112,32 @@ def main(
         cdl.get_binary_graph = lambda threshold=None, g=full_graph: g
         logger.info("Graph override active: %s (%d edges)", graph_override, int(override.sum()))
 
+    # Opt-in corruption (Phase 0 mechanism test). Scope: this is an INFERENCE-TIME
+    # structural omission in the CURRENT CDL. The predictor was trained on the FULL
+    # feature set with random one-source dropout, and the learned graph is applied
+    # only at prediction (cdl.py train_step/predict_next_state); removing an edge here
+    # blinds the world model's PREDICTION mask to that parent. It is NOT evidence about
+    # a predictor structurally retrained never to see the parent -- that
+    # "retrained-without-edge" variant is an optional future check, not built here.
+    #
+    # Separation of the graph's two uses (the paper's own design principle): conflict
+    # ENUMERATION stays on the BASE (pre-corruption) graph, captured here and held
+    # FIXED for every corruption level k, so the planner is always asked to mitigate
+    # the SAME conflicts. Only predict_next_state sees the corrupted mask. When
+    # corruption is off, the plain --graph-override path is unchanged.
+    enum_graph = None  # numpy [state_dim, state_dim] used for conflict enumeration
+    if corrupt_edges:
+        base_graph = cdl.get_binary_graph().clone()
+        enum_graph = base_graph[:, :-1].cpu().detach().numpy()
+        corrupted, removed = remove_edges(base_graph, corrupt_edges, env)
+        cdl.get_binary_graph = lambda threshold=None, g=corrupted: g
+        logger.info(
+            "Graph corruption active (world-model mask only; conflicts fixed on base "
+            "graph): removed %d edge(s): %s",
+            len(removed),
+            ", ".join(spec for spec, _, _ in removed),
+        )
+
     algorithms = get_planners(cfg, model, env)
     utility_fns = env.get_utility_fns()
 
@@ -125,7 +171,12 @@ def main(
         state_t = state_to_tensor(state_dict).to(cfg.device)
         raw_params = denormalize_params(state_t[: env.num_params].cpu().numpy(), env)
 
-        causal_graph = cdl.get_binary_graph()[:, :-1].cpu().detach().numpy()
+        # Fixed conflict population: enumerate from the BASE graph when corrupting,
+        # so no conflict is ever dropped and k = all-edges is still a valid row.
+        if enum_graph is not None:
+            causal_graph = enum_graph
+        else:
+            causal_graph = cdl.get_binary_graph()[:, :-1].cpu().detach().numpy()
         edges = detect_conflict_edges(causal_graph, env)
 
         num_conflicts = len(edges)
@@ -139,7 +190,7 @@ def main(
         step_utilities: dict[str, list[float]] = {algo.name: [] for algo in algorithms}
         step_panels = []
 
-        for edge in edges:
+        for conflict_index, edge in enumerate(edges):
             param_id = edge["param_id"]
             primary_xapp_id = edge["primary_xapp_id"]
             xapps_in_conflict = edge["xapps_in_conflict"]
@@ -180,6 +231,12 @@ def main(
             weights = weights / weights.sum() * num_xapps
 
             for algo in algorithms:
+                # Common random numbers: reseed the global torch/numpy RNG from this
+                # unit of work's coordinates so the SAME conflict draws the SAME
+                # samples at every k (planners use the global stream, see cem/mppi/mcts).
+                planner_seed = _planner_seed(cfg.seed, global_step, conflict_index, algo.name)
+                torch.manual_seed(planner_seed)
+                np.random.seed(planner_seed)
                 state_for_algo = state_t.clone().detach()
 
                 action = algo.act(
