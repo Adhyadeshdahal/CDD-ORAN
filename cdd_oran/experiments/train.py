@@ -66,7 +66,13 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
     random_policy = RandomPolicy(action_dim=env.action_dim, action_space=env.action_space)
     sampler = None
     artifact_manifest = None
-    if cfg.model_kind == "cdl" and cfg.model.posterior_artifact:
+    # Oracle structure comes from the env's true adjacency (built inside get_model); it stages
+    # no posterior/enumeration artifacts and needs no sampler here.
+    if (
+        cfg.model_kind == "cdl"
+        and cfg.model.structure_source != "oracle"
+        and cfg.model.posterior_artifact
+    ):
         from dataclasses import replace as _replace
 
         from cdd_oran.models import (

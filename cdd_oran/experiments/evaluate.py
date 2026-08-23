@@ -361,7 +361,13 @@ def main(
     act_dim = env.get_action_dim()
     sampler = None
     run_manifest = None
-    if cfg.model_kind == "cdl" and cfg.model.posterior_artifact:
+    # Oracle structure is rebuilt from the env's true adjacency inside get_model; it staged no
+    # artifacts at train time, so there is nothing to verify or load here.
+    if (
+        cfg.model_kind == "cdl"
+        and cfg.model.structure_source != "oracle"
+        and cfg.model.posterior_artifact
+    ):
         from cdd_oran.models import (
             make_structure_sampler,
             verify_checkpoint_manifest,

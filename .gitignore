@@ -31,3 +31,6 @@ runs/*
 
 .tmp/
 .temp/
+
+# generated discovery outputs (posterior/enum)
+artifacts/

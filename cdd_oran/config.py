@@ -22,6 +22,14 @@ class ModelConfig:
     interv_weight: float = 1.0
     # Structure-conditioned dynamics (CDL only) are the sole world model. The bounded
     # residual + posterior structure sampler + frozen enumeration graph configure it.
+    # Attribution ablation knob: where the causal STRUCTURE comes from.
+    #   "discovered" -- load the calibrated posterior + frozen enumeration artifacts (default).
+    #   "oracle"     -- build a degenerate one-hot posterior + enumeration graph from the env's
+    #                   TRUE adjacency (env.true_adj_matrix); needs NO discovery artifacts.
+    structure_source: str = "discovered"
+    # Attribution ablation knob: bounded dense residual ON/OFF. OFF makes the residual
+    # contribute EXACTLY zero (no learnable path); it is not merely bound=0.
+    residual_enabled: bool = True
     residual_bound: float = 0.25
     residual_l2: float = 1e-2
     residual_l1: float = 1e-3
@@ -149,6 +157,8 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             feature_fc_dims=tuple(cast(list[int], values["model"]["feature_fc_dims"])),
             batch_size=cast(int, values["model"]["batch_size"]),
             interv_weight=cast(float, values["model"].get("interv_weight", 1.0)),
+            structure_source=cast(str, values["model"].get("structure_source", "discovered")),
+            residual_enabled=cast(bool, values["model"].get("residual_enabled", True)),
             residual_bound=cast(float, values["model"].get("residual_bound", 0.25)),
             residual_l2=cast(float, values["model"].get("residual_l2", 1e-2)),
             residual_l1=cast(float, values["model"].get("residual_l1", 1e-3)),

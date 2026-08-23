@@ -189,6 +189,7 @@ class CDL(CausalModel):
         residual_l1=1e-3,
         residual_hidden=(64, 64),
         residual_alert_fraction=0.25,
+        residual_enabled=True,
         sampler=None,
         m_train=1,
         predict_members=1,
@@ -210,6 +211,10 @@ class CDL(CausalModel):
         self.residual_l1 = float(residual_l1)
         self.residual_hidden = tuple(residual_hidden)
         self.residual_alert_fraction = float(residual_alert_fraction)
+        # Residual ON/OFF ablation switch. When OFF there is NO residual module at all, so
+        # the bounded dense path can contribute EXACTLY zero and adds no learnable parameter
+        # (not merely bound=0). Predictions then equal the structure-conditioned graph mean.
+        self.residual_enabled = bool(residual_enabled)
         # P1 structure sampler (adapter injected by the model factory). Never a point graph.
         self.sampler = sampler
         self.m_train = int(m_train)
@@ -241,13 +246,17 @@ class CDL(CausalModel):
             ]
         ).to(self.device)
 
-        # Bounded dense residual (KPI children only) is always part of the world model.
-        self.residual = DenseResidual(
-            state_dim + action_dim,
-            state_dim - kpi_start,
-            self.residual_hidden,
-            self.residual_bound,
-        ).to(self.device)
+        # Bounded dense residual (KPI children only). Present only when enabled; when the
+        # ablation switch is OFF the module is None and every prediction/training path treats
+        # the residual delta as an exact (non-learnable) zero.
+        self.residual = None
+        if self.residual_enabled:
+            self.residual = DenseResidual(
+                state_dim + action_dim,
+                state_dim - kpi_start,
+                self.residual_hidden,
+                self.residual_bound,
+            ).to(self.device)
 
         prototype = self.models[0]
         parameter_names = tuple(dict(prototype.named_parameters()))
@@ -278,7 +287,9 @@ class CDL(CausalModel):
         )
 
         optimizer_kwargs = {"fused": True} if self.device.type == "cuda" else {}
-        trainable = list(self.models.parameters()) + list(self.residual.parameters())
+        trainable = list(self.models.parameters())
+        if self.residual is not None:
+            trainable += list(self.residual.parameters())
         self.opt = optim.Adam(trainable, lr=lr, **optimizer_kwargs)
 
         fd = state_dim
@@ -344,6 +355,15 @@ class CDL(CausalModel):
             )
         structures = self.sampler.sample_structures(m, device=device)
         return structures.to(device=device)
+
+    def _residual_delta(self, s, a):
+        """Bounded residual delta ``(batch, k)`` over KPI children, or an exact non-learnable
+        zero when the residual is disabled. The zero has ``requires_grad=False`` so no learnable
+        path is added and the contribution fraction is exactly 0."""
+        if self.residual is not None:
+            return self.residual(s, a)
+        k = self.state_dim - self.kpi_start
+        return torch.zeros(s.shape[0], k, device=self.device, dtype=s.dtype)
 
     def _force_slots(self, structures, child_rows):
         """Force the invariant slots the legacy path always keeps on: each child's own
@@ -431,8 +451,9 @@ class CDL(CausalModel):
 
         mu_graph, std_graph = self._graph_means(s_t, a_batch, all_rows, struct)  # (m, fd, batch, 1)
 
-        # Bounded residual on KPI children only; broadcast over structure members.
-        delta = self.residual(s_t, a_batch)  # (batch, k)
+        # Bounded residual on KPI children only; broadcast over structure members. When the
+        # residual is disabled this is an exact zero (no learnable path).
+        delta = self._residual_delta(s_t, a_batch)  # (batch, k)
         delta_rows = delta.transpose(0, 1).unsqueeze(-1)  # (k, batch, 1)
         mu_total = mu_graph.clone()
         mu_total[:, self.kpi_start :, :, :] = mu_graph[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
@@ -463,7 +484,9 @@ class CDL(CausalModel):
 
         loss = graph_nll + aug_nll + residual_penalty
         loss.backward()
-        params = list(self.models.parameters()) + list(self.residual.parameters())
+        params = list(self.models.parameters())
+        if self.residual is not None:
+            params += list(self.residual.parameters())
         nn.utils.clip_grad_norm_(params, self.grad_clip)
         self.opt.step()
         return loss.detach()
@@ -480,12 +503,13 @@ class CDL(CausalModel):
         kpi_rows = torch.arange(self.kpi_start, self.state_dim, device=self.device)
         with torch.no_grad():
             self.models.eval()
-            self.residual.eval()
+            if self.residual is not None:
+                self.residual.eval()
             if structures is None:
                 structures = self._sample_structures(1, self.device)
             struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
             mu_graph, _ = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
-            delta = self.residual(s, a)  # (batch, k)
+            delta = self._residual_delta(s, a)  # (batch, k); exact zero when disabled
             # mu_total = graph mean + bounded residual (KPI rows), broadcast over members.
             delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
             mu_total = mu_graph + delta_rows  # (m, k, batch, 1)
@@ -614,7 +638,8 @@ class CDL(CausalModel):
         kpi_rows = torch.arange(self.kpi_start, self.state_dim, device=self.device)
         with torch.no_grad():
             self.models.eval()
-            self.residual.eval()
+            if self.residual is not None:
+                self.residual.eval()
             if structures is None:
                 # Reuse the structures fixed for this decision (planner.act), if any;
                 # otherwise draw a fresh set (a bare predict outside a decision scope).
@@ -625,7 +650,7 @@ class CDL(CausalModel):
                 )
             struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
             mu_graph, std_graph = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
-            delta = self.residual(s, a)  # (batch, k)
+            delta = self._residual_delta(s, a)  # (batch, k); exact zero when disabled
             # (m, k, batch, 1): broadcast the structure-independent residual over members.
             delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
             mu_total = mu_graph + delta_rows
@@ -667,7 +692,10 @@ class CDL(CausalModel):
             "grad_clip": self.grad_clip,
             "device": self.device,
             # Structure-conditioned residual state + config.
-            "residual_state_dict": self.residual.state_dict(),
+            "residual_enabled": self.residual_enabled,
+            "residual_state_dict": (
+                self.residual.state_dict() if self.residual is not None else None
+            ),
             "residual_bound": self.residual_bound,
             "residual_l2": self.residual_l2,
             "residual_l1": self.residual_l1,
@@ -695,7 +723,7 @@ class CDL(CausalModel):
         self.mask_CMI = state["mask_CMI"]
         self._eval_cmi_acc = state["eval_cmi_acc"]
         self._eval_step_count = state["eval_step_count"]
-        if state.get("residual_state_dict") is not None:
+        if state.get("residual_state_dict") is not None and self.residual is not None:
             self.residual.load_state_dict(state["residual_state_dict"])
         saved_enum = state.get("enumeration_graph")
         if saved_enum is not None:

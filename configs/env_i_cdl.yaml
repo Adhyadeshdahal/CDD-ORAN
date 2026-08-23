@@ -33,6 +33,9 @@ model:
   feature_fc_dims: [64, 64]
   batch_size: 128
   # --- structure-conditioned dynamics ---
+  # Attribution ablation knobs (see .temp/new_arch/reports/attribution_infra_handoff.md):
+  structure_source: discovered  # discovered (default) | oracle (env.true_adj_matrix)
+  residual_enabled: true        # bounded dense residual ON/OFF (OFF = exact zero)
   residual_bound: 0.25
   residual_l2: 0.01
   residual_l1: 0.001

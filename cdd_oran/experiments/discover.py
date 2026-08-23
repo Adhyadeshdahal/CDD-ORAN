@@ -171,8 +171,17 @@ def run_discovery(
 
     seed = cfg.seed
     device = cfg.device
-    # Discovery is decoupled: it must NOT depend on pre-existing posterior/enumeration artifacts.
-    cfg = replace(cfg, model=replace(cfg.model, posterior_artifact=None, enumeration_graph=None))
+    # Discovery is decoupled: it must NOT depend on pre-existing posterior/enumeration artifacts,
+    # and it always learns the causal structure (never the oracle true-adjacency shortcut).
+    cfg = replace(
+        cfg,
+        model=replace(
+            cfg.model,
+            posterior_artifact=None,
+            enumeration_graph=None,
+            structure_source="discovered",
+        ),
+    )
 
     seed_everything(seed, cfg.deterministic)
     env = get_env(cfg)

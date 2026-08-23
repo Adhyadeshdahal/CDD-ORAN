@@ -70,10 +70,55 @@ class PosteriorStructureSampler:
         return cls(posterior, seed=seed)
 
 
+def build_oracle_enumeration_graph(env):
+    """ORACLE variant enumeration graph, built directly from the env's TRUE adjacency (no
+    discovery, no artifact). Returns a ``(fd, fd+1)`` bool tensor whose square state block is
+    ``env.true_adj_matrix`` and whose action column is on (the action is always a source, and
+    the action column is dropped for conflict enumeration anyway)."""
+    true_adj = np.asarray(env.true_adj_matrix, dtype=bool)
+    fd = env.get_state_dim()
+    if true_adj.shape != (fd, fd):
+        raise ValueError(f"env.true_adj_matrix shape {true_adj.shape} != (fd, fd)=({fd}, {fd})")
+    graph = torch.zeros(fd, fd + 1, dtype=torch.bool)
+    graph[:, :fd] = torch.as_tensor(true_adj)
+    graph[:, -1] = True
+    _validate_enum_structure(graph.numpy())  # reject a zero-edge true adjacency
+    return graph
+
+
+def build_oracle_posterior(env):
+    """Degenerate one-hot GraphPosterior over the env's TRUE adjacency: per-edge probabilities
+    are exactly 0/1, so every draw returns the true parent block. Flagged calibrated=True so the
+    structure sampler accepts it with no discovery/calibration step."""
+    from cdd_oran.analysis.graph_posterior import GraphPosterior
+
+    true_adj = np.asarray(env.true_adj_matrix, dtype=float)
+    return GraphPosterior(
+        true_adj,
+        node_names=node_names(env),
+        meta={"environment": None, "calibrated": True, "source": "oracle_true_adjacency"},
+    )
+
+
+def build_oracle_sampler(env, seed=0):
+    """ORACLE structure sampler: a PosteriorStructureSampler over the degenerate one-hot
+    true-adjacency posterior. Needs no posterior artifact."""
+    return PosteriorStructureSampler(build_oracle_posterior(env), seed=seed)
+
+
 def make_structure_sampler(cfg: ExperimentConfig, seed=0, env=None):
-    """Build the P1 structure sampler for the structure-conditioned world model by LOADING the
-    configured precomputed calibrated posterior artifact (``model.posterior_artifact``). No
-    global RNG mutation (review blocker #4); rejects uncalibrated artifacts (review blocker #2)."""
+    """Build the P1 structure sampler for the structure-conditioned world model.
+
+    ``structure_source=oracle`` builds a degenerate one-hot sampler from ``env.true_adj_matrix``
+    (no artifact needed). Otherwise (``discovered``) LOADS the configured precomputed calibrated
+    posterior artifact (``model.posterior_artifact``): no global RNG mutation (review blocker #4);
+    rejects uncalibrated artifacts (review blocker #2)."""
+    if cfg.model.structure_source == "oracle":
+        if env is None:
+            from cdd_oran.envs import get_env
+
+            env = get_env(cfg)
+        return build_oracle_sampler(env, seed=seed)
     artifact = cfg.model.posterior_artifact
     if not artifact:
         raise ValueError(
@@ -343,10 +388,18 @@ def get_model(cfg: ExperimentConfig, env, sampler=None):
         "node_names": node_names(env),
     }
     if cfg.model_kind == "cdl":
-        enum_graph = None
-        if cfg.model.enumeration_graph:
-            enum_graph, enum_meta = load_enumeration_graph(cfg.model.enumeration_graph)
-            validate_enumeration_artifact(enum_graph, enum_meta, env, cfg.environment)
+        # Structure source: oracle builds the enumeration graph (and, when no sampler is
+        # injected, a degenerate one-hot sampler) straight from the env's TRUE adjacency, needing
+        # no discovery artifacts. discovered loads + validates the frozen enumeration artifact.
+        if cfg.model.structure_source == "oracle":
+            enum_graph = build_oracle_enumeration_graph(env)
+            if sampler is None:
+                sampler = build_oracle_sampler(env, seed=cfg.seed)
+        else:
+            enum_graph = None
+            if cfg.model.enumeration_graph:
+                enum_graph, enum_meta = load_enumeration_graph(cfg.model.enumeration_graph)
+                validate_enumeration_artifact(enum_graph, enum_meta, env, cfg.environment)
         return CDL(
             **model_kwargs,
             interv_weight=cfg.model.interv_weight,
@@ -355,6 +408,7 @@ def get_model(cfg: ExperimentConfig, env, sampler=None):
             residual_l1=cfg.model.residual_l1,
             residual_hidden=cfg.model.residual_hidden,
             residual_alert_fraction=cfg.model.residual_alert_fraction,
+            residual_enabled=cfg.model.residual_enabled,
             sampler=sampler,
             predict_members=cfg.model.predict_members,
             enumeration_graph=enum_graph,
