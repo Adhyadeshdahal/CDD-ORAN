@@ -138,6 +138,22 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    # Runtime-validate the attribution knobs so a typo or a quoted string cannot silently pick
+    # the wrong ablation (review BLOCKER #8). A quoted "false" would otherwise stay a truthy
+    # string and defeat the residual ablation that tonight's --set model.residual_enabled=false
+    # relies on.
+    structure_source = values["model"].get("structure_source", "discovered")
+    if structure_source not in ("discovered", "oracle"):
+        raise ValueError(
+            f"model.structure_source must be 'discovered' or 'oracle', got {structure_source!r}"
+        )
+    residual_enabled = values["model"].get("residual_enabled", True)
+    if not isinstance(residual_enabled, bool):
+        raise ValueError(
+            f"model.residual_enabled must be a boolean, got {residual_enabled!r} "
+            f"({type(residual_enabled).__name__}); use true/false, not a quoted string"
+        )
+
     return ExperimentConfig(
         seed=values["seed"],
         mitigation_seed=values.get("mitigation_seed", values["seed"]),
@@ -157,8 +173,8 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             feature_fc_dims=tuple(cast(list[int], values["model"]["feature_fc_dims"])),
             batch_size=cast(int, values["model"]["batch_size"]),
             interv_weight=cast(float, values["model"].get("interv_weight", 1.0)),
-            structure_source=cast(str, values["model"].get("structure_source", "discovered")),
-            residual_enabled=cast(bool, values["model"].get("residual_enabled", True)),
+            structure_source=structure_source,
+            residual_enabled=residual_enabled,
             residual_bound=cast(float, values["model"].get("residual_bound", 0.25)),
             residual_l2=cast(float, values["model"].get("residual_l2", 1e-2)),
             residual_l1=cast(float, values["model"].get("residual_l1", 1e-3)),

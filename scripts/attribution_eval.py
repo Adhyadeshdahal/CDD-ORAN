@@ -47,6 +47,23 @@ def build_parser():
     parser.add_argument("--device", default="cpu", help="Torch device (default: cpu)")
     parser.add_argument("--n-transitions", type=int, default=512, help="Held-out transition count")
     parser.add_argument("--seed", type=int, default=0, help="Held-out set seed (same for all variants)")
+    parser.add_argument(
+        "--attribution-seed",
+        type=int,
+        default=0,
+        help="Structure-draw seed, reused for every CDL model (full & structure_only share it)",
+    )
+    parser.add_argument(
+        "--held-out-ranges",
+        choices=("train", "ood"),
+        default=None,
+        help="Held-out param ranges (default: each run's evaluation_param_ranges)",
+    )
+    parser.add_argument(
+        "--require-full-set",
+        action="store_true",
+        help="Require all four named variants (full, structure_only, oracle, dense) to be present",
+    )
     parser.add_argument("--out-md", default=None, help="Write the markdown comparison table here")
     parser.add_argument("--out-json", default=None, help="Write the full JSON comparison here")
     parser.add_argument("--log-level", default="INFO")
@@ -62,6 +79,9 @@ def main(argv=None):
         device=args.device,
         n_transitions=args.n_transitions,
         seed=args.seed,
+        attribution_seed=args.attribution_seed,
+        held_out_ranges=args.held_out_ranges,
+        require_full_set=args.require_full_set,
         out_md=args.out_md,
         out_json=args.out_json,
         config_path=args.config,

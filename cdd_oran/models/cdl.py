@@ -356,15 +356,6 @@ class CDL(CausalModel):
         structures = self.sampler.sample_structures(m, device=device)
         return structures.to(device=device)
 
-    def _residual_delta(self, s, a):
-        """Bounded residual delta ``(batch, k)`` over KPI children, or an exact non-learnable
-        zero when the residual is disabled. The zero has ``requires_grad=False`` so no learnable
-        path is added and the contribution fraction is exactly 0."""
-        if self.residual is not None:
-            return self.residual(s, a)
-        k = self.state_dim - self.kpi_start
-        return torch.zeros(s.shape[0], k, device=self.device, dtype=s.dtype)
-
     def _force_slots(self, structures, child_rows):
         """Force the invariant slots the legacy path always keeps on: each child's own
         source (self slot) and the action source. ``structures`` is ``(m, n_children,
@@ -452,11 +443,19 @@ class CDL(CausalModel):
         mu_graph, std_graph = self._graph_means(s_t, a_batch, all_rows, struct)  # (m, fd, batch, 1)
 
         # Bounded residual on KPI children only; broadcast over structure members. When the
-        # residual is disabled this is an exact zero (no learnable path).
-        delta = self._residual_delta(s_t, a_batch)  # (batch, k)
-        delta_rows = delta.transpose(0, 1).unsqueeze(-1)  # (k, batch, 1)
-        mu_total = mu_graph.clone()
-        mu_total[:, self.kpi_start :, :, :] = mu_graph[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
+        # residual is disabled the total mean IS the graph mean at the representation level
+        # (no ``+ zeros`` allocation, no learnable path) -- review MAJOR #7.
+        if self.residual is None:
+            delta = None
+            delta_rows = None
+            mu_total = mu_graph
+        else:
+            delta = self.residual(s_t, a_batch)  # (batch, k)
+            delta_rows = delta.transpose(0, 1).unsqueeze(-1)  # (k, batch, 1)
+            mu_total = mu_graph.clone()
+            mu_total[:, self.kpi_start :, :, :] = (
+                mu_graph[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
+            )
 
         targets = s_tp1.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, fd, batch, 1)
         graph_nll = self._nll(mu_total, std_graph, targets).mean()
@@ -475,12 +474,19 @@ class CDL(CausalModel):
         struct_aug = struct.unsqueeze(2).expand(m, fd, bs, ns).clone()  # (m, fd, bs, ns)
         struct_aug[:, :, torch.arange(bs, device=self.device), drop_idx] = False
         mu_aug, std_aug = self._graph_means(s_t, a_batch, all_rows, struct_aug)
-        mu_aug_total = mu_aug.clone()
-        mu_aug_total[:, self.kpi_start :, :, :] = mu_aug[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
+        if self.residual is None:
+            mu_aug_total = mu_aug
+            residual_penalty = mu_graph.new_zeros(())
+        else:
+            mu_aug_total = mu_aug.clone()
+            mu_aug_total[:, self.kpi_start :, :, :] = (
+                mu_aug[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
+            )
+            scaled = delta / self.residual_bound
+            residual_penalty = (
+                self.residual_l2 * scaled.pow(2).mean() + self.residual_l1 * scaled.abs().mean()
+            )
         aug_nll = self._nll(mu_aug_total, std_aug, targets).mean()
-
-        scaled = delta / self.residual_bound
-        residual_penalty = self.residual_l2 * scaled.pow(2).mean() + self.residual_l1 * scaled.abs().mean()
 
         loss = graph_nll + aug_nll + residual_penalty
         loss.backward()
@@ -492,12 +498,16 @@ class CDL(CausalModel):
         return loss.detach()
 
     def residual_diagnostics(self, s, a, structures=None):
-        """Anti-collapse measurement (spec sec 3). Returns graph mean, bounded residual,
-        total mean and the unsigned per-KPI / aggregate contribution fractions. The tanh
-        bound is the safety bound; this fraction is the collapse guard.
+        """Anti-collapse COLLAPSE DIAGNOSTIC (spec sec 3). Returns graph mean, bounded residual,
+        total mean and the unsigned per-KPI / aggregate residual-to-graph MAGNITUDE RATIO.
 
-        With ``m > 1`` the fraction is computed per member (transitions are NEVER averaged
-        first) then reported as both the member-mean and the max-member fraction."""
+        This magnitude ratio (``residual_magnitude_ratio`` / legacy ``fraction_aggregate``) is a
+        collapse guard only: it is NOT the residual's predictive contribution and must never be
+        presented as the attribution answer (review BLOCKER #2). The paired predictive delta
+        ``dMSE_residual`` / ``dNLL_residual`` (see the attribution harness) is that answer.
+
+        With ``m > 1`` the ratio is computed per member (transitions are NEVER averaged first)
+        then reported as both the member-mean and the max-member ratio."""
         s = s.to(self.device)
         a = a.to(self.device)
         kpi_rows = torch.arange(self.kpi_start, self.state_dim, device=self.device)
@@ -509,23 +519,33 @@ class CDL(CausalModel):
                 structures = self._sample_structures(1, self.device)
             struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
             mu_graph, _ = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
-            delta = self._residual_delta(s, a)  # (batch, k); exact zero when disabled
-            # mu_total = graph mean + bounded residual (KPI rows), broadcast over members.
-            delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
-            mu_total = mu_graph + delta_rows  # (m, k, batch, 1)
+            k = mu_graph.shape[1]
+            if self.residual is None:
+                # Representation-level identity: the total mean IS the graph mean (review MAJOR #7).
+                mu_total = mu_graph
+                delta = mu_graph.new_zeros(s.shape[0], k)  # (batch, k), exact zero
+            else:
+                delta = self.residual(s, a)  # (batch, k), bounded by +/- residual_bound
+                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
+                mu_total = mu_graph + delta_rows  # (m, k, batch, 1)
 
             abs_delta = delta.abs().mean(dim=0)  # (k,)
-            # per-member per-KPI fraction: (m, k)
+            # per-member per-KPI ratio: (m, k)
             abs_mu = mu_graph.abs().mean(dim=(2, 3))  # (m, k)
             frac_mk = abs_delta.unsqueeze(0) / (abs_mu + abs_delta.unsqueeze(0) + 1e-8)
             frac_per_kpi = frac_mk.mean(dim=0)  # (k,)
             frac_aggregate = frac_mk.mean()
             frac_max_member = frac_mk.mean(dim=1).max()  # worst member, aggregated over KPI
         return {
-            # Components (review MINOR #8): callers can audit the fractions against these.
+            # Components (review MINOR #8): callers can audit the ratios against these.
             "mu_graph": mu_graph,  # (m, k, batch, 1)
             "delta": delta,  # (batch, k), bounded by +/- residual_bound
-            "mu_total": mu_total,  # (m, k, batch, 1) == mu_graph + delta
+            "mu_total": mu_total,  # (m, k, batch, 1); IS mu_graph when the residual is disabled
+            # Residual-to-graph magnitude ratio -- COLLAPSE DIAGNOSTIC, not the attribution answer.
+            "residual_magnitude_ratio": frac_aggregate,
+            "residual_magnitude_ratio_per_kpi": frac_per_kpi,
+            "residual_magnitude_ratio_max_member": frac_max_member,
+            # Legacy aliases (kept so train.py + existing tests keep reading the same keys).
             "fraction_per_kpi": frac_per_kpi,
             "fraction_aggregate": frac_aggregate,
             "fraction_max_member": frac_max_member,
@@ -625,14 +645,12 @@ class CDL(CausalModel):
     def predict_next_state(self, s, a, structures=None):
         return self._structure_predict_next_state(s, a, structures)
 
-    def _structure_predict_next_state(self, s, a, structures=None):
-        """Structure-conditioned prediction over KPI children with the bounded residual.
+    def _structure_components(self, s, a, structures=None):
+        """Shared structure-conditioned forward over KPI children under GIVEN structures.
 
-        ``structures`` is ``(m, fd, ns)`` or ``(m, k, ns)``; if omitted the injected P1
-        sampler is used for ``m=1`` (never ``get_binary_graph``). Returns a Normal with
-        mean/std shaped ``(m, batch, k)``, squeezed to the planner-compatible ``(batch,
-        k)`` when ``m == 1``. The multi-member axis is an API for Phase 3; Phase 2 does not
-        average transitions across members."""
+        Returns ``(mu_graph, mu_total, std_graph)`` each shaped ``(m, k, batch, 1)``. When the
+        residual is disabled ``mu_total IS mu_graph`` at the representation level (review MAJOR
+        #7): no ``+ zeros`` allocation, identical ``.data_ptr()``."""
         s = s.to(self.device)
         a = a.to(self.device)
         kpi_rows = torch.arange(self.kpi_start, self.state_dim, device=self.device)
@@ -650,10 +668,24 @@ class CDL(CausalModel):
                 )
             struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
             mu_graph, std_graph = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
-            delta = self._residual_delta(s, a)  # (batch, k); exact zero when disabled
-            # (m, k, batch, 1): broadcast the structure-independent residual over members.
-            delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
-            mu_total = mu_graph + delta_rows
+            if self.residual is None:
+                mu_total = mu_graph  # representation-level identity
+            else:
+                delta = self.residual(s, a)  # (batch, k)
+                # (m, k, batch, 1): broadcast the structure-independent residual over members.
+                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
+                mu_total = mu_graph + delta_rows
+        return mu_graph, mu_total, std_graph
+
+    def _structure_predict_next_state(self, s, a, structures=None):
+        """Structure-conditioned prediction over KPI children with the bounded residual.
+
+        ``structures`` is ``(m, fd, ns)`` or ``(m, k, ns)``; if omitted the injected P1
+        sampler is used for ``m=1`` (never ``get_binary_graph``). Returns a Normal with
+        mean/std shaped ``(m, batch, k)``, squeezed to the planner-compatible ``(batch,
+        k)`` when ``m == 1``. The multi-member axis is an API for Phase 3; Phase 2 does not
+        average transitions across members."""
+        _mu_graph, mu_total, std_graph = self._structure_components(s, a, structures)
         # -> (m, batch, k)
         mu = mu_total.squeeze(-1).permute(0, 2, 1)
         std = std_graph.squeeze(-1).permute(0, 2, 1)
@@ -661,6 +693,25 @@ class CDL(CausalModel):
             mu = mu.squeeze(0)
             std = std.squeeze(0)
         return Normal(mu, std)
+
+    def predict_components(self, s, a, structures=None):
+        """Graph-only and full prediction components over KPI children under GIVEN structures,
+        for the paired residual-contribution metric (review BLOCKER #2). Returns a dict with
+        ``mu_graph``, ``mu_total`` and ``std`` each shaped ``(m, batch, k)`` (member axis kept,
+        NOT squeezed). The residual shifts only the mean, so ``std`` is shared; when the residual
+        is disabled ``mu_total is mu_graph`` (representation-level identity)."""
+        mu_graph, mu_total, std_graph = self._structure_components(s, a, structures)
+
+        def to_mbk(x):
+            return x.squeeze(-1).permute(0, 2, 1)  # (m, batch, k)
+
+        mu_graph_mbk = to_mbk(mu_graph)
+        return {
+            "mu_graph": mu_graph_mbk,
+            # Preserve the representation-level identity through the reshape when disabled.
+            "mu_total": mu_graph_mbk if mu_total is mu_graph else to_mbk(mu_total),
+            "std": to_mbk(std_graph),
+        }
 
     def evaluate_predictions(self, s, a, s_1):
         """

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import shutil
 from pathlib import Path
 
@@ -9,6 +10,8 @@ import torch
 from cdd_oran.config import ExperimentConfig
 from cdd_oran.models.cdl import CDL
 from cdd_oran.models.mlp import MLPInference
+
+logger = logging.getLogger(__name__)
 
 
 def node_names(env):
@@ -393,8 +396,15 @@ def get_model(cfg: ExperimentConfig, env, sampler=None):
         # no discovery artifacts. discovered loads + validates the frozen enumeration artifact.
         if cfg.model.structure_source == "oracle":
             enum_graph = build_oracle_enumeration_graph(env)
-            if sampler is None:
-                sampler = build_oracle_sampler(env, seed=cfg.seed)
+            # Oracle PREDICTION must use env.true_adj_matrix. Unconditionally rebuild the sampler
+            # from the env and IGNORE any caller-supplied one, so a discovered/arbitrary posterior
+            # can never leak into oracle prediction (review BLOCKER #3).
+            if sampler is not None:
+                logger.warning(
+                    "structure_source=oracle ignores the caller-supplied sampler and rebuilds "
+                    "the degenerate one-hot sampler from env.true_adj_matrix"
+                )
+            sampler = build_oracle_sampler(env, seed=cfg.seed)
         else:
             enum_graph = None
             if cfg.model.enumeration_graph:
