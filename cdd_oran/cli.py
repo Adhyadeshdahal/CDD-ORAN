@@ -47,13 +47,9 @@ def build_parser():
         "--graph-override",
         choices=("causal", "full", "correlation"),
         default="causal",
-        help="Ablate the inference graph structure: causal (default), full (dense), correlation",
-    )
-    evaluate.add_argument(
-        "--corrupt-edges",
         help=(
-            "Opt-in: comma-separated edges to REMOVE from the inference graph before "
-            "planning, e.g. 'KPI1<-P2,KPI2<-P3'. Default off."
+            "Ablate the conflict-enumeration graph structure: causal (default), full (dense), "
+            "correlation"
         ),
     )
     _add_log_level(evaluate)
@@ -115,18 +111,12 @@ def main(argv=None):
             graph_cfg = _load_run_config(args.graph_run, None) if args.graph_run else None
             from cdd_oran.experiments.evaluate import main as evaluate
 
-            corrupt_edges = (
-                [edge.strip() for edge in args.corrupt_edges.split(",") if edge.strip()]
-                if args.corrupt_edges
-                else None
-            )
             return evaluate(
                 cfg,
                 run_dir=args.run,
                 graph_run=args.graph_run,
                 graph_cfg=graph_cfg,
                 graph_override=args.graph_override,
-                corrupt_edges=corrupt_edges,
             )
 
         if args.command == "sweep":

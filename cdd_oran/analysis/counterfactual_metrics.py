@@ -11,8 +11,9 @@ from __future__ import annotations
 import argparse
 import json
 from collections import defaultdict
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -402,7 +403,7 @@ def study_correlations(
 
 
 def _load_records(paths: Sequence[str]) -> list[dict[str, Any]]:
-    records = []
+    records: list[dict[str, Any]] = []
     for path in paths:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         if isinstance(payload, list):

@@ -18,7 +18,9 @@ class XApp:
     def __init__(
         self,
         threshold: float,
-        utility_fn: Callable[[list[float]], float],
+        # Accepts any KPI vector array-like (list or numpy array); planners probe it with
+        # numpy arrays, conflict scoring passes lists.
+        utility_fn: Callable[..., float],
         name: str,
         params: tuple[Param, ...],
         direction: int,

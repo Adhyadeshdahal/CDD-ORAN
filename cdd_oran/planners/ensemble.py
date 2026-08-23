@@ -86,12 +86,10 @@ class EnsembleAggregator:
 
 
 def member_count(model) -> int:
-    """Default ensemble size a model's ``predict_next_state`` returns (1 for hard-mask /
-    single-model). Lets the multi-step rollout planners decide single vs per-member rollout
-    WITHOUT an extra forward pass, so the m=1 path stays byte-identical."""
-    if getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned":
-        return int(getattr(model, "predict_members", 1))
-    return 1
+    """Default ensemble size a model's ``predict_next_state`` returns (1 for a single-model
+    world model such as the MLP baseline). Lets the multi-step rollout planners decide single
+    vs per-member rollout WITHOUT an extra forward pass, so the m=1 path stays byte-identical."""
+    return int(getattr(model, "predict_members", 1))
 
 
 def member_disagreement(dist) -> torch.Tensor:

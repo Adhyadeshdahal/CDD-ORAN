@@ -1,6 +1,7 @@
+from typing import cast
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Normal
 from torch.func import functional_call, vmap
@@ -52,7 +53,7 @@ class DenseResidual(nn.Module):
         super().__init__()
         self.bound = float(bound)
         self.net = MLP(input_dim, out_dim, list(hidden))
-        last = self.net.net[-1]  # final nn.Linear
+        last = cast(nn.Linear, self.net.net[-1])  # final nn.Linear
         nn.init.zeros_(last.weight)
         nn.init.zeros_(last.bias)
 
@@ -62,24 +63,25 @@ class DenseResidual(nn.Module):
 
 
 class StatePredictor(nn.Module):
-    def __init__(self, state_dim, action_dim, feature_dim, pred_hidden, *, dynamics_mode="hard_mask"):
+    def __init__(self, state_dim, action_dim, feature_dim, pred_hidden):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
-        self.dynamics_mode = dynamics_mode
 
         self.state_feature_extractors = nn.ModuleList(
             [MLP(1, feature_dim, []) for _ in range(state_dim)]
         )
         self.action_feature_extractor = MLP(action_dim, feature_dim, [])
+        # Max-pool head, kept for the offline P1 posterior bootstrap: update_mask recomputes
+        # CMI through this head (masked_max_from_top_two) on a frozen predictor. It is NOT the
+        # prediction path -- predictions go through the structure-conditioned head below.
         self.predictor = MLP(feature_dim, 2, pred_hidden)
-        if dynamics_mode == "structure_conditioned":
-            # Structure-conditioned child predictor: input is the flattened per-source
-            # slot tensor (feature + one presence bit per source). The source axis is
-            # NEVER reduced before this MLP, so source j cannot cancel source j' by being
-            # pooled together -- per-parent identity is preserved (spec risk 1 / done #2).
-            ns = state_dim + 1
-            self.structure_predictor = MLP(ns * (feature_dim + 1), 2, pred_hidden)
+        # Structure-conditioned child predictor (the sole prediction head): input is the
+        # flattened per-source slot tensor (feature + one presence bit per source). The
+        # source axis is NEVER reduced before this MLP, so source j cannot cancel source j'
+        # by being pooled together -- per-parent identity is preserved.
+        ns = state_dim + 1
+        self.structure_predictor = MLP(ns * (feature_dim + 1), 2, pred_hidden)
 
     def features(self, s, a):
         """
@@ -96,16 +98,13 @@ class StatePredictor(nn.Module):
         """
         feats: (..., state_dim+1, feature_dim) -> mu (..., 1), std (..., 1)
 
-        ``structure`` (..., state_dim+1) selects the structure-conditioned path: each
-        source keeps its own feature slot and a presence bit is concatenated so an absent
-        parent is distinguishable from a present parent whose feature happens to be zero.
-        The source axis is NOT reduced. Legacy ``structure=None`` keeps the exact max-pool.
+        ``structure`` (..., state_dim+1) selects the structure-conditioned prediction path:
+        each source keeps its own feature slot and a presence bit is concatenated so an
+        absent parent is distinguishable from a present parent whose feature happens to be
+        zero. The source axis is NOT reduced. ``structure=None`` uses the max-pool head,
+        which exists only for the CMI/update_mask bootstrap, not for prediction.
         """
         if structure is not None:
-            if self.dynamics_mode != "structure_conditioned":
-                raise ValueError(
-                    "structure conditioning requires dynamics_mode='structure_conditioned'"
-                )
             structure_f = structure.to(feats.dtype).unsqueeze(-1)  # (..., ns, 1)
             structure_f = structure_f.expand(*feats.shape[:-1], 1)
             # GATE each source feature by its presence bit BEFORE flattening: an absent
@@ -185,7 +184,6 @@ class CDL(CausalModel):
         eval_steps=10,
         interv_weight=1.0,
         *,
-        dynamics_mode="hard_mask",
         residual_bound=0.25,
         residual_l2=1e-2,
         residual_l1=1e-3,
@@ -196,8 +194,6 @@ class CDL(CausalModel):
         predict_members=1,
         enumeration_graph=None,
     ):
-        if dynamics_mode not in ("hard_mask", "structure_conditioned"):
-            raise ValueError(f"unknown dynamics_mode: {dynamics_mode!r}")
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.cmi_threshold = cmi_threshold
@@ -208,8 +204,7 @@ class CDL(CausalModel):
         self.grad_clip = grad_clip
         self.kpi_start = kpi_start
         self.node_names = node_names
-        # Phase 2 structure-conditioned config (only active in the new default mode).
-        self.dynamics_mode = dynamics_mode
+        # Structure-conditioned dynamics config (the sole world model).
         self.residual_bound = float(residual_bound)
         self.residual_l2 = float(residual_l2)
         self.residual_l1 = float(residual_l1)
@@ -241,22 +236,18 @@ class CDL(CausalModel):
                     action_dim,
                     feature_dim,
                     list(generative_fc_dims),
-                    dynamics_mode=dynamics_mode,
                 )
                 for _ in range(state_dim)
             ]
         ).to(self.device)
 
-        # Bounded dense residual (KPI children only), built in the new default mode.
-        if dynamics_mode == "structure_conditioned":
-            self.residual = DenseResidual(
-                state_dim + action_dim,
-                state_dim - kpi_start,
-                self.residual_hidden,
-                self.residual_bound,
-            ).to(self.device)
-        else:
-            self.residual = None
+        # Bounded dense residual (KPI children only) is always part of the world model.
+        self.residual = DenseResidual(
+            state_dim + action_dim,
+            state_dim - kpi_start,
+            self.residual_hidden,
+            self.residual_bound,
+        ).to(self.device)
 
         prototype = self.models[0]
         parameter_names = tuple(dict(prototype.named_parameters()))
@@ -287,10 +278,7 @@ class CDL(CausalModel):
         )
 
         optimizer_kwargs = {"fused": True} if self.device.type == "cuda" else {}
-        if self.residual is not None:
-            trainable = list(self.models.parameters()) + list(self.residual.parameters())
-        else:
-            trainable = self.models.parameters()
+        trainable = list(self.models.parameters()) + list(self.residual.parameters())
         self.opt = optim.Adam(trainable, lr=lr, **optimizer_kwargs)
 
         fd = state_dim
@@ -335,64 +323,23 @@ class CDL(CausalModel):
         return -Normal(mu, std).log_prob(target)
 
     def train_step(self, s_batch, a_batch, structures=None):
-        if self.dynamics_mode == "structure_conditioned":
-            return self._structure_train_step(s_batch, a_batch, structures)
-        # ---- hard-mask path (byte-identical to the golden regression baseline) ----
-        s_t = s_batch[:, 0]
-        s_tp1 = s_batch[:, 1]
-        bs = s_t.shape[0]
-        fd = self.state_dim
+        """Structure-conditioned dynamics training (the sole training path).
 
-        self.opt.zero_grad()
-        # a_batch[:, 0] is param_id — the param that was changed
-        # bias: drop the changed param more often so model learns to predict without it
-        changed_param_ids = a_batch[:, 0].long()  # (bs,) which param changed
-
-        # 50% of the time drop the changed param, 50% drop random
-        use_informed = torch.rand(bs, device=self.device) > 0.5
-        random_drop = torch.randint(fd + 1, (bs,), device=self.device)
-        informed_drop = changed_param_ids  # drop the changed param
-
-        drop_idx = torch.where(use_informed, informed_drop, random_drop)
-        mask = F.one_hot(drop_idx, fd + 1).bool()
-
-        self.models.train()
-        parameters = self._stacked_parameters()
-        feats = self._batched_forward(
-            parameters,
-            s_t,
-            a_batch,
-            features=None,
-            features_in_dim=None,
-            return_features=True,
-        )
-        mu, std = self._batched_forward(parameters, features=feats, features_in_dim=0)
-        targets = s_tp1.transpose(0, 1).unsqueeze(-1)
-        full_loss = self._nll(mu, std, targets).mean()
-
-        masked_feats = feats.masked_fill(mask.unsqueeze(0).unsqueeze(-1), float("-inf"))
-        mu_m, std_m = self._batched_forward(
-            parameters,
-            features=masked_feats,
-            features_in_dim=0,
-        )
-        masked_loss = self._nll(mu_m, std_m, targets).mean()
-        loss = full_loss + masked_loss
-        loss.backward()
-        nn.utils.clip_grad_norm_(self.models.parameters(), self.grad_clip)
-        self.opt.step()
-
-        return loss.detach()
+        ``structures`` may be passed explicitly; otherwise the injected P1 sampler draws
+        ``m_train`` of them. There is no max-pool training path -- the max-pool head is kept
+        only so the offline CMI bootstrap can run on a frozen predictor.
+        """
+        return self._structure_train_step(s_batch, a_batch, structures)
 
     # ------------------------------------------------------------------ #
-    # Phase 2: structure-conditioned dynamics + bounded residual.
+    # Structure-conditioned dynamics + bounded residual.
     # ------------------------------------------------------------------ #
     def _sample_structures(self, m, device):
         """Draw ``m`` structures from the injected P1 sampler. Fails loudly if none is
-        supplied -- the new mode must never silently fall back to a point graph."""
+        supplied -- the world model must never silently fall back to a point graph."""
         if self.sampler is None:
             raise ValueError(
-                "dynamics_mode='structure_conditioned' requires a P1 structure sampler; "
+                "structure-conditioned prediction requires a P1 structure sampler; "
                 "none was supplied (pass structures= explicitly or inject a sampler)"
             )
         structures = self.sampler.sample_structures(m, device=device)
@@ -441,7 +388,7 @@ class CDL(CausalModel):
         batch = s.shape[0]
         mus, stds = [], []
         for i in range(child_rows.shape[0]):
-            sp = self.models[int(child_rows[i])]
+            sp = cast(StatePredictor, self.models[int(child_rows[i])])
             feats = sp.features(s, a)  # (batch, ns, f)
             feats_m = feats.unsqueeze(0).expand(m, batch, feats.shape[-2], feats.shape[-1])
             structure_c = structures[:, i]  # (m, ns) or (m, batch, ns)
@@ -458,9 +405,7 @@ class CDL(CausalModel):
         Every ``predict_next_state`` call with ``structures=None`` afterwards reuses this set
         until ``clear_decision_structures`` -- so all candidate actions and the full rollout
         within a single act call are scored under the IDENTICAL structures, and a fresh set is
-        drawn at the next decision. No-op (returns None) outside structure_conditioned mode."""
-        if self.dynamics_mode != "structure_conditioned":
-            return None
+        drawn at the next decision."""
         self._decision_structures = self._sample_structures(self.predict_members, self.device)
         return self._decision_structures
 
@@ -488,7 +433,6 @@ class CDL(CausalModel):
 
         # Bounded residual on KPI children only; broadcast over structure members.
         delta = self.residual(s_t, a_batch)  # (batch, k)
-        k = delta.shape[-1]
         delta_rows = delta.transpose(0, 1).unsqueeze(-1)  # (k, batch, 1)
         mu_total = mu_graph.clone()
         mu_total[:, self.kpi_start :, :, :] = mu_graph[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
@@ -531,8 +475,6 @@ class CDL(CausalModel):
 
         With ``m > 1`` the fraction is computed per member (transitions are NEVER averaged
         first) then reported as both the member-mean and the max-member fraction."""
-        if self.dynamics_mode != "structure_conditioned":
-            raise ValueError("residual_diagnostics is only defined for structure_conditioned mode")
         s = s.to(self.device)
         a = a.to(self.device)
         kpi_rows = torch.arange(self.kpi_start, self.state_dim, device=self.device)
@@ -657,37 +599,7 @@ class CDL(CausalModel):
         return graph
 
     def predict_next_state(self, s, a, structures=None):
-        if self.dynamics_mode == "structure_conditioned":
-            return self._structure_predict_next_state(s, a, structures)
-        # ---- hard-mask path (byte-identical to the golden regression baseline) ----
-        s = s.to(self.device)
-        a = a.to(self.device)
-        with torch.no_grad():
-            self.models.eval()
-            parameters = self._stacked_parameters()
-            feats = self._batched_forward(
-                parameters,
-                s,
-                a,
-                features=None,
-                features_in_dim=None,
-                return_features=True,
-            )
-            targets = torch.arange(self.kpi_start, self.state_dim, device=self.device)
-            parameters = {name: value[targets] for name, value in parameters.items()}
-            feats = feats[targets]
-            graph_mask = self.get_binary_graph()[targets].clone()
-            graph_mask[torch.arange(len(targets), device=self.device), targets] = True
-            graph_mask[:, -1] = True
-            masked_feats = feats.masked_fill(~graph_mask.unsqueeze(1).unsqueeze(-1), float("-inf"))
-            mu, std = self._batched_forward(
-                parameters,
-                features=masked_feats,
-                features_in_dim=0,
-            )
-        mu = mu.squeeze(-1).transpose(0, 1)
-        std = std.squeeze(-1).transpose(0, 1)
-        return Normal(mu, std)
+        return self._structure_predict_next_state(s, a, structures)
 
     def _structure_predict_next_state(self, s, a, structures=None):
         """Structure-conditioned prediction over KPI children with the bounded residual.
@@ -754,9 +666,8 @@ class CDL(CausalModel):
             "eval_steps": self.eval_steps,
             "grad_clip": self.grad_clip,
             "device": self.device,
-            # Phase 2 mode + residual (metadata only; absent keys => legacy hard-mask).
-            "dynamics_mode": self.dynamics_mode,
-            "residual_state_dict": self.residual.state_dict() if self.residual is not None else None,
+            # Structure-conditioned residual state + config.
+            "residual_state_dict": self.residual.state_dict(),
             "residual_bound": self.residual_bound,
             "residual_l2": self.residual_l2,
             "residual_l1": self.residual_l1,
@@ -774,14 +685,6 @@ class CDL(CausalModel):
         Load the model state, optimizer state, and other attributes.
         """
         state = torch.load(filepath, map_location=self.device)
-        # No checkpoint reshaping across modes (spec risk 2): a hard-mask predictor and a
-        # structure-conditioned predictor have different parameter layouts.
-        saved_mode = state.get("dynamics_mode", "hard_mask")
-        if saved_mode != self.dynamics_mode:
-            raise ValueError(
-                f"checkpoint dynamics_mode={saved_mode!r} cannot load into a "
-                f"{self.dynamics_mode!r} model; rebuild the model in the matching mode"
-            )
         for i, model in enumerate(self.models):
             model.load_state_dict(state["models_state_dict"][i])
         self.opt.load_state_dict(state["optimizer_state_dict"])
@@ -792,7 +695,7 @@ class CDL(CausalModel):
         self.mask_CMI = state["mask_CMI"]
         self._eval_cmi_acc = state["eval_cmi_acc"]
         self._eval_step_count = state["eval_step_count"]
-        if self.residual is not None and state.get("residual_state_dict") is not None:
+        if state.get("residual_state_dict") is not None:
             self.residual.load_state_dict(state["residual_state_dict"])
         saved_enum = state.get("enumeration_graph")
         if saved_enum is not None:

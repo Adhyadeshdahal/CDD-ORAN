@@ -71,13 +71,13 @@ class PosteriorStructureSampler:
 
 
 def make_structure_sampler(cfg: ExperimentConfig, seed=0, env=None):
-    """Build the P1 structure sampler for structure_conditioned mode by LOADING the configured
-    precomputed calibrated posterior artifact (``model.posterior_artifact``). No global RNG
-    mutation (review blocker #4); rejects uncalibrated artifacts (review blocker #2)."""
+    """Build the P1 structure sampler for the structure-conditioned world model by LOADING the
+    configured precomputed calibrated posterior artifact (``model.posterior_artifact``). No
+    global RNG mutation (review blocker #4); rejects uncalibrated artifacts (review blocker #2)."""
     artifact = cfg.model.posterior_artifact
     if not artifact:
         raise ValueError(
-            "dynamics_mode='structure_conditioned' requires model.posterior_artifact "
+            "the structure-conditioned world model requires model.posterior_artifact "
             "(a precomputed CALIBRATED posterior file; generate it offline with "
             "cdd_oran.analysis.graph_posterior --save-posterior)"
         )
@@ -149,17 +149,16 @@ def validate_enumeration_artifact(graph, meta, env, environment):
             "enumeration graph node-name ordering does not match the target env "
             f"({meta.get('node_names')} != {expected_nodes})"
         )
-    if meta.get("model_kind") != "cdl" or meta.get("dynamics_mode") != "hard_mask":
+    if meta.get("model_kind") != "cdl":
         raise ValueError(
-            "enumeration graph must come from a hard-mask CDL source "
-            f"(got model_kind={meta.get('model_kind')!r}, dynamics_mode={meta.get('dynamics_mode')!r})"
+            f"enumeration graph must come from a CDL source (got model_kind={meta.get('model_kind')!r})"
         )
 
 
 def freeze_enumeration_graph(run_dir, out_path, device=None):
-    """OFFLINE: freeze the crisp hard ENUMERATION graph from a trained HARD-MASK CDL run into
-    its own artifact (review blocker #3). Validates the source is a hard-mask CDL and the graph
-    has nonzero state edges; records env + node layout for load-time validation."""
+    """OFFLINE: freeze the crisp hard ENUMERATION graph from a trained CDL run into its own
+    artifact. The graph comes from the CMI-based ``get_binary_graph`` (the P1 bootstrap path);
+    validates it has nonzero state edges and records env + node layout for load-time validation."""
     from dataclasses import replace
 
     from cdd_oran.config import load_config
@@ -169,10 +168,9 @@ def freeze_enumeration_graph(run_dir, out_path, device=None):
     cfg = load_config(run_dir / "config.yaml")
     if device:
         cfg = replace(cfg, device=device)
-    if cfg.model_kind != "cdl" or cfg.model.dynamics_mode != "hard_mask":
+    if cfg.model_kind != "cdl":
         raise ValueError(
-            "freeze_enumeration_graph requires a hard-mask CDL source run "
-            f"(got model_kind={cfg.model_kind!r}, dynamics_mode={cfg.model.dynamics_mode!r})"
+            f"freeze_enumeration_graph requires a CDL source run (got model_kind={cfg.model_kind!r})"
         )
     env = get_env(cfg)
     model = get_model(cfg, env)
@@ -187,7 +185,6 @@ def freeze_enumeration_graph(run_dir, out_path, device=None):
         "node_names": node_names(env),
         "state_edge_count": state_edges,
         "model_kind": cfg.model_kind,
-        "dynamics_mode": cfg.model.dynamics_mode,
     }
     Path(out_path).write_text(json.dumps(payload, indent=2))
     return out_path
@@ -347,13 +344,12 @@ def get_model(cfg: ExperimentConfig, env, sampler=None):
     }
     if cfg.model_kind == "cdl":
         enum_graph = None
-        if cfg.model.dynamics_mode == "structure_conditioned" and cfg.model.enumeration_graph:
+        if cfg.model.enumeration_graph:
             enum_graph, enum_meta = load_enumeration_graph(cfg.model.enumeration_graph)
             validate_enumeration_artifact(enum_graph, enum_meta, env, cfg.environment)
         return CDL(
             **model_kwargs,
             interv_weight=cfg.model.interv_weight,
-            dynamics_mode=cfg.model.dynamics_mode,
             residual_bound=cfg.model.residual_bound,
             residual_l2=cfg.model.residual_l2,
             residual_l1=cfg.model.residual_l1,

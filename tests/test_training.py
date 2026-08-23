@@ -20,6 +20,12 @@ def _make_model():
     )
 
 
+def _structs(m=1):
+    """Fixed structure-conditioned training structures (m, state_dim=3, ns=4)."""
+    torch.manual_seed(1)
+    return torch.rand(m, 3, 4) > 0.5
+
+
 def _assert_optimizer_states_equal(left, right):
     left_states = list(left.opt.state.values())
     right_states = list(right.opt.state.values())
@@ -33,12 +39,14 @@ def _assert_optimizer_states_equal(left, right):
                 assert left_state[key] == right_state[key]
 
 
-def test_cdl_batched_training_and_mask_update():
+def test_cdl_structure_training_and_mask_update():
     model = _make_model()
     state_pairs = torch.rand(8, 2, 3)
     actions = torch.tensor([[0.0, 1.0, 2.0]] * 8)
 
-    loss = model.train_step(state_pairs, actions)
+    # Structure-conditioned training (the sole training path) + the CMI/update_mask path
+    # kept for the offline P1 bootstrap.
+    loss = model.train_step(state_pairs, actions, structures=_structs(1))
     model.update_mask(state_pairs, actions)
 
     assert loss.shape == ()
@@ -46,7 +54,10 @@ def test_cdl_batched_training_and_mask_update():
     assert model.get_causal_graph().shape == (3, 4)
 
 
-def test_cdl_targets_align_with_predictor_axis(monkeypatch):
+def test_cdl_update_mask_targets_align_with_predictor_axis(monkeypatch):
+    """The CMI/update_mask path (kept for the P1 bootstrap) aligns its NLL targets with the
+    per-source predictor axis: the full pass is (fd, bs, 1) and the masked pass is
+    (fd, fd+1, bs, 1)."""
     model = _make_model()
     original_nll = model._nll
 
@@ -61,7 +72,6 @@ def test_cdl_targets_align_with_predictor_axis(monkeypatch):
     state_pairs = torch.rand(8, 2, 3)
     actions = torch.tensor([[0.0, 1.0, 2.0]] * 8)
 
-    model.train_step(state_pairs, actions)
     model.update_mask(state_pairs, actions)
 
 
@@ -88,7 +98,7 @@ def test_cdl_checkpoint_round_trip_preserves_training_and_cmi_state(tmp_path):
     model = _make_model()
 
     torch.manual_seed(12)
-    model.train_step(state_pairs, actions)
+    model.train_step(state_pairs, actions, structures=_structs(1))
     model.update_mask(state_pairs, actions)
     assert model._eval_step_count == 1
     model.update_mask(state_pairs, actions)
@@ -108,9 +118,9 @@ def test_cdl_checkpoint_round_trip_preserves_training_and_cmi_state(tmp_path):
     _assert_optimizer_states_equal(model, restored)
 
     torch.manual_seed(13)
-    left_loss = model.train_step(state_pairs, actions)
+    left_loss = model.train_step(state_pairs, actions, structures=_structs(1))
     torch.manual_seed(13)
-    right_loss = restored.train_step(state_pairs, actions)
+    right_loss = restored.train_step(state_pairs, actions, structures=_structs(1))
     torch.testing.assert_close(left_loss, right_loss)
     for key, value in model.models.state_dict().items():
         torch.testing.assert_close(value, restored.models.state_dict()[key])

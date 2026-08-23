@@ -12,9 +12,10 @@ import hashlib
 import json
 import sys
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -27,9 +28,7 @@ from cdd_oran.analysis.stats import (  # noqa: E402
     cliffs_delta,
     compare_seeds,
     holm_correction,
-    satisfaction_rate,
 )
-
 
 DEFAULT_ENVS = ("EnvironmentI", "EnvironmentII")
 DEFAULT_SEEDS = tuple(range(45, 55))
@@ -116,13 +115,16 @@ def variant_recipe(environment: str, variant: str, artifact_root: str | Path = "
             }, reuse_from="source-hard",
             notes="matched dense 64-64 MLP; graph is supplied only for the current MLP API",
         ),
+        # TODO(orchestrator): the hard_mask conference architecture was deleted (feat/v2).
+        # This baseline recipe's "model.dynamics_mode" override no longer resolves against a
+        # config field. Decide whether to drop this baseline or reconstruct it from git history.
         "hard_mask": VariantRecipe(
             variant="hard_mask", config=cdl, model_kind="cdl", train_required=True,
             graph_source="causal", overrides={
                 **common_planner, "model.dynamics_mode": "hard_mask",
                 "model.predict_members": 1, "model.posterior_artifact": None,
                 "model.enumeration_graph": None,
-            }, notes="legacy/golden source checkpoint",
+            }, notes="DELETED conference architecture; recipe kept for the orchestrator to resolve",
         ),
         "oracle": VariantRecipe(
             variant="oracle", config=cdl, model_kind="cdl", train_required=False,
@@ -135,6 +137,8 @@ def variant_recipe(environment: str, variant: str, artifact_root: str | Path = "
             reuse_from="hard_mask", corrupt_edges=CORRUPTION_EDGES[environment],
             notes="immutable direct actuator-edge corruption; prediction mask only",
         ),
+        # TODO(orchestrator): "soft_mask" was never an implemented dynamics_mode value; with
+        # the mode field removed this override does not resolve. Resolve or drop this baseline.
         "soft_mask": VariantRecipe(
             variant="soft_mask", config=cdl, model_kind="cdl", train_required=True,
             graph_source="causal", overrides={
@@ -155,10 +159,10 @@ def variant_recipe(environment: str, variant: str, artifact_root: str | Path = "
             notes="dense predictor with fixed non-edge Jacobian penalty",
         ),
         "bootstrap_ensemble": VariantRecipe(
-            variant="bootstrap_ensemble", config=("configs/env_i_cdl_p2.yaml" if token == "i" else cdl),
+            variant="bootstrap_ensemble", config=cdl,
             model_kind="cdl", train_required=True, graph_source="enumeration",
             overrides={
-                **common_planner, "model.dynamics_mode": "structure_conditioned",
+                **common_planner,
                 "model.posterior_artifact": posterior, "model.enumeration_graph": enumeration,
                 "model.residual_bound": 0.0, "model.residual_l1": 0.0,
                 "model.residual_l2": 0.0, "model.predict_members": 8,
@@ -177,10 +181,10 @@ def variant_recipe(environment: str, variant: str, artifact_root: str | Path = "
             }, notes="eight independent hard-mask dynamics members; outer seed is replication unit",
         ),
         "full": VariantRecipe(
-            variant="full", config=("configs/env_i_cdl_p2.yaml" if token == "i" else cdl),
+            variant="full", config=cdl,
             model_kind="cdl", train_required=True, graph_source="enumeration",
             overrides={
-                **common_planner, "model.dynamics_mode": "structure_conditioned",
+                **common_planner,
                 "model.posterior_artifact": posterior, "model.enumeration_graph": enumeration,
                 "model.predict_members": 8, "planner.ensemble_aggregator": "quantile",
                 "planner.ensemble_quantile": 0.9, "planner.disagreement_penalty": 0.0,
@@ -298,7 +302,7 @@ def planner_record_key(record: dict[str, Any]) -> tuple[Any, ...]:
 
 
 def validate_planner_coverage(records: Iterable[dict[str, Any]]) -> None:
-    grouped: dict[tuple[Any, ...], set[str]] = defaultdict(set)
+    grouped: dict[tuple[Any, ...], set[Any]] = defaultdict(set)
     for record in records:
         grouped[(record.get("environment"), record.get("variant"), record.get("seed"), record.get("case_id"), record.get("conflict_id"))].add(record.get("planner"))
     for key, planners in grouped.items():
@@ -494,7 +498,7 @@ def stats_report(records: Iterable[dict[str, Any]], full_variant: str = "full") 
                 raise ValueError("utility and satisfaction seed pairing differs")
             utility_stats = compare_seeds(full, base, seed=0)
             satisfaction_stats = compare_seeds(sat_full, sat_base, seed=0)
-            item = {
+            item: dict[str, Any] = {
                 "environment": environment,
                 "planner": planner,
                 "full_variant": full_variant,
@@ -507,7 +511,7 @@ def stats_report(records: Iterable[dict[str, Any]], full_variant: str = "full") 
             all_pvalues.append(float(utility_stats["wilcoxon"]["p_value"]))
             comparisons.append(item)
     # Confirmatory Holm family: all baselines for each environment/planner.
-    for (environment, planner), group in sorted(grouped.items()):
+    for environment, planner in sorted(grouped):
         family = [item for item in pending if item["environment"] == environment and item["planner"] == planner]
         adjusted = holm_correction([item["utility"]["wilcoxon"]["p_value"] for item in family])
         for item, value in zip(family, adjusted, strict=True):
@@ -696,4 +700,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except (ValueError, FileNotFoundError, RuntimeError) as error:
         print(f"ablation_sweep: {error}", file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from error

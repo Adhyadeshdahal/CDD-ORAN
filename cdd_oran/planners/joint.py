@@ -149,6 +149,8 @@ class JointMultiNCPPlanner(Planner):
                 next_kpis, next_stds = sample[member], dist.stddev[member]
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed forward -> next NCP sees the shift
+        # param_ids is always non-empty for a joint conflict, so the loop ran at least once.
+        assert next_kpis is not None and next_stds is not None, "joint cost needs >=1 NCP"
         # Risk-depth limit: only the FINAL hop's std is risk-adjusted below.
         return score_batch(
             next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa
@@ -180,8 +182,8 @@ def _self_check():
     assert len(actions) == len(param_ids), "one action per NCP expected"
     for (pi, b, v) in actions:
         assert pi in param_ids
-        assert 0 <= b <= env.action_space[1], f"bin {b} out of bounds"
-        assert 0 <= v <= env.action_space[pi + 2], f"index {v} out of bounds for p{pi}"
+        assert 0 <= b <= env.action_space[1], f"bin {b} out of bounds"  # ty: ignore[not-subscriptable]
+        assert 0 <= v <= env.action_space[pi + 2], f"index {v} out of bounds for p{pi}"  # ty: ignore[not-subscriptable]
 
     # single-NCP fallback is a valid Planner action
     single = planner.act(state.clone(), param_ids[0], xapps, weights, 10)

@@ -199,8 +199,8 @@ def _self_check():
     torch.manual_seed(7)
     a_h3 = h3.act(state.clone(), pi, xapps, weights, 10)
     assert a_h3[0] == pi
-    assert 0 <= a_h3[1] <= env.action_space[1]
-    assert 0 <= a_h3[2] <= env.action_space[pi + 2]
+    assert 0 <= a_h3[1] <= env.action_space[1]  # ty: ignore[not-subscriptable]
+    assert 0 <= a_h3[2] <= env.action_space[pi + 2]  # ty: ignore[not-subscriptable]
     print("horizon self-check OK:", {"baseline": a_base, "H1": a_h1, "H3": a_h3})
 
 

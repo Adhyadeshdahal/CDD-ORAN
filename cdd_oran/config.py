@@ -17,10 +17,11 @@ class ModelConfig:
     feature_fc_dims: tuple[int, ...]
     batch_size: int
     # Interventional-CMI reweight (CDL only). 1.0 = OFF, bit-identical to baseline.
+    # Used by the offline P1 posterior bootstrap (edge_stability -> update_mask), not by
+    # the structure-conditioned prediction path.
     interv_weight: float = 1.0
-    # Phase 2 structure-conditioned dynamics (CDL only). "hard_mask" is the legacy
-    # default and stays byte-identical; "structure_conditioned" is the new world model.
-    dynamics_mode: str = "hard_mask"
+    # Structure-conditioned dynamics (CDL only) are the sole world model. The bounded
+    # residual + posterior structure sampler + frozen enumeration graph configure it.
     residual_bound: float = 0.25
     residual_l2: float = 1e-2
     residual_l1: float = 1e-3
@@ -148,7 +149,6 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             feature_fc_dims=tuple(cast(list[int], values["model"]["feature_fc_dims"])),
             batch_size=cast(int, values["model"]["batch_size"]),
             interv_weight=cast(float, values["model"].get("interv_weight", 1.0)),
-            dynamics_mode=cast(str, values["model"].get("dynamics_mode", "hard_mask")),
             residual_bound=cast(float, values["model"].get("residual_bound", 0.25)),
             residual_l2=cast(float, values["model"].get("residual_l2", 1e-2)),
             residual_l1=cast(float, values["model"].get("residual_l1", 1e-3)),

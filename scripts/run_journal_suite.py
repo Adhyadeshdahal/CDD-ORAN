@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -234,7 +235,7 @@ class Suite:
         return True
 
     # ---- Stage 1: recovery (train CDL + threshold_sweep + edge_stability) ----
-    def recovery(self):
+    def run_recovery(self):
         stage = 1
         for env in self.args.envs:
             self.recovery[env] = {}
@@ -286,7 +287,7 @@ class Suite:
                     entry["edge_stability"] = stab
 
     # ---- Stage 2: world models (train MLP) ----
-    def world_models(self):
+    def run_world_models(self):
         stage = 2
         for env in self.args.envs:
             self.world_models[env] = {}
@@ -308,7 +309,7 @@ class Suite:
                 }
 
     # ---- Stage 3: mitigation (evaluate CDL + MLP over mitigation seeds and overrides) ----
-    def mitigation(self):
+    def run_mitigation(self):
         stage = 3
         for env in self.args.envs:
             self.mitigation[env] = {}
@@ -403,7 +404,7 @@ class Suite:
         self.satisfaction[env][seed][mseed].setdefault(override, {})[model_kind] = rates
 
     # ---- Stage 4: risk sweep (evaluate CDL over planner.risk_kappa) ----
-    def risk_sweep(self):
+    def run_risk_sweep(self):
         stage = 4
         for env in self.args.envs:
             self.risk_sweep[env] = {}
@@ -715,13 +716,13 @@ def main(argv=None):
         return 0
 
     if 1 in stages:
-        suite.recovery()
+        suite.run_recovery()
     if 2 in stages:
-        suite.world_models()
+        suite.run_world_models()
     if 3 in stages:
-        suite.mitigation()
+        suite.run_mitigation()
     if 4 in stages:
-        suite.risk_sweep()
+        suite.run_risk_sweep()
     if 5 in stages:
         suite.stats()
     if 6 in stages:
@@ -774,9 +775,9 @@ def _emit_selftest(args):
     # Synthetic paired per-seed means (CDL clearly above MLP) through compare_seeds.
     cdl = np.array([0.90, 0.92, 0.88])
     mlp = np.array([0.61, 0.59, 0.63])
-    rows = []
+    rows: list[dict[str, Any]] = []
     for env, planner in [("EnvironmentI", "QACM"), ("EnvironmentI", "ModelBasedMPPI")]:
-        row = {
+        row: dict[str, Any] = {
             "environment": env,
             "planner": planner,
             **stats_module.compare_seeds(cdl, mlp, seed=args.seed),

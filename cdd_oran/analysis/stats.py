@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import math
+from typing import Any
 
 import numpy as np
 
@@ -177,7 +178,7 @@ def bh_fdr(pvalues) -> np.ndarray:
     return adj
 
 
-def compare_seeds(cdl: np.ndarray, mlp: np.ndarray, seed: int = 0):
+def compare_seeds(cdl: np.ndarray, mlp: np.ndarray, seed: int = 0) -> dict[str, Any]:
     """Robust comparison for one planner from PER-SEED PAIRED MEANS.
 
     REPLICATION UNIT: independent mitigation seeds, NOT within-run samples. Pass one
@@ -286,9 +287,9 @@ def satisfaction_rate(
                 "values and no xApp->KPI mapping are stored in v1",
             ],
             "note": (
-                "utilities.json v%s lacks the satisfaction inputs; re-run evaluate.py "
+                "utilities.json v{} lacks the satisfaction inputs; re-run evaluate.py "
                 "(v2 persists `planner_satisfied`), or pass directions= and "
-                "norm_thresholds= from the env." % str(data.get("version"))
+                "norm_thresholds= from the env.".format(data.get("version"))
             ),
             "planners": list(data.get("algorithm_names", [])),
         }

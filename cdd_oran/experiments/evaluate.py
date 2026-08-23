@@ -13,8 +13,8 @@ Pipeline
      - Conflict count per step
 """
 
-import hashlib
 import copy
+import hashlib
 import json
 import logging
 import random
@@ -22,21 +22,21 @@ from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from cdd_oran.analysis.graph_baselines import (
-    build_override_graph,
-    collect_transitions,
-    remove_edges,
-)
 from cdd_oran.analysis.counterfactual_metrics import (
     autoregressive_rollout_rmse,
     counterfactual_action_response_error,
     decision_regret,
     one_step_mse,
+)
+from cdd_oran.analysis.graph_baselines import (
+    build_override_graph,
+    collect_transitions,
 )
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
 from cdd_oran.conflicts import (
@@ -83,7 +83,7 @@ def preserve_probe_rng(model):
         torch.set_rng_state(global_snapshot[2])
         if global_snapshot[3] is not None:
             torch.cuda.set_rng_state_all(global_snapshot[3])
-        if sampler_state is not None:
+        if sampler is not None and sampler_state is not None:
             sampler.rng.bit_generator.state = sampler_state
 
 
@@ -199,7 +199,7 @@ def collect_counterfactual_trajectory(
     observed_state = state_t.detach().clone()
 
     structures = None
-    if getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned":
+    if hasattr(model, "_sample_structures"):
         count = int(getattr(model, "predict_members", 1))
         structures = model._sample_structures(count, device)
         member_structures = structures.detach().cpu().numpy()
@@ -341,7 +341,6 @@ def main(
     graph_run=None,
     graph_cfg=None,
     graph_override="causal",
-    corrupt_edges=None,
     counterfactual_horizon=0,
     counterfactual_gamma=1.0,
 ):
@@ -362,7 +361,7 @@ def main(
     act_dim = env.get_action_dim()
     sampler = None
     run_manifest = None
-    if cfg.model_kind == "cdl" and cfg.model.dynamics_mode == "structure_conditioned":
+    if cfg.model_kind == "cdl" and cfg.model.posterior_artifact:
         from cdd_oran.models import (
             make_structure_sampler,
             verify_checkpoint_manifest,
@@ -424,38 +423,16 @@ def main(
         action_col = torch.ones((override.shape[0], 1), dtype=torch.bool, device=override.device)
         full_graph = torch.cat([override, action_col], dim=1)
         cdl.get_binary_graph = lambda threshold=None, g=full_graph: g
-        logger.info("Graph override active: %s (%d edges)", graph_override, int(override.sum()))
-
-    # Opt-in corruption (Phase 0 mechanism test). Scope: this is an INFERENCE-TIME
-    # structural omission in the CURRENT CDL. The predictor was trained on the FULL
-    # feature set with random one-source dropout, and the learned graph is applied
-    # only at prediction (cdl.py train_step/predict_next_state); removing an edge here
-    # blinds the world model's PREDICTION mask to that parent. It is NOT evidence about
-    # a predictor structurally retrained never to see the parent -- that
-    # "retrained-without-edge" variant is an optional future check, not built here.
-    #
-    # Separation of the graph's two uses (the paper's own design principle): conflict
-    # ENUMERATION stays on the BASE (pre-corruption) graph, captured here and held
-    # FIXED for every corruption level k, so the planner is always asked to mitigate
-    # the SAME conflicts. Only predict_next_state sees the corrupted mask. When
-    # corruption is off, the plain --graph-override path is unchanged.
-    enum_graph = None  # numpy [state_dim, state_dim] used for conflict enumeration
-    if corrupt_edges:
-        base_graph = cdl.get_binary_graph().clone()
-        enum_graph = base_graph[:, :-1].cpu().detach().numpy()
-        corrupted, removed = remove_edges(base_graph, corrupt_edges, env)
-        cdl.get_binary_graph = lambda threshold=None, g=corrupted: g
         logger.info(
-            "Graph corruption active (world-model mask only; conflicts fixed on base "
-            "graph): removed %d edge(s): %s",
-            len(removed),
-            ", ".join(spec for spec, _, _ in removed),
+            "Graph override active: %s (%d edges) -- overrides the conflict-enumeration graph",
+            graph_override,
+            int(override.sum()),
         )
 
-    # Phase 2 residual diagnostics on a FIXED probe bank (structure_conditioned only),
-    # so runs are comparable and the report never depends on planner-induced states.
+    # Residual diagnostics on a FIXED probe bank (CDL world model only), so runs are
+    # comparable and the report never depends on planner-induced states.
     residual_report = None
-    if getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned":
+    if hasattr(model, "residual_diagnostics"):
         # Compute the probe under SAVED/RESTORED RNG state (review MAJOR #7): the probe
         # reseeds and consumes env randomness, so snapshot python/numpy/torch RNG first and
         # restore it afterward -- the real evaluation trajectory (env resets under CRN) is
@@ -520,12 +497,9 @@ def main(
         state_t = state_to_tensor(state_dict).to(cfg.device)
         raw_params = denormalize_params(state_t[: env.num_params].cpu().numpy(), env)
 
-        # Fixed conflict population: enumerate from the BASE graph when corrupting,
-        # so no conflict is ever dropped and k = all-edges is still a valid row.
-        if enum_graph is not None:
-            causal_graph = enum_graph
-        else:
-            causal_graph = cdl.get_binary_graph()[:, :-1].cpu().detach().numpy()
+        # Conflicts are enumerated from the (frozen) enumeration graph, or a --graph-override
+        # replacement when one is active.
+        causal_graph = cdl.get_binary_graph()[:, :-1].cpu().detach().numpy()
         edges = detect_conflict_edges(causal_graph, env)
 
         num_conflicts = len(edges)
@@ -701,17 +675,18 @@ def main(
 
     writer.close()
     metrics = read_metrics(run_dir)
-    metrics["evaluation"] = {
+    evaluation: dict[str, Any] = {
         "planner_mean_utilities": {
             name: float(np.mean(values)) if values else None
             for name, values in all_utilities.items()
         }
     }
+    metrics["evaluation"] = evaluation
     if residual_report is not None:
-        metrics["evaluation"]["residual"] = residual_report
+        evaluation["residual"] = residual_report
         utilities_data["residual"] = residual_report
     if counterfactual_horizon:
-        metrics["evaluation"]["counterfactual"] = {
+        evaluation["counterfactual"] = {
             "enabled": True,
             "horizon": int(counterfactual_horizon),
             "gamma": float(counterfactual_gamma),

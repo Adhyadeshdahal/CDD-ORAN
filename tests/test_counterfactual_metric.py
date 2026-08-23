@@ -1,3 +1,4 @@
+from dataclasses import replace
 from types import SimpleNamespace
 
 import numpy as np
@@ -147,7 +148,6 @@ class _TinyEnv:
 
 
 class _StubModel:
-    dynamics_mode = "hard_mask"
     device = torch.device("cpu")
 
     def predict_next_state(self, state, action):
@@ -250,9 +250,6 @@ def test_evaluator_collector_isolated_and_disabled_path(tmp_path, monkeypatch):
     monkeypatch.setattr(evaluate, "get_env", lambda cfg: _EvalEnv())
     monkeypatch.setattr(evaluate, "get_model", lambda cfg, env, sampler=None: _EvalModel())
     monkeypatch.setattr(evaluate, "get_planners", lambda cfg, model, env: [])
-    cfg = DEFAULT_CONFIG
-    cfg = cfg.__class__(
-        **{**cfg.__dict__, "device": "cpu", "num_steps": 1, "model_kind": "cdl"}
-    )
+    cfg = replace(DEFAULT_CONFIG, device="cpu", num_steps=1, model_kind="cdl")
     assert evaluate.main(cfg=cfg, run_dir=eval_dir) == 0
     assert not (eval_dir / "counterfactuals.json").exists()

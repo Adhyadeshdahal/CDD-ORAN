@@ -148,7 +148,6 @@ def _ensemble_model(env, predict_members):
         device="cpu",
         node_names=[f"n{i}" for i in range(state_dim)],
         eval_steps=2,
-        dynamics_mode="structure_conditioned",
         residual_hidden=[8],
         sampler=_FixedSampler(structs),
         predict_members=predict_members,

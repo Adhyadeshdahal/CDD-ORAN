@@ -66,7 +66,7 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
     random_policy = RandomPolicy(action_dim=env.action_dim, action_space=env.action_space)
     sampler = None
     artifact_manifest = None
-    if cfg.model_kind == "cdl" and cfg.model.dynamics_mode == "structure_conditioned":
+    if cfg.model_kind == "cdl" and cfg.model.posterior_artifact:
         from dataclasses import replace as _replace
 
         from cdd_oran.models import (
@@ -174,14 +174,9 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
             s_pair = torch.stack([s, s_next], dim=1)
             loss = model.train_step(s_pair, a)
 
-        # Hard-mask CMI estimation. The structure_conditioned default draws its structures
-        # from the injected P1 sampler, so it does not run the legacy CMI update here.
-        if cfg.model_kind == "cdl" and getattr(model, "dynamics_mode", "hard_mask") == "hard_mask":
-            if step % (cfg.train.eval_steps * cfg.train.inference_gradient_steps) == 0:
-                s, a, s_next = train_buffer.sample(cfg.model.batch_size)
-                a = a.reshape(-1, action_dim)
-                s_pair = torch.stack([s, s_next], dim=1)
-                model.update_mask(s_pair, a)
+        # The structure-conditioned world model draws its structures from the injected P1
+        # sampler; the CMI graph it consumes for conflict enumeration is a frozen offline
+        # artifact, so there is no in-loop CMI (update_mask) estimation here.
 
         if step % cfg.train.plot_freq == 0:
             if cfg.model_kind == "cdl":
@@ -232,10 +227,10 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
                     pred.sum(),
                 )
 
-                # Phase 2 residual reporting (structure_conditioned only): contribution
-                # fraction is the anti-collapse measurement, reported at every eval.
+                # Residual reporting (CDL world model only): the contribution fraction is the
+                # anti-collapse measurement, reported at every eval.
                 if (
-                    getattr(model, "dynamics_mode", "hard_mask") == "structure_conditioned"
+                    hasattr(model, "residual_diagnostics")
                     and len(test_buffer) >= cfg.train.test_batch_size
                 ):
                     # Reuse the SAME held-out batch as the MSE report above (review MINOR #8),

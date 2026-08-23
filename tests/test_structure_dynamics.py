@@ -10,6 +10,7 @@ its contribution fraction is finite, and the sampled-structure forward runs on C
 import json
 from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
@@ -28,7 +29,6 @@ from cdd_oran.models import (
 )
 from cdd_oran.models.cdl import CDL, StatePredictor
 
-
 # state_dim=3 (source 0,1 = parents, source 2 = the KPI self slot), action_dim=3,
 # feature_dim=2 -> ns = state_dim + 1 = 4 source slots (0,1,2 state + 3 action).
 STATE_DIM, KPI_START, ACTION_DIM, FEATURE_DIM = 3, 1, 3, 2
@@ -40,10 +40,8 @@ def _linear_predictor():
     analytically-known weights: mu = sum_j w_j * gated_feat_j[0], w = [1,2,3,4] over the four
     source slots, gated_feat_j = feat_j * presence_j. log_std weight is 0 -> std ~ 1."""
     torch.manual_seed(0)
-    sp = StatePredictor(
-        STATE_DIM, ACTION_DIM, FEATURE_DIM, [], dynamics_mode="structure_conditioned"
-    )
-    lin = sp.structure_predictor.net[-1]  # Linear(ns*(f+1)=12, 2)
+    sp = StatePredictor(STATE_DIM, ACTION_DIM, FEATURE_DIM, [])
+    lin = cast(torch.nn.Linear, sp.structure_predictor.net[-1])  # Linear(ns*(f+1)=12, 2)
     with torch.no_grad():
         lin.weight.zero_()
         lin.bias.zero_()
@@ -137,8 +135,8 @@ def test_absent_parent_std_invariance_with_known_logstd_weight():
     absent parent's raw feature leaves the predicted STD exactly unchanged (gating applies to
     the variance head too, not just the mean)."""
     torch.manual_seed(0)
-    sp = StatePredictor(STATE_DIM, ACTION_DIM, FEATURE_DIM, [], dynamics_mode="structure_conditioned")
-    lin = sp.structure_predictor.net[-1]
+    sp = StatePredictor(STATE_DIM, ACTION_DIM, FEATURE_DIM, [])
+    lin = cast(torch.nn.Linear, sp.structure_predictor.net[-1])
     with torch.no_grad():
         lin.weight.zero_()
         lin.bias.zero_()
@@ -202,7 +200,6 @@ def _model(sampler=None):
         device="cpu",
         node_names=["p0", "k0", "k1"],
         eval_steps=2,
-        dynamics_mode="structure_conditioned",
         residual_hidden=[4],
         sampler=sampler,
     )
@@ -361,7 +358,7 @@ def test_train_step_runs_and_updates_residual_params():
 # --------------------------------------------------------------------------- #
 def _env_i_cfg(enum_path=None, posterior_path=None):
     cfg = load_config("env_i_cdl.yaml")
-    model = replace(cfg.model, dynamics_mode="structure_conditioned")
+    model = cfg.model
     if enum_path is not None:
         model = replace(model, enumeration_graph=str(enum_path))
     if posterior_path is not None:
@@ -417,16 +414,16 @@ def test_wrong_node_order_enumeration_artifact_rejected(tmp_path):
         get_model(_env_i_cfg(enum_path=enum), env)
 
 
-def test_wrong_env_or_source_mode_enumeration_artifact_rejected(tmp_path):
+def test_wrong_env_enumeration_artifact_rejected(tmp_path):
     env = get_env(_env_i_cfg())
     bad_env = _write_enum(tmp_path / "badenv.json", env.true_adj_matrix, env, environment="EnvironmentII")
     with pytest.raises(ValueError, match="environment"):
         get_model(_env_i_cfg(enum_path=bad_env), env)
-    bad_mode = _write_enum(
-        tmp_path / "badmode.json", env.true_adj_matrix, env, dynamics_mode="structure_conditioned"
+    bad_kind = _write_enum(
+        tmp_path / "badkind.json", env.true_adj_matrix, env, model_kind="mlp"
     )
-    with pytest.raises(ValueError, match="hard-mask"):
-        get_model(_env_i_cfg(enum_path=bad_mode), env)
+    with pytest.raises(ValueError, match="CDL source"):
+        get_model(_env_i_cfg(enum_path=bad_kind), env)
 
 
 # --------------------------------------------------------------------------- #

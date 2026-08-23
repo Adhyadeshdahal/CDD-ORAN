@@ -1,3 +1,8 @@
+# Env I structure-conditioned CDL (the sole world model).
+# Two PRECOMPUTED OFFLINE ARTIFACTS are LOADED at train/eval time (no online bootstrap, no
+# global RNG mutation): posterior_artifact (the held-out-CALIBRATED P1 posterior) and
+# enumeration_graph (the frozen crisp graph for conflict enumeration). Generate both offline
+# first, then set the two paths below. predict_members>1 turns on the robust-planning ensemble.
 seed: 45
 mitigation_seed: 0
 environment: EnvironmentI
@@ -15,6 +20,17 @@ model:
   generative_fc_dims: [64, 64]
   feature_fc_dims: [64, 64]
   batch_size: 128
+  # --- structure-conditioned dynamics ---
+  residual_bound: 0.25
+  residual_l2: 0.01
+  residual_l1: 0.001
+  residual_hidden: [64, 64]
+  residual_alert_fraction: 0.25
+  # REQUIRED offline artifacts (set both before training):
+  posterior_artifact: null  # calibrated P1 posterior file (GraphPosterior.save)
+  enumeration_graph: null   # frozen crisp enumeration graph file (freeze_enumeration_graph)
+  # Robust-planning ensemble size (1 = single-model prediction).
+  predict_members: 8
 train:
   total_steps: 20000
   init_steps: 4000
@@ -25,6 +41,12 @@ train:
 planner:
   n_horizon: 1
   risk_kappa: 0.0
+  # Robust return aggregation over the predict_members ensemble.
+  ensemble_aggregator: quantile   # mean | quantile (risk-averse, default) | kappa
+  ensemble_quantile: 0.9          # upper cost quantile for "quantile"
+  ensemble_kappa: null            # for "kappa"; null reuses risk_kappa
+  disagreement_penalty: 0.0       # optional additive OOD penalty (0 = off, still reported)
+  ood_threshold: null             # disagreement OOD warning threshold (null = off)
   cem:
     n_candidate: 256
     n_top: 128
