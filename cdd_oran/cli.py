@@ -54,6 +54,33 @@ def build_parser():
     )
     _add_log_level(evaluate)
 
+    discover = commands.add_parser(
+        "discover",
+        help="Discover causal structure -> calibrated posterior + frozen enumeration graph",
+    )
+    discover.add_argument("--config", required=True, help="YAML experiment config (model_kind=cdl)")
+    discover.add_argument("--seed", type=int, help="Override the config seed")
+    discover.add_argument(
+        "--out", default="artifacts", help="Directory for <env>_posterior.json / <env>_enum.json"
+    )
+    discover.add_argument(
+        "--set",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Override a dotted config path",
+    )
+    discover.add_argument("--train-steps", type=int, default=4000, help="CMI-head gradient steps")
+    discover.add_argument("--pool-size", type=int, default=4096, help="Transition pool size")
+    discover.add_argument("--cmi-batches", type=int, default=64, help="Batches to converge mask_CMI")
+    discover.add_argument("--B", type=int, default=50, help="Posterior bootstrap resamples")
+    discover.add_argument("--n-transitions", type=int, default=2048, help="Bootstrap transition pool")
+    discover.add_argument(
+        "--calibration-run",
+        help="Held-out run dir for calibration (default: within-environment vs this env's truth)",
+    )
+    _add_log_level(discover)
+
     viz = commands.add_parser("viz", help="Visualize an experiment run")
     viz.add_argument("--run", required=True, help="Experiment run directory")
     viz.add_argument(
@@ -118,6 +145,30 @@ def main(argv=None):
                 graph_cfg=graph_cfg,
                 graph_override=args.graph_override,
             )
+
+        if args.command == "discover":
+            cfg = load_config(args.config, args.set)
+            if args.seed is not None:
+                cfg = replace(cfg, seed=args.seed)
+            from cdd_oran.experiments.discover import main as discover_main
+
+            result = discover_main(
+                cfg,
+                out_dir=args.out,
+                train_steps=args.train_steps,
+                pool_size=args.pool_size,
+                cmi_batches=args.cmi_batches,
+                B=args.B,
+                n_transitions=args.n_transitions,
+                calibration_run=args.calibration_run,
+            )
+            logger.info(
+                "Discovery complete: posterior=%s enum=%s (%d state edges)",
+                result["posterior"],
+                result["enumeration_graph"],
+                result["state_edges"],
+            )
+            return 0
 
         if args.command == "sweep":
             run_sweep(args.config, args.seeds, args.set, args.tag, args.graph_sweep)
