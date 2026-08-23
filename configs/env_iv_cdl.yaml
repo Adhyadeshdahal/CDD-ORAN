@@ -15,6 +15,17 @@ model:
   generative_fc_dims: [64, 64]
   feature_fc_dims: [64, 64]
   batch_size: 128
+  # --- structure-conditioned dynamics ---
+  residual_bound: 0.25
+  residual_l2: 0.01
+  residual_l1: 0.001
+  residual_hidden: [64, 64]
+  residual_alert_fraction: 0.25
+  # REQUIRED offline artifacts, produced by `cdd_oran.cli discover`.
+  posterior_artifact: artifacts/EnvironmentIV_posterior.json
+  enumeration_graph: artifacts/EnvironmentIV_enum.json
+  # Robust-planning ensemble size (1 = single-model prediction).
+  predict_members: 8
 train:
   total_steps: 50000
   init_steps: 4000
@@ -25,6 +36,12 @@ train:
 planner:
   n_horizon: 1
   risk_kappa: 0.0
+  # Robust return aggregation over the predict_members ensemble.
+  ensemble_aggregator: quantile
+  ensemble_quantile: 0.9
+  ensemble_kappa: null
+  disagreement_penalty: 0.0
+  ood_threshold: null
   cem:
     n_candidate: 256
     n_top: 128
