@@ -60,13 +60,25 @@ def cell_metrics(run_dirs, planner="QACM"):
     }
 
 
+def _enum_sources(run_dirs):
+    """Distinct `enum_source` provenance stamps across a cell's run dirs (default 'self')."""
+    srcs = set()
+    for rd in run_dirs:
+        data = json.loads((Path(rd) / "utilities.json").read_text(encoding="utf-8"))
+        srcs.add(data.get("enum_source", "self"))
+    return srcs
+
+
 def build(cells, planner="QACM"):
     """cells: dict[(structure,agg)] -> list[run_dir]. Returns metrics table + verdict."""
     m = {}
+    all_sources = set()
     for st in STRUCTURES:
         for ag in AGGS:
             rds = cells.get((st, ag), [])
             m[(st, ag)] = cell_metrics(rds, planner) if rds else None
+            if rds:
+                all_sources |= _enum_sources(rds)
 
     def util(st, ag):
         c = m.get((st, ag))
@@ -85,6 +97,11 @@ def build(cells, planner="QACM"):
 
     # gate deltas (primary column = quantile)
     verdict = []
+    if len(all_sources) > 1:
+        verdict.append(
+            f"WARNING: cells use mixed enum_source {sorted(all_sources)} -- decision sets "
+            "are NOT matched; utility means may be scored on different conflict sets."
+        )
     oq, dq = util("oracle", "quantile"), util("discovered", "quantile")
     if oq is not None and dq is not None:
         gap = oq - dq

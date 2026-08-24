@@ -343,9 +343,16 @@ def main(
     graph_override="causal",
     counterfactual_horizon=0,
     counterfactual_gamma=1.0,
+    enum_source="self",
+    enum_graph=None,
 ):
     if run_dir is None:
         raise ValueError("An experiment run directory is required")
+    if enum_source != "self" and graph_override != "causal":
+        raise ValueError(
+            "--enum-source and --graph-override both replace the enumeration graph; "
+            "use at most one"
+        )
 
     training_seed = cfg.seed
     cfg = replace(
@@ -435,6 +442,30 @@ def main(
             int(override.sum()),
         )
 
+    # Matched-decision-set gate: install a canonical enumeration graph used identically for
+    # every structure so both are scored on the SAME conflict set. Only conflict enumeration
+    # reads get_binary_graph; the planner's prediction sampler is untouched.
+    if enum_source != "self":
+        from cdd_oran.models import (
+            build_oracle_enumeration_graph,
+            load_enumeration_graph,
+        )
+
+        if enum_source == "oracle":
+            enum = build_oracle_enumeration_graph(env)
+        else:  # "path"
+            if not enum_graph:
+                raise ValueError("--enum-source=path requires --enum-graph")
+            enum, _ = load_enumeration_graph(enum_graph)
+        enum = enum.to(cdl.get_binary_graph().device)
+        cdl.get_binary_graph = lambda threshold=None, g=enum: g
+        logger.info(
+            "Enumeration graph overridden: source=%s (%d state edges) -- matched decision "
+            "set; prediction sampler untouched",
+            enum_source,
+            int(enum[:, :-1].sum()),
+        )
+
     # Residual diagnostics on a FIXED probe bank (CDL world model only), so runs are
     # comparable and the report never depends on planner-induced states.
     residual_report = None
@@ -481,6 +512,9 @@ def main(
         "version": 2,
         "environment": cfg.environment,
         "model_kind": cfg.model_kind,
+        # Provenance for the matched-decision-set gate: readers/gate_2x2 can assert both
+        # cells enumerated on the same source before comparing utilities.
+        "enum_source": enum_source,
         "algorithm_names": algorithm_names,
         "param_thresholds": [list(param.get_threshold()) for param in env.params],
         "kpi_thresholds": KPI_THRESHOLDS,

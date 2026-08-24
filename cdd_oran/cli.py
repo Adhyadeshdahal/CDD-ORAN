@@ -52,6 +52,19 @@ def build_parser():
             "correlation"
         ),
     )
+    evaluate.add_argument(
+        "--enum-source",
+        choices=("self", "oracle", "path"),
+        default="self",
+        help=(
+            "Enumeration graph for conflict detection: self (structure_source, default), "
+            "oracle (env.true_adj_matrix -- canonical matched decision set), path (--enum-graph)"
+        ),
+    )
+    evaluate.add_argument(
+        "--enum-graph",
+        help="Enumeration-graph JSON (fd, fd+1) when --enum-source=path",
+    )
     _add_log_level(evaluate)
 
     discover = commands.add_parser(
@@ -144,6 +157,8 @@ def main(argv=None):
                 graph_run=args.graph_run,
                 graph_cfg=graph_cfg,
                 graph_override=args.graph_override,
+                enum_source=args.enum_source,
+                enum_graph=args.enum_graph,
             )
 
         if args.command == "discover":
