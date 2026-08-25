@@ -61,6 +61,7 @@ planner:
   ensemble_quantile: 0.9          # upper cost quantile for "quantile"
   ensemble_kappa: null            # for "kappa"; null reuses risk_kappa
   disagreement_penalty: 0.0       # optional additive OOD penalty (0 = off, still reported)
+  utility_weight: 0.0             # signed standardized-utility reward in the per-member cost (0 = off)
   ood_threshold: null             # disagreement OOD warning threshold (null = off)
   cem:
     n_candidate: 256

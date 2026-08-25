@@ -67,6 +67,7 @@ def score_batch(
     device: torch.device | str,
     stds_batch: torch.Tensor | None = None,
     kappa: float = 0.0,
+    utility_weight: float = 0.0,
 ) -> torch.Tensor:
     # Vectorised over candidates (the ~5min/run hot loop). Kept in numpy on purpose:
     # the original promotes float32 KPI sums to float64 via `float32 array - python
@@ -81,6 +82,8 @@ def score_batch(
     )
     cost_matrix = np.zeros((count, len(xapps)))
     sat_matrix = np.zeros((count, len(xapps)))
+    # Signed standardized utility per xApp, for the optional utility_weight reward below.
+    util_matrix = np.zeros((count, len(xapps)))
     for xapp_index, xapp in enumerate(xapps):
         indices = _xapp_kpi_indices(xapp, width)
         mean, std = xapp.mean, xapp.std
@@ -96,7 +99,17 @@ def score_batch(
             distance = np.where(unsat, utility - norm_threshold, 0.0)
         cost_matrix[:, xapp_index] = weights[xapp_index] * distance * scaling_term
         sat_matrix[:, xapp_index] = np.where(unsat, 0.0, 1.0)
+        # Reuse the SAME normalised utility the distance/satisfaction logic just used; the
+        # sign turns "better for this xApp" into "larger" for maximiser AND minimiser.
+        util_matrix[:, xapp_index] = (1.0 if xapp.direction == 0 else -1.0) * utility
     costs = cost_matrix.sum(axis=1) - (sat_matrix.sum(axis=1)) ** 2
+    if utility_weight:
+        # Lever 2 / Option A: restore a utility gradient PAST the satisfaction threshold,
+        # where distance clamps to 0 and the cost would otherwise be flat. Applied here, in
+        # the PER-MEMBER cost, so the ensemble quantile still aggregates risk-adjusted
+        # totals (it does NOT degenerate into expected utility). Guarded so utility_weight
+        # == 0.0 skips the op entirely -> bit-identical to the pre-term cost.
+        costs = costs - utility_weight * util_matrix.sum(axis=1)
     return torch.tensor(costs, dtype=torch.float32, device=device)
 
 
@@ -108,6 +121,7 @@ def _score_batch_reference(
     device: torch.device | str,
     stds_batch: torch.Tensor | None = None,
     kappa: float = 0.0,
+    utility_weight: float = 0.0,
 ) -> torch.Tensor:
     """Original per-candidate loop, kept only as the parity oracle for _self_check."""
     count = next_kpis_batch.shape[0]
@@ -121,12 +135,16 @@ def _score_batch_reference(
         stds = stds_np[index] if stds_np is not None else None
         cost_vec = np.zeros(len(xapps))
         sat_vec = np.zeros(len(xapps))
+        util_vec = np.zeros(len(xapps))
         for xapp_index, xapp in enumerate(xapps):
             utility = xapp.compute_utility(risk_adjust(kpis, stds, xapp.direction, kappa))
             distance, satisfied = weighted_distance(xapp, utility)
             cost_vec[xapp_index] = weights[xapp_index] * distance * scaling_term
             sat_vec[xapp_index] = satisfied
+            util_vec[xapp_index] = (1.0 if xapp.direction == 0 else -1.0) * utility
         costs[index] = cost_vec.sum() - (sat_vec.sum()) ** 2
+        if utility_weight:
+            costs[index] = costs[index] - utility_weight * util_vec.sum()
     return torch.tensor(costs, dtype=torch.float32, device=device)
 
 
@@ -181,6 +199,35 @@ def _self_check() -> None:
         old = _score_batch_reference(kpis, xapps, weights_ref, 1.3, "cpu", stds, kap)
         assert torch.allclose(new, old, atol=0.0, rtol=0.0), f"kappa={kap}: values differ"
         assert torch.equal(new.argmin(), old.argmin()), f"kappa={kap}: argmin flipped"
+        # (a) utility_weight=0 parity: the new term is a strict no-op -- an explicit 0.0 is
+        # bit-identical to the pre-term call (which is exactly the default-arg call above),
+        # and the reference path stays byte-consistent with the fast path at lambda>0 too.
+        zero = score_batch(kpis, xapps, weights_ref, 1.3, "cpu", stds, kap, 0.0)
+        assert torch.equal(zero, new), f"kappa={kap}: utility_weight=0 is not a no-op"
+        for lam in (0.0, 0.4):
+            fast = score_batch(kpis, xapps, weights_ref, 1.3, "cpu", stds, kap, lam)
+            ref = _score_batch_reference(kpis, xapps, weights_ref, 1.3, "cpu", stds, kap, lam)
+            assert torch.allclose(fast, ref, atol=0.0, rtol=0.0), f"lambda={lam}: values differ"
+            assert torch.equal(fast.argmin(), ref.argmin()), f"lambda={lam}: argmin flipped"
+
+    # (b) utility_weight>0 breaks the flat region: two EQUALLY satisfied candidates (both
+    # distance 0, sat 1 -> identical cost -1 at lambda=0) must order by utility once
+    # lambda>0, for a maximiser (dir 0) and a minimiser (dir 1) alike.
+    for direction in (0, 1):
+        xapps = [make(direction)]
+        # dir 0: utilities 1 < 2 (2 is better). dir 1: utilities -1 > -2 (-2 is better).
+        better = 2.0 if direction == 0 else -2.0
+        worse = 1.0 if direction == 0 else -1.0
+        pair = torch.tensor([[worse], [better]])
+        sig2 = torch.ones(2, 1)
+        flat = score_batch(pair, xapps, [1.0], 1.0, dev, sig2, 0.0, 0.0)
+        assert flat[0].item() == flat[1].item() == -1.0, f"dir {direction}: not equally satisfied"
+        assert int(flat.argmin()) == 0, "lambda=0 must tie and keep the first candidate"
+        rewarded = score_batch(pair, xapps, [1.0], 1.0, dev, sig2, 0.0, 0.5)
+        assert rewarded[1].item() < rewarded[0].item(), (
+            f"dir {direction}: higher-utility satisfied candidate must cost strictly less"
+        )
+        assert int(rewarded.argmin()) == 1, f"dir {direction}: argmin did not move to the better utility"
 
     print("cost self-check OK")
 

@@ -18,6 +18,7 @@ def build_aggregator(cfg: ExperimentConfig) -> EnsembleAggregator:
         quantile=getattr(cfg.planner, "ensemble_quantile", 0.9),
         kappa=kappa if ens_kappa is None else ens_kappa,
         disagreement_penalty=getattr(cfg.planner, "disagreement_penalty", 0.0),
+        utility_weight=getattr(cfg.planner, "utility_weight", 0.0),
         ood_threshold=getattr(cfg.planner, "ood_threshold", None),
     )
 

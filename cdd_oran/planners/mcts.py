@@ -175,10 +175,16 @@ class ModelBasedMCTS(Planner):
 
         cost_vec = np.zeros(len(xapps))
         sat_vec = np.zeros(len(xapps))
+        signed_u = np.zeros(len(xapps))
         for i, xapp in enumerate(xapps):
             u = xapp.compute_utility(risk_adjust(kpis, stds, xapp.direction, self.risk_kappa))
             d, s = weighted_distance(xapp, u)
             cost_vec[i] = w[i] * d * tau
             sat_vec[i] = s
+            signed_u[i] = (1.0 if xapp.direction == 0 else -1.0) * u
         f_cost = cost_vec.sum() - (sat_vec.sum()) ** 2
+        # Mirror of score_batch's Lever 2 / Option A term so m=1 and m>1 agree.
+        # Guarded so utility_weight == 0.0 leaves this path bit-identical.
+        if self.aggregator.utility_weight:
+            f_cost = f_cost - self.aggregator.utility_weight * signed_u.sum()
         return float(f_cost)

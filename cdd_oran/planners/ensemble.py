@@ -59,12 +59,18 @@ class EnsembleAggregator:
                           reuse the planner's ``risk_kappa`` as ``kappa``.
     ``disagreement_penalty`` adds ``w * disagreement`` to the cost (0 = off). ``ood_threshold``
     raises an OOD flag when disagreement exceeds it (None = never).
+
+    ``utility_weight`` (Lever 2 / Option A) is NOT an aggregation setting: it is the signed
+    standardized-utility reward applied INSIDE each member's cost by ``score_batch``, and it
+    therefore also bites on the m=1 path. It rides on this dataclass only because this is the
+    one planner-knob carrier already threaded to every ``score_batch`` call site. 0.0 = off.
     """
 
     method: str = "quantile"
     quantile: float = 0.9
     kappa: float = 0.0
     disagreement_penalty: float = 0.0
+    utility_weight: float = 0.0
     ood_threshold: float | None = None
 
     def combine(self, per_member: torch.Tensor) -> torch.Tensor:
@@ -112,13 +118,18 @@ def robust_returns_from_dist(dist, xapps, weights, scaling_term, device, kappa, 
     sample = dist.sample()
     std = dist.stddev
     if sample.ndim == 2:  # m = 1: unchanged single-model path
-        costs = score_batch(sample, xapps, weights, scaling_term, device, std, kappa)
+        costs = score_batch(
+            sample, xapps, weights, scaling_term, device, std, kappa, aggregator.utility_weight
+        )
         return costs, torch.zeros_like(costs)
 
     members = sample.shape[0]
     per_member = torch.stack(
         [
-            score_batch(sample[j], xapps, weights, scaling_term, device, std[j], kappa)
+            score_batch(
+                sample[j], xapps, weights, scaling_term, device, std[j], kappa,
+                aggregator.utility_weight,
+            )
             for j in range(members)
         ],
         dim=0,

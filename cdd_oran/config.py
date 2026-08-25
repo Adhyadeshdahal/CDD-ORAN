@@ -93,6 +93,9 @@ class PlannerConfig:
     ensemble_quantile: float = 0.9  # upper cost quantile (risk-averse) for "quantile"
     ensemble_kappa: float | None = None  # for "kappa"; None -> reuse risk_kappa
     disagreement_penalty: float = 0.0  # additive OOD penalty on cost; 0 = off
+    # Signed standardized-utility reward folded into the PER-MEMBER cost (Lever 2 / Option A).
+    # Applies on every path (m=1 and m>1); 0.0 = off and byte-identical to the pre-term cost.
+    utility_weight: float = 0.0
     ood_threshold: float | None = None  # disagreement OOD warning threshold; None = off
 
 
@@ -205,6 +208,7 @@ def load_config(path: str | Path, overrides: Iterable[str] = ()) -> ExperimentCo
             ensemble_quantile=values["planner"].get("ensemble_quantile", 0.9),
             ensemble_kappa=values["planner"].get("ensemble_kappa", None),
             disagreement_penalty=values["planner"].get("disagreement_penalty", 0.0),
+            utility_weight=values["planner"].get("utility_weight", 0.0),
             ood_threshold=values["planner"].get("ood_threshold", None),
         ),
     )

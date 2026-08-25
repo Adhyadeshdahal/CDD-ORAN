@@ -156,6 +156,7 @@ class RecedingHorizonCEM(Planner):
             # Risk-depth limit: the kappa shift uses THIS step's one-step aleatoric std only.
             total = total + discount * score_batch(
                 next_kpis, xapps, weights, scaling_term, self.device, std, self.risk_kappa,
+                self.aggregator.utility_weight,
             )
             state = state.clone()
             state[:, num_params:] = next_kpis  # feed predicted KPIs forward

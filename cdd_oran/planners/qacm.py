@@ -89,6 +89,7 @@ class QACM(Planner):
 
                     cost = np.zeros(len(xapps))
                     s = np.zeros(len(xapps))
+                    signed_u = np.zeros(len(xapps))
 
                     for i, xapp in enumerate(xapps):
                         u_i = self.compute_utility(
@@ -97,8 +98,13 @@ class QACM(Planner):
                         d_i, s_i = self.obtain_weighted_distance(xapp, u_i)
                         cost[i] = w[i] * d_i * tau
                         s[i] = s_i
+                        signed_u[i] = (1.0 if xapp.direction == 0 else -1.0) * u_i
 
                     f_cost = cost.sum() - (s.sum()) ** 2
+                    # Mirror of score_batch's Lever 2 / Option A term so m=1 and m>1 agree.
+                    # Guarded so utility_weight == 0.0 leaves this path bit-identical.
+                    if self.aggregator.utility_weight:
+                        f_cost = f_cost - self.aggregator.utility_weight * signed_u.sum()
 
                 if f_cost < min_cost:
                     min_cost = f_cost

@@ -153,7 +153,8 @@ class JointMultiNCPPlanner(Planner):
         assert next_kpis is not None and next_stds is not None, "joint cost needs >=1 NCP"
         # Risk-depth limit: only the FINAL hop's std is risk-adjusted below.
         return score_batch(
-            next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa
+            next_kpis, xapps, weights, scaling_term, self.device, next_stds, self.risk_kappa,
+            self.aggregator.utility_weight,
         )
 
 
