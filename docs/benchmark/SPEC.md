@@ -296,20 +296,28 @@ over time — a case the current benchmark **cannot** express (`evaluate.py` nev
 planner actions and reports a mean of static per-step utilities;
 `research-envs-semantics.md` headline).
 
-**Causal graph / SCM sketch.** A multi-step KPI chain where an early beneficial move
-propagates to a larger later loss. Minimal load-bearing chain:
+**Causal graph / SCM sketch (RATIFIED fan-out redesign, `review-e3-redesign.md`;
+`GATE_CONTRACT_E3.md`).** A depth-three KPI cascade whose internal conduit **fans out** into two
+delayed monitored services, so an early beneficial move propagates to a larger later loss on more
+than one SLA. This is the ratified redesign that supersedes the earlier single-harm
+`P0->K0->K1->K2` chain (the old single-edge `K1->K2` decoy is obsolete). Load-bearing structure
+(`num_params=4`, `num_kpis=5`, every coefficient exactly 1):
 
 ```
 P0 ──► K0        (immediate: action on P0 improves K0 at t+1)
-K0 ──► K1        (K0 at t feeds K1 at t+1)
-K1 ──► K2        (K1 at t feeds K2 at t+1)   [delayed harm accumulates down-chain]
+K0 ──► K1        (internal conduit, EXCLUDED from the panel)
+K1 ──► K2        (K1 fans out to a delayed monitored service)
+K1 ──► K3        (K1 fans out to a second delayed monitored service)
+P1 ──► K2 ,  P2 ──► K3 ,  P3 ──► K4   (K4 is P0's non-descendant structural control)
 ```
 
-- Each KPI->KPI edge advances one step per **[SEM] PD2** (K0_t -> K1_{t+1} -> K2_{t+2}), so
-  the immediate gain at K0 and the delayed loss at K2 are separated by the chain depth in
-  time. The sign structure is set so that maximizing the immediate K0 objective drives K2
-  below target by a larger amount later — an immediate benefit that creates greater delayed
-  harm.
+- Each KPI->KPI edge advances one step per **[SEM] PD2** (K0_t -> K1_{t+1} -> {K2,K3}_{t+2}),
+  so the immediate gain at K0 and the delayed loss at the fan-out pair {K2,K3} are separated by
+  the chain depth in time. The sign structure is set so that maximizing the immediate K0
+  objective drives K2 and K3 below target by a larger combined amount later — an immediate
+  benefit that creates greater delayed harm across two services.
+- Scored panel IDs are `(0,2,3)`; K1 (internal conduit) and K4 (non-descendant control) are
+  excluded IDs `(1,4)`, identically for all four cells, the TRUE oracle, realized return, and D3.
 - Depth and lag of the chain are fixed to **match the planning horizon** given to the
   horizon-aware arm, so the oracle, simulator, and planner all score the same delayed
   trajectory (no timing mismatch).
@@ -327,14 +335,14 @@ causing larger downstream loss — is probed by a **2×2 design** crossing two b
 |                          | **H = 1 (myopic)** | **H = causal-depth horizon** |
 |--------------------------|--------------------|------------------------------|
 | **Full structure**       | cell FM            | **cell FH (proposed)**       |
-| **Truncated structure** (drop `K1->K2`) | cell TM | cell TH             |
+| **Truncated structure** (drop the fan-out pair `{K1->K2, K1->K3}`) | cell TM | cell TH |
 
 - **PRIMARY contrast (headline temporal claim): FH vs FM** — full structure held fixed
   (correct), horizon varied H=depth vs H=1. This isolates **temporal decision value**: given
   the correct chain, does planning over the horizon avoid the delayed harm that the myopic
   planner takes? This is the ONE named primary contrast.
 - **Mechanism checks (secondary):** FH vs TH isolates **causal structure** (same horizon,
-  chain edge present vs dropped); TM is the neither-cell floor. Together they separate
+  fan-out pair `{K1->K2, K1->K3}` present vs dropped); TM is the neither-cell floor. Together they separate
   structure from horizon so a positive primary contrast cannot be attributed to horizon
   alone. No "H=1 and/or drop the edge" ambiguity: each factor is its own axis.
 

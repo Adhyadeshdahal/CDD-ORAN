@@ -103,23 +103,38 @@ K5 from realized scoring. Regret is computed on the full objective under the tru
 
 ### 2.4 E3 — myopic/chain-truncated decoy (SPEC E3)
 
-**Decoy construction rule (2×2 design):** Four cells under the same model capacity:
+Everything below is FROZEN by `docs/benchmark/GATE_CONTRACT_E3.md` (ruling
+`review-e3-redesign.md`, RATIFIED fan-out redesign; `num_kpis` 4->5). The obsolete single-edge
+`K1->K2` decoy is superseded.
 
-|                          | **H = 1 (myopic)** | **H = causal-depth horizon** |
-|--------------------------|--------------------|------------------------------|
-| **Full structure**       | cell FM            | cell FH (proposed)           |
-| **Truncated structure**  | cell TM            | cell TH                      |
+**Decoy construction rule (2×2 design):** Four cells under the same model capacity and objective:
 
-The **PRIMARY contrast is FH vs FM** — full structure held fixed, horizon varied. This
-isolates temporal decision value.
+|                          | **H = 1 (myopic)** | **H = causal-depth horizon (H=3)** |
+|--------------------------|--------------------|------------------------------------|
+| **Full structure**       | cell FM            | cell FH (proposed)                 |
+| **Truncated structure**  | cell TM            | cell TH                            |
 
-**State bank.** Fixed set of states on the chain.
+Full structure is the depth-three cascade `P0->K0->K1->{K2,K3}` (K1 conduit, K4 non-descendant
+control). The **truncated** analytic model drops **exactly the fan-out pair `{K1->K2, K1->K3}`**
+(adjacency edges `(2,5),(3,5)`), zeroing only K1's contribution to K2 and K3; TRUE realization
+and oracle always retain both edges. The **PRIMARY contrast is FH vs FM** — full structure held
+fixed, horizon varied. This isolates temporal decision value.
 
-**Threshold.** Minimum cumulative realized regret over the causal horizon for FM vs FH,
-set before any simulator search.
+**State bank.** `env_seed=0..4095`, `episode=0`, noise off, 3 neutral advances; valid iff
+`P1>=L AND P2>=L`, `L=0.5+0.5*sqrt(2/12)`; retain the first `N=32` ascending (contract "State
+bank"). Panel IDs `(0,2,3)`; excluded IDs `(1,4)`.
 
-**Acceptance.** FM incurs positive cumulative regret vs the FH oracle (PRIMARY contrast).
-Secondary: FH vs TH isolates causal structure; TM is the floor.
+**Threshold.** `tau_E3 = 0.10`, `tol = 0.01`, `tol_zero = 1e-12` (contract "Decision gate").
+
+**Acceptance.** PASS iff `mean_bank(gap_H_norm) >= 0.10` AND `mean_bank(abs(gap_T_norm)) <= 0.01`.
+PRIMARY contrast FH vs FM; secondary FH vs TH isolates causal structure; TM is the floor. A
+normalized null is a valid boundary result.
+
+**Standalone SCM gate (prerequisite).** Before the decision gate, the SCM-correctness gate
+(`scripts/e3_scm_gate.py`, contract "Standalone SCM gate") verifies the seven-edge adjacency,
+the P0 descendant timing (K0@t+1, K1@t+2, K2&K3@t+3), K4 inertness under do(P0), off-manifold
+direct-parentage for `K0->K1/K1->K2/K1->K3`, and that the decision decoy differs from TRUE by
+exactly `(2,5),(3,5)`. Any failed clause blocks decision-gate execution.
 
 ### 2.5 E4 — correlational-on-observational decoy (SPEC E4)
 
@@ -162,7 +177,7 @@ varies.
 |-----|--------------------------------|--------------------|------------|-----------|
 | E1  | EXEMPT                         | —                  | —          | —         |
 | E2  | Omit `P0 -> K5`               | Single-decision H=1 | +/− controls | `τ_E2`  |
-| E3  | Myopic H=1 / truncated chain   | Cumulative H=depth  | Chain states | `τ_E3`  |
+| E3  | Myopic H=1 / drop fan-out `{K1->K2,K1->K3}` | Cumulative H=3 | Cascade states | `τ_E3` |
 | E4  | Correlational observational    | Interventional      | Fixed bank | `τ_E4` + sign-reversal |
 
 ---
@@ -177,7 +192,7 @@ Removing the defining factor removes or greatly reduces the gap.
 |-----|----------------------|-----------------------------------------|-----------------------------------------|
 | E1  | EXEMPT               | — (MAJOR 9)                             | —                                       |
 | E2  | Shared-control fan-out | Remove `P0` from the conflict panel    | Regret gap (decoy − oracle) → ≤ tol     |
-| E3  | Temporal chain depth   | Set H = 1 (collapse horizon to myopic) | Cumulative regret gap → ≤ tol           |
+| E3  | Temporal cascade depth (fan-out) | Drop the fan-out pair `{K1->K2,K1->K3}` (truncated model) | Cumulative regret gap `abs(gap_T_norm)` → ≤ tol |
 | E4  | Action-relevant confound | Remove `Z -> A_behavior` edge          | Interventional regret gap → ≤ tol       |
 
 ### 3.2 Acceptance (all envs except E1)
