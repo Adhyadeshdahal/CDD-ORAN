@@ -501,6 +501,56 @@ interventional data under these conditions — **report the null boundary result
 `Z` (or the behavior policy) upward** toward a positive result; the locked parameters stand.
 A gap that requires cranking `Z` into an unlocked regime is not a valid E4 result.
 
+### E4 built minimal SCM + structural design-validation gate (FROZEN, `GATE_CONTRACT_E4.md`)
+
+Everything in this subsection is FROZEN pre-code in `docs/benchmark/GATE_CONTRACT_E4.md` (ruling
+`.herdr/reports/rule-e4-design.md`, which CORRECTED two blockers in the `e4-research.md`
+proposal). It supersedes, for the built unit, the "reuse Env IV backbone" sketch above: the built
+E4 is the **minimal single-outcome** confounded SCM (ruling Q6, Q9), NOT the legacy Env-IV graph
+(whose `Z` sits on outcomes only — the old null).
+
+**Minimal confounded SCM (`cdd_oran/envs/v2/e4.py`).** One acted param `A = P0`, one KPI
+`K_out = K0`, one latent confounder `Z` on all three required edges:
+
+```
+Z ──► A_behavior   (confounder biases the data-collection action)
+Z ──► K_out        (confounder moves the outcome)
+A ──► K_out        (the true causal effect to recover)
+
+K_out(q+1) = alpha*A_q + theta*Z_q + c   (alpha=-1, theta=+2.5, c=0; one-step lag, [SEM] PD2)
+Z ~ Normal(0,1),  eta ~ Normal(0, 0.5^2),  A_behavior = clip(0.5 + lambda*Z + eta, 0, 1)
+```
+
+`Z` is **latent** (never a param or KPI, never exposed to a planner), so the *observed* env
+adjacency is only `(K0,P0) = (0,0)`; the two `Z`-incident edges are mandatory latent-edge SCM
+metadata. Data collection has two modes on a preregistered `rho_obs:rho_do = 90:10` mixture:
+**observational** (`A = A_behavior`, the same `Z` enters `K_out`) and **interventional**
+(`do(A=v)` set independently of `Z`, `Z` still enters `K_out`). `Z`, `eta`, and the randomized
+do-action use dedicated NON-ALIASING coordinate-keyed tape slots; pending + committed `Z` are
+carried in snapshot/restore. Decisions are scored on the latent-noiseless interventional-mean
+reduction `K_score(a) = E_Z[K_out|do(A=a)] = -a` (`Z` integrated to `E[Z]=0`; ruling Q10).
+
+**Structural design-validation gate + λ=0 control (PRE-REGISTERED gate;
+`scripts/e4_structural_gate.py`).** Deterministic, NO training. It checks that the benchmark
+*expresses* action-relevant confounding: it recomputes the exact clipped-normal moments and the
+exact 90:10 naive pooled line `K_hat_naive(a) = c_pool + b_pool*a` (slope `b_pool = +3.29` —
+**sign-reversed** from the true `alpha = -1`), builds the 64-state geometry bank (seeds `0..63`),
+has the aware model `K_hat=-a` and the naive pooled model each select the locked hinge `argmax`
+over `V`, realizes both on the true interventional-mean SCM, and computes the graded structural
+`gap_norm = 0.6695395708852947`. The **factor-removal control** removes exactly `Z -> A_behavior`
+(`lambda=0`), leaving everything else fixed; the naive pooler then recovers slope `-1`, agrees
+with the oracle, and the control gap collapses to `0`. **PASS iff both**
+`mean_bank(gap_norm) >= 0.10` **AND** `mean_bank(abs(gap_norm_control)) <= 0.01` — both clauses
+wired into the result and the process exit (the E2 lesson). Deterministic success says the design
+contains the intended action-relevant confounding trap.
+
+**Trained-arm decision value is DEFERRED (requires training).** The structural gate + λ=0 control
+own benchmark *validity*; they do NOT claim a learned causal arm wins. The structure-aware
+(`D=1`-restricted regression), correlational-pooler, discovered, and dense arm comparison on the
+matched 90:10 corpus — with `pi_E4=0.50`, `tau_E4_trained=0.10` defaults — is **DEFERRED** and,
+per `memory/causal-planner-direction-explored.md`, may honestly be null. Its null must NOT trigger
+changes to `Z`, `lambda`, the mixture, or the bank.
+
 ---
 
 ## E5 — Integrated stress (composition capstone)

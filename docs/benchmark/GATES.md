@@ -171,6 +171,38 @@ observational transitions, same randomized-interventional transitions, same trai
 splits, same intervention indicators, same action coverage. Only the structural assumption
 varies.
 
+**Built structural design-validation gate + λ=0 control (FROZEN, `GATE_CONTRACT_E4.md`).**
+The tonight-built unit is the **structural (design-validation) gate**, NOT the trained-arm
+evaluation. Everything below is FROZEN by `docs/benchmark/GATE_CONTRACT_E4.md` (ruling
+`.herdr/reports/rule-e4-design.md`, which corrected two proposal blockers). It is deterministic
+and uses NO training.
+
+- **Minimal confounded SCM** (`cdd_oran/envs/v2/e4.py`): 1 param `A=P0`, 1 KPI `K_out=K0`, latent
+  `Z` on `Z->A_behavior`, `Z->K_out`, `A->K_out`; `K_out=-A+2.5*Z` at one-step lag;
+  `A_behavior=clip(0.5+lambda*Z+eta,0,1)`; obs/do modes on `rho_obs:rho_do=90:10`. Observed
+  adjacency is only `(0,0)`; the two `Z`-incident edges are latent metadata.
+- **Naive decoy** = exact 90:10 OLS pooler that ignores `D` and omits latent `Z`:
+  `K_hat_naive(a)=c_pool+b_pool*a`, `b_pool=+3.291569669211391` (sign-reversed from the true
+  `-1`), `c_pool=-2.145784834605695`. Aware/oracle model `K_hat=-a`.
+- **Bank.** `env_seed=0..4095`, `episode=0`, noise off, 3 neutral advances; retain the first
+  `N=64` states valid under the frozen `z_true` geometry rule (`m=0.50`); expected seeds `0..63`.
+  Fewer than 64 ⇒ feasibility FAIL.
+- **Gap.** Each model selects the locked hinge `argmax` over `V={0,..,1.00}` (smallest index on
+  ties); realize on the true interventional-mean SCM `K_score(a)=-a`;
+  `gap_norm=(regret_true(naive)-regret_true(oracle))/D(s)=0.6695395708852947`, `D(s)=35.641...`.
+- **Threshold.** `tau_E4=0.10`, `tol=0.01`, `tol_zero=1e-12`.
+- **λ=0 factor-removal control.** Remove exactly `Z->A_behavior` (`lambda=0`), all else fixed;
+  the pooler recovers slope `-1`, `a_naive_control=0`, and `gap_norm_control=0`.
+- **Acceptance.** `scripts/e4_structural_gate.py` — **PASS iff both**
+  `mean_bank(gap_norm)>=0.10` **AND** `mean_bank(abs(gap_norm_control))<=0.01`. Both clauses are
+  wired into `passed` and the process exit status; an injected wrong control (a `lambda!=0` env
+  that does not remove the confounding edge) FAILS. A normalized null is a valid boundary result.
+
+**DEFERRED (requires training).** The trained-arm decision-value evaluation — structure-aware
+`D=1` regression, correlational pooler, discovered arm, dense arm on the matched corpus
+(`pi_E4=0.50`, `tau_E4_trained=0.10`) — is NOT built tonight and is honestly allowed to be null;
+it must not trigger changes to `Z`, `lambda`, the mixture, or the bank.
+
 ### 2.6 Per-env summary
 
 | Env | Decoy rule                     | Regret type        | State bank | Threshold |

@@ -13,5 +13,6 @@ from cdd_oran.envs.v2.base import V2Env
 from cdd_oran.envs.v2.e1 import E1V2Env
 from cdd_oran.envs.v2.e2 import E2V2Env
 from cdd_oran.envs.v2.e3 import E3V2Env
+from cdd_oran.envs.v2.e4 import E4V2Env
 
-__all__ = ["V2Env", "E1V2Env", "E2V2Env", "E3V2Env"]
+__all__ = ["V2Env", "E1V2Env", "E2V2Env", "E3V2Env", "E4V2Env"]
