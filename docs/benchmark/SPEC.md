@@ -224,7 +224,7 @@ re-expressed as a preregistered decoy contrast.
 **Causal graph / SCM sketch.** Reuse Env II fan-out (`env_ii.py:85-105`). Key structure:
 
 ```
-P0 ──► K0, K1, K2, K3, K5      (shared NCP: broad fan-out)
+P0 ──► K0, K1, K2, K5      (shared NCP: broad fan-out)  # (schematic error corrected to match env_ii.py:88-105 source graph; not an outcome-dependent change)
 P1 ──► K0, K1, K3, K4
 xApp3 ◄── {K3(=kpi41), K4(=kpi42)}   (two KPIs fan into one xApp)
 kpi_to_xapp = {0:0, 1:1, 2:2, 3:3, 4:3, 5:4}   (env_ii.py:87)
