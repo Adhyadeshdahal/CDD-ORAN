@@ -5,12 +5,16 @@ Subcommands are added one green increment at a time. Currently:
     generate  -- roll the E1 SCM, persist rows.npz + manifest.json under a run dir
     split     -- write an episode-level train/test split.json for a persisted dataset
     train     -- train the oracle-graph and dense arms on identical rows + split ids
+    eval      -- score both arms on the held-out test episodes -> immutable metrics.json
+    verify    -- assert each reloaded artifact reproduces predictions within a frozen tol
 
 Example::
 
     uv run python -m scripts.e1_slice generate --episodes 64 --steps 16 --out runs/e1slice/dev
     uv run python -m scripts.e1_slice split --dataset runs/e1slice/dev --test-fraction 0.2
     uv run python -m scripts.e1_slice train --dataset runs/e1slice/dev
+    uv run python -m scripts.e1_slice eval --dataset runs/e1slice/dev
+    uv run python -m scripts.e1_slice verify --dataset runs/e1slice/dev
 """
 
 from __future__ import annotations
@@ -20,6 +24,12 @@ import json
 from pathlib import Path
 
 from cdd_oran.e1slice.dataset import E1DatasetConfig, load_dataset, write_dataset
+from cdd_oran.e1slice.evaluate import (
+    evaluate_dataset,
+    predict,
+    save_reference_predictions,
+    verify_dataset,
+)
 from cdd_oran.e1slice.model import Arm, ModelConfig, save_arm, train_arm
 from cdd_oran.e1slice.split import SplitConfig, load_split, write_split
 
@@ -67,11 +77,34 @@ def _cmd_train(args: argparse.Namespace) -> int:
     for arm in arms:
         model, meta = train_arm(rows, split["train_episodes"], arm, cfg)
         save_arm(args.dataset, model, meta, manifest["dataset_hash"], split["split_hash"])
+        # Capture the LIVE model's test predictions as the reload reference for `verify`.
+        model.eval()
+        save_reference_predictions(args.dataset, arm, predict(model, rows, split["test_episodes"]))
         print(
             f"trained {arm:>6}: params {meta['capacity']['num_parameters']}, "
             f"train_mse {meta['final_train_mse']:.3e}"
         )
     return 0
+
+
+def _cmd_eval(args: argparse.Namespace) -> int:
+    record = evaluate_dataset(args.dataset)
+    for arm, m in record["arms"].items():
+        print(f"eval {arm:>6}: test_mse {m['mse']:.3e}  test_mae {m['mae']:.3e}  "
+              f"(n={m['n_test_rows']})")
+    print(f"  metrics_hash {record['metrics_hash'][:12]} -> {Path(args.dataset) / 'metrics.json'}")
+    return 0
+
+
+def _cmd_verify(args: argparse.Namespace) -> int:
+    results = verify_dataset(args.dataset, tol=args.tol)
+    ok = True
+    for r in results:
+        status = "PASS" if r.passed else "FAIL"
+        ok = ok and r.passed
+        print(f"verify {r.arm:>6}: {status}  max_abs_diff {r.max_abs_diff:.2e}  (tol {args.tol:.0e})")
+    print("RESULT:", "PASS" if ok else "FAIL")
+    return 0 if ok else 1
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -101,6 +134,15 @@ def _build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--batch-size", type=int, default=64, dest="batch_size")
     tr.add_argument("--weight-seed", type=int, default=0, dest="weight_seed")
     tr.set_defaults(func=_cmd_train)
+
+    ev = sub.add_parser("eval", help="score both arms on held-out test episodes")
+    ev.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    ev.set_defaults(func=_cmd_eval)
+
+    vf = sub.add_parser("verify", help="assert reloaded artifacts reproduce predictions")
+    vf.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    vf.add_argument("--tol", type=float, default=1e-6, help="frozen reload tolerance")
+    vf.set_defaults(func=_cmd_verify)
 
     return parser
 
