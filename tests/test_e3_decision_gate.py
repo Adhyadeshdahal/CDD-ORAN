@@ -179,3 +179,17 @@ def test_latent_equals_observed_at_noise_off():
     env.reset(episode=0)
     env.neutral_step()
     assert np.array_equal(env.latent_kpis(), env.observed_kpis())
+
+
+def test_scm_prerequisite_blocks_decision(monkeypatch):
+    """The authoritative decision-gate entry point runs the SCM-correctness gate FIRST and refuses
+    to report a decision PASS when the prerequisite fails (GATE_CONTRACT_E3.md). A user cannot run
+    the decision gate alone and receive PASS on a structurally wrong env."""
+    import scripts.e3_decision_gate as e3d
+
+    class _FailingSCM:
+        passed = False
+        failures = ["injected SCM failure"]
+
+    monkeypatch.setattr(e3d, "run_e3_scm_gate", lambda *a, **k: _FailingSCM())
+    assert e3d.main([]) == 1

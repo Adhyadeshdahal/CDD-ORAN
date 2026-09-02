@@ -42,6 +42,7 @@ if _REPO_ROOT not in sys.path:
 from cdd_oran.analysis.v2_regret import PanelXApp, reward  # noqa: E402
 from cdd_oran.envs.v2.e3 import E3V2Env  # noqa: E402
 from cdd_oran.planners.sequence import greedy_fm  # noqa: E402
+from scripts.e3_scm_gate import run_e3_scm_gate  # noqa: E402
 
 # --- FROZEN protocol constants (GATE_CONTRACT_E3.md) ------------------------------------------
 SEED_POOL = range(4096)
@@ -325,7 +326,26 @@ def main(argv: list[str] | None = None) -> int:
         help="TEST-ONLY: use the FULL model as the 'truncated' control so the factor-removal "
         "clause fails; verifies acceptance gates on BOTH clauses (exit nonzero).",
     )
+    parser.add_argument(
+        "--skip-scm",
+        action="store_true",
+        help="TEST-ONLY: skip the SCM-correctness prerequisite and run the decision gate in "
+        "isolation. The authoritative entry point runs the SCM gate first (contract prerequisite).",
+    )
     args = parser.parse_args(argv)
+
+    # GATE_CONTRACT_E3.md prerequisite: the SCM-correctness gate MUST pass before the decision
+    # gate. Enforce it here so the authoritative entry point cannot report a decision PASS on a
+    # structurally wrong env. (--skip-scm isolates the decision logic for unit tests.)
+    if not args.skip_scm:
+        scm = run_e3_scm_gate()
+        print(f"E3 SCM prerequisite: {'PASS' if scm.passed else 'FAIL'}")
+        if not scm.passed:
+            for msg in getattr(scm, "failures", []):
+                print(f"    - {msg}")
+            print("  SCM prerequisite FAILED — decision gate not run.")
+            print("RESULT: FAIL")
+            return 1
 
     if args.inject_bad_control:
         def _full() -> E3V2Env:

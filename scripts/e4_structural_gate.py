@@ -391,6 +391,7 @@ class GateResult:
     latent_edges_ok: bool = False
     env_corpus_ok: bool = False
     control_corpus_ok: bool = False
+    single_factor_ok: bool = False
     env_corpus: "EnvCorpusResult | None" = None
     control_corpus: "EnvCorpusResult | None" = None
     failures: list = field(default_factory=list)
@@ -418,6 +419,26 @@ def run_e4_structural_gate(
     probe = env_factory(0)
     control_probe = control_env_factory(0)
     alpha, theta = probe.alpha, probe.theta
+
+    # (1b) single-factor control invariant (GATE_CONTRACT_E4.md: the control removes ONLY
+    # Z->A_behavior, i.e. differs from the primary env in lambda alone; every other frozen SCM
+    # parameter is identical). Without this the control could silently mutate alpha/theta/c and
+    # validate against its own declarations. Assert the invariant executably.
+    result.single_factor_ok = bool(
+        probe.lam == PRIMARY_LAM
+        and control_probe.lam == CONTROL_LAM
+        and control_probe.alpha == probe.alpha
+        and control_probe.theta == probe.theta
+        and control_probe.c == probe.c
+        and control_probe.mode == probe.mode
+    )
+    if not result.single_factor_ok:
+        result.failures.append(
+            "control is not a single-factor (lambda-only) removal — primary("
+            f"lam={probe.lam}, alpha={probe.alpha}, theta={probe.theta}, c={probe.c}, "
+            f"mode={probe.mode}) vs control(lam={control_probe.lam}, alpha={control_probe.alpha}, "
+            f"theta={control_probe.theta}, c={control_probe.c}, mode={control_probe.mode})"
+        )
 
     # (1) exact moments at the primary lambda.
     p, var_a, cov_az = clipped_normal_moments(probe.lam)
@@ -526,6 +547,7 @@ def run_e4_structural_gate(
         and result.seeds_ok
         and result.env_corpus_ok
         and result.control_corpus_ok
+        and result.single_factor_ok
         and not any("moment" in f or "b_pool" in f or "c_pool" in f for f in result.failures)
     )
     return result

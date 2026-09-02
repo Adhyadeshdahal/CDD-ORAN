@@ -330,3 +330,18 @@ def test_standardization_and_adjacency_constants():
     m = E4V2Env(env_seed=0).true_adj_matrix()
     assert m.shape == (2, 2)
     assert int(m.sum()) == 1 and m[1, 0] == 1.0  # K0 (row 1) reads P0 (col 0)
+
+
+def test_control_must_be_single_factor():
+    """The lambda=0 control must differ from the primary env in lambda ALONE. A control that also
+    mutates theta (or any other frozen SCM parameter) is REJECTED via the executable single-factor
+    invariant (GATE_CONTRACT_E4.md) -- it cannot validate against its own altered declarations."""
+    def theta_mutated_control(seed):
+        return E4V2Env(
+            env_seed=seed, obs_noise_scale=0.0, lam=CONTROL_LAM, theta=5.0, mode=E4V2Env.MODE_DO
+        )
+
+    result = run_e4_structural_gate(control_env_factory=theta_mutated_control, **_FAST)
+    assert not result.single_factor_ok
+    assert not result.passed
+    assert any("single-factor" in f for f in result.failures)
