@@ -1,0 +1,35 @@
+{
+  "arm": "discovered",
+  "capacity": {
+    "architecture": "per-output masked MLP",
+    "hidden": [
+      16
+    ],
+    "num_active_inputs_per_output": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "num_parameters": 644
+  },
+  "config": {
+    "batch_size": 64,
+    "epochs": 300,
+    "hidden": [
+      16
+    ],
+    "lr": 0.01,
+    "weight_seed": 0
+  },
+  "dataset_hash": "cfce4c10c7a7eb794f9a8f14e4e52b96188cbce69eb8b620729d04aa6a0b94ca",
+  "discovery_hash": "c67fd92ef7bebb784ae2e704515723a54ca1450954dde5f2cf18d2216ea96805",
+  "final_train_mse": 0.009817088954150677,
+  "git_dirty": false,
+  "git_sha": "9f6fa5b697835e858bd4e95f2a99f86986ea5798",
+  "model_sha256": "44ddc6a7857eb8d6af6cc79c7b0cf7efa6b899090a00c9d429048c95caaad416",
+  "n_train_rows": 576,
+  "ref_sha256": "46385cc660b7cedc18297344f2124f89b57b2a16bc0e055f1ea379a6a5d11f0e",
+  "schema_version": "e1slice.v1",
+  "split_hash": "ec6658d0c7a46bacc02ed701f77b6a7251b6ee35eb2349b029d75784714ad8d3"
+}

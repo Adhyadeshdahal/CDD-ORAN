@@ -1,0 +1,62 @@
+{
+  "content_hash": "7914ad050826cc55836256ced8fe2753e8d906bb6296ca022be30e75f415f370",
+  "dataset_hash": "cfce4c10c7a7eb794f9a8f14e4e52b96188cbce69eb8b620729d04aa6a0b94ca",
+  "discovery_hash": "c67fd92ef7bebb784ae2e704515723a54ca1450954dde5f2cf18d2216ea96805",
+  "git_dirty": false,
+  "git_sha": "9f6fa5b697835e858bd4e95f2a99f86986ea5798",
+  "gt_edge_count": 6,
+  "method": "largest_gap",
+  "protocol_commit": "e5312a696a0ed5f9d590e9ad766bdbfdad53a16c",
+  "recovery": {
+    "kpi_kpi": {
+      "accuracy": 0.9375,
+      "edges": 0,
+      "f1": 0.0,
+      "fn": 2,
+      "fp": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tp": 0
+    },
+    "missed": [
+      {
+        "child": 6,
+        "child_name": "K2",
+        "parent": 4,
+        "parent_name": "K0",
+        "type": "kpi_kpi"
+      },
+      {
+        "child": 7,
+        "child_name": "K3",
+        "parent": 5,
+        "parent_name": "K1",
+        "type": "kpi_kpi"
+      }
+    ],
+    "ncp_kpi": {
+      "accuracy": 1.0,
+      "edges": 4,
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 4
+    },
+    "num_params": 4,
+    "overall": {
+      "accuracy": 0.96875,
+      "edges": 4,
+      "f1": 0.8,
+      "fn": 2,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "tp": 4
+    }
+  },
+  "schema_version": "e1slice.v1",
+  "split_hash": "ec6658d0c7a46bacc02ed701f77b6a7251b6ee35eb2349b029d75784714ad8d3",
+  "threshold": 0.6742466468375388
+}

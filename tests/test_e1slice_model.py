@@ -24,6 +24,7 @@ from cdd_oran.e1slice.model import (
     load_arm,
     save_arm,
     train_arm,
+    validate_explicit_mask,
 )
 from cdd_oran.e1slice.split import SplitConfig, load_split, make_split, write_split
 from cdd_oran.envs.v2.e1 import E1V2Env
@@ -52,7 +53,29 @@ def test_arms_have_identical_capacity():
     # Same architecture -> identical parameter budget; only the input mask differs.
     oracle = build_model("oracle", _MODEL)
     dense = build_model("dense", _MODEL)
-    assert oracle.num_parameters() == dense.num_parameters()
+    # A discovered arm is built from an EXPLICIT mask (never env truth) and matches capacity.
+    discovered = build_model("discovered", _MODEL, mask=arm_mask("oracle").numpy())
+    assert oracle.num_parameters() == dense.num_parameters() == discovered.num_parameters()
+
+
+def test_arm_mask_refuses_to_derive_discovered():
+    # The discovered mask must come from discovery.json, never from environment truth.
+    with pytest.raises(ValueError):
+        arm_mask("discovered")
+    with pytest.raises(ValueError):
+        build_model("discovered", _MODEL)  # no explicit mask supplied
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        np.ones((E1V2Env.num_kpis, _IN_DIM + 1), dtype=np.float32),  # wrong shape
+        np.full((E1V2Env.num_kpis, _IN_DIM), 2.0, dtype=np.float32),  # non-binary
+    ],
+)
+def test_validate_explicit_mask_rejects_bad_masks(bad):
+    with pytest.raises(ValueError):
+        validate_explicit_mask(bad)
 
 
 def test_oracle_ignores_non_parent_inputs():

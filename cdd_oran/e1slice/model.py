@@ -1,16 +1,18 @@
-"""Matched oracle/dense one-step predictor and its training, for the E1 slice.
+"""Matched oracle/dense/discovered one-step predictor and its training, for the E1 slice.
 
-The two arms share ONE architecture -- a small per-output MLP head for each KPI -- and
-differ only by a fixed, non-trainable input mask:
+The arms share ONE architecture -- a small per-output MLP head for each KPI -- and differ only
+by a fixed, non-trainable input mask:
 
-    oracle: head j sees only x[parents(j)]  (the true-graph parents of KPI j)
-    dense:  head j sees all inputs
+    oracle:     head j sees only x[parents(j)]  (the true-graph parents of KPI j)
+    dense:      head j sees all inputs
+    discovered: head j sees only x[discovered-parents(j)]  (the FROZEN learned graph)
 
 The mask is applied by zeroing non-parent inputs before the head, so it is not a learnable
-parameter and both arms carry an IDENTICAL parameter budget. The oracle's only advantage is
-the structural prior (correct sparsity); capacity is matched by construction and recorded as
-explicit metadata. E1's mechanism is linear, so both arms are expected to fit -- this is the
-recovery control, a pipeline test, not a superiority claim.
+parameter and all arms carry an IDENTICAL parameter budget. The oracle's advantage is the true
+structural prior; the discovered arm gets the label-free learned prior from ``discovery.json``
+(never env truth). Capacity is matched by construction and recorded as explicit metadata. E1's
+mechanism is linear, so a correctly-masked arm is expected to fit -- this is the recovery
+control, a pipeline test, not a superiority claim.
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ from cdd_oran.e1slice.dataset import E1Rows, _atomic_write_text, _git_sha, guard
 from cdd_oran.e1slice.split import row_indices_for
 from cdd_oran.envs.v2.e1 import E1V2Env
 
-Arm = Literal["oracle", "dense"]
+Arm = Literal["oracle", "dense", "discovered"]
 
 # The trained arm's per-KPI test predictions captured at train time; the reload reference.
 REF_FILE = "test_pred_ref.npz"
@@ -65,6 +67,10 @@ class ModelConfig:
 def arm_mask(arm: Arm) -> torch.Tensor:
     """(num_kpis, in_dim) 0/1 input mask for an arm, from the E1 true adjacency.
 
+    Only ``oracle`` (true graph) and ``dense`` (all inputs) are derived here. The ``discovered``
+    mask MUST come from the frozen ``discovery.json`` via ``validate_explicit_mask`` -- it is
+    never derived from environment truth.
+
     in_dim = [params | kpis]; source indexing in true_adj_matrix already matches this layout
     (source s < num_params is param s; s >= num_params is KPI s-num_params).
     """
@@ -72,9 +78,22 @@ def arm_mask(arm: Arm) -> torch.Tensor:
     if arm == "oracle":
         adj = E1V2Env(env_seed=0).true_adj_matrix()  # (p+k, p+k) float32
         mask = adj[p : p + k, : p + k]
-    else:
+    elif arm == "dense":
         mask = np.ones((k, p + k), dtype=np.float32)
+    else:
+        raise ValueError(f"arm_mask does not derive a '{arm}' mask; supply it explicitly")
     return torch.as_tensor(np.asarray(mask, dtype=np.float32))
+
+
+def validate_explicit_mask(mask: npt.NDArray[Any] | torch.Tensor) -> torch.Tensor:
+    """Validate and coerce an explicitly-supplied (num_kpis, in_dim) binary mask to a tensor."""
+    arr = mask.detach().cpu().numpy() if isinstance(mask, torch.Tensor) else np.asarray(mask)
+    p, k = E1V2Env.num_params, E1V2Env.num_kpis
+    if arr.shape != (k, p + k):
+        raise ValueError(f"explicit mask shape {arr.shape} != expected {(k, p + k)}")
+    if not np.isin(arr, (0, 1)).all():
+        raise ValueError("explicit mask must be binary (0/1)")
+    return torch.as_tensor(arr.astype(np.float32))
 
 
 class OneStepPredictor(nn.Module):
@@ -117,17 +136,29 @@ def _xy(rows: E1Rows, indices: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
     )
 
 
-def build_model(arm: Arm, cfg: ModelConfig) -> OneStepPredictor:
+def build_model(
+    arm: Arm, cfg: ModelConfig, mask: npt.NDArray[Any] | torch.Tensor | None = None
+) -> OneStepPredictor:
+    """Build an arm. ``mask`` must be supplied for ``discovered`` (the frozen learned graph)."""
     cfg.validate()
     torch.manual_seed(cfg.weight_seed)
-    return OneStepPredictor(arm_mask(arm), cfg.hidden)
+    resolved = validate_explicit_mask(mask) if mask is not None else arm_mask(arm)
+    return OneStepPredictor(resolved, cfg.hidden)
 
 
 def train_arm(
-    rows: E1Rows, train_episodes: list[int], arm: Arm, cfg: ModelConfig
+    rows: E1Rows,
+    train_episodes: list[int],
+    arm: Arm,
+    cfg: ModelConfig,
+    mask: npt.NDArray[Any] | torch.Tensor | None = None,
 ) -> tuple[OneStepPredictor, dict[str, Any]]:
-    """Train one arm on the TRAIN episodes only. Returns the model and capacity/training meta."""
-    model = build_model(arm, cfg)
+    """Train one arm on the TRAIN episodes only. Returns the model and capacity/training meta.
+
+    For ``discovered``, pass the frozen binary mask from ``discovery.json``; oracle/dense derive
+    their masks internally. All arms share the identical architecture and parameter budget.
+    """
+    model = build_model(arm, cfg, mask=mask)
     idx = row_indices_for(rows, train_episodes)
     x, y = _xy(rows, idx)
 
@@ -189,6 +220,7 @@ def save_arm(
     split_hash: str,
     reference_pred: npt.NDArray[np.float64],
     force: bool = False,
+    discovery_hash: str | None = None,
 ) -> Path:
     """Persist an arm's weights, reload reference, and metadata under ``arms/<arm>/``.
 
@@ -196,9 +228,13 @@ def save_arm(
     and ``arm_meta.json`` -- and records a SHA-256 digest of the first two so any later reload
     can prove the bytes it reads are the bytes that were trained/captured. Each file is written
     atomically. Refuses to run if downstream ``metrics.json`` exists unless ``force`` clears it.
+    For the ``discovered`` arm, ``discovery_hash`` (the frozen graph's content hash) is required
+    and recorded so eval/verify can bind the arm to the exact frozen graph.
     """
     out = Path(dataset_dir)
     guard_descendants(out, _TRAIN_DESCENDANTS, force, "train")
+    if str(meta["arm"]) == "discovered" and not discovery_hash:
+        raise ValueError("save_arm: the 'discovered' arm requires a discovery_hash")
 
     reference_pred = np.ascontiguousarray(reference_pred, dtype=np.float64)
     if reference_pred.ndim != 2 or reference_pred.shape[1] != E1V2Env.num_kpis:
@@ -224,6 +260,8 @@ def save_arm(
         "git_dirty": dirty,
         **meta,
     }
+    if discovery_hash is not None:
+        record["discovery_hash"] = discovery_hash
     _atomic_write_text(arm_dir / "arm_meta.json", json.dumps(record, indent=2, sort_keys=True))
     return arm_dir
 
@@ -243,7 +281,10 @@ def load_arm(dataset_dir: str | Path, arm: Arm) -> tuple[OneStepPredictor, dict[
         raise ValueError(
             f"{meta_file}: schema_version {meta.get('schema_version')!r} != {SCHEMA_VERSION!r}"
         )
-    for key in ("arm", "config", "dataset_hash", "split_hash", "capacity", "model_sha256", "ref_sha256"):
+    required = ["arm", "config", "dataset_hash", "split_hash", "capacity", "model_sha256", "ref_sha256"]
+    if arm == "discovered":
+        required.append("discovery_hash")
+    for key in required:
         if key not in meta:
             raise ValueError(f"{meta_file}: missing required field '{key}'")
     if meta["arm"] != arm:
@@ -256,11 +297,38 @@ def load_arm(dataset_dir: str | Path, arm: Arm) -> tuple[OneStepPredictor, dict[
     if _sha256_file(ref_file) != meta["ref_sha256"]:
         raise ValueError(f"{ref_file}: bytes do not match arm_meta ref_sha256")
 
+    if arm == "discovered":
+        # Rebuild the discovered mask from the FROZEN graph on disk and bind by content hash,
+        # so a changed discovery.json (or a mismatched graph) fails the reload closed.
+        from cdd_oran.e1slice.discovery import discovered_mask_array, load_discovery
+
+        disc = load_discovery(arm_dir.parent.parent)
+        if disc["content_hash"] != meta["discovery_hash"]:
+            raise ValueError(
+                f"{meta_file}: discovery_hash {meta['discovery_hash']} != discovery.json "
+                f"content_hash {disc['content_hash']} (arm bound to a different frozen graph)"
+            )
+        resolved_mask = validate_explicit_mask(discovered_mask_array(disc))
+    else:
+        resolved_mask = arm_mask(arm)
+
     raw = dict(meta["config"])
     raw["hidden"] = tuple(raw["hidden"])  # JSON has no tuples; restore the arch shape
     cfg = ModelConfig(**raw)
-    model = OneStepPredictor(arm_mask(arm), cfg.hidden)
+    model = OneStepPredictor(resolved_mask, cfg.hidden)
+    # register_buffer aliases resolved_mask, and load_state_dict copies the checkpoint buffer INTO
+    # it in place -- so snapshot the intended mask BEFORE loading, or the check would compare the
+    # buffer to itself.
+    expected_mask = resolved_mask.detach().clone()
     state = torch.load(model_file, weights_only=True)
     model.load_state_dict(state)
+    # ``mask`` is a registered buffer, so load_state_dict OVERWRITES it with the checkpoint's copy.
+    # Require the loaded buffer to equal the mask we resolved (true graph for oracle/dense; the
+    # FROZEN discovery graph for discovered) so a checkpoint carrying a different valid mask is
+    # rejected and the arm is truly bound to its intended graph.
+    if not torch.equal(model.mask, expected_mask):
+        raise ValueError(
+            f"{model_file}: checkpoint mask does not match the resolved '{arm}' arm mask"
+        )
     model.eval()
     return model, meta

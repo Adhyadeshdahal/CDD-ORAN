@@ -22,6 +22,7 @@ import numpy as np
 import numpy.typing as npt
 import torch
 
+from cdd_oran.analysis.recovery_metrics import recovery_by_edge_type
 from cdd_oran.e1slice import SCHEMA_VERSION
 from cdd_oran.e1slice.dataset import (
     E1Rows,
@@ -30,12 +31,14 @@ from cdd_oran.e1slice.dataset import (
     canonical_json,
     load_dataset,
 )
+from cdd_oran.e1slice.discovery import load_discovery
 from cdd_oran.e1slice.model import REF_FILE, Arm, OneStepPredictor, load_arm
 from cdd_oran.e1slice.split import load_split, row_indices_for
 from cdd_oran.envs.v2.e1 import E1V2Env
 
-_ARMS: tuple[Arm, ...] = ("oracle", "dense")
+_ARMS: tuple[Arm, ...] = ("oracle", "dense", "discovered")
 VERIFY_TOL = 1e-6
+_NODE_NAMES = ["P0", "P1", "P2", "P3", "K0", "K1", "K2", "K3"]
 
 
 def predict(model: OneStepPredictor, rows: E1Rows, episodes: list[int]) -> npt.NDArray[np.float64]:
@@ -105,11 +108,44 @@ def _bind_arm(
     return model, arm_meta
 
 
+_PARITY_CONFIG_KEYS = ("hidden", "lr", "epochs", "batch_size", "weight_seed")
+
+
+def _arm_parity_signature(meta: dict[str, Any]) -> tuple[Any, ...]:
+    """The (config, train size, architecture, param count) fingerprint that must match across arms."""
+    config = meta["config"]
+    capacity = meta["capacity"]
+    return (
+        tuple(tuple(config[key]) if key == "hidden" else config[key] for key in _PARITY_CONFIG_KEYS),
+        meta["n_train_rows"],
+        capacity["architecture"],
+        tuple(capacity["hidden"]),
+        capacity["num_parameters"],
+    )
+
+
+def _assert_cross_arm_parity(metas: dict[str, dict[str, Any]]) -> None:
+    """Reject a mixed/interrupted arm set: all arms must be a matched comparison.
+
+    Discovered vs oracle vs dense is only meaningful if the arms share ModelConfig, train-row
+    count, architecture, and the identical parameter budget -- only the fixed mask may differ.
+    """
+    reference_arm = _ARMS[0]
+    reference = _arm_parity_signature(metas[reference_arm])
+    for arm, meta in metas.items():
+        if _arm_parity_signature(meta) != reference:
+            raise ValueError(
+                f"arm '{arm}' is not a matched comparison against '{reference_arm}': "
+                f"config/n_train_rows/architecture/num_parameters differ"
+            )
+
+
 def evaluate_dataset(dataset_dir: str | Path) -> dict[str, Any]:
-    """Reload both arms, score them on the held-out test episodes, write metrics.json.
+    """Reload all arms, score them on the held-out test episodes, write metrics.json.
 
     Validates the complete provenance chain (rows->manifest, split->dataset, arm->dataset+split,
-    model/reference bytes->digests) and confirms reload fidelity against each captured reference
+    model/reference bytes->digests), requires the three arms to be a matched comparison (shared
+    config/architecture/param count), and confirms reload fidelity against each captured reference
     BEFORE atomically publishing metrics.json.
     """
     out = Path(dataset_dir)
@@ -121,9 +157,12 @@ def evaluate_dataset(dataset_dir: str | Path) -> dict[str, Any]:
     y = rows.y_kpis[idx]
     expected_shape = (int(idx.shape[0]), E1V2Env.num_kpis)
 
+    bound = {arm: _bind_arm(out, arm, manifest, split) for arm in _ARMS}
+    _assert_cross_arm_parity({arm: meta for arm, (_model, meta) in bound.items()})
+
     arm_metrics: dict[str, Any] = {}
     for arm in _ARMS:
-        model, arm_meta = _bind_arm(out, arm, manifest, split)
+        model, arm_meta = bound[arm]
         pred = predict(model, rows, test_episodes)
         reference = _load_reference(out, arm, expected_shape)
         max_abs = float(np.abs(pred - reference).max())
@@ -173,11 +212,68 @@ def verify_dataset(dataset_dir: str | Path, tol: float = VERIFY_TOL) -> list[Ver
     test_episodes = split["test_episodes"]
     expected_shape = (int(row_indices_for(rows, test_episodes).shape[0]), E1V2Env.num_kpis)
 
+    bound = {arm: _bind_arm(out, arm, manifest, split) for arm in _ARMS}
+    _assert_cross_arm_parity({arm: meta for arm, (_model, meta) in bound.items()})
+
     results: list[VerifyResult] = []
     for arm in _ARMS:
-        model, _ = _bind_arm(out, arm, manifest, split)
+        model, _ = bound[arm]
         reloaded_pred = predict(model, rows, test_episodes)
         reference = _load_reference(out, arm, expected_shape)
         max_abs = float(np.abs(reloaded_pred - reference).max())
         results.append(VerifyResult(arm=arm, max_abs_diff=max_abs, passed=max_abs <= tol))
     return results
+
+
+def full_graph_from_discovered_mask(mask: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+    """Embed a ``(K, P+K)`` discovered parent mask into the full ``(P+K, P+K)`` child/parent graph.
+
+    Only the KPI child rows ``P..P+K-1`` carry predicted edges; the earlier param-child rows are
+    empty (params have no modelled parents). This is the layout ``recovery_by_edge_type`` expects.
+    """
+    mask = np.asarray(mask, dtype=int)
+    p, k = E1V2Env.num_params, E1V2Env.num_kpis
+    if mask.shape != (k, p + k):
+        raise ValueError(f"discovered mask shape {mask.shape} is not (num_kpis, num_params+num_kpis)={(k, p + k)}")
+    full = np.zeros((p + k, p + k), dtype=int)
+    full[p : p + k, :] = mask
+    return full
+
+
+def score_recovery(dataset_dir: str | Path) -> dict[str, Any]:
+    """POST-FREEZE recovery scoring: score the persisted discovered graph against E1 truth.
+
+    This is the only place E1 ground truth is read. It loads the already-persisted, hash-bound
+    ``discovery.json`` FIRST, then compares its mask to ``E1V2Env().true_adj_matrix()`` and writes
+    a separate ``recovery.json`` so recovery numbers can never alter discovery.
+    """
+    out = Path(dataset_dir)
+    rows, manifest = load_dataset(out)
+    split = _bind_split(out, rows, manifest)
+    disc = load_discovery(
+        out,
+        expected_dataset_hash=manifest["dataset_hash"],
+        expected_split_hash=split["split_hash"],
+    )
+
+    pred = full_graph_from_discovered_mask(np.asarray(disc["binary_mask"], dtype=int))
+    gt = E1V2Env(env_seed=0).true_adj_matrix().astype(int)
+    recovery = recovery_by_edge_type(pred, gt, E1V2Env.num_params, node_names=_NODE_NAMES)
+
+    sha, dirty = _git_sha()
+    record: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "dataset_hash": manifest["dataset_hash"],
+        "split_hash": split["split_hash"],
+        "discovery_hash": disc["content_hash"],
+        "protocol_commit": disc["protocol_commit"],
+        "method": disc["method"],
+        "threshold": disc["threshold"],
+        "gt_edge_count": int(gt.sum()),
+        "recovery": recovery,
+        "git_sha": sha,
+        "git_dirty": dirty,
+    }
+    record["content_hash"] = hashlib.sha256(canonical_json(record).encode()).hexdigest()
+    _atomic_write_text(out / "recovery.json", json.dumps(record, indent=2, sort_keys=True))
+    return record
