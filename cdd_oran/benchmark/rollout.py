@@ -157,12 +157,19 @@ def rollout_open_loop(
             raise ValueError(f"score_fn returned a non-finite value {r} on KPI {k}")
         step_returns.append(r)
 
+    cumulative = float(sum(step_returns))
+    if not math.isfinite(cumulative):
+        raise ValueError(
+            f"cumulative_return is non-finite ({cumulative}): finite per-step returns summed to a "
+            f"non-finite total (overflow)"
+        )
+
     return RolloutResult(
         actions=tuple(validated),
         warmup_kpi=warmup,
         scored_kpis=scored,
         step_returns=tuple(step_returns),
-        cumulative_return=float(sum(step_returns)),
+        cumulative_return=cumulative,
     )
 
 
@@ -178,17 +185,30 @@ def enumerate_open_loop(
 
     Enumerates the Cartesian product ``action_options ** horizon`` (the same per-step option set at
     every step), rolls each candidate on its OWN fresh clone, and returns the maximum-cumulative-
-    return sequence. Exact ties break to the **lexicographically smallest** sequence in the order of
-    ``action_options`` (``itertools.product`` yields ascending order; the incumbent is replaced only
-    on a strict improvement, so the first maximizer is kept). This is a correctness oracle, not an
-    optimized planner. The ``max_sequences`` guard is checked BEFORE any rollout or allocation: an
-    option set whose product exceeds it raises without executing a single rollout.
+    return sequence. Options are first sorted ascending by ``(param_id, value)``, so exact ties
+    break to the **lexicographically smallest** action sequence regardless of caller ordering: the
+    sorted ``itertools.product`` yields sequences in ascending order and the incumbent is replaced
+    only on a strict improvement, so the first (lex-smallest) maximizer is kept. This is a
+    correctness oracle, not an optimized planner. The ``max_sequences`` guard is checked BEFORE the
+    option set is even materialized: an option set whose product exceeds it raises without listing
+    the options, allocating the product, or executing a single rollout.
     """
-    options = list(action_options)
-    if not options:
-        raise ValueError("action_options must be a finite, non-empty set")
     if horizon < 1:
         raise ValueError(f"horizon must be >= 1, got {horizon}")
+    n_options = len(action_options)
+    if n_options == 0:
+        raise ValueError("action_options must be a finite, non-empty set")
+
+    # Bound the enumeration size BEFORE materializing/iterating the option set, so an oversized
+    # option set is rejected without listing the options or allocating the Cartesian product.
+    num_sequences = n_options**horizon
+    if num_sequences > max_sequences:
+        raise ValueError(
+            f"enumeration of {num_sequences} sequences exceeds max_sequences={max_sequences} "
+            f"({n_options} options ** horizon {horizon})"
+        )
+
+    options = list(action_options)
     for opt in options:
         # Value finiteness / arity is checked up front; param-id range is checked per-rollout since
         # it needs the env. Enumeration size is bounded before any rollout is ever executed.
@@ -197,12 +217,10 @@ def enumerate_open_loop(
         if not math.isfinite(float(opt[1])):
             raise ValueError(f"option value must be finite, got {opt!r}")
 
-    num_sequences = len(options) ** horizon
-    if num_sequences > max_sequences:
-        raise ValueError(
-            f"enumeration of {num_sequences} sequences exceeds max_sequences={max_sequences} "
-            f"({len(options)} options ** horizon {horizon})"
-        )
+    # Sort ascending by (param_id, value) so that keeping only STRICT improvers below yields the
+    # lexicographically SMALLEST maximizing sequence intrinsically — independent of the caller's
+    # option ordering (SEMANTICS §3 tie-break).
+    options = sorted(options, key=lambda o: (int(o[0]), float(o[1])))
 
     best_return: float | None = None
     best_rollout: RolloutResult | None = None

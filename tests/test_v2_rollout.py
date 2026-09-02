@@ -17,6 +17,8 @@ The kernel bakes in no environment; tiny local SCMs reproduce the semantics arit
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
+from typing import cast
 
 import numpy as np
 import pytest
@@ -148,6 +150,17 @@ def test_oracle_ties_break_lexicographically_smallest():
     assert oracle.best_actions == ((0, 0.0), (0, 0.0))  # lexicographically smallest tie-break
 
 
+def test_oracle_tiebreak_lex_smallest_with_unsorted_options():
+    """Ties break to the lex-smallest sequence even when caller options are UNSORTED.
+
+    The kernel sorts options by (param_id, value) internally, so the tie-break is intrinsic and
+    does not depend on the order the caller passed."""
+    env = _ConstEnv()
+    options = [(0, 2.0), (0, 0.0), (0, 1.0)]  # deliberately unsorted
+    oracle = enumerate_open_loop(lambda: _ConstEnv(), env.snapshot(), options, 2, _r_k0)
+    assert oracle.best_actions == ((0, 0.0), (0, 0.0))  # lex-smallest, not caller-first (0,2.0)
+
+
 def test_max_sequences_guard_fires_before_any_rollout():
     """The guard raises BEFORE minting a single env / rollout."""
     calls = {"n": 0}
@@ -160,6 +173,34 @@ def test_max_sequences_guard_fires_before_any_rollout():
     with pytest.raises(ValueError, match="exceeds max_sequences"):
         enumerate_open_loop(factory, _H1Env().snapshot(), options, 3, _r_k0, max_sequences=10)
     assert calls["n"] == 0  # no rollout executed
+
+
+class _GuardProbeOptions(Sequence):
+    """A Sequence whose length is known but which raises if anything MATERIALIZES/iterates it."""
+
+    def __init__(self, n: int) -> None:
+        self._n = n
+
+    def __len__(self) -> int:
+        return self._n
+
+    def __getitem__(self, idx):  # list()/iteration goes through here → must not run pre-guard
+        raise AssertionError("option set was materialized/iterated before the max_sequences guard")
+
+
+def test_max_sequences_guard_fires_before_materialization():
+    """An oversized option set is rejected from ``len ** horizon`` alone, before it is listed."""
+    probe = cast("Sequence", _GuardProbeOptions(4))  # 4 ** 3 = 64 > 10
+    with pytest.raises(ValueError, match="exceeds max_sequences"):
+        enumerate_open_loop(lambda: _H1Env(), _H1Env().snapshot(), probe, 3, _r_k0, max_sequences=10)
+
+
+def test_non_finite_cumulative_return_rejected():
+    """Finite per-step scores that overflow to a non-finite SUM are rejected."""
+    env = _H2Env()
+    with pytest.raises(ValueError, match="cumulative_return is non-finite"):
+        # two scored steps, each a finite 1e308 → sum overflows to +inf
+        rollout_open_loop(lambda: _H2Env(), env.snapshot(), [(0, 1.0), (0, 0.0)], lambda k: 1e308)
 
 
 # --- Step 3: paired, unclamped cumulative regret --------------------------------------------
