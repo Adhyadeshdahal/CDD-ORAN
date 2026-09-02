@@ -33,7 +33,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cdd_oran.analysis.edge_stability import edge_stability
+from cdd_oran.analysis.edge_stability import bootstrap_frequency
 
 
 # --------------------------------------------------------------------------- #
@@ -434,21 +434,23 @@ class GraphPosterior:
 
     @classmethod
     def from_bootstrap(cls, run_dir, B=50, n_transitions=2048, seed=0, device=None):
-        """Bootstrap-with-calibration entry point: reuse ``edge_stability`` to get
-        per-edge inclusion frequencies from the FROZEN predictor, then wrap them as a
-        posterior. Requires a trained CDL run; not exercised by the CPU test."""
-        result = edge_stability(
+        """Bootstrap entry point: reuse the truth-FREE ``bootstrap_frequency`` to get per-edge
+        inclusion frequencies from the FROZEN predictor, then wrap them as a posterior. Reads NO
+        ground truth -- recovery scoring is the separate post-hoc ``edge_stability.recovery_report``
+        -- so PRODUCING a posterior never touches ``env.true_adj_matrix``. Requires a trained CDL
+        run; not exercised by the CPU test."""
+        freq, context = bootstrap_frequency(
             run_dir, B=B, n_transitions=n_transitions, seed=seed, device=device
         )
-        freq = np.asarray(result["frequency_matrix"], dtype=float)
+        freq = np.asarray(freq, dtype=float)
         return cls(
             freq,
             meta={
                 "source": "bootstrap",
-                "run_dir": result["run_dir"],
-                "environment": result["environment"],
-                "B": result["B"],
-                "n_transitions": result["n_transitions"],
+                "run_dir": context["run_dir"],
+                "environment": context["environment"],
+                "B": context["B"],
+                "n_transitions": context["n_transitions"],
             },
         )
 
@@ -562,21 +564,41 @@ def main(argv=None):
     if not args.calibration_run:
         p.error("at least one --calibration-run is required; target labels must be held out")
 
-    # Build the target posterior first. Its labels are not exposed until after the
-    # calibration map has been fitted on separate labelled calibration runs.
     from dataclasses import replace
 
     from cdd_oran.config import load_config
     from cdd_oran.envs import get_env
 
+    # Reject a leaking calibration run BEFORE any bootstrap or calibrator fit: same path, OR same
+    # ENVIRONMENT as the target (its true adjacency IS the target's, so fitting the calibrator on
+    # it leaks the answer). Held-out calibration must come from a DIFFERENT environment (Plan 002).
+    target_cfg = load_config(Path(args.run) / "config.yaml")
+    if args.device:
+        target_cfg = replace(target_cfg, device=args.device)
+    target_environment = target_cfg.environment
+    reference_cfgs = []
+    for calibration_run in args.calibration_run:
+        if Path(calibration_run).resolve() == Path(args.run).resolve():
+            p.error("--calibration-run must be different from --run")
+        reference_cfg = load_config(Path(calibration_run) / "config.yaml")
+        if args.device:
+            reference_cfg = replace(reference_cfg, device=args.device)
+        if reference_cfg.environment == target_environment:
+            p.error(
+                f"--calibration-run environment {reference_cfg.environment!r} equals the target "
+                f"run's environment {target_environment!r}: same-environment calibration leaks the "
+                "target's true adjacency. Use a run from a DIFFERENT held-out environment."
+            )
+        reference_cfgs.append((calibration_run, reference_cfg))
+
+    # Build the target posterior. Its labels are not exposed until after the calibration map has
+    # been fitted on the separate held-out calibration runs.
     post = GraphPosterior.from_bootstrap(
         args.run, B=args.B, n_transitions=args.n_transitions, seed=args.seed, device=args.device
     )
     calibration_scores = []
     calibration_labels = []
-    for calibration_run in args.calibration_run:
-        if Path(calibration_run).resolve() == Path(args.run).resolve():
-            p.error("--calibration-run must be different from --run")
+    for calibration_run, reference_cfg in reference_cfgs:
         reference = GraphPosterior.from_bootstrap(
             calibration_run,
             B=args.B,
@@ -584,9 +606,6 @@ def main(argv=None):
             seed=args.seed,
             device=args.device,
         )
-        reference_cfg = load_config(Path(calibration_run) / "config.yaml")
-        if args.device:
-            reference_cfg = replace(reference_cfg, device=args.device)
         reference_env = get_env(reference_cfg)
         calibration_scores.append(reference.marginals())
         calibration_labels.append(np.asarray(reference_env.true_adj_matrix, dtype=float))
@@ -600,10 +619,7 @@ def main(argv=None):
     calibrator = IsotonicCalibrator().fit(cal_scores, cal_labels)
     calibrated = post.apply_calibrator(calibrator)
 
-    cfg = load_config(Path(args.run) / "config.yaml")
-    if args.device:
-        cfg = replace(cfg, device=args.device)
-    env = get_env(cfg)
+    env = get_env(target_cfg)
     gt = np.asarray(env.true_adj_matrix, dtype=float)
     before = post.calibration_check(gt)
     after = calibrated.calibration_check(gt)

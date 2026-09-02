@@ -15,12 +15,18 @@ What it does, decoupled from dynamics/residual/planner weights:
      The structure-conditioned prediction head and the bounded residual are NEVER touched.
   3. Converges the step-CMI matrix (``mask_CMI``) directly to its steady-state mean, independent
      of the slow EMA / training budget, and freezes the crisp ENUMERATION graph from it.
-  4. Bootstraps a per-edge inclusion posterior (P1 ``edge_stability``) from the frozen predictor,
-     fits an isotonic calibration map, and writes the CALIBRATED posterior artifact.
+  4. Bootstraps a per-edge inclusion posterior (P1 ``edge_stability``) from the frozen predictor.
+     Calibrating that posterior into inclusion probabilities needs labels; those labels must be
+     HELD OUT, never the target environment's own true adjacency (that is target leakage). So:
+       * with ``--calibration-run`` (a DISTINCT held-out environment) it fits an isotonic map on
+         that run's scores+labels and writes the CALIBRATED, downstream-sampleable posterior;
+       * without it, it writes only a RAW diagnostic (calibrated=false) that robust structure
+         sampling / staging reject -- the target's true adjacency is never read on this path.
 
 Outputs (the exact formats ``train``/``evaluate`` already load and hash):
-  * ``<out>/<environment>_posterior.json`` -- ``GraphPosterior.save`` (calibrated=True).
-  * ``<out>/<environment>_enum.json``      -- ``freeze_enumeration_graph`` (nonzero state edges).
+  * ``<out>/<environment>_posterior.json``     -- calibrated posterior (``--calibration-run`` mode).
+  * ``<out>/<environment>_raw_posterior.json`` -- raw uncalibrated diagnostic (no calibration run).
+  * ``<out>/<environment>_enum.json``          -- ``freeze_enumeration_graph`` (nonzero state edges).
 
 # ponytail: CMI-on-a-max-pool-predictor is the discovery SIGNAL for now. A more scalable /
 # differentiable structure learner (NOTEARS / DiBS / a variational edge posterior) is a future
@@ -46,7 +52,7 @@ from cdd_oran.analysis.edge_stability import collect_transitions
 from cdd_oran.analysis.graph_posterior import GraphPosterior, IsotonicCalibrator
 from cdd_oran.config import ExperimentConfig
 from cdd_oran.envs import get_env
-from cdd_oran.models import freeze_enumeration_graph, get_model, node_names
+from cdd_oran.models import freeze_enumeration_graph, get_model, node_names, sha256_file
 from cdd_oran.policies import RandomPolicy
 from cdd_oran.utils.runs import create_run_dir
 from cdd_oran.utils.seeding import seed_everything
@@ -120,34 +126,61 @@ def _converge_mask_cmi(model, s, a, s_next, batch_size, n_batches):
     return model.mask_CMI
 
 
-def _calibration_source(calibration_run, raw_marginals, env, *, B, n_transitions, seed, device):
-    """Return ``(scores, labels, provenance)`` for the isotonic calibration fit.
+def _load_reference_config(calibration_run, device):
+    """Load a calibration run's own config (optionally overriding device)."""
+    from cdd_oran.config import load_config
 
-    Held-out when ``--calibration-run`` is given (its own bootstrap frequencies vs its env
-    ground truth); otherwise within-environment (this run's bootstrap frequencies vs this env's
-    ground truth). Within-environment is score->label recalibration, not held-out structural
-    coverage; it is recorded as such in the artifact metadata.
+    ref_cfg = load_config(Path(calibration_run) / "config.yaml")
+    if device:
+        ref_cfg = replace(ref_cfg, device=device)
+    return ref_cfg
+
+
+def _check_held_out(ref_cfg, target_environment):
+    """Refuse a calibration run that would leak the TARGET environment's ground truth.
+
+    A calibration run in the same environment as the target shares its true adjacency, so
+    fitting against its labels is indirect target leakage (self-calibration). Only a run from
+    a DISTINCT held-out environment provides honest structural labels.
     """
-    if calibration_run:
-        reference = GraphPosterior.from_bootstrap(
-            calibration_run, B=B, n_transitions=n_transitions, seed=seed, device=device
+    if ref_cfg.environment == target_environment:
+        raise ValueError(
+            f"--calibration-run environment {ref_cfg.environment!r} equals the target "
+            f"environment {target_environment!r}: same-target (self) calibration would leak "
+            "the target's true adjacency. Use a run from a DIFFERENT held-out environment."
         )
-        # Load the calibration run's own config/env for its held-out labels.
-        from cdd_oran.config import load_config
 
-        ref_cfg = load_config(Path(calibration_run) / "config.yaml")
-        if device:
-            ref_cfg = replace(ref_cfg, device=device)
-        ref_env = get_env(ref_cfg)
-        return (
-            reference.marginals(),
-            np.asarray(ref_env.true_adj_matrix, dtype=float),
-            {"mode": "held_out", "run": str(calibration_run)},
+
+def _held_out_calibration_source(
+    calibration_run, run_dir, ref_cfg, *, B, n_transitions, seed, device
+):
+    """Return ``(scores, labels, provenance)`` for the isotonic fit from a DISTINCT held-out run.
+
+    Scores are the calibration run's OWN bootstrap inclusion frequencies; labels are that run's
+    environment ground truth. The target run/environment's true adjacency is never read here, so
+    the calibrated posterior has not (directly or indirectly) seen the answer it will be sampled
+    against. Provenance records the calibration run identity + its checkpoint hash so held-out
+    calibration is auditable in the persisted artifact.
+    """
+    if Path(calibration_run).resolve() == Path(run_dir).resolve():
+        raise ValueError(
+            "--calibration-run must differ from the discovery run just produced (self-calibration)"
         )
+    reference = GraphPosterior.from_bootstrap(
+        calibration_run, B=B, n_transitions=n_transitions, seed=seed, device=device
+    )
+    ref_env = get_env(ref_cfg)
+    checkpoint = Path(calibration_run) / "checkpoint.pt"
+    provenance = {
+        "mode": "held_out",
+        "run": str(calibration_run),
+        "environment": ref_cfg.environment,
+        "checkpoint_sha256": sha256_file(checkpoint) if checkpoint.exists() else None,
+    }
     return (
-        np.asarray(raw_marginals, dtype=float),
-        np.asarray(env.true_adj_matrix, dtype=float),
-        {"mode": "within_environment", "run": None},
+        reference.marginals(),
+        np.asarray(ref_env.true_adj_matrix, dtype=float),
+        provenance,
     )
 
 
@@ -182,6 +215,13 @@ def run_discovery(
             structure_source="discovered",
         ),
     )
+
+    # Validate a held-out calibration run BEFORE any training, so a same-target/self
+    # calibration request fails fast instead of after a full discovery run.
+    ref_cfg = None
+    if calibration_run is not None:
+        ref_cfg = _load_reference_config(calibration_run, device)
+        _check_held_out(ref_cfg, cfg.environment)
 
     seed_everything(seed, cfg.deterministic)
     env = get_env(cfg)
@@ -220,18 +260,50 @@ def run_discovery(
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    posterior_path = out_dir / f"{cfg.environment}_posterior.json"
     enum_path = out_dir / f"{cfg.environment}_enum.json"
 
-    # 3) Frozen crisp enumeration graph from the trained CMI (fails loudly on zero state edges).
+    # 3) Frozen crisp enumeration graph from the trained CMI (label-free / preconfigured
+    #    threshold; fails loudly on zero state edges). No ground truth is read here.
     freeze_enumeration_graph(run_dir, enum_path, device=device)
 
-    # 4) Calibrated per-edge posterior from the frozen predictor's bootstrap frequencies.
+    # 4) Per-edge inclusion posterior from the frozen predictor's bootstrap frequencies.
     raw_post = GraphPosterior.from_bootstrap(
         run_dir, B=B, n_transitions=n_transitions, seed=seed, device=device
     )
-    scores, labels, provenance = _calibration_source(
-        calibration_run, raw_post.marginals(), env,
+    raw_post.node_names = node_names(env)
+    common_meta = {"environment": cfg.environment, "discovery": True}
+
+    if calibration_run is None:
+        # NO-CALIBRATION MODE: persist a RAW diagnostic (calibrated=False). Without a held-out
+        # calibration run there is no honest way to map scores to inclusion probabilities, so the
+        # target environment's true adjacency is deliberately NOT read on this path. The artifact
+        # is NOT downstream-sampleable -- from_artifact / stage_run_artifacts reject it.
+        raw_post.meta = {
+            **raw_post.meta,
+            **common_meta,
+            "calibrated": False,
+            "calibration": {"mode": "uncalibrated", "run": None},
+        }
+        raw_path = out_dir / f"{cfg.environment}_raw_posterior.json"
+        raw_post.save(raw_path)
+        logger.info(
+            "Discovery artifacts: raw_posterior=%s (UNCALIBRATED, not downstream-sampleable) "
+            "enum=%s (%d state edges); pass --calibration-run for a calibrated posterior",
+            raw_path, enum_path, state_edges,
+        )
+        return {
+            "run_dir": str(run_dir),
+            "raw_posterior": str(raw_path),
+            "calibrated_posterior": None,
+            "enumeration_graph": str(enum_path),
+            "environment": cfg.environment,
+            "state_edges": state_edges,
+            "calibrated": False,
+        }
+
+    # CALIBRATION MODE: fit an isotonic map from a DISTINCT held-out run's scores + labels.
+    scores, labels, provenance = _held_out_calibration_source(
+        calibration_run, run_dir, ref_cfg,
         B=B, n_transitions=n_transitions, seed=seed, device=device,
     )
     calibrator = IsotonicCalibrator().fit(scores, labels)
@@ -239,21 +311,24 @@ def run_discovery(
     calibrated.node_names = node_names(env)
     calibrated.meta = {
         **calibrated.meta,
-        "environment": cfg.environment,
-        "discovery": True,
+        **common_meta,
         "calibration": provenance,
+        "calibration_runs": [provenance["run"]],
     }
-    calibrated.save(posterior_path)
+    calibrated_path = out_dir / f"{cfg.environment}_posterior.json"
+    calibrated.save(calibrated_path)
     logger.info(
-        "Discovery artifacts: posterior=%s (calibration=%s) enum=%s (%d state edges)",
-        posterior_path, provenance["mode"], enum_path, state_edges,
+        "Discovery artifacts: calibrated_posterior=%s (held-out run=%s) enum=%s (%d state edges)",
+        calibrated_path, provenance["run"], enum_path, state_edges,
     )
     return {
         "run_dir": str(run_dir),
-        "posterior": str(posterior_path),
+        "raw_posterior": None,
+        "calibrated_posterior": str(calibrated_path),
         "enumeration_graph": str(enum_path),
         "environment": cfg.environment,
         "state_edges": state_edges,
+        "calibrated": True,
     }
 
 

@@ -105,7 +105,16 @@ def _restore_mask_state(model, snapshot):
     model._eval_step_count = count
 
 
-def edge_stability(run_dir, B=50, n_transitions=2048, pi=0.5, seed=0, device=None):
+def bootstrap_frequency(run_dir, B=50, n_transitions=2048, seed=0, device=None):
+    """Truth-FREE bootstrap of per-edge selection frequency from the FROZEN predictor.
+
+    This is the artifact-PRODUCING path (``GraphPosterior.from_bootstrap`` calls it): it reads
+    NO ground truth. Returns ``(freq, context)`` where ``freq`` is the ``(fd, fd)`` per-edge
+    selection frequency over ``B`` resamples and ``context`` carries run/env/config identity plus
+    the truth-free baseline hard-threshold PREDICTION. Scoring that frequency against
+    ``env.true_adj_matrix`` is deferred to the post-hoc ``recovery_report`` (Plan 002 Step 2:
+    ground truth is read only by a separately invoked report, AFTER the artifact is frozen).
+    """
     run_dir = Path(run_dir)
     cfg = load_config(run_dir / "config.yaml")
     if device:
@@ -135,18 +144,8 @@ def edge_stability(run_dir, B=50, n_transitions=2048, pi=0.5, seed=0, device=Non
         _restore_mask_state(model, snapshot)
     freq = freq / B
 
-    gt = env.true_adj_matrix
-    table = []
-    for cut in np.arange(0.1, 1.0 + 1e-9, 0.1):
-        selected = (freq >= cut).astype(int)
-        table.append({"cut": float(cut), **_prf(selected, gt)})
-
     baseline_cmi = model.mask_CMI.cpu().detach().numpy()
-    baseline_pred = binary_graph_from_cmi(baseline_cmi, cfg.model.cmi_threshold)
-    baseline = _prf(baseline_pred, gt)
-
-    pi_selected = (freq >= pi).astype(int)
-    return {
+    context = {
         "run_dir": str(run_dir),
         "environment": cfg.environment,
         "config_threshold": cfg.model.cmi_threshold,
@@ -155,10 +154,64 @@ def edge_stability(run_dir, B=50, n_transitions=2048, pi=0.5, seed=0, device=Non
         "batch_size": batch_size,
         "seed": seed,
         "device": cfg.device,
+        # Truth-free baseline hard-threshold PREDICTION; scored against gt only in recovery_report.
+        "baseline_pred": binary_graph_from_cmi(baseline_cmi, cfg.model.cmi_threshold),
+    }
+    return freq, context
+
+
+def recovery_report(freq, context, pi=0.5, env=None):
+    """POST-HOC recovery scoring: reads ground truth to score a FROZEN frequency matrix.
+
+    Call this ONLY after the artifact is frozen. The artifact-producing path
+    (``bootstrap_frequency`` / ``GraphPosterior.from_bootstrap``) never invokes it, so producing a
+    posterior never reads ``env.true_adj_matrix``. Numbers are identical to the pre-split
+    ``edge_stability`` output; only WHEN truth is read has moved.
+    """
+    if env is None:
+        cfg = load_config(Path(context["run_dir"]) / "config.yaml")
+        env = get_env(cfg)
+    gt = env.true_adj_matrix
+
+    table = []
+    for cut in np.arange(0.1, 1.0 + 1e-9, 0.1):
+        selected = (freq >= cut).astype(int)
+        table.append({"cut": float(cut), **_prf(selected, gt)})
+
+    baseline = _prf(np.asarray(context["baseline_pred"]), gt)
+    pi_selected = (freq >= pi).astype(int)
+    return {
         "gt_edge_count": int(gt.sum()),
-        "baseline_single_threshold": {"threshold": cfg.model.cmi_threshold, **baseline},
+        "baseline_single_threshold": {"threshold": context["config_threshold"], **baseline},
         "pi_selected": {"cut": pi, **_prf(pi_selected, gt)},
         "frequency_cut_table": table,
+    }
+
+
+def edge_stability(run_dir, B=50, n_transitions=2048, pi=0.5, seed=0, device=None):
+    """Full recovery report: truth-free bootstrap frequency + POST-HOC ground-truth scoring.
+
+    Thin composition preserved for the CLI / recovery gate. The frequency is produced with NO
+    truth read (``bootstrap_frequency``); truth is read only afterwards, in ``recovery_report``.
+    Return shape and numbers are unchanged from the pre-split function.
+    """
+    freq, context = bootstrap_frequency(
+        run_dir, B=B, n_transitions=n_transitions, seed=seed, device=device
+    )
+    report = recovery_report(freq, context, pi=pi)
+    return {
+        "run_dir": context["run_dir"],
+        "environment": context["environment"],
+        "config_threshold": context["config_threshold"],
+        "B": context["B"],
+        "n_transitions": context["n_transitions"],
+        "batch_size": context["batch_size"],
+        "seed": context["seed"],
+        "device": context["device"],
+        "gt_edge_count": report["gt_edge_count"],
+        "baseline_single_threshold": report["baseline_single_threshold"],
+        "pi_selected": report["pi_selected"],
+        "frequency_cut_table": report["frequency_cut_table"],
         "frequency_matrix": freq,
     }
 

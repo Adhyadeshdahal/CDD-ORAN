@@ -69,7 +69,16 @@ def build_parser():
 
     discover = commands.add_parser(
         "discover",
-        help="Discover causal structure -> calibrated posterior + frozen enumeration graph",
+        help="Discover causal structure -> posterior + frozen enumeration graph",
+        description=(
+            "Discover causal structure from an environment. --calibration-run is REQUIRED to "
+            "produce a downstream-sampleable CALIBRATED posterior (<env>_posterior.json): its "
+            "labels must come from a DISTINCT held-out environment, never the target's own true "
+            "adjacency. Without --calibration-run the output is only an UNCALIBRATED raw "
+            "diagnostic (<env>_raw_posterior.json) that robust structure sampling / staging "
+            "reject; the target's true adjacency is not read on this path. True adjacency is "
+            "allowed for post-hoc recovery scoring only (e.g. cdd_oran.analysis.auto_threshold)."
+        ),
     )
     discover.add_argument("--config", required=True, help="YAML experiment config (model_kind=cdl)")
     discover.add_argument("--seed", type=int, help="Override the config seed")
@@ -90,7 +99,12 @@ def build_parser():
     discover.add_argument("--n-transitions", type=int, default=2048, help="Bootstrap transition pool")
     discover.add_argument(
         "--calibration-run",
-        help="Held-out run dir for calibration (default: within-environment vs this env's truth)",
+        help=(
+            "DISTINCT held-out environment's run dir supplying calibration labels. Required for a "
+            "calibrated, downstream-sampleable posterior; omit it for a raw uncalibrated "
+            "diagnostic only. Must NOT be the target environment (same-target calibration leaks "
+            "the target's true adjacency and is rejected)."
+        ),
     )
     _add_log_level(discover)
 
@@ -177,12 +191,21 @@ def main(argv=None):
                 n_transitions=args.n_transitions,
                 calibration_run=args.calibration_run,
             )
-            logger.info(
-                "Discovery complete: posterior=%s enum=%s (%d state edges)",
-                result["posterior"],
-                result["enumeration_graph"],
-                result["state_edges"],
-            )
+            if result["calibrated"]:
+                logger.info(
+                    "Discovery complete: calibrated_posterior=%s enum=%s (%d state edges)",
+                    result["calibrated_posterior"],
+                    result["enumeration_graph"],
+                    result["state_edges"],
+                )
+            else:
+                logger.info(
+                    "Discovery complete: raw_posterior=%s (UNCALIBRATED, not downstream-"
+                    "sampleable; pass --calibration-run) enum=%s (%d state edges)",
+                    result["raw_posterior"],
+                    result["enumeration_graph"],
+                    result["state_edges"],
+                )
             return 0
 
         if args.command == "sweep":
