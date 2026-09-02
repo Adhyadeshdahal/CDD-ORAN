@@ -229,3 +229,43 @@ def test_full_graph_mapping_and_imperfect_recovery_fixture():
     missed = {(m["child"], m["parent"], m["type"]) for m in out["missed"]}
     assert (6, 4, "kpi_kpi") in missed
     assert out["kpi_kpi"]["fn"] >= 1
+
+
+def test_full_graph_mapping_rejects_wrong_shape():
+    from cdd_oran.e1slice.evaluate import full_graph_from_discovered_mask
+
+    with pytest.raises(ValueError, match="num_kpis"):
+        full_graph_from_discovered_mask(np.zeros((3, 8), dtype=int))
+
+
+def test_load_arm_rejects_checkpoint_mask_mismatch(tmp_path: Path):
+    import torch
+
+    from cdd_oran.e1slice.model import _sha256_file, load_arm
+
+    _prepare(tmp_path)
+    arm_dir = tmp_path / "arms" / "discovered"
+    # Smuggle a DIFFERENT mask (bit-inverted, so it always differs from the frozen graph) into the
+    # checkpoint buffer, then re-record its digest so the byte-digest check passes and we reach the
+    # mask-binding assertion.
+    state = torch.load(arm_dir / "model.pt", weights_only=True)
+    state["mask"] = 1.0 - state["mask"]
+    torch.save(state, arm_dir / "model.pt")
+    meta = json.loads((arm_dir / "arm_meta.json").read_text())
+    meta["model_sha256"] = _sha256_file(arm_dir / "model.pt")
+    (arm_dir / "arm_meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="checkpoint mask"):
+        load_arm(tmp_path, "discovered")
+
+
+def test_eval_and_verify_reject_mismatched_cross_arm_config(tmp_path: Path):
+    _prepare(tmp_path)
+    # Break the matched comparison: the oracle arm claims a different weight_seed than the others.
+    meta_path = tmp_path / "arms" / "oracle" / "arm_meta.json"
+    meta = json.loads(meta_path.read_text())
+    meta["config"]["weight_seed"] = 999
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="matched comparison"):
+        evaluate_dataset(tmp_path)
+    with pytest.raises(ValueError, match="matched comparison"):
+        verify_dataset(tmp_path)

@@ -47,13 +47,41 @@ PROTOCOL_COMMIT = "e5312a696a0ed5f9d590e9ad766bdbfdad53a16c"
 # Downstream stages that must not survive a re-``discover`` unless ``force`` is given.
 _DISCOVER_DESCENDANTS = ("arms", "metrics.json", "recovery.json")
 
+# The frozen primary contract (docs/benchmark/E1_DISCOVERY_PROTOCOL.md). These are NOT tunable:
+# the persisted discovery.json the discovered arm consumes must always use exactly these.
+FROZEN_FLOOR = 1e-3
+FROZEN_METHOD = "largest_gap"
+
+# The frozen E1 candidate-graph shape (num_kpis, num_params + num_kpis). This is the protocol's
+# fixed layout, not environment truth, so it is a local constant (discovery imports no env symbol).
+_NUM_KPIS = 4
+_NUM_PARAMS = 4
+_CANDIDATE_SHAPE = (_NUM_KPIS, _NUM_PARAMS + _NUM_KPIS)
+
 
 @dataclass(frozen=True)
 class DiscoveryConfig:
-    """Frozen discovery contract. ``method`` is fixed to the primary label-free rule."""
+    """Frozen discovery contract: ``floor`` and ``method`` are fixed and non-overridable.
 
-    floor: float = 1e-3
-    method: str = "largest_gap"
+    Any value other than the frozen ``FROZEN_FLOOR`` / ``FROZEN_METHOD`` is rejected, so a rerun
+    can never persist a differently-thresholded primary ``discovery.json`` while still stamping
+    the original ``protocol_commit`` (the anti-p-hacking guarantee).
+    """
+
+    floor: float = FROZEN_FLOOR
+    method: str = FROZEN_METHOD
+
+    def __post_init__(self) -> None:
+        if self.floor != FROZEN_FLOOR:
+            raise ValueError(
+                f"DiscoveryConfig: floor is frozen at {FROZEN_FLOOR}, got {self.floor}. The "
+                "primary discovery threshold is not tunable; a floor sweep may only be run as a "
+                "labelled diagnostic that never writes the primary discovery.json."
+            )
+        if self.method != FROZEN_METHOD:
+            raise ValueError(
+                f"DiscoveryConfig: method is frozen at {FROZEN_METHOD!r}, got {self.method!r}"
+            )
 
 
 @dataclass(frozen=True)
@@ -222,8 +250,10 @@ def load_discovery(
     mask = np.asarray(record["binary_mask"], dtype=np.int64)
     coefs = np.asarray(record["coefficients"], dtype=np.float64)
     scores = np.asarray(record["scores"], dtype=np.float64)
-    if mask.ndim != 2:
-        raise ValueError(f"{disc_file}: binary_mask must be 2-D, got shape {mask.shape}")
+    if mask.shape != _CANDIDATE_SHAPE:
+        raise ValueError(
+            f"{disc_file}: binary_mask shape {mask.shape} != frozen candidate shape {_CANDIDATE_SHAPE}"
+        )
     if coefs.shape != mask.shape or scores.shape != mask.shape:
         raise ValueError(f"{disc_file}: coefficients/scores shapes disagree with binary_mask")
     if not set(np.unique(mask).tolist()).issubset({0, 1}):

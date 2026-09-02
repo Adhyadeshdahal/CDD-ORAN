@@ -29,7 +29,6 @@ from pathlib import Path
 
 from cdd_oran.e1slice.dataset import E1DatasetConfig, load_dataset, write_dataset
 from cdd_oran.e1slice.discovery import (
-    DiscoveryConfig,
     discovered_mask_array,
     load_discovery,
     write_discovery,
@@ -68,7 +67,9 @@ def _cmd_split(args: argparse.Namespace) -> int:
 
 
 def _cmd_discover(args: argparse.Namespace) -> int:
-    record = write_discovery(args.dataset, DiscoveryConfig(floor=args.floor), force=args.force)
+    # The primary discovery uses the FROZEN floor/method (not overridable) so a rerun cannot
+    # persist a differently-thresholded mask under the same protocol_commit.
+    record = write_discovery(args.dataset, force=args.force)
     mask = record["binary_mask"]
     n_edges = int(sum(sum(row) for row in mask))
     print(
@@ -176,7 +177,6 @@ def _build_parser() -> argparse.ArgumentParser:
 
     dis = sub.add_parser("discover", help="learn a label-free graph from train rows -> discovery.json")
     dis.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
-    dis.add_argument("--floor", type=float, default=1e-3, help="largest_gap floor (frozen: 1e-3)")
     dis.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
     dis.set_defaults(func=_cmd_discover)
 

@@ -8,13 +8,14 @@ artifact corruption handling.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from cdd_oran.e1slice.dataset import E1DatasetConfig, E1Rows, write_dataset
+from cdd_oran.e1slice.dataset import E1DatasetConfig, E1Rows, canonical_json, write_dataset
 from cdd_oran.e1slice.discovery import (
     PROTOCOL_COMMIT,
     DiscoveryConfig,
@@ -121,6 +122,15 @@ def test_rejects_empty_training_rows():
         discover_graph(_synthetic_rows(), [])
 
 
+def test_discovery_config_freezes_floor_and_method():
+    # The primary threshold is not tunable: only the frozen floor/method are accepted.
+    assert DiscoveryConfig().floor == 1e-3 and DiscoveryConfig().method == "largest_gap"
+    with pytest.raises(ValueError, match="floor is frozen"):
+        DiscoveryConfig(floor=0.5)
+    with pytest.raises(ValueError, match="method is frozen"):
+        DiscoveryConfig(method="otsu")
+
+
 def test_does_not_import_env_truth():
     import ast
 
@@ -194,6 +204,21 @@ def test_corrupted_discovery_is_rejected(tmp_path: Path, mutate):
     mutate(record)  # mutate a field WITHOUT recomputing content_hash
     (tmp_path / "discovery.json").write_text(json.dumps(record, indent=2, sort_keys=True))
     with pytest.raises(ValueError):
+        load_discovery(tmp_path)
+
+
+def test_load_discovery_rejects_wrong_candidate_shape(tmp_path: Path):
+    _prepare_dataset(tmp_path)
+    record = json.loads((tmp_path / "discovery.json").read_text())
+    # Drop the last child row -> (3, 8); keep the payload internally consistent and re-hash so the
+    # SHAPE guard (not the content_hash guard) is what rejects it.
+    for key in ("binary_mask", "coefficients", "scores"):
+        record[key] = record[key][:3]
+    record["candidate_shape"] = [3, 8]
+    payload = {k: v for k, v in record.items() if k != "content_hash"}
+    record["content_hash"] = hashlib.sha256(canonical_json(payload).encode()).hexdigest()
+    (tmp_path / "discovery.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="candidate shape"):
         load_discovery(tmp_path)
 
 

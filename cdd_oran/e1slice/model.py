@@ -316,7 +316,19 @@ def load_arm(dataset_dir: str | Path, arm: Arm) -> tuple[OneStepPredictor, dict[
     raw["hidden"] = tuple(raw["hidden"])  # JSON has no tuples; restore the arch shape
     cfg = ModelConfig(**raw)
     model = OneStepPredictor(resolved_mask, cfg.hidden)
+    # register_buffer aliases resolved_mask, and load_state_dict copies the checkpoint buffer INTO
+    # it in place -- so snapshot the intended mask BEFORE loading, or the check would compare the
+    # buffer to itself.
+    expected_mask = resolved_mask.detach().clone()
     state = torch.load(model_file, weights_only=True)
     model.load_state_dict(state)
+    # ``mask`` is a registered buffer, so load_state_dict OVERWRITES it with the checkpoint's copy.
+    # Require the loaded buffer to equal the mask we resolved (true graph for oracle/dense; the
+    # FROZEN discovery graph for discovered) so a checkpoint carrying a different valid mask is
+    # rejected and the arm is truly bound to its intended graph.
+    if not torch.equal(model.mask, expected_mask):
+        raise ValueError(
+            f"{model_file}: checkpoint mask does not match the resolved '{arm}' arm mask"
+        )
     model.eval()
     return model, meta

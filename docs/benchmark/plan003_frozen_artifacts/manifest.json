@@ -1,0 +1,80 @@
+{
+  "columns": [
+    "episode",
+    "time",
+    "x_params",
+    "x_kpis",
+    "y_kpis"
+  ],
+  "config": {
+    "env_seed": 0,
+    "n_episodes": 48,
+    "obs_noise_scale": 0.0,
+    "steps_per_episode": 16,
+    "warmup": 2
+  },
+  "created_utc": "2026-09-02T19:13:24.535665+00:00",
+  "dataset_hash": "cfce4c10c7a7eb794f9a8f14e4e52b96188cbce69eb8b620729d04aa6a0b94ca",
+  "git_dirty": false,
+  "git_sha": "9f6fa5b697835e858bd4e95f2a99f86986ea5798",
+  "n_episodes": 48,
+  "n_rows": 768,
+  "schema_version": "e1slice.v1",
+  "scm_hash": "cfda05087772da51ca2256baa6b9fd05e343f0d6f3926d20100f94c716f636a5",
+  "scm_identity": {
+    "a": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "adjacency_edges": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        5
+      ]
+    ],
+    "b2": 0.5,
+    "b3": 0.5,
+    "env": "E1V2Env",
+    "mu": [
+      0.5,
+      0.5,
+      0.75,
+      0.75
+    ],
+    "num_kpis": 4,
+    "num_params": 4,
+    "obs_noise_scale": 0.0,
+    "sigma": [
+      0.28867513459481287,
+      0.28867513459481287,
+      0.3227486121839514,
+      0.3227486121839514
+    ]
+  },
+  "seeds": {
+    "action_namespace": 101,
+    "env_seed": 0
+  }
+}

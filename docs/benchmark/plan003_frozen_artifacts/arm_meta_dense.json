@@ -1,0 +1,34 @@
+{
+  "arm": "dense",
+  "capacity": {
+    "architecture": "per-output masked MLP",
+    "hidden": [
+      16
+    ],
+    "num_active_inputs_per_output": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "num_parameters": 644
+  },
+  "config": {
+    "batch_size": 64,
+    "epochs": 300,
+    "hidden": [
+      16
+    ],
+    "lr": 0.01,
+    "weight_seed": 0
+  },
+  "dataset_hash": "cfce4c10c7a7eb794f9a8f14e4e52b96188cbce69eb8b620729d04aa6a0b94ca",
+  "final_train_mse": 4.730647731321369e-07,
+  "git_dirty": false,
+  "git_sha": "9f6fa5b697835e858bd4e95f2a99f86986ea5798",
+  "model_sha256": "8f4870caa826b847e68b989b514febb602385ef6e4dcaabaed441a765a63b8e4",
+  "n_train_rows": 576,
+  "ref_sha256": "dd791ee83f68cff2967369266d921eaff36fe8243336e501c6ecf24d7517f46e",
+  "schema_version": "e1slice.v1",
+  "split_hash": "ec6658d0c7a46bacc02ed701f77b6a7251b6ee35eb2349b029d75784714ad8d3"
+}

@@ -12,11 +12,21 @@ noiseless E1 control under a label-free OLS + `largest_gap` rule.
   (`docs: freeze E1 discovery protocol`). Recorded as `protocol_commit` in `discovery.json`.
 - Implementation commit: `9f6fa5b697835e858bd4e95f2a99f86986ea5798`
   (`e1slice: add learned graph and discovered arm`).
-- `dataset_hash` `cfce4c10c7a7…`, `split_hash` `ec6658d0c7a4…`,
-  `discovery.json content_hash` `c67fd92ef7be…`, `metrics_hash` `c9ff3ed28f36…`,
-  `recovery.json content_hash` `7914ad050826…`.
-- Archived artifacts: `docs/benchmark/plan003_frozen_artifacts/{discovery,metrics,recovery,split}.json`
-  and `run.log` (heavy `rows.npz`/`model.pt` live in the gitignored `runs/` dir).
+- Full provenance hashes (not truncated):
+  - `dataset_hash` `cfce4c10c7a7eb794f9a8f14e4e52b96188cbce69eb8b620729d04aa6a0b94ca`
+  - `scm_hash` `cfda05087772da51ca2256baa6b9fd05e343f0d6f3926d20100f94c716f636a5`
+  - `split_hash` `ec6658d0c7a46bacc02ed701f77b6a7251b6ee35eb2349b029d75784714ad8d3`
+  - `discovery.json content_hash` `c67fd92ef7bebb784ae2e704515723a54ca1450954dde5f2cf18d2216ea96805`
+  - `metrics_hash` `c9ff3ed28f36214280324abdb1457d362db94747c85b46a0acfc9609efc74514`
+  - `recovery.json content_hash` `7914ad050826cc55836256ced8fe2753e8d906bb6296ca022be30e75f415f370`
+- Archived artifacts (full chain validates from disk):
+  `docs/benchmark/plan003_frozen_artifacts/` holds `manifest.json`, `split.json`,
+  `discovery.json`, `arm_meta_{oracle,dense,discovered}.json`, `metrics.json`, `recovery.json`,
+  and `run.log`. Every child artifact's `dataset_hash`/`split_hash` matches `manifest.json`, the
+  discovered arm's `discovery_hash` matches `discovery.json`'s `content_hash`, and the discovery
+  and recovery `content_hash`es recompute from their bytes. Heavy `rows.npz`/`model.pt` remain in
+  the gitignored `runs/` directory (byte-regenerable by a deterministic re-run of the frozen
+  slice, which yields identical hashes).
 
 ## Configuration and command lines
 
@@ -79,8 +89,16 @@ its K2/K3 heads cannot see K0/K1, so they cannot represent `K2 = P2 + 0.5·K0` o
 
 ## Interpretation
 
-The label-free rule recovers **exactly the NCP->KPI (interventionally reachable) structure** and
-leaves a **KPI->KPI recall floor**. This is consistent with the split-by-edge-type diagnostic:
-the missing mass is entirely KPI->KPI, which random NCP interventions in this control cannot help
-resolve. The result is reported as the frozen method produced it; it was not adjusted after E1
-truth was inspected.
+The label-free rule recovers all four NCP->KPI edges and leaves a **KPI->KPI recall floor** — but
+the cause is the **global threshold**, not any interventional unresolvability. The K->K signal is
+**present and identified**: the fit assigns nonzero standardized coefficients to exactly the true
+K->K parents (K0->K2 = 0.439, K1->K3 = 0.456). Those coefficients simply fall **below** the
+label-free `largest_gap` cut (~0.674), which lands in the gap **between** the K->K band (~0.44)
+and the P->K band (~0.9). So the two K->K edges were missed by the single global cut applied
+across a bimodal score distribution, and were **not** shown to be interventionally unresolvable —
+their signal is right there in the coefficients. (Any claim that random NCP interventions could
+not resolve them would be contradicted by these very coefficients; no such claim is made.)
+
+The result is reported as the frozen method produced it; it was not adjusted after E1 truth was
+inspected. The natural, non-retuning follow-ups are per-band or per-child thresholding, which
+would be a NEW method under its own freeze — not a change to this one.
