@@ -52,8 +52,13 @@ def _factories(
         return cls(env_seed=seed, obs_noise_scale=0.0)
 
     def shadow_factory(seed: int, dst_kpi: int) -> E3V2Env:
-        kw = {1: {"c10": 0.0}, 2: {"c25": 0.0}, 3: {"c35": 0.0}}[dst_kpi]
-        return cls(env_seed=seed, obs_noise_scale=0.0, **kw)
+        if dst_kpi == 1:
+            return cls(env_seed=seed, obs_noise_scale=0.0, c10=0.0)
+        if dst_kpi == 2:
+            return cls(env_seed=seed, obs_noise_scale=0.0, c25=0.0)
+        if dst_kpi == 3:
+            return cls(env_seed=seed, obs_noise_scale=0.0, c35=0.0)
+        raise ValueError(f"no ablatable KPI edge into K{dst_kpi}")
 
     return env_factory, shadow_factory
 

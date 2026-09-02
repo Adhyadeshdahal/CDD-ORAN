@@ -106,9 +106,13 @@ def default_shadow_factory(seed: int, dst_kpi: int) -> E1V2Env:
     raise ValueError(f"no ablatable KPI edge into K{dst_kpi}")
 
 
+# A committed env snapshot: (params, prev_params, prev_kpis, episode, time). See E1V2Env.snapshot.
+Snapshot = tuple[np.ndarray, np.ndarray, np.ndarray, int, int]
+
+
 def _build_bank(
     env_factory: Callable[[int], E1V2Env],
-) -> list[tuple[np.ndarray, np.ndarray, np.ndarray]]:
+) -> list[Snapshot]:
     bank = []
     for seed in range(N_STATES):
         env = env_factory(seed)
@@ -120,7 +124,7 @@ def _build_bank(
 
 def _do_rollout(
     env: E1V2Env,
-    snap: tuple[np.ndarray, np.ndarray, np.ndarray],
+    snap: Snapshot,
     param_id: int,
     value: float,
     horizon: int,
@@ -141,7 +145,7 @@ def _do_rollout(
 
 def _do_kpi_source(
     env: E1V2Env,
-    snap: tuple[np.ndarray, np.ndarray, np.ndarray],
+    snap: Snapshot,
     src_kpi: int,
     value: float,
 ) -> np.ndarray:

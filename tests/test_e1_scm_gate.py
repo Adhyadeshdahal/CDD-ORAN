@@ -50,8 +50,9 @@ def _factories(cls: type[E1V2Env]) -> tuple[Callable[[int], E1V2Env], Callable[[
         return cls(env_seed=seed, obs_noise_scale=0.0)
 
     def shadow_factory(seed: int, dst_kpi: int) -> E1V2Env:
-        kw = {"b2": 0.0} if dst_kpi == 2 else {"b3": 0.0}
-        return cls(env_seed=seed, obs_noise_scale=0.0, **kw)
+        if dst_kpi == 2:
+            return cls(env_seed=seed, obs_noise_scale=0.0, b2=0.0)
+        return cls(env_seed=seed, obs_noise_scale=0.0, b3=0.0)
 
     return env_factory, shadow_factory
 

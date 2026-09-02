@@ -15,6 +15,7 @@ from torch.distributions import Normal
 from cdd_oran.config import DEFAULT_CONFIG
 from cdd_oran.conflicts import detect_conflict_edges, state_to_tensor
 from cdd_oran.envs import get_env
+from cdd_oran.envs.base import XApp
 from cdd_oran.models.cdl import CDL
 from cdd_oran.planners.cem import ModelBasedCEM
 from cdd_oran.planners.cost import score_batch
@@ -263,12 +264,16 @@ def test_utility_weight_picks_the_higher_utility_satisfied_candidate():
     equal satisfaction count) score identically today, so the argmin keeps the first one
     scanned regardless of how much utility is left on the table. With utility_weight>0 the
     higher-utility candidate must win -- for a maximiser and a minimiser alike."""
-    from types import SimpleNamespace
-
     for direction in (0, 1):
-        xapp = SimpleNamespace(
-            direction=direction, threshold=0.0, mean=0.0, std=1.0,
-            compute_utility=lambda k: float(k[0]),
+        # A real XApp (not a SimpleNamespace) so the score_batch(Sequence[XApp]) contract is
+        # actually type-checked. mean_std=(0, 1) is the identity standardisation this test wants.
+        xapp = XApp(
+            threshold=0.0,
+            utility_fn=lambda k: float(k[0]),
+            name="t",
+            params=(),
+            direction=direction,
+            mean_std=(0.0, 1.0),
         )
         # dir 0 (maximiser): utilities 1 < 2, both >= threshold 0 -> both satisfied.
         # dir 1 (minimiser): utilities -1 > -2, both <= threshold 0 -> both satisfied.

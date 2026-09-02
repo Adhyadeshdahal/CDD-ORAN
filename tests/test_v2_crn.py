@@ -14,6 +14,8 @@ Covers the SEMANTICS §4/§5 contract (review findings 2 + 6):
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import numpy as np
 
 from cdd_oran.envs.v2 import E1V2Env
@@ -119,12 +121,14 @@ def test_distinct_variables_draw_independently():
 # --- global RNG isolation ---------------------------------------------------
 
 def test_module_level_numpy_state_unchanged_across_rollout():
-    before = np.random.get_state()
+    # numpy's stub types get_state() as the legacy=False dict overload; the default
+    # (legacy=True) returns the MT19937 tuple we compare positionally below.
+    before = cast("tuple[Any, ...]", np.random.get_state())
     env = _make(noise=0.5)
     for t in range(6):
         env.step(t % env.num_params, 0.1 * t)
         env.observed_kpis()
-    after = np.random.get_state()
+    after = cast("tuple[Any, ...]", np.random.get_state())
     assert before[0] == after[0]
     assert np.array_equal(before[1], after[1])
     assert before[2:] == after[2:]

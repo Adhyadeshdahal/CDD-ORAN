@@ -19,6 +19,7 @@ import subprocess
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from typing import TypedDict
 
 import numpy as np
 
@@ -53,7 +54,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Small env-corpus for the fast rejection / bad-control tests. A broken env fails the mechanism
 # identity (exact, tol_zero) and the moment checks at ANY N, so these do not need the frozen N.
-_FAST = dict(corpus_n_obs=4000, corpus_n_do=1000, corpus_pool_do=1000)
+# TypedDict so `**_FAST` type-checks against the gate's keyword params (PEP 692).
+class _FastKwargs(TypedDict):
+    corpus_n_obs: int
+    corpus_n_do: int
+    corpus_pool_do: int
+
+
+_FAST: _FastKwargs = {"corpus_n_obs": 4000, "corpus_n_do": 1000, "corpus_pool_do": 1000}
 
 
 # --------------------------------------------------------------------------------------
