@@ -4,17 +4,21 @@ Subcommands are added one green increment at a time. Currently:
 
     generate  -- roll the E1 SCM, persist rows.npz + manifest.json under a run dir
     split     -- write an episode-level train/test split.json for a persisted dataset
-    train     -- train the oracle-graph and dense arms on identical rows + split ids
-    eval      -- score both arms on the held-out test episodes -> immutable metrics.json
+    discover  -- learn a label-free graph from TRAIN rows only -> frozen discovery.json
+    train     -- train the oracle, dense, and discovered arms on identical rows + split ids
+    eval      -- score all arms on the held-out test episodes -> immutable metrics.json
     verify    -- assert each reloaded artifact reproduces predictions within a frozen tol
+    recover   -- POST-FREEZE: score the discovered graph vs E1 truth -> recovery.json
 
 Example::
 
     uv run python -m scripts.e1_slice generate --episodes 64 --steps 16 --out runs/e1slice/dev
     uv run python -m scripts.e1_slice split --dataset runs/e1slice/dev --test-fraction 0.2
+    uv run python -m scripts.e1_slice discover --dataset runs/e1slice/dev
     uv run python -m scripts.e1_slice train --dataset runs/e1slice/dev
     uv run python -m scripts.e1_slice eval --dataset runs/e1slice/dev
     uv run python -m scripts.e1_slice verify --dataset runs/e1slice/dev
+    uv run python -m scripts.e1_slice recover --dataset runs/e1slice/dev
 """
 
 from __future__ import annotations
@@ -24,7 +28,13 @@ import json
 from pathlib import Path
 
 from cdd_oran.e1slice.dataset import E1DatasetConfig, load_dataset, write_dataset
-from cdd_oran.e1slice.evaluate import evaluate_dataset, predict, verify_dataset
+from cdd_oran.e1slice.discovery import (
+    DiscoveryConfig,
+    discovered_mask_array,
+    load_discovery,
+    write_discovery,
+)
+from cdd_oran.e1slice.evaluate import evaluate_dataset, predict, score_recovery, verify_dataset
 from cdd_oran.e1slice.model import Arm, ModelConfig, save_arm, train_arm
 from cdd_oran.e1slice.split import SplitConfig, load_split, write_split
 
@@ -57,6 +67,18 @@ def _cmd_split(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_discover(args: argparse.Namespace) -> int:
+    record = write_discovery(args.dataset, DiscoveryConfig(floor=args.floor), force=args.force)
+    mask = record["binary_mask"]
+    n_edges = int(sum(sum(row) for row in mask))
+    print(
+        f"discovered {n_edges} edges (method {record['method']}, "
+        f"threshold {record['threshold']:.4f}) -> {Path(args.dataset) / 'discovery.json'}"
+    )
+    print(f"  content_hash {record['content_hash'][:12]}  protocol_commit {record['protocol_commit'][:12]}")
+    return 0
+
+
 def _cmd_train(args: argparse.Namespace) -> int:
     rows, manifest = load_dataset(args.dataset)
     # Fail closed if split.json is not bound to this exact dataset + episode coverage.
@@ -69,10 +91,19 @@ def _cmd_train(args: argparse.Namespace) -> int:
         hidden=tuple(args.hidden), lr=args.lr, epochs=args.epochs,
         batch_size=args.batch_size, weight_seed=args.weight_seed,
     )
-    # Both arms consume the IDENTICAL rows object and the SAME train episode ids.
-    arms: tuple[Arm, ...] = ("oracle", "dense")
+    # The discovered arm uses the FROZEN learned graph (bound to this dataset + split).
+    disc = load_discovery(
+        args.dataset,
+        expected_dataset_hash=manifest["dataset_hash"],
+        expected_split_hash=split["split_hash"],
+    )
+    disc_mask = discovered_mask_array(disc)
+    # All three arms consume the IDENTICAL rows object and the SAME train episode ids; only the
+    # fixed mask differs (oracle=true graph, dense=all inputs, discovered=frozen learned graph).
+    arms: tuple[Arm, ...] = ("oracle", "dense", "discovered")
     for arm in arms:
-        model, meta = train_arm(rows, split["train_episodes"], arm, cfg)
+        mask = disc_mask if arm == "discovered" else None
+        model, meta = train_arm(rows, split["train_episodes"], arm, cfg, mask=mask)
         # Capture the LIVE model's test predictions as the reload reference for `verify`,
         # persisted (with a byte digest) alongside the weights by save_arm.
         model.eval()
@@ -80,9 +111,10 @@ def _cmd_train(args: argparse.Namespace) -> int:
         save_arm(
             args.dataset, model, meta, manifest["dataset_hash"], split["split_hash"],
             reference, force=args.force,
+            discovery_hash=disc["content_hash"] if arm == "discovered" else None,
         )
         print(
-            f"trained {arm:>6}: params {meta['capacity']['num_parameters']}, "
+            f"trained {arm:>10}: params {meta['capacity']['num_parameters']}, "
             f"train_mse {meta['final_train_mse']:.3e}"
         )
     return 0
@@ -103,9 +135,22 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     for r in results:
         status = "PASS" if r.passed else "FAIL"
         ok = ok and r.passed
-        print(f"verify {r.arm:>6}: {status}  max_abs_diff {r.max_abs_diff:.2e}  (tol {args.tol:.0e})")
+        print(f"verify {r.arm:>10}: {status}  max_abs_diff {r.max_abs_diff:.2e}  (tol {args.tol:.0e})")
     print("RESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
+
+
+def _cmd_recover(args: argparse.Namespace) -> int:
+    record = score_recovery(args.dataset)
+    rec = record["recovery"]
+    for block in ("overall", "ncp_kpi", "kpi_kpi"):
+        b = rec[block]
+        print(
+            f"recover {block:>8}: P {b['precision']:.3f}  R {b['recall']:.3f}  F1 {b['f1']:.3f}  "
+            f"(tp {b['tp']} fp {b['fp']} fn {b['fn']})"
+        )
+    print(f"  missed {len(rec['missed'])} edge(s); recovery.json content_hash {record['content_hash'][:12]}")
+    return 0
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -129,7 +174,13 @@ def _build_parser() -> argparse.ArgumentParser:
     spl.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
     spl.set_defaults(func=_cmd_split)
 
-    tr = sub.add_parser("train", help="train the oracle + dense arms on the split")
+    dis = sub.add_parser("discover", help="learn a label-free graph from train rows -> discovery.json")
+    dis.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    dis.add_argument("--floor", type=float, default=1e-3, help="largest_gap floor (frozen: 1e-3)")
+    dis.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
+    dis.set_defaults(func=_cmd_discover)
+
+    tr = sub.add_parser("train", help="train the oracle + dense + discovered arms on the split")
     tr.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
     tr.add_argument("--hidden", type=int, nargs="*", default=[16], help="hidden layer widths")
     tr.add_argument("--lr", type=float, default=1e-2)
@@ -147,6 +198,10 @@ def _build_parser() -> argparse.ArgumentParser:
     vf.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
     vf.add_argument("--tol", type=float, default=1e-6, help="frozen reload tolerance")
     vf.set_defaults(func=_cmd_verify)
+
+    rc = sub.add_parser("recover", help="POST-FREEZE: score the discovered graph vs E1 truth")
+    rc.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    rc.set_defaults(func=_cmd_recover)
 
     return parser
 
