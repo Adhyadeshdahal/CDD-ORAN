@@ -34,3 +34,7 @@ runs/*
 
 # generated discovery outputs (posterior/enum)
 artifacts/
+reports/
+
+# herdr orchestration trail (local only)
+.herdr/
