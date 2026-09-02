@@ -1,0 +1,30 @@
+### generate
+wrote 768 rows (48 episodes) -> runs\e1slice\plan003_frozen
+  dataset_hash cfce4c10c7a7  scm_hash cfda05087772
+{"schema_version": "e1slice.v1", "git_sha": "9f6fa5b697835e858bd4e95f2a99f86986ea5798", "git_dirty": false}
+### split
+split 36 train / 12 test episodes -> runs\e1slice\plan003_frozen\split.json
+  split_hash ec6658d0c7a4  bound to dataset_hash cfce4c10c7a7
+### discover
+discovered 4 edges (method largest_gap, threshold 0.6742) -> runs\e1slice\plan003_frozen\discovery.json
+  content_hash c67fd92ef7be  protocol_commit e5312a696a0e
+### train
+trained     oracle: params 644, train_mse 3.838e-08
+trained      dense: params 644, train_mse 4.731e-07
+trained discovered: params 644, train_mse 9.817e-03
+### eval
+eval oracle: test_mse 4.253e-07  test_mae 1.435e-04  (n=192)
+eval  dense: test_mse 1.433e-06  test_mae 5.351e-04  (n=192)
+eval discovered: test_mse 1.036e-02  test_mae 6.038e-02  (n=192)
+  metrics_hash c9ff3ed28f36 -> runs\e1slice\plan003_frozen\metrics.json
+### verify
+verify     oracle: PASS  max_abs_diff 0.00e+00  (tol 1e-06)
+verify      dense: PASS  max_abs_diff 0.00e+00  (tol 1e-06)
+verify discovered: PASS  max_abs_diff 0.00e+00  (tol 1e-06)
+RESULT: PASS
+### recover
+recover  overall: P 1.000  R 0.667  F1 0.800  (tp 4 fp 0 fn 2)
+recover  ncp_kpi: P 1.000  R 1.000  F1 1.000  (tp 4 fp 0 fn 0)
+recover  kpi_kpi: P 0.000  R 0.000  F1 0.000  (tp 0 fp 0 fn 2)
+  missed 2 edge(s); recovery.json content_hash 7914ad050826
+### EXIT 0
