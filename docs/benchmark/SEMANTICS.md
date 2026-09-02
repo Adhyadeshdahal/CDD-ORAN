@@ -410,3 +410,13 @@ needs a **closed-loop** (state-feedback) oracle — which would be a strictly st
 to-enumerate comparator and could enlarge measured regret — is deferred to the E3 spec (WP2);
 this contract commits only to the open-loop comparator and flags the closed-loop question as
 unresolved.
+
+---
+
+## Implementation pointer (NON-NORMATIVE)
+
+The shared open-loop executor of the §1.1 call list, the §3 exhaustive open-loop oracle, and
+§3 unclamped paired regret live in `cdd_oran/benchmark/rollout.py`
+(`rollout_open_loop` / `enumerate_open_loop` / `paired_regret`), characterized by
+`tests/test_v2_rollout.py`. This paragraph is a convenience pointer only: the definitions above
+remain the sole authority, and nothing in that module or its tests amends this contract.
