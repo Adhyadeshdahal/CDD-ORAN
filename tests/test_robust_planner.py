@@ -360,6 +360,15 @@ def _index_only_offset(bin_id, index):
     return 3.0 - index
 
 
+def _index_only_rising(bin_id, index):
+    """Signed utility depends only on the index and INCREASES with it -> best is the LAST index.
+
+    Used by the end-to-end MCTS move test: the batched planner breaks a flat tie deterministically
+    to the first-scanned leaf (index 0), so the utility-driven pick must land on a DIFFERENT index
+    for the move to be observable. A rising offset puts the best index at ``_MAX_INDEX``."""
+    return 1.0 + index
+
+
 class _GridModel:
     """An m=1 world model whose next-KPI vector is a pure lookup on (bin_id, index).
 
@@ -511,14 +520,15 @@ def test_mcts_m1_evaluate_mirrors_score_batch_with_the_utility_weight_term():
 
 def test_utility_weight_moves_the_mcts_m1_pick_off_the_flat_region():
     """MCTS m=1 end-to-end. Signed utility depends only on the INDEX (so the outcome does not
-    depend on which bins the tree happened to expand) and decreases with it, making index 0
-    the unique best. At lambda=0 the surface is flat and the search keeps its pre-term pick;
-    at lambda>0 the chosen index must move to 0 -- for a maximiser AND a minimiser, so a
-    flipped sign (which would choose index 2) cannot pass."""
+    depend on which bins the batched search evaluated) and INCREASES with it, making the last
+    index (``_MAX_INDEX``) the unique best. At lambda=0 the cost surface is flat, so the batched
+    search breaks the tie deterministically to the first-scanned leaf (index 0); at lambda>0 the
+    chosen index must move to ``_MAX_INDEX`` -- for a maximiser AND a minimiser, so a flipped sign
+    (which would choose index 0) cannot pass, and cannot masquerade as the flat-tie baseline."""
     for direction in (0, 1):
         xapp = _flat_xapp(direction)
         env = _grid_env(xapp)
-        model = _GridModel(direction, _index_only_offset)
+        model = _GridModel(direction, _index_only_rising)
 
         baseline = _mcts_action(model, env, xapp, EnsembleAggregator())  # pre-change default
         assert _mcts_action(model, env, xapp, EnsembleAggregator(utility_weight=0.0)) == baseline, (
@@ -527,14 +537,18 @@ def test_utility_weight_moves_the_mcts_m1_pick_off_the_flat_region():
         assert torch.all(_grid_scores(model, xapp, 0.0, _GRID) == -1.0), (
             "the lambda=0 baseline above must be a pick off a genuinely FLAT cost surface"
         )
+        assert baseline[2] == 0, (
+            f"dir {direction}: the flat-tie baseline must sit on the first-scanned index 0 "
+            f"(got {baseline}); the utility-driven move below is measured against it"
+        )
 
         rewarded = _mcts_action(model, env, xapp, EnsembleAggregator(utility_weight=0.5))
-        assert rewarded[2] == 0, (
-            f"dir {direction}: m=1 MCTS must move to the highest-signed-utility index 0 "
-            f"(a flipped sign would pick index {_MAX_INDEX}); got {rewarded}"
+        assert rewarded[2] == _MAX_INDEX, (
+            f"dir {direction}: m=1 MCTS must move to the highest-signed-utility index {_MAX_INDEX} "
+            f"(a flipped sign would pick index 0); got {rewarded}"
         )
         assert rewarded[2] != baseline[2], (
-            f"dir {direction}: the flat lambda=0 search must not already sit on index 0 "
+            f"dir {direction}: the flat lambda=0 search must not already sit on index {_MAX_INDEX} "
             f"(baseline {baseline}), or the move proves nothing"
         )
 
