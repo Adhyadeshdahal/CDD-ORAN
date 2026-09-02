@@ -9,11 +9,11 @@ scientific contract.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 001 | Make E1 artifacts fail closed | P1 | M | - | TODO |
-| 002 | Remove target leakage from discovery calibration | P1 | M | - | TODO |
-| 003 | Add the learned E1 discovery arm | P1 | L | 001, 002 | TODO |
+| 001 | Make E1 artifacts fail closed | P1 | M | - | DONE (merged c5d3663) |
+| 002 | Remove target leakage from discovery calibration | P1 | M | - | DONE (merged c5d3663) |
+| 003 | Add the learned E1 discovery arm | P1 | L | 001, 002 | IN PROGRESS |
 | 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | TODO |
-| 005 | Build the v2 episodic rollout kernel | P2 | M | - | TODO |
+| 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
 
