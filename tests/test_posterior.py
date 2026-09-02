@@ -6,6 +6,9 @@ Covers the three checks named in the P1 brief:
   (c) calibration is fitted on separate labels and scored on held-out labels.
 """
 
+import shutil
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -197,16 +200,22 @@ def test_transformed_cmi_posterior_builds_and_checks():
 def test_from_bootstrap_preserves_asymmetric_child_parent_alignment(monkeypatch):
     frequency = np.array([[0.0, 0.2, 0.8], [0.7, 0.0, 0.1], [0.3, 0.9, 0.0]])
 
-    def fake_edge_stability(run_dir, B, n_transitions, seed, device):
-        return {
-            "frequency_matrix": frequency,
+    def fake_bootstrap_frequency(run_dir, B, n_transitions, seed, device):
+        context = {
             "run_dir": str(run_dir),
             "environment": "EnvironmentI",
+            "config_threshold": 0.2,
             "B": B,
             "n_transitions": n_transitions,
+            "batch_size": 32,
+            "seed": seed,
+            "device": device,
+            "baseline_pred": np.zeros_like(frequency, dtype=int),
         }
+        return frequency, context
 
-    monkeypatch.setattr(posterior_module, "edge_stability", fake_edge_stability)
+    # The producing path calls the truth-FREE bootstrap_frequency, never edge_stability.
+    monkeypatch.setattr(posterior_module, "bootstrap_frequency", fake_bootstrap_frequency)
     post = GraphPosterior.from_bootstrap("calibration-run", B=3, n_transitions=7, seed=2)
     assert np.array_equal(post.marginals(), frequency)
     assert post.marginals()[0, 2] == 0.8
@@ -245,3 +254,31 @@ def test_raw_posterior_is_not_flagged_calibrated(tmp_path):
     path = tmp_path / "raw.json"
     post.save(path)
     assert not GraphPosterior.load(path).is_calibrated
+
+
+def test_graph_posterior_cli_rejects_same_environment_calibration(tmp_path):
+    """graph_posterior.main() must reject a --calibration-run from the SAME environment as the
+    target run (even a DIFFERENT run path), not only an identical path: same-environment labels
+    ARE the target's true adjacency, so fitting the calibrator on them leaks the answer (Plan 002
+    Finding 1). Rejection happens before any bootstrap, so only config.yaml files are needed."""
+    configs = Path(posterior_module.__file__).parents[2] / "configs"
+    run = tmp_path / "target_run"
+    run.mkdir()
+    cal = tmp_path / "cal_run"
+    cal.mkdir()
+    shutil.copyfile(configs / "env_i_cdl.yaml", run / "config.yaml")
+    shutil.copyfile(configs / "env_i_cdl.yaml", cal / "config.yaml")  # SAME environment, other path
+    with pytest.raises(SystemExit):
+        posterior_module.main(["--run", str(run), "--calibration-run", str(cal)])
+
+
+def test_raw_posterior_artifact_is_rejected_by_structure_sampler(tmp_path):
+    """The P1<->P2 boundary refuses to sample an uncalibrated posterior artifact: this is what
+    stops a no-calibration discovery diagnostic from ever reaching robust structure sampling."""
+    from cdd_oran.models import PosteriorStructureSampler
+
+    post, _ = _tiny_posterior()
+    path = tmp_path / "raw.json"
+    post.save(path)
+    with pytest.raises(ValueError, match="not calibrated"):
+        PosteriorStructureSampler.from_artifact(path)
