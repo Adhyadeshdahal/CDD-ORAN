@@ -478,6 +478,11 @@ class CDL(CausalModel):
             mu_aug_total = mu_aug
             residual_penalty = mu_graph.new_zeros(())
         else:
+            # delta / delta_rows are bound together with self.residual in the earlier block;
+            # ty cannot correlate the two `self.residual is None` checks across the mutable
+            # attribute, so it still sees them as `... | None`. Assert the invariant it can't
+            # prove: inside this branch (residual is not None) both are guaranteed set.
+            assert delta is not None and delta_rows is not None
             mu_aug_total = mu_aug.clone()
             mu_aug_total[:, self.kpi_start :, :, :] = (
                 mu_aug[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
