@@ -40,8 +40,8 @@ from __future__ import annotations
 import math
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import numpy as np
 
@@ -392,8 +392,8 @@ class GateResult:
     env_corpus_ok: bool = False
     control_corpus_ok: bool = False
     single_factor_ok: bool = False
-    env_corpus: "EnvCorpusResult | None" = None
-    control_corpus: "EnvCorpusResult | None" = None
+    env_corpus: EnvCorpusResult | None = None
+    control_corpus: EnvCorpusResult | None = None
     failures: list = field(default_factory=list)
 
 

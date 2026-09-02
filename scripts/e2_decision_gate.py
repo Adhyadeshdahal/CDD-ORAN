@@ -27,8 +27,8 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import numpy as np
 
@@ -39,7 +39,6 @@ if _REPO_ROOT not in sys.path:
 from cdd_oran.analysis.v2_regret import (  # noqa: E402
     P0_GRID,
     PanelXApp,
-    reward,
     score_grid,
 )
 from cdd_oran.envs.v2.e2 import E2V2Env, safe_exp  # noqa: E402

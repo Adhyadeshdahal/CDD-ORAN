@@ -25,12 +25,11 @@ import pytest
 from cdd_oran.envs.v2.e3 import E3V2Env
 from cdd_oran.planners.sequence import _rollout_sequence_scored
 from scripts.e3_decision_gate import (
+    _R,
     GRID,
     N_BANK,
-    TAU_E3,
     TOL,
     TOL_ZERO,
-    _R,
     build_bank,
     run_e3_decision_gate,
     vectorized_G,

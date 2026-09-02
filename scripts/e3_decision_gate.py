@@ -30,8 +30,8 @@ from __future__ import annotations
 import math
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import numpy as np
 
@@ -137,7 +137,7 @@ def vectorized_G(snap, c10: float, c25: float, c35: float) -> np.ndarray:
     """
     P = np.asarray(snap[1], dtype=float)  # committed prev_params
     K = np.asarray(snap[2], dtype=float)  # committed prev_kpis
-    P0c, P1c, P2c, P3c = P[0], P[1], P[2], P[3]
+    P0c, P1c, P2c = P[0], P[1], P[2]  # P3 (K4) is excluded from the E3 panel
     K0c = K[0]
 
     a1 = GRID[:, None, None]
