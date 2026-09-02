@@ -24,12 +24,7 @@ import json
 from pathlib import Path
 
 from cdd_oran.e1slice.dataset import E1DatasetConfig, load_dataset, write_dataset
-from cdd_oran.e1slice.evaluate import (
-    evaluate_dataset,
-    predict,
-    save_reference_predictions,
-    verify_dataset,
-)
+from cdd_oran.e1slice.evaluate import evaluate_dataset, predict, verify_dataset
 from cdd_oran.e1slice.model import Arm, ModelConfig, save_arm, train_arm
 from cdd_oran.e1slice.split import SplitConfig, load_split, write_split
 
@@ -42,7 +37,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         env_seed=args.seed,
         obs_noise_scale=args.obs_noise_scale,
     )
-    manifest = write_dataset(cfg, args.out)
+    manifest = write_dataset(cfg, args.out, force=args.force)
     out = Path(args.out)
     print(f"wrote {manifest['n_rows']} rows ({manifest['n_episodes']} episodes) -> {out}")
     print(f"  dataset_hash {manifest['dataset_hash'][:12]}  scm_hash {manifest['scm_hash'][:12]}")
@@ -52,7 +47,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
 
 def _cmd_split(args: argparse.Namespace) -> int:
     cfg = SplitConfig(test_fraction=args.test_fraction, split_seed=args.split_seed)
-    record = write_split(args.dataset, cfg)
+    record = write_split(args.dataset, cfg, force=args.force)
     print(
         f"split {record['n_train_episodes']} train / {record['n_test_episodes']} test episodes "
         f"-> {Path(args.dataset) / 'split.json'}"
@@ -64,10 +59,12 @@ def _cmd_split(args: argparse.Namespace) -> int:
 
 def _cmd_train(args: argparse.Namespace) -> int:
     rows, manifest = load_dataset(args.dataset)
-    split = load_split(args.dataset)
-    if split["dataset_hash"] != manifest["dataset_hash"]:
-        print("ERROR: split.json is not bound to this dataset (dataset_hash mismatch).")
-        return 1
+    # Fail closed if split.json is not bound to this exact dataset + episode coverage.
+    split = load_split(
+        args.dataset,
+        expected_dataset_hash=manifest["dataset_hash"],
+        episode_ids=set(int(e) for e in rows.episode.tolist()),
+    )
     cfg = ModelConfig(
         hidden=tuple(args.hidden), lr=args.lr, epochs=args.epochs,
         batch_size=args.batch_size, weight_seed=args.weight_seed,
@@ -76,10 +73,14 @@ def _cmd_train(args: argparse.Namespace) -> int:
     arms: tuple[Arm, ...] = ("oracle", "dense")
     for arm in arms:
         model, meta = train_arm(rows, split["train_episodes"], arm, cfg)
-        save_arm(args.dataset, model, meta, manifest["dataset_hash"], split["split_hash"])
-        # Capture the LIVE model's test predictions as the reload reference for `verify`.
+        # Capture the LIVE model's test predictions as the reload reference for `verify`,
+        # persisted (with a byte digest) alongside the weights by save_arm.
         model.eval()
-        save_reference_predictions(args.dataset, arm, predict(model, rows, split["test_episodes"]))
+        reference = predict(model, rows, split["test_episodes"])
+        save_arm(
+            args.dataset, model, meta, manifest["dataset_hash"], split["split_hash"],
+            reference, force=args.force,
+        )
         print(
             f"trained {arm:>6}: params {meta['capacity']['num_parameters']}, "
             f"train_mse {meta['final_train_mse']:.3e}"
@@ -118,12 +119,14 @@ def _build_parser() -> argparse.ArgumentParser:
     gen.add_argument("--seed", type=int, default=0, help="env_seed for the coordinate tape")
     gen.add_argument("--obs-noise-scale", type=float, default=0.0, dest="obs_noise_scale")
     gen.add_argument("--out", type=str, required=True, help="output run directory")
+    gen.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
     gen.set_defaults(func=_cmd_generate)
 
     spl = sub.add_parser("split", help="write an episode-level train/test split")
     spl.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
     spl.add_argument("--test-fraction", type=float, default=0.2, dest="test_fraction")
     spl.add_argument("--split-seed", type=int, default=0, dest="split_seed")
+    spl.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
     spl.set_defaults(func=_cmd_split)
 
     tr = sub.add_parser("train", help="train the oracle + dense arms on the split")
@@ -133,6 +136,7 @@ def _build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--epochs", type=int, default=300)
     tr.add_argument("--batch-size", type=int, default=64, dest="batch_size")
     tr.add_argument("--weight-seed", type=int, default=0, dest="weight_seed")
+    tr.add_argument("--force", action="store_true", help="overwrite existing downstream metrics")
     tr.set_defaults(func=_cmd_train)
 
     ev = sub.add_parser("eval", help="score both arms on held-out test episodes")

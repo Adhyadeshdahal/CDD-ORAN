@@ -15,21 +15,31 @@ recovery control, a pipeline test, not a superiority claim.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import math
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
+import numpy.typing as npt
 import torch
 from torch import nn
 
 from cdd_oran.e1slice import SCHEMA_VERSION
-from cdd_oran.e1slice.dataset import E1Rows, _git_sha
+from cdd_oran.e1slice.dataset import E1Rows, _atomic_write_text, _git_sha, guard_descendants
 from cdd_oran.e1slice.split import row_indices_for
 from cdd_oran.envs.v2.e1 import E1V2Env
 
 Arm = Literal["oracle", "dense"]
+
+# The trained arm's per-KPI test predictions captured at train time; the reload reference.
+REF_FILE = "test_pred_ref.npz"
+
+# Downstream stages that must not survive a re-``train`` unless ``force`` is given.
+_TRAIN_DESCENDANTS = ("metrics.json",)
 
 
 @dataclass(frozen=True)
@@ -39,6 +49,17 @@ class ModelConfig:
     epochs: int = 300
     batch_size: int = 64
     weight_seed: int = 0
+
+    def validate(self) -> None:
+        """Reject configurations that cannot produce a trainable arm."""
+        if not self.hidden or any(int(w) <= 0 for w in self.hidden):
+            raise ValueError(f"ModelConfig: hidden widths must be non-empty and positive, got {self.hidden}")
+        if not (math.isfinite(self.lr) and self.lr > 0.0):
+            raise ValueError(f"ModelConfig: lr must be finite and > 0, got {self.lr}")
+        if self.epochs <= 0:
+            raise ValueError(f"ModelConfig: epochs must be > 0, got {self.epochs}")
+        if self.batch_size <= 0:
+            raise ValueError(f"ModelConfig: batch_size must be > 0, got {self.batch_size}")
 
 
 def arm_mask(arm: Arm) -> torch.Tensor:
@@ -97,6 +118,7 @@ def _xy(rows: E1Rows, indices: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def build_model(arm: Arm, cfg: ModelConfig) -> OneStepPredictor:
+    cfg.validate()
     torch.manual_seed(cfg.weight_seed)
     return OneStepPredictor(arm_mask(arm), cfg.hidden)
 
@@ -139,39 +161,106 @@ def train_arm(
     return model, meta
 
 
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _atomic_torch_save(state: dict[str, Any], path: Path) -> str:
+    """Save a state dict to a same-dir temp file, publish atomically, return its byte digest."""
+    tmp = path.with_name(path.name + ".tmp")
+    torch.save(state, tmp)
+    os.replace(tmp, path)
+    return _sha256_file(path)
+
+
+def _atomic_savez_ref(pred: npt.NDArray[np.float64], path: Path) -> str:
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "wb") as fh:
+        np.savez(fh, pred=pred)
+    os.replace(tmp, path)
+    return _sha256_file(path)
+
+
 def save_arm(
     dataset_dir: str | Path,
     model: OneStepPredictor,
     meta: dict[str, Any],
     dataset_hash: str,
     split_hash: str,
+    reference_pred: npt.NDArray[np.float64],
+    force: bool = False,
 ) -> Path:
-    """Persist an arm's weights + metadata under ``<dataset_dir>/arms/<arm>/``."""
-    arm_dir = Path(dataset_dir) / "arms" / str(meta["arm"])
+    """Persist an arm's weights, reload reference, and metadata under ``arms/<arm>/``.
+
+    The arm stage owns three files -- ``model.pt``, the reload reference ``test_pred_ref.npz``,
+    and ``arm_meta.json`` -- and records a SHA-256 digest of the first two so any later reload
+    can prove the bytes it reads are the bytes that were trained/captured. Each file is written
+    atomically. Refuses to run if downstream ``metrics.json`` exists unless ``force`` clears it.
+    """
+    out = Path(dataset_dir)
+    guard_descendants(out, _TRAIN_DESCENDANTS, force, "train")
+
+    reference_pred = np.ascontiguousarray(reference_pred, dtype=np.float64)
+    if reference_pred.ndim != 2 or reference_pred.shape[1] != E1V2Env.num_kpis:
+        raise ValueError(
+            f"reference predictions must be (n_test_rows, {E1V2Env.num_kpis}), "
+            f"got {reference_pred.shape}"
+        )
+    if not np.isfinite(reference_pred).all():
+        raise ValueError("reference predictions contain non-finite values")
+
+    arm_dir = out / "arms" / str(meta["arm"])
     arm_dir.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), arm_dir / "model.pt")
+    model_digest = _atomic_torch_save(model.state_dict(), arm_dir / "model.pt")
+    ref_digest = _atomic_savez_ref(reference_pred, arm_dir / REF_FILE)
     sha, dirty = _git_sha()
     record = {
         "schema_version": SCHEMA_VERSION,
         "dataset_hash": dataset_hash,
         "split_hash": split_hash,
+        "model_sha256": model_digest,
+        "ref_sha256": ref_digest,
         "git_sha": sha,
         "git_dirty": dirty,
         **meta,
     }
-    (arm_dir / "arm_meta.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    _atomic_write_text(arm_dir / "arm_meta.json", json.dumps(record, indent=2, sort_keys=True))
     return arm_dir
 
 
 def load_arm(dataset_dir: str | Path, arm: Arm) -> tuple[OneStepPredictor, dict[str, Any]]:
-    """Rebuild an arm's architecture and load its trained weights."""
+    """Rebuild an arm's architecture, verify its file digests, and load its trained weights.
+
+    Fails closed if ``arm_meta.json`` is missing a required field, names a different arm, or if
+    the bytes of ``model.pt`` / ``test_pred_ref.npz`` do not match the digests recorded at
+    train time (tampered or truncated weights/reference).
+    """
     arm_dir = Path(dataset_dir) / "arms" / arm
-    meta = json.loads((arm_dir / "arm_meta.json").read_text())
+    meta_file = arm_dir / "arm_meta.json"
+    meta = json.loads(meta_file.read_text())
+
+    if meta.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError(
+            f"{meta_file}: schema_version {meta.get('schema_version')!r} != {SCHEMA_VERSION!r}"
+        )
+    for key in ("arm", "config", "dataset_hash", "split_hash", "capacity", "model_sha256", "ref_sha256"):
+        if key not in meta:
+            raise ValueError(f"{meta_file}: missing required field '{key}'")
+    if meta["arm"] != arm:
+        raise ValueError(f"{meta_file}: arm {meta['arm']!r} != requested {arm!r}")
+
+    model_file = arm_dir / "model.pt"
+    ref_file = arm_dir / REF_FILE
+    if _sha256_file(model_file) != meta["model_sha256"]:
+        raise ValueError(f"{model_file}: bytes do not match arm_meta model_sha256")
+    if _sha256_file(ref_file) != meta["ref_sha256"]:
+        raise ValueError(f"{ref_file}: bytes do not match arm_meta ref_sha256")
+
     raw = dict(meta["config"])
     raw["hidden"] = tuple(raw["hidden"])  # JSON has no tuples; restore the arch shape
     cfg = ModelConfig(**raw)
     model = OneStepPredictor(arm_mask(arm), cfg.hidden)
-    state = torch.load(arm_dir / "model.pt", weights_only=True)
+    state = torch.load(model_file, weights_only=True)
     model.load_state_dict(state)
     model.eval()
     return model, meta
