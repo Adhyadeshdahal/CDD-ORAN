@@ -334,9 +334,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # GATE_CONTRACT_E3.md prerequisite: the SCM-correctness gate MUST pass before the decision
-    # gate. Enforce it here so the authoritative entry point cannot report a decision PASS on a
-    # structurally wrong env. (--skip-scm isolates the decision logic for unit tests.)
+    # GATE_CONTRACT_E3.md prerequisite: the canonical SCM-correctness gate MUST pass before the
+    # decision gate. This CLI default couples them — the authoritative entry point runs the
+    # CANONICAL SCM gate (default factories) and refuses a decision PASS if it fails. Scope note:
+    # this is NOT a universal coupling of arbitrary factories. run_e3_decision_gate() stays
+    # independently injectable, and --skip-scm bypasses the prerequisite — both for unit tests.
     if not args.skip_scm:
         scm = run_e3_scm_gate()
         print(f"E3 SCM prerequisite: {'PASS' if scm.passed else 'FAIL'}")

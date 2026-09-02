@@ -424,20 +424,22 @@ def run_e4_structural_gate(
     # Z->A_behavior, i.e. differs from the primary env in lambda alone; every other frozen SCM
     # parameter is identical). Without this the control could silently mutate alpha/theta/c and
     # validate against its own declarations. Assert the invariant executably.
+    # Every contract-relevant field except lambda must be identical between primary and control.
+    _SINGLE_FACTOR_FIELDS = ("alpha", "theta", "c", "eta_scale", "obs_noise_scale", "mode")
+    _field_mismatch = [
+        f for f in _SINGLE_FACTOR_FIELDS if getattr(control_probe, f) != getattr(probe, f)
+    ]
     result.single_factor_ok = bool(
-        probe.lam == PRIMARY_LAM
-        and control_probe.lam == CONTROL_LAM
-        and control_probe.alpha == probe.alpha
-        and control_probe.theta == probe.theta
-        and control_probe.c == probe.c
-        and control_probe.mode == probe.mode
+        probe.lam == PRIMARY_LAM and control_probe.lam == CONTROL_LAM and not _field_mismatch
     )
     if not result.single_factor_ok:
+        details = ", ".join(
+            f"{f}: primary={getattr(probe, f)!r} vs control={getattr(control_probe, f)!r}"
+            for f in (["lam"] if probe.lam != PRIMARY_LAM or control_probe.lam != CONTROL_LAM else [])
+            + _field_mismatch
+        )
         result.failures.append(
-            "control is not a single-factor (lambda-only) removal — primary("
-            f"lam={probe.lam}, alpha={probe.alpha}, theta={probe.theta}, c={probe.c}, "
-            f"mode={probe.mode}) vs control(lam={control_probe.lam}, alpha={control_probe.alpha}, "
-            f"theta={control_probe.theta}, c={control_probe.c}, mode={control_probe.mode})"
+            "control is not a single-factor (lambda-only) removal — mismatched: " + details
         )
 
     # (1) exact moments at the primary lambda.

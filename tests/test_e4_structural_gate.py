@@ -334,14 +334,25 @@ def test_standardization_and_adjacency_constants():
 
 def test_control_must_be_single_factor():
     """The lambda=0 control must differ from the primary env in lambda ALONE. A control that also
-    mutates theta (or any other frozen SCM parameter) is REJECTED via the executable single-factor
-    invariant (GATE_CONTRACT_E4.md) -- it cannot validate against its own altered declarations."""
-    def theta_mutated_control(seed):
-        return E4V2Env(
-            env_seed=seed, obs_noise_scale=0.0, lam=CONTROL_LAM, theta=5.0, mode=E4V2Env.MODE_DO
-        )
+    mutates ANY other contract-relevant field (theta, eta_scale, alpha, c, obs_noise_scale, mode)
+    is REJECTED via the executable single-factor invariant (GATE_CONTRACT_E4.md) -- it cannot
+    validate against its own altered declarations. Proves every non-lambda field is protected,
+    not just theta."""
+    mutations = (
+        {"theta": 5.0},
+        {"eta_scale": 1.0},
+        {"alpha": -2.0},
+        {"c": 0.3},
+        {"obs_noise_scale": 0.1},
+    )
+    for mut in mutations:
+        def mutated_control(seed, mut=mut):
+            kw = {"env_seed": seed, "lam": CONTROL_LAM, "mode": E4V2Env.MODE_DO,
+                  "obs_noise_scale": 0.0}
+            kw.update(mut)
+            return E4V2Env(**kw)
 
-    result = run_e4_structural_gate(control_env_factory=theta_mutated_control, **_FAST)
-    assert not result.single_factor_ok
-    assert not result.passed
-    assert any("single-factor" in f for f in result.failures)
+        result = run_e4_structural_gate(control_env_factory=mutated_control, **_FAST)
+        assert not result.single_factor_ok, f"mutation {mut} not caught by single-factor invariant"
+        assert not result.passed
+        assert any("single-factor" in f for f in result.failures)
