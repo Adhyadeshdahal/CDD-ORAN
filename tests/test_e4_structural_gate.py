@@ -17,6 +17,7 @@ from __future__ import annotations
 import math
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,7 @@ def test_e4_structural_gate_passes():
     assert result.env_corpus_ok and result.control_corpus_ok
     # Empirical ≈ frozen for every checked quantity; mechanism identity is exact.
     ec = result.env_corpus
+    assert ec is not None
     for key, frozen in ec.frozen.items():
         assert abs(ec.empirical[key] - frozen) <= STAT_TOL, f"{key} drifted"
     assert ec.empirical["mech_err_obs"] == 0.0 and ec.empirical["mech_err_do"] == 0.0
@@ -338,21 +340,31 @@ def test_control_must_be_single_factor():
     is REJECTED via the executable single-factor invariant (GATE_CONTRACT_E4.md) -- it cannot
     validate against its own altered declarations. Proves every non-lambda field is protected,
     not just theta."""
-    mutations = (
-        {"theta": 5.0},
-        {"eta_scale": 1.0},
-        {"alpha": -2.0},
-        {"c": 0.3},
-        {"obs_noise_scale": 0.1},
-    )
-    for mut in mutations:
-        def mutated_control(seed, mut=mut):
-            kw = {"env_seed": seed, "lam": CONTROL_LAM, "mode": E4V2Env.MODE_DO,
-                  "obs_noise_scale": 0.0}
-            kw.update(mut)
-            return E4V2Env(**kw)
+    # (alpha, theta, c, eta_scale, obs_noise_scale) each mutated one at a time, off the primary
+    # defaults. Explicit kwargs (no **unpacking) so the factory stays statically typed.
+    def make_control(
+        alpha: float = -1.0,
+        theta: float = 2.5,
+        c: float = 0.0,
+        eta_scale: float = 0.5,
+        obs_noise_scale: float = 0.0,
+    ) -> Callable[[int], E4V2Env]:
+        def factory(seed: int) -> E4V2Env:
+            return E4V2Env(
+                env_seed=seed, lam=CONTROL_LAM, mode=E4V2Env.MODE_DO, alpha=alpha, theta=theta,
+                c=c, eta_scale=eta_scale, obs_noise_scale=obs_noise_scale,
+            )
+        return factory
 
-        result = run_e4_structural_gate(control_env_factory=mutated_control, **_FAST)
-        assert not result.single_factor_ok, f"mutation {mut} not caught by single-factor invariant"
+    mutated_controls = (
+        ("theta", make_control(theta=5.0)),
+        ("eta_scale", make_control(eta_scale=1.0)),
+        ("alpha", make_control(alpha=-2.0)),
+        ("c", make_control(c=0.3)),
+        ("obs_noise_scale", make_control(obs_noise_scale=0.1)),
+    )
+    for field, control in mutated_controls:
+        result = run_e4_structural_gate(control_env_factory=control, **_FAST)
+        assert not result.single_factor_ok, f"{field} mutation not caught by single-factor invariant"
         assert not result.passed
         assert any("single-factor" in f for f in result.failures)

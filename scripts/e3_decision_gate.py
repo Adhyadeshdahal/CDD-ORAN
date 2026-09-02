@@ -156,7 +156,8 @@ def vectorized_G(snap, c10: float, c25: float, c35: float) -> np.ndarray:
 
 def _argmax_lex(G: np.ndarray) -> tuple[int, int, int]:
     """Lexicographically smallest argmax: np.argmax on C-order returns the first max (row-major)."""
-    return tuple(int(i) for i in np.unravel_index(int(np.argmax(G)), G.shape))
+    idx = np.unravel_index(int(np.argmax(G)), G.shape)
+    return int(idx[0]), int(idx[1]), int(idx[2])
 
 
 def _seq_to_indices(values) -> tuple[int, ...]:
