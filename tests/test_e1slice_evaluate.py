@@ -6,13 +6,13 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from cdd_oran.e1slice.dataset import E1DatasetConfig, load_dataset, write_dataset
 from cdd_oran.e1slice.evaluate import (
     evaluate_dataset,
     predict,
     regression_metrics,
-    save_reference_predictions,
     verify_dataset,
 )
 from cdd_oran.e1slice.model import Arm, ModelConfig, save_arm, train_arm
@@ -24,16 +24,16 @@ _ARMS: tuple[Arm, ...] = ("oracle", "dense")
 
 
 def _prepare(dataset_dir: Path) -> None:
-    """Full pipeline: generate -> split -> train + save reference predictions."""
+    """Full pipeline: generate -> split -> train (weights + reference captured together)."""
     write_dataset(_CFG, dataset_dir)
     write_split(dataset_dir, SplitConfig(test_fraction=0.25, split_seed=0))
     rows, manifest = load_dataset(dataset_dir)
     split = load_split(dataset_dir)
     for arm in _ARMS:
         model, meta = train_arm(rows, split["train_episodes"], arm, _MODEL)
-        save_arm(dataset_dir, model, meta, manifest["dataset_hash"], split["split_hash"])
         model.eval()
-        save_reference_predictions(dataset_dir, arm, predict(model, rows, split["test_episodes"]))
+        reference = predict(model, rows, split["test_episodes"])
+        save_arm(dataset_dir, model, meta, manifest["dataset_hash"], split["split_hash"], reference)
 
 
 def test_regression_metrics_are_zero_on_perfect_prediction():
@@ -76,13 +76,67 @@ def test_verify_passes_for_a_faithful_roundtrip(tmp_path: Path):
         assert r.max_abs_diff <= 1e-6
 
 
-def test_verify_fails_if_the_reference_is_corrupted(tmp_path: Path):
+def test_verify_rejects_a_corrupted_reference(tmp_path: Path):
     _prepare(tmp_path)
-    # Corrupt the oracle reference so the reloaded artifact no longer matches it.
+    # Corrupt the oracle reference: its recorded ref_sha256 no longer matches the bytes.
     ref_path = tmp_path / "arms" / "oracle" / "test_pred_ref.npz"
     with np.load(ref_path) as data:
         bad = data["pred"] + 1.0
     np.savez(ref_path, pred=bad)
-    results = {r.arm: r for r in verify_dataset(tmp_path, tol=1e-6)}
-    assert not results["oracle"].passed
-    assert results["dense"].passed  # untouched arm still round-trips
+    with pytest.raises(ValueError, match="ref_sha256"):
+        verify_dataset(tmp_path, tol=1e-6)
+
+
+def test_eval_rejects_a_corrupted_reference(tmp_path: Path):
+    _prepare(tmp_path)
+    ref_path = tmp_path / "arms" / "dense" / "test_pred_ref.npz"
+    with np.load(ref_path) as data:
+        bad = data["pred"] + 1.0
+    np.savez(ref_path, pred=bad)
+    with pytest.raises(ValueError, match="ref_sha256"):
+        evaluate_dataset(tmp_path)
+
+
+def test_changed_split_is_rejected_by_eval_and_verify(tmp_path: Path):
+    from cdd_oran.e1slice.split import build_split_record, make_split
+
+    _prepare(tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    rows, _ = load_dataset(tmp_path)
+    # Rewrite split.json with a DIFFERENT seed (new, internally-valid split_hash) while the
+    # trained arms stay on disk, still bound to the ORIGINAL split_hash.
+    other = SplitConfig(test_fraction=0.25, split_seed=7)
+    record = build_split_record(make_split(rows.episode.tolist(), other), other, manifest["dataset_hash"])
+    (tmp_path / "split.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    # The arms bind to the original split_hash; both consumers must refuse before producing results.
+    with pytest.raises(ValueError, match="split_hash"):
+        evaluate_dataset(tmp_path)
+    with pytest.raises(ValueError, match="split_hash"):
+        verify_dataset(tmp_path)
+
+
+def test_eval_refuses_stale_metrics_without_force(tmp_path: Path):
+    _prepare(tmp_path)
+    evaluate_dataset(tmp_path)
+    # A stale metrics.json is a downstream artifact of train; retraining must refuse it.
+    rows, manifest = load_dataset(tmp_path)
+    split = load_split(tmp_path)
+    model, meta = train_arm(rows, split["train_episodes"], "oracle", _MODEL)
+    model.eval()
+    reference = predict(model, rows, split["test_episodes"])
+    with pytest.raises(ValueError, match="metrics.json"):
+        save_arm(tmp_path, model, meta, manifest["dataset_hash"], split["split_hash"], reference)
+
+
+@pytest.mark.parametrize(
+    "pred, target",
+    [
+        (np.zeros((2, 3)), np.zeros((2, 4))),  # shape mismatch
+        (np.zeros((0, 4)), np.zeros((0, 4))),  # empty
+        (np.zeros(4), np.zeros(4)),            # not 2-D
+        (np.full((2, 4), np.nan), np.zeros((2, 4))),  # non-finite
+    ],
+)
+def test_regression_metrics_rejects_bad_inputs(pred, target):
+    with pytest.raises(ValueError):
+        regression_metrics(pred, target)

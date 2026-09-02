@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from cdd_oran.e1slice import SCHEMA_VERSION
 from cdd_oran.e1slice.dataset import (
@@ -85,3 +87,71 @@ def test_write_load_roundtrip_and_manifest(tmp_path: Path):
     assert loaded_manifest == json.loads((tmp_path / "manifest.json").read_text())
     # Reloaded rows reproduce the persisted content hash exactly.
     assert dataset_hash(rows) == manifest["dataset_hash"]
+
+
+def test_load_rejects_a_single_tampered_row_byte(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    # Flip one value in the persisted rows: the recomputed dataset_hash must no longer match.
+    with np.load(tmp_path / "rows.npz") as data:
+        cols = {name: data[name] for name in data.files}
+    cols["x_params"][0, 0] += 1.0
+    np.savez(tmp_path / "rows.npz", **cols)
+    with pytest.raises(ValueError, match="dataset_hash"):
+        load_dataset(tmp_path)
+
+
+def test_load_rejects_a_manifest_hash_mismatch(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["dataset_hash"] = "0" * 64
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="dataset_hash"):
+        load_dataset(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"n_episodes": 1},
+        {"steps_per_episode": 0},
+        {"warmup": -1},
+        {"obs_noise_scale": 0.5},
+    ],
+)
+def test_generate_rejects_invalid_config(kwargs):
+    with pytest.raises(ValueError):
+        generate_rows(replace(_CFG, **kwargs))
+
+
+def test_nonzero_observation_noise_is_rejected():
+    # This latent recovery slice stays noiseless: nonzero obs noise is an error, not a feature.
+    with pytest.raises(ValueError, match="obs_noise_scale"):
+        write_dataset(replace(_CFG, obs_noise_scale=1e-3), Path("unused"))
+
+
+def test_generate_refuses_to_clobber_downstream_without_force(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    (tmp_path / "split.json").write_text("{}")  # a stale downstream artifact
+    with pytest.raises(ValueError, match="downstream artifacts already exist"):
+        write_dataset(_CFG, tmp_path)
+    # With force, the known descendant is cleared and generation republishes cleanly.
+    write_dataset(_CFG, tmp_path, force=True)
+    assert not (tmp_path / "split.json").exists()
+
+
+def test_failed_write_leaves_no_partial_final(tmp_path: Path, monkeypatch):
+    write_dataset(_CFG, tmp_path)
+    good = (tmp_path / "manifest.json").read_text()
+
+    import cdd_oran.e1slice.dataset as ds
+
+    def boom(path, text):
+        raise OSError("simulated write failure")
+
+    monkeypatch.setattr(ds, "_atomic_write_text", boom)
+    with pytest.raises(OSError):
+        write_dataset(_CFG, tmp_path, force=True)
+    # rows.npz was republished, but the manifest publish failed: the old manifest is intact,
+    # not a half-written file, and no *.tmp final artifact was left behind.
+    assert (tmp_path / "manifest.json").read_text() == good
+    assert not (tmp_path / "manifest.json.tmp").exists()

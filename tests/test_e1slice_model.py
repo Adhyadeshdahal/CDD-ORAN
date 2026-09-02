@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 from cdd_oran.e1slice.dataset import (
@@ -13,6 +14,7 @@ from cdd_oran.e1slice.dataset import (
     load_dataset,
     write_dataset,
 )
+from cdd_oran.e1slice.evaluate import predict
 from cdd_oran.e1slice.model import (
     Arm,
     ModelConfig,
@@ -93,10 +95,50 @@ def test_save_load_reproduces_predictions(tmp_path: Path):
     split = load_split(tmp_path)
 
     model, meta = train_arm(rows, split["train_episodes"], "oracle", _MODEL)
-    save_arm(tmp_path, model, meta, ds_manifest["dataset_hash"], split["split_hash"])
-
-    reloaded, _ = load_arm(tmp_path, "oracle")
-    x = torch.randn(7, _IN_DIM)
     model.eval()
+    reference = predict(model, rows, split["test_episodes"])
+    save_arm(tmp_path, model, meta, ds_manifest["dataset_hash"], split["split_hash"], reference)
+
+    reloaded, reloaded_meta = load_arm(tmp_path, "oracle")
+    x = torch.randn(7, _IN_DIM)
     assert torch.allclose(model(x), reloaded(x), atol=1e-6)
     assert isinstance(reloaded, OneStepPredictor)
+    # Digests for both persisted artifacts are recorded and verified on reload.
+    assert reloaded_meta["model_sha256"] and reloaded_meta["ref_sha256"]
+
+
+def test_load_arm_rejects_tampered_weights(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0))
+    rows, ds_manifest = load_dataset(tmp_path)
+    split = load_split(tmp_path)
+    model, meta = train_arm(rows, split["train_episodes"], "oracle", _MODEL)
+    model.eval()
+    reference = predict(model, rows, split["test_episodes"])
+    save_arm(tmp_path, model, meta, ds_manifest["dataset_hash"], split["split_hash"], reference)
+
+    # Flip one byte of the saved weights: the recorded model_sha256 no longer matches.
+    weights = tmp_path / "arms" / "oracle" / "model.pt"
+    raw = bytearray(weights.read_bytes())
+    raw[-1] ^= 0x01
+    weights.write_bytes(raw)
+    with pytest.raises(ValueError, match="model_sha256"):
+        load_arm(tmp_path, "oracle")
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"hidden": ()},
+        {"hidden": (0,)},
+        {"lr": 0.0},
+        {"lr": float("nan")},
+        {"epochs": 0},
+        {"batch_size": 0},
+    ],
+)
+def test_build_model_rejects_invalid_config(kwargs):
+    from dataclasses import replace
+
+    with pytest.raises(ValueError):
+        build_model("dense", replace(_MODEL, **kwargs))
