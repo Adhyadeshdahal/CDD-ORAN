@@ -23,7 +23,9 @@ from typing import cast
 import numpy as np
 import pytest
 
+import cdd_oran.benchmark.rollout as rollout_mod
 from cdd_oran.benchmark.rollout import (
+    OracleResult,
     enumerate_open_loop,
     paired_regret,
     rollout_open_loop,
@@ -227,27 +229,38 @@ def test_h2_paired_regret_is_two():
     assert reg.regret == pytest.approx(2.0)
 
 
-def test_regret_is_unclamped_when_oracle_is_suboptimal_on_its_own_grid():
-    """Regret is the raw ``oracle_return − planner_return`` with NO ``max(0, ·)`` clamp, so a
-    genuinely SUB-OPTIMAL oracle surfaces as ``regret < 0`` rather than being hidden (SEMANTICS §3
-    "Non-negativity is a property to verify, not to clamp").
+def test_regret_is_unclamped_when_oracle_is_suboptimal(monkeypatch):
+    """Regret is the raw ``oracle.best_return − planner.cumulative_return`` with NO ``max(0, ·)``
+    clamp, so a genuinely SUB-OPTIMAL / buggy oracle surfaces as ``regret < 0`` rather than being
+    hidden (SEMANTICS §3 "Non-negativity is a property to verify, not to clamp").
 
-    The planner acts IN the oracle grid (no out-of-domain escape). The negative signal comes from
-    the oracle underperforming on its OWN grid: a stateful scorer rewards only the first rollout it
-    scores, and ``paired_regret`` rolls the planner before the oracle — so the planner's in-grid
-    action is scored with a +10 bonus that the oracle's re-score of the SAME action never sees."""
+    The SAME pure objective ``_r_k0`` scores BOTH arms (SEMANTICS §2 identical-R contract) and the
+    planner acts IN the grid (no out-of-domain escape). Negativity comes solely from an ORACLE that
+    is genuinely sub-optimal on its own grid: the exhaustive search is monkeypatched to report an
+    in-grid sequence whose return (0) is below the planner's realized return (1)."""
     env = _H1Env()
-    options = [(0, 1.0)]  # single-point grid; the planner action is IN this grid
-    calls = {"n": 0}
+    snap = env.snapshot()
+    grid = [(0, 0.0), (0, 1.0), (0, 2.0)]  # planner action (0,2.0) is IN this grid
 
-    def first_rollout_bonus(k):
-        calls["n"] += 1
-        return float(k[0]) + (10.0 if calls["n"] == 1 else 0.0)
+    # A buggy/sub-optimal oracle: it reports an in-grid sequence returning 0 as "best", below the
+    # planner's realized 1. Same pure _r_k0 scores this rollout, so the R contract is not violated.
+    subopt_rollout = rollout_open_loop(lambda: _H1Env(), snap, [(0, 1.0)], _r_k0)  # k_2=0 → return 0
+    assert subopt_rollout.cumulative_return == pytest.approx(0.0)
 
-    reg = paired_regret(lambda: _H1Env(), env.snapshot(), [(0, 1.0)], options, first_rollout_bonus)
-    assert reg.planner_return == pytest.approx(10.0)  # planner scored first, with the bonus
-    assert reg.oracle_return == pytest.approx(0.0)    # oracle re-scored the SAME in-grid action, no bonus
-    assert reg.regret == pytest.approx(-10.0)         # unclamped: negative regret surfaces oracle suboptimality
+    def _suboptimal_oracle(*args, **kwargs):
+        return OracleResult(
+            best_actions=subopt_rollout.actions,
+            best_return=subopt_rollout.cumulative_return,  # 0.0, below the planner's 1.0
+            best_rollout=subopt_rollout,
+            num_sequences=1,
+        )
+
+    monkeypatch.setattr(rollout_mod, "enumerate_open_loop", _suboptimal_oracle)
+
+    reg = paired_regret(lambda: _H1Env(), snap, [(0, 2.0)], grid, _r_k0)
+    assert reg.planner_return == pytest.approx(1.0)  # planner (0,2.0): k_2 = 1 under pure _r_k0
+    assert reg.oracle_return == pytest.approx(0.0)   # injected sub-optimal oracle, same R
+    assert reg.regret == pytest.approx(-1.0)         # raw, UNCLAMPED: negative regret surfaces the bug
 
 
 def test_paired_regret_rejects_out_of_domain_planner_action():
