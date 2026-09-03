@@ -94,6 +94,51 @@ def test_discovery_no_calibration_writes_raw_uncalibrated_diagnostic(tmp_path):
     assert raw.meta["calibration"]["mode"] == "uncalibrated"
 
 
+def test_no_calibration_run_removes_stale_calibrated_posterior(tmp_path):
+    """Finding #8: a no-cal discovery into a dir that still holds a CALIBRATED
+    ``{env}_posterior.json`` from an earlier calibrated run must REMOVE that stale calibrated
+    artifact. Configs consume ``posterior_artifact`` and ``enumeration_graph`` as INDEPENDENT
+    paths, so leaving the old posterior beside this run's new enum graph would silently pair two
+    different runs."""
+    cfg = _tiny_cfg()
+
+    # Simulate a prior CALIBRATED run into the SAME --out dir.
+    stale = tmp_path / "EnvironmentI_posterior.json"
+    stale.write_text('{"stale": "prior calibrated posterior"}', encoding="utf-8")
+
+    result = _discover(cfg, tmp_path)  # no calibration_run -> no-cal branch
+
+    assert result["calibrated"] is False
+    assert result["calibrated_posterior"] is None
+    # The mismatched calibrated posterior is gone; only this run's fresh raw/enum pair remains.
+    assert not stale.exists(), "stale calibrated posterior must be removed by a no-cal run"
+    assert (tmp_path / "EnvironmentI_raw_posterior.json").exists()
+    assert (tmp_path / "EnvironmentI_enum.json").exists()
+
+
+def test_no_calibration_partial_failure_still_removes_stale_posterior(tmp_path, monkeypatch):
+    """R2-1: the stale-posterior removal must precede the enum refresh + bootstrap, so a partial
+    failure cannot leave a NEW enum paired with the OLD calibrated posterior. Here the bootstrap
+    raises AFTER the enum is refreshed; the stale calibrated posterior must ALREADY be gone."""
+    cfg = _tiny_cfg()
+    stale = tmp_path / "EnvironmentI_posterior.json"
+    stale.write_text('{"stale": "prior calibrated posterior"}', encoding="utf-8")
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("bootstrap failed mid-run")
+
+    monkeypatch.setattr(GraphPosterior, "from_bootstrap", _boom)
+
+    with pytest.raises(RuntimeError, match="bootstrap failed"):
+        _discover(cfg, tmp_path)
+
+    # The failure landed AFTER the enum was refreshed (proving removal HAD to precede it)...
+    assert (tmp_path / "EnvironmentI_enum.json").exists()
+    # ...yet the stale calibrated posterior is already gone -- no new-enum + old-posterior pair
+    # survives the failure window (removal is hoisted before the enum overwrite).
+    assert not stale.exists(), "stale calibrated posterior must be removed before the failure window"
+
+
 def test_raw_diagnostic_is_rejected_by_downstream_sampler_and_staging(tmp_path):
     """The raw diagnostic loads for analysis but robust structure sampling / staging refuse it
     (Plan 002 Step 4)."""

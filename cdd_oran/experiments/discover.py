@@ -262,6 +262,27 @@ def run_discovery(
     out_dir.mkdir(parents=True, exist_ok=True)
     enum_path = out_dir / f"{cfg.environment}_enum.json"
 
+    # Corruption guard (review finding #8), hoisted BEFORE the enum is overwritten (R2-1): a PRIOR
+    # calibrated run into this same --out dir leaves a downstream-sampleable {env}_posterior.json.
+    # A no-cal run refreshes only the raw/enum pair and never rewrites that calibrated file, and
+    # configs consume ``posterior_artifact`` and ``enumeration_graph`` as INDEPENDENT paths with no
+    # cross-run binding -- so a stale calibrated posterior left beside a fresh enum graph gets
+    # silently mixed across two runs. Remove it BEFORE freeze_enumeration_graph overwrites the enum
+    # (and before the bootstrap below, which may raise), so NO window ever exists where a NEW enum
+    # coexists with the OLD posterior: any later failure/interruption leaves at worst
+    # {old-enum,new-enum}+no-posterior, both of which fail closed downstream -- never a silent
+    # mismatched pair.
+    if calibration_run is None:
+        stale_calibrated = out_dir / f"{cfg.environment}_posterior.json"
+        if stale_calibrated.exists():
+            stale_calibrated.unlink()
+            logger.warning(
+                "Discovery no-cal run superseded a STALE calibrated posterior %s (removed before "
+                "refreshing the enum): a raw/uncalibrated run does not rewrite it, and leaving it "
+                "beside this run's new enumeration graph %s would let downstream silently mix two runs",
+                stale_calibrated, enum_path,
+            )
+
     # 3) Frozen crisp enumeration graph from the trained CMI (label-free / preconfigured
     #    threshold; fails loudly on zero state edges). No ground truth is read here.
     freeze_enumeration_graph(run_dir, enum_path, device=device)
@@ -277,7 +298,8 @@ def run_discovery(
         # NO-CALIBRATION MODE: persist a RAW diagnostic (calibrated=False). Without a held-out
         # calibration run there is no honest way to map scores to inclusion probabilities, so the
         # target environment's true adjacency is deliberately NOT read on this path. The artifact
-        # is NOT downstream-sampleable -- from_artifact / stage_run_artifacts reject it.
+        # is NOT downstream-sampleable -- from_artifact / stage_run_artifacts reject it. (Any stale
+        # calibrated {env}_posterior.json was already removed above, BEFORE the enum was refreshed.)
         raw_post.meta = {
             **raw_post.meta,
             **common_meta,
