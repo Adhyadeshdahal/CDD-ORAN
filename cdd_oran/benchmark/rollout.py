@@ -254,7 +254,39 @@ def paired_regret(
     even though the arms take different actions. Regret is ``oracle_return − planner_return`` with
     **no clamping** (non-negativity is a property to verify, never to enforce). The oracle horizon
     is the planner's horizon, so the scored windows match in length by construction.
+
+    Domain guard (SEMANTICS §3): the planner and the oracle must search the SAME action class /
+    grid, so every ``planner_actions[h]`` must be one of ``action_options``. An out-of-domain
+    planner action would let the planner escape the oracle's search and manufacture a spurious
+    NEGATIVE regret, so it is rejected up front with ``ValueError``. Regret itself is NEVER
+    clamped: on a matched grid a genuinely sub-optimal oracle must still be able to surface as
+    ``regret < 0`` ("Non-negativity is a property to verify, not to clamp", SEMANTICS §3).
     """
+    # Reject out-of-domain planner actions before any rollout. Options/actions are normalized to
+    # ``(int(param_id), float(value))`` -- the same coercion the rollout kernel applies -- so the
+    # comparison is against the exact grid points the oracle enumerates. Malformed entries are left
+    # for rollout_open_loop / enumerate_open_loop to report with their own canonical errors.
+    option_set: set[tuple[int, float]] = set()
+    for opt in action_options:
+        if isinstance(opt, tuple) and len(opt) == 2:
+            try:
+                option_set.add((int(opt[0]), float(opt[1])))
+            except (TypeError, ValueError):
+                continue
+    for h, action in enumerate(planner_actions):
+        if not (isinstance(action, tuple) and len(action) == 2):
+            continue
+        try:
+            key = (int(action[0]), float(action[1]))
+        except (TypeError, ValueError):
+            continue
+        if key not in option_set:
+            raise ValueError(
+                f"planner action {action!r} at step {h} is outside the oracle action grid "
+                f"({len(option_set)} options); regret requires the planner and the oracle to share "
+                f"one action class/grid (SEMANTICS §3)"
+            )
+
     planner = rollout_open_loop(env_factory, start_snapshot, planner_actions, score_fn)
     horizon = len(planner.actions)
     oracle = enumerate_open_loop(

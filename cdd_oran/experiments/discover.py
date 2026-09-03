@@ -278,6 +278,23 @@ def run_discovery(
         # calibration run there is no honest way to map scores to inclusion probabilities, so the
         # target environment's true adjacency is deliberately NOT read on this path. The artifact
         # is NOT downstream-sampleable -- from_artifact / stage_run_artifacts reject it.
+        #
+        # Corruption guard (review finding #8): a PRIOR calibrated run into this same --out dir
+        # leaves a downstream-sampleable ``{env}_posterior.json``. This no-cal run refreshes only
+        # the raw/enum pair and never rewrites that calibrated file, so leaving it in place would
+        # let a config -- which consumes ``posterior_artifact`` and ``enumeration_graph`` as
+        # INDEPENDENT paths with no cross-run binding -- silently pair this run's NEW enum graph
+        # with the OLD calibrated posterior. Remove the stale calibrated artifact so a mismatched
+        # cross-run pair can never be consumed.
+        stale_calibrated = out_dir / f"{cfg.environment}_posterior.json"
+        if stale_calibrated.exists():
+            stale_calibrated.unlink()
+            logger.warning(
+                "Discovery no-cal run superseded a STALE calibrated posterior %s (removed): a "
+                "raw/uncalibrated run does not refresh it, and leaving it beside this run's new "
+                "enumeration graph %s would let downstream silently mix two runs",
+                stale_calibrated, enum_path,
+            )
         raw_post.meta = {
             **raw_post.meta,
             **common_meta,

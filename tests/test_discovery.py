@@ -94,6 +94,28 @@ def test_discovery_no_calibration_writes_raw_uncalibrated_diagnostic(tmp_path):
     assert raw.meta["calibration"]["mode"] == "uncalibrated"
 
 
+def test_no_calibration_run_removes_stale_calibrated_posterior(tmp_path):
+    """Finding #8: a no-cal discovery into a dir that still holds a CALIBRATED
+    ``{env}_posterior.json`` from an earlier calibrated run must REMOVE that stale calibrated
+    artifact. Configs consume ``posterior_artifact`` and ``enumeration_graph`` as INDEPENDENT
+    paths, so leaving the old posterior beside this run's new enum graph would silently pair two
+    different runs."""
+    cfg = _tiny_cfg()
+
+    # Simulate a prior CALIBRATED run into the SAME --out dir.
+    stale = tmp_path / "EnvironmentI_posterior.json"
+    stale.write_text('{"stale": "prior calibrated posterior"}', encoding="utf-8")
+
+    result = _discover(cfg, tmp_path)  # no calibration_run -> no-cal branch
+
+    assert result["calibrated"] is False
+    assert result["calibrated_posterior"] is None
+    # The mismatched calibrated posterior is gone; only this run's fresh raw/enum pair remains.
+    assert not stale.exists(), "stale calibrated posterior must be removed by a no-cal run"
+    assert (tmp_path / "EnvironmentI_raw_posterior.json").exists()
+    assert (tmp_path / "EnvironmentI_enum.json").exists()
+
+
 def test_raw_diagnostic_is_rejected_by_downstream_sampler_and_staging(tmp_path):
     """The raw diagnostic loads for analysis but robust structure sampling / staging refuse it
     (Plan 002 Step 4)."""
