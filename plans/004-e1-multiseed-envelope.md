@@ -109,11 +109,14 @@ untracked intermediate is the sole source.
 
 ## Done Criteria
 
-- [ ] Dry run names exactly ten collision-free jobs.
-- [ ] Runner resumes only validated stages and preserves complete logs.
-- [ ] All ten planned replicates are represented, including failures.
-- [ ] Summary includes full child hashes and paired effect envelopes.
-- [ ] Full verification passes after runner code changes.
+- [x] Dry run names exactly ten collision-free jobs.
+- [x] Runner resumes only validated stages and preserves complete logs.
+- [x] All ten planned replicates are represented, including failures. (10/10, `failed_replicates=[]`)
+- [x] Summary includes full child hashes and paired effect envelopes.
+- [x] Full verification passes after runner code changes.
+
+Digest committed at `docs/benchmark/plan004_envelope_digest/` (re-run on hardened runner `5152c6d`,
+reproduces the single-seed 2026-09-02 result and the prior uncommitted envelope; `complete=true`).
 
 ## STOP Conditions
 

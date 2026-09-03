@@ -1,0 +1,100 @@
+{
+  "git_dirty": false,
+  "git_sha": "5152c6dc65c04bb02d8d049c6fdda2120582bdbf",
+  "git_status_short": "",
+  "launch_utc": "2026-09-03T07:56:32.277365+00:00",
+  "numpy_version": "2.4.2",
+  "plan": "004-e1-multiseed-envelope",
+  "python_version": "3.12.13",
+  "settings": {
+    "arms": [
+      "oracle",
+      "dense",
+      "discovered"
+    ],
+    "bootstrap": {
+      "alpha": 0.05,
+      "n_resamples": 10000,
+      "resample_seed": 0
+    },
+    "dataset": {
+      "episodes": 48,
+      "obs_noise_scale": 0.0,
+      "steps": 16,
+      "warmup": 2
+    },
+    "graph_blocks": [
+      "overall",
+      "ncp_kpi",
+      "kpi_kpi"
+    ],
+    "model": {
+      "batch_size": 64,
+      "epochs": 300,
+      "hidden": [
+        16
+      ],
+      "lr": 0.01
+    },
+    "n_replicates": 10,
+    "seed_matrix": {
+      "0": {
+        "env_seed": 0,
+        "split_seed": 0,
+        "weight_seed": 0
+      },
+      "1": {
+        "env_seed": 1,
+        "split_seed": 0,
+        "weight_seed": 1
+      },
+      "2": {
+        "env_seed": 2,
+        "split_seed": 0,
+        "weight_seed": 2
+      },
+      "3": {
+        "env_seed": 3,
+        "split_seed": 0,
+        "weight_seed": 3
+      },
+      "4": {
+        "env_seed": 4,
+        "split_seed": 0,
+        "weight_seed": 4
+      },
+      "5": {
+        "env_seed": 5,
+        "split_seed": 0,
+        "weight_seed": 5
+      },
+      "6": {
+        "env_seed": 6,
+        "split_seed": 0,
+        "weight_seed": 6
+      },
+      "7": {
+        "env_seed": 7,
+        "split_seed": 0,
+        "weight_seed": 7
+      },
+      "8": {
+        "env_seed": 8,
+        "split_seed": 0,
+        "weight_seed": 8
+      },
+      "9": {
+        "env_seed": 9,
+        "split_seed": 0,
+        "weight_seed": 9
+      }
+    },
+    "split": {
+      "split_seed": 0,
+      "test_fraction": 0.25
+    },
+    "verify_tol": 1e-06
+  },
+  "torch_version": "2.10.0+cu128",
+  "uv_lock_sha256": "51069062bef708fca159cffb65bdc1013816d5fc4c55d56eadc3cb7c200e401a"
+}

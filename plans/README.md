@@ -12,7 +12,7 @@ scientific contract.
 | 001 | Make E1 artifacts fail closed | P1 | M | - | DONE (merged c5d3663) |
 | 002 | Remove target leakage from discovery calibration | P1 | M | - | DONE (merged c5d3663) |
 | 003 | Add the learned E1 discovery arm | P1 | L | 001, 002 | DONE (merged afc88de) |
-| 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | RUNNER DONE (7abaa75); measurement digest pending re-run — see Post-merge review |
+| 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | DONE (runner 7abaa75; digest committed under docs/benchmark/plan004_envelope_digest/) |
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
@@ -70,13 +70,18 @@ positives). Key corrections:
   a small verifiable digest (`summary.json` + provenance + per-replicate hashes), bulk runs kept
   gitignored.
 
-Fix units in flight (guards/validation only — no frozen E1 number changes):
+Fix units (guards/validation only — no frozen E1 number changed; each adversarially reviewed, review
+findings verified before routing):
 
-- **A (docs/claims):** correct the "green" overclaim + two wording narrowings (protocol-predates,
-  registered-parameter match). — merging first.
-- **C (corruption + guard):** #8 stale calibrated posterior in legacy no-cal discovery; #9
-  `paired_regret` action-domain guard.
-- **B (provenance):** #3 seed-label validation, #4 sweep exit-code gate, #5 scm_hash/frozen-const
-  rehash, #6 atomic dataset publish, #7 stale-descendant cleanup.
+- **A (docs/claims)** — committed `80ccab5`: corrected the "green" overclaim (explicit Gate status in
+  `E1_DISCOVERY_RESULT.md`) + two wording narrowings (protocol predates *this method's* result;
+  registered-parameter match, not effective-capacity match).
+- **C (corruption + guard)** — merged `30f81d8` (2 rounds): #8 stale calibrated posterior removed
+  *before* the enum refresh (review caught the removal was too late — a bootstrap failure re-opened
+  the corruption); #9 `paired_regret` action-domain guard, regret left unclamped.
+- **B (provenance)** — merged `5152c6d` (2 rounds): #3 seed-label validation (non-truncating),
+  #4 sweep exit-code gate, #5 scm_hash + `scm_identity` + warmup + frozen-const rehash, #6 atomic
+  dataset publish, #7 stale-descendant cleanup (review caught 3 incomplete tamper-bindings).
 
-Merge order A -> C -> B, then the 004 re-run + digest. Dispositions finalized as each lands.
+Integration gate on `feat/v2 @ 5152c6d`: ruff + ty clean, full pytest green (1 xfailed). The 004
+envelope was re-run on the hardened runner and its digest committed (see the 004 row).
