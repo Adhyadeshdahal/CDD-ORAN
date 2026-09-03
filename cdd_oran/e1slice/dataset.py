@@ -53,8 +53,12 @@ _EXPECTED_DTYPES: dict[str, np.dtype[Any]] = {
 }
 
 # Downstream stages that must not survive a re-``generate`` unless ``force`` is given
-# (dependency order: rows/manifest -> split -> arms -> metrics).
-_GENERATE_DESCENDANTS = ("split.json", "arms", "metrics.json")
+# (dependency order: rows/manifest -> split -> discovery -> arms -> metrics -> recovery).
+# discovery.json/recovery.json are included so a forced regenerate cannot leave a graph or
+# recovery result still bound to the previous (now-overwritten) ancestor dataset.
+_GENERATE_DESCENDANTS = (
+    "split.json", "discovery.json", "arms", "metrics.json", "recovery.json",
+)
 
 
 @dataclass(frozen=True)
@@ -177,9 +181,8 @@ def _atomic_write_text(path: Path, text: str) -> None:
     os.replace(tmp, path)
 
 
-def _atomic_savez_rows(path: Path, rows: E1Rows) -> None:
-    """Persist the row columns into a same-dir temp ``.npz``, then publish atomically."""
-    tmp = path.with_name(path.name + ".tmp")
+def _stage_rows(tmp: Path, rows: E1Rows) -> None:
+    """Materialise the row columns into the given temp ``.npz`` path (no publish)."""
     with open(tmp, "wb") as fh:
         np.savez(
             fh,
@@ -189,7 +192,39 @@ def _atomic_savez_rows(path: Path, rows: E1Rows) -> None:
             x_kpis=rows.x_kpis,
             y_kpis=rows.y_kpis,
         )
-    os.replace(tmp, path)
+
+
+def _stage_text(tmp: Path, text: str) -> None:
+    """Materialise ``text`` into the given temp path (no publish)."""
+    tmp.write_text(text)
+
+
+def _publish_dataset_pair(out: Path, rows: E1Rows, manifest: dict[str, Any]) -> None:
+    """Publish ``rows.npz`` + ``manifest.json`` as an atomic pair.
+
+    BOTH artifacts are fully materialised to same-directory temp files before EITHER is
+    ``os.replace``-d into place, so a crash mid-write can never begin renaming with a
+    half-written partner and can never destroy the prior valid pair: an interrupted publish
+    leaves the on-disk dataset either fully old or fully new. rows is published first, then
+    the manifest that binds it. (A hard crash strictly between the two renames leaves new
+    rows + old manifest, which ``load_dataset`` rejects loudly on the dataset_hash mismatch --
+    never silently accepted.)
+    """
+    rows_final, man_final = out / "rows.npz", out / "manifest.json"
+    rows_tmp = rows_final.with_name(rows_final.name + ".tmp")
+    man_tmp = man_final.with_name(man_final.name + ".tmp")
+    try:
+        _stage_rows(rows_tmp, rows)
+        _stage_text(man_tmp, json.dumps(manifest, indent=2, sort_keys=True))
+    except BaseException:
+        for tmp in (rows_tmp, man_tmp):
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+        raise
+    os.replace(rows_tmp, rows_final)
+    os.replace(man_tmp, man_final)
 
 
 def guard_descendants(
@@ -266,18 +301,17 @@ def write_dataset(
 ) -> dict[str, Any]:
     """Generate, persist ``rows.npz`` + ``manifest.json`` under ``out_dir``, return the manifest.
 
-    Refuses to run if downstream artifacts (split/arms/metrics) already exist unless ``force``
-    is set; with ``force`` those known descendants are removed first. Both files are staged to
-    same-directory temporaries and published atomically, so a failed write leaves no partial
-    final artifact.
+    Refuses to run if downstream artifacts (split/discovery/arms/metrics/recovery) already
+    exist unless ``force`` is set; with ``force`` those known descendants are removed first.
+    ``rows.npz`` and ``manifest.json`` are published as an atomic pair (both staged first, then
+    replaced), so an interrupted write leaves the on-disk dataset either fully old or fully new.
     """
     rows = generate_rows(cfg)
     manifest = build_manifest(cfg, rows)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     guard_descendants(out, _GENERATE_DESCENDANTS, force, "generate")
-    _atomic_savez_rows(out / "rows.npz", rows)
-    _atomic_write_text(out / "manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
+    _publish_dataset_pair(out, rows, manifest)
     return manifest
 
 
@@ -291,7 +325,8 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
 
     if manifest.get("schema_version") != SCHEMA_VERSION:
         bad(f"{man_file}: schema_version {manifest.get('schema_version')!r} != {SCHEMA_VERSION!r}")
-    for key in ("n_rows", "n_episodes", "columns", "config", "dataset_hash"):
+    for key in ("n_rows", "n_episodes", "columns", "config", "seeds", "dataset_hash",
+                "scm_hash", "scm_identity"):
         if key not in manifest:
             bad(f"{man_file}: missing required field '{key}'")
     if manifest["columns"] != list(_COLUMNS):
@@ -318,6 +353,14 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
     if manifest["n_rows"] != n:
         bad(f"{man_file}: n_rows {manifest['n_rows']} != {n} rows on disk")
     config = manifest["config"]
+    for key in ("env_seed", "warmup", "n_episodes", "steps_per_episode"):
+        if key not in config:
+            bad(f"{man_file}: config missing required field '{key}'")
+    seeds = manifest["seeds"]
+    if not isinstance(seeds, dict) or "env_seed" not in seeds:
+        bad(f"{man_file}: seeds must record env_seed")
+    if int(seeds["env_seed"]) != int(config["env_seed"]):
+        bad(f"{man_file}: seeds.env_seed {seeds['env_seed']} != config.env_seed {config['env_seed']}")
     n_episodes = int(config["n_episodes"])
     steps = int(config["steps_per_episode"])
     if manifest["n_episodes"] != n_episodes:
@@ -328,9 +371,37 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
     if not np.all(counts == steps):
         bad(f"{rows_file}: episodes do not all have steps_per_episode={steps} rows")
 
+    # Bind ``warmup`` to the rows. warmup enters neither scm_hash nor dataset_hash, but the
+    # recorded ``time`` coordinate is proof of it: warmup steps advance env.time before the first
+    # row is recorded, so every episode's recorded times are exactly the contiguous block
+    # ``warmup .. warmup+steps-1``. A tampered manifest.config.warmup no longer matches the rows.
+    warmup = int(config["warmup"])
+    expected_times = np.arange(warmup, warmup + steps, dtype=rows.time.dtype)
+    for e in uniq.tolist():
+        episode_times = np.sort(rows.time[rows.episode == e])
+        if not np.array_equal(episode_times, expected_times):
+            bad(
+                f"{rows_file}: episode {e} times {episode_times.tolist()} != contiguous "
+                f"warmup..warmup+steps-1 ({warmup}..{warmup + steps - 1}); "
+                f"manifest.config.warmup is not bound to the rows"
+            )
+
     recomputed = dataset_hash(rows)
     if recomputed != manifest["dataset_hash"]:
         bad(f"{rows_file}: dataset_hash {recomputed} != manifest {manifest['dataset_hash']}")
+
+    # Re-derive scm_hash from the recorded config and bind it: the manifest's declared SCM must
+    # be exactly the SCM its config induces (a re-derivation of a value already in the file, so a
+    # correctly generated manifest is unaffected).
+    cfg = E1DatasetConfig(**config)
+    recomputed_scm = scm_hash(cfg)
+    if recomputed_scm != manifest["scm_hash"]:
+        bad(f"{man_file}: scm_hash {manifest['scm_hash']} != recomputed {recomputed_scm}")
+    # Also bind the human-readable scm_identity blob itself (not just its hash): it was written
+    # from ``scm_identity(cfg)``, so exact dict equality holds for a correct manifest but a hand-
+    # edited coefficient (e.g. scm_identity.b2) that left scm_hash untouched is rejected.
+    if manifest["scm_identity"] != scm_identity(cfg):
+        bad(f"{man_file}: scm_identity does not match the config-derived SCM")
 
 
 def load_dataset(out_dir: str | Path) -> tuple[E1Rows, dict[str, Any]]:

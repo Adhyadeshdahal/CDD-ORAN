@@ -139,19 +139,117 @@ def test_generate_refuses_to_clobber_downstream_without_force(tmp_path: Path):
     assert not (tmp_path / "split.json").exists()
 
 
-def test_failed_write_leaves_no_partial_final(tmp_path: Path, monkeypatch):
+def test_forced_generate_clears_stale_discovery_and_recovery(tmp_path: Path):
+    # Finding #7: a forced regenerate must not leave discovery/recovery bound to the old ancestor.
     write_dataset(_CFG, tmp_path)
-    good = (tmp_path / "manifest.json").read_text()
+    (tmp_path / "discovery.json").write_text("{}")
+    (tmp_path / "recovery.json").write_text("{}")
+    # Without force, their presence blocks the rerun.
+    with pytest.raises(ValueError, match="downstream artifacts already exist"):
+        write_dataset(_CFG, tmp_path)
+    # With force, guard_descendants removes both stale outputs.
+    write_dataset(_CFG, tmp_path, force=True)
+    assert not (tmp_path / "discovery.json").exists()
+    assert not (tmp_path / "recovery.json").exists()
 
+
+# --- Finding #5: dataset provenance rehash must cover scm_hash + seed consistency ----------
+def test_load_rejects_scm_hash_mismatch(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["scm_hash"] = "0" * 64  # rows + dataset_hash stay valid; only scm_hash is wrong
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="scm_hash"):
+        load_dataset(tmp_path)
+
+
+def test_load_rejects_inconsistent_env_seed(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["seeds"]["env_seed"] = int(manifest["config"]["env_seed"]) + 1
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="env_seed"):
+        load_dataset(tmp_path)
+
+
+def test_load_rejects_manifest_missing_warmup(tmp_path: Path):
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    del manifest["config"]["warmup"]
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="warmup"):
+        load_dataset(tmp_path)
+
+
+def test_valid_manifest_still_loads_after_rederivation(tmp_path: Path):
+    # The new re-derivations (scm_hash, seed consistency) leave a correct manifest byte-identical.
+    manifest = write_dataset(_CFG, tmp_path)
+    rows, loaded = load_dataset(tmp_path)
+    assert loaded == json.loads((tmp_path / "manifest.json").read_text())
+    assert loaded["scm_hash"] == manifest["scm_hash"] == scm_hash(_CFG)
+    assert dataset_hash(rows) == manifest["dataset_hash"]
+
+
+# --- R2-1: warmup must be bound to the rows, and the scm_identity blob itself checked ----------
+def test_load_rejects_tampered_warmup(tmp_path: Path):
+    # warmup enters neither scm_hash nor dataset_hash; it is bound only via the row time coords.
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["config"]["warmup"] = 999  # rows still start at time == original warmup (2)
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="warmup"):
+        load_dataset(tmp_path)
+
+
+def test_load_rejects_tampered_scm_identity_blob(tmp_path: Path):
+    # Editing scm_identity.b2 while leaving scm_hash untouched must not load.
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["scm_identity"]["b2"] = 999.0  # scm_hash left as-is
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="scm_identity"):
+        load_dataset(tmp_path)
+
+
+def test_genuine_dataset_loads_with_warmup_and_identity_bound(tmp_path: Path):
+    # A real dataset satisfies the new warmup-time and scm_identity binds and loads unchanged.
+    manifest = write_dataset(_CFG, tmp_path)
+    rows, loaded = load_dataset(tmp_path)
+    assert loaded == json.loads((tmp_path / "manifest.json").read_text())
+    assert loaded["scm_hash"] == manifest["scm_hash"]
+    assert dataset_hash(rows) == manifest["dataset_hash"]
+    # Every episode's recorded times are the contiguous warmup..warmup+steps-1 block.
+    for e in range(_CFG.n_episodes):
+        te = np.sort(rows.time[rows.episode == e])
+        assert te.tolist() == list(range(_CFG.warmup, _CFG.warmup + _CFG.steps_per_episode))
+
+
+# --- Finding #6: rows.npz + manifest.json publish is an atomic pair ------------------------
+def test_manifest_write_failure_after_config_change_keeps_prior_pair(tmp_path: Path, monkeypatch):
     import cdd_oran.e1slice.dataset as ds
 
-    def boom(path, text):
-        raise OSError("simulated write failure")
+    # A valid dataset from config A is on disk.
+    write_dataset(_CFG, tmp_path)
+    old_rows = (tmp_path / "rows.npz").read_bytes()
+    old_manifest = (tmp_path / "manifest.json").read_text()
+    old_dataset_hash = json.loads(old_manifest)["dataset_hash"]
 
-    monkeypatch.setattr(ds, "_atomic_write_text", boom)
+    # Republish a DIFFERENT config B (its rows differ), but the manifest staging fails mid-write.
+    cfg_b = replace(_CFG, n_episodes=_CFG.n_episodes + 2)
+
+    def boom(tmp, text):
+        raise OSError("simulated manifest write failure")
+
+    monkeypatch.setattr(ds, "_stage_text", boom)
     with pytest.raises(OSError):
-        write_dataset(_CFG, tmp_path, force=True)
-    # rows.npz was republished, but the manifest publish failed: the old manifest is intact,
-    # not a half-written file, and no *.tmp final artifact was left behind.
-    assert (tmp_path / "manifest.json").read_text() == good
+        write_dataset(cfg_b, tmp_path, force=True)
+
+    # The prior valid pair survives whole: never a NEW-rows + OLD-manifest state, and no temp
+    # artifacts left behind.
+    assert (tmp_path / "rows.npz").read_bytes() == old_rows
+    assert (tmp_path / "manifest.json").read_text() == old_manifest
+    assert not (tmp_path / "rows.npz.tmp").exists()
     assert not (tmp_path / "manifest.json.tmp").exists()
+    # And the surviving pair still loads and binds.
+    _, manifest = load_dataset(tmp_path)
+    assert manifest["dataset_hash"] == old_dataset_hash

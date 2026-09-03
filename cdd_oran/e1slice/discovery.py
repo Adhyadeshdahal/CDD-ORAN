@@ -235,7 +235,7 @@ def load_discovery(
             f"{disc_file}: schema_version {record.get('schema_version')!r} != {SCHEMA_VERSION!r}"
         )
     for key in (
-        "dataset_hash", "split_hash", "protocol_commit", "method", "threshold",
+        "dataset_hash", "split_hash", "protocol_commit", "method", "floor", "threshold",
         "binary_mask", "coefficients", "scores", "content_hash",
     ):
         if key not in record:
@@ -263,6 +263,27 @@ def load_discovery(
     threshold = float(record["threshold"])
     if not np.array_equal(mask, (scores >= threshold).astype(np.int64)):
         raise ValueError(f"{disc_file}: binary_mask is inconsistent with scores >= threshold")
+
+    # Enforce the frozen protocol constants and re-derive the score/coefficient/threshold
+    # relations from the persisted arrays. These are re-derivations of values already in the
+    # file, so a correctly generated discovery.json is byte-unaffected; a rerun that quietly
+    # retuned the threshold (while still stamping the original protocol_commit) is rejected.
+    if record["protocol_commit"] != PROTOCOL_COMMIT:
+        raise ValueError(
+            f"{disc_file}: protocol_commit {record['protocol_commit']!r} != frozen {PROTOCOL_COMMIT!r}"
+        )
+    if record["method"] != FROZEN_METHOD:
+        raise ValueError(f"{disc_file}: method {record['method']!r} != frozen {FROZEN_METHOD!r}")
+    if float(record["floor"]) != FROZEN_FLOOR:
+        raise ValueError(f"{disc_file}: floor {record['floor']} != frozen {FROZEN_FLOOR}")
+    if not np.array_equal(scores, np.abs(coefs)):
+        raise ValueError(f"{disc_file}: scores are not the absolute standardized coefficients")
+    expected_threshold = float(largest_gap(scores.ravel(), FROZEN_FLOOR))
+    if threshold != expected_threshold:
+        raise ValueError(
+            f"{disc_file}: threshold {threshold} != largest_gap(scores, {FROZEN_FLOOR}) "
+            f"{expected_threshold}"
+        )
 
     if expected_dataset_hash is not None and record["dataset_hash"] != expected_dataset_hash:
         raise ValueError(

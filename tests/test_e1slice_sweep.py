@@ -177,6 +177,150 @@ def test_failed_replicate_does_not_block_later_replicates(tmp_path: Path) -> Non
 
 
 # ---------------------------------------------------------------------------
+# Finding #3: persisted seeds must match the replicate (no copied/stale seeds).
+# ---------------------------------------------------------------------------
+def _write_seed_artifacts(
+    rep: Path, *, env_seed: float, split_seed: float, weight_seed: float
+) -> None:
+    """Write the minimal seed-bearing artifacts a real replicate persists."""
+    rep.mkdir(parents=True, exist_ok=True)
+    (rep / "manifest.json").write_text(json.dumps({"seeds": {"env_seed": env_seed}}))
+    (rep / "split.json").write_text(json.dumps({"config": {"split_seed": split_seed}}))
+    for arm in sweep.ARMS:
+        arm_dir = rep / "arms" / arm
+        arm_dir.mkdir(parents=True, exist_ok=True)
+        (arm_dir / "arm_meta.json").write_text(json.dumps({"config": {"weight_seed": weight_seed}}))
+
+
+def test_seeds_match_replicate_accepts_matching_seeds(tmp_path: Path) -> None:
+    rep = sweep.replicate_dir(tmp_path, 0)
+    _write_seed_artifacts(rep, env_seed=0, split_seed=0, weight_seed=0)
+    journal = {"replicate": 0}
+    assert sweep.seeds_match_replicate(rep, 0, journal) is True
+
+
+@pytest.mark.parametrize(
+    "env_seed, split_seed, weight_seed, journal_r",
+    [
+        (9, 0, 9, 9),  # replicate-09 copied over replicate-00 (the finding's scenario)
+        (9, 0, 0, 0),  # only env_seed foreign
+        (0, 0, 9, 0),  # only weight_seed foreign
+        (0, 1, 0, 0),  # only split_seed foreign
+        (0, 0, 0, 7),  # only the journal's recorded replicate is foreign
+    ],
+)
+def test_seeds_match_replicate_rejects_foreign_seeds(
+    tmp_path: Path, env_seed: int, split_seed: int, weight_seed: int, journal_r: int
+) -> None:
+    rep = sweep.replicate_dir(tmp_path, 0)
+    _write_seed_artifacts(rep, env_seed=env_seed, split_seed=split_seed, weight_seed=weight_seed)
+    assert sweep.seeds_match_replicate(rep, 0, {"replicate": journal_r}) is False
+
+
+def test_seeds_match_replicate_rejects_non_integral_labels(tmp_path: Path) -> None:
+    # R2-3: a JSON 0.9 must NOT be truncated to 0 and accepted as seed/replicate 0.
+    rep = sweep.replicate_dir(tmp_path, 0)
+    _write_seed_artifacts(rep, env_seed=0.9, split_seed=0.9, weight_seed=0.9)
+    assert sweep.seeds_match_replicate(rep, 0, {"replicate": 0.9}) is False
+
+
+@pytest.mark.parametrize("field", ["journal", "env_seed", "split_seed", "weight_seed"])
+def test_seeds_match_replicate_rejects_each_truncating_label(tmp_path: Path, field: str) -> None:
+    # Each label is checked without truncation; a non-integral 0.9 in any one field rejects.
+    rep = sweep.replicate_dir(tmp_path, 0)
+    labels: dict[str, float] = {"env_seed": 0, "split_seed": 0, "weight_seed": 0}
+    journal_r: float = 0
+    if field == "journal":
+        journal_r = 0.9
+    else:
+        labels[field] = 0.9
+    _write_seed_artifacts(rep, **labels)  # type: ignore[arg-type]
+    assert sweep.seeds_match_replicate(rep, 0, {"replicate": journal_r}) is False
+
+
+def test_resume_rejects_a_copied_replicate_with_foreign_seeds(tmp_path: Path) -> None:
+    counter = tmp_path / "counter"
+    stages = [_fake_stage(n, counter) for n in ("a", "b")]
+    sweep.run_replicate(tmp_path, 0, stages)
+    assert _read_counter(counter) == 2
+    rep = sweep.replicate_dir(tmp_path, 0)
+
+    # Correct seeds present -> resume still validates and skips (nothing recomputes).
+    _write_seed_artifacts(rep, env_seed=0, split_seed=0, weight_seed=0)
+    sweep.run_replicate(tmp_path, 0, stages)
+    assert _read_counter(counter) == 2
+
+    # Simulate copying a fully-valid replicate-09 dir onto replicate-00: its own artifacts and
+    # journal carry seed 9. The chain must now be rejected and every stage re-run.
+    _write_seed_artifacts(rep, env_seed=9, split_seed=0, weight_seed=9)
+    journal = sweep.load_journal(rep, 0)
+    journal["replicate"] = 9
+    sweep.save_journal(rep, journal)
+    sweep.run_replicate(tmp_path, 0, stages)
+    assert _read_counter(counter) == 4  # a + b both re-ran
+
+
+# ---------------------------------------------------------------------------
+# Finding #4: a semantically invalid sweep must not exit 0.
+# ---------------------------------------------------------------------------
+def _validating_stage(name: str, counter: Path, *, ok: bool) -> sweep.Stage:
+    """A fast stage that runs cleanly but whose semantic validator returns ``ok``."""
+    base = _fake_stage(name, counter)
+    return sweep.Stage(name, base.argv, base.artifacts, validate=lambda _d: ok)
+
+
+def test_run_stage_fails_when_semantic_validate_does_not_hold(tmp_path: Path) -> None:
+    counter = tmp_path / "counter"
+    good = _fake_stage("a", counter)
+    bad = _validating_stage("b", counter, ok=False)
+    status = sweep.run_replicate(tmp_path, 0, [good, bad])
+    assert status["status"] == "failed"
+    assert status["failed_stage"] == "b"
+    # The subprocess DID run (rc 0, artifact written) but the binding check failed the stage.
+    assert _read_counter(counter) == 2
+    journal = sweep.load_journal(sweep.replicate_dir(tmp_path, 0), 0)
+    assert journal["stages"]["b"]["returncode"] == 0
+    assert journal["stages"]["b"]["validated"] is False
+    assert journal["stages"]["b"]["ok"] is False
+
+
+def test_run_stage_passes_when_semantic_validate_holds(tmp_path: Path) -> None:
+    counter = tmp_path / "counter"
+    status = sweep.run_replicate(tmp_path, 0, [_validating_stage("a", counter, ok=True)])
+    assert status["status"] == "succeeded"
+    journal = sweep.load_journal(sweep.replicate_dir(tmp_path, 0), 0)
+    assert journal["stages"]["a"]["validated"] is True
+
+
+def _run_all_with(monkeypatch, out: Path, *, complete: bool) -> int:
+    """Drive ``run_all`` past the heavy pipeline: all statuses succeed; aggregate sets complete."""
+    monkeypatch.setattr(sweep, "capture_provenance", lambda o: {})
+    monkeypatch.setattr(
+        sweep, "run_replicate",
+        lambda o, r, stages: {
+            "replicate": r, "seeds": sweep.replicate_seeds(r),
+            "status": "succeeded", "failed_stage": None,
+        },
+    )
+    summary = {"n_replicates_succeeded": 10 if complete else 9, "complete": complete, "replicates": []}
+    monkeypatch.setattr(sweep, "aggregate", lambda o, stages: summary)
+    monkeypatch.setattr(
+        sweep, "write_outputs",
+        lambda o, s: (out / "replicates.jsonl", out / "summary.json"),
+    )
+    return sweep.run_all(out, force_unlock=False)
+
+
+def test_run_all_exits_nonzero_when_aggregate_incomplete(tmp_path: Path, monkeypatch) -> None:
+    # Every run-status looks clean (failed == []), but the aggregate is incomplete.
+    assert _run_all_with(monkeypatch, tmp_path / "bad", complete=False) == 1
+
+
+def test_run_all_exits_zero_only_when_complete(tmp_path: Path, monkeypatch) -> None:
+    assert _run_all_with(monkeypatch, tmp_path / "good", complete=True) == 0
+
+
+# ---------------------------------------------------------------------------
 # Bootstrap / pairing math (fixed arrays, no SciPy).
 # ---------------------------------------------------------------------------
 def test_envelope_on_fixed_array() -> None:
