@@ -179,7 +179,9 @@ def test_failed_replicate_does_not_block_later_replicates(tmp_path: Path) -> Non
 # ---------------------------------------------------------------------------
 # Finding #3: persisted seeds must match the replicate (no copied/stale seeds).
 # ---------------------------------------------------------------------------
-def _write_seed_artifacts(rep: Path, *, env_seed: int, split_seed: int, weight_seed: int) -> None:
+def _write_seed_artifacts(
+    rep: Path, *, env_seed: float, split_seed: float, weight_seed: float
+) -> None:
     """Write the minimal seed-bearing artifacts a real replicate persists."""
     rep.mkdir(parents=True, exist_ok=True)
     (rep / "manifest.json").write_text(json.dumps({"seeds": {"env_seed": env_seed}}))
@@ -212,6 +214,27 @@ def test_seeds_match_replicate_rejects_foreign_seeds(
 ) -> None:
     rep = sweep.replicate_dir(tmp_path, 0)
     _write_seed_artifacts(rep, env_seed=env_seed, split_seed=split_seed, weight_seed=weight_seed)
+    assert sweep.seeds_match_replicate(rep, 0, {"replicate": journal_r}) is False
+
+
+def test_seeds_match_replicate_rejects_non_integral_labels(tmp_path: Path) -> None:
+    # R2-3: a JSON 0.9 must NOT be truncated to 0 and accepted as seed/replicate 0.
+    rep = sweep.replicate_dir(tmp_path, 0)
+    _write_seed_artifacts(rep, env_seed=0.9, split_seed=0.9, weight_seed=0.9)
+    assert sweep.seeds_match_replicate(rep, 0, {"replicate": 0.9}) is False
+
+
+@pytest.mark.parametrize("field", ["journal", "env_seed", "split_seed", "weight_seed"])
+def test_seeds_match_replicate_rejects_each_truncating_label(tmp_path: Path, field: str) -> None:
+    # Each label is checked without truncation; a non-integral 0.9 in any one field rejects.
+    rep = sweep.replicate_dir(tmp_path, 0)
+    labels: dict[str, float] = {"env_seed": 0, "split_seed": 0, "weight_seed": 0}
+    journal_r: float = 0
+    if field == "journal":
+        journal_r = 0.9
+    else:
+        labels[field] = 0.9
+    _write_seed_artifacts(rep, **labels)  # type: ignore[arg-type]
     assert sweep.seeds_match_replicate(rep, 0, {"replicate": journal_r}) is False
 
 

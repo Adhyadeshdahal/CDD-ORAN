@@ -271,6 +271,23 @@ def test_load_discovery_rejects_frozen_constant_or_relation_violation(
         load_discovery(tmp_path)
 
 
+def test_load_discovery_rejects_sub_tolerance_score_perturbation(tmp_path: Path):
+    # R2-2: the scores == abs(coefficients) invariant is EXACT. A 1e-9 perturbation of a below-
+    # threshold score (mask unchanged) would slip past a tolerant np.allclose but np.array_equal
+    # rejects it.
+    _prepare_dataset(tmp_path)
+    record = json.loads((tmp_path / "discovery.json").read_text())
+    threshold = float(record["threshold"])
+    original = float(record["scores"][0][1])
+    perturbed = original + 1e-9
+    assert perturbed < threshold  # stays below threshold, so the binary mask is unchanged
+    record["scores"][0][1] = perturbed
+    _rehash(record)  # keep content_hash consistent so the exact-equality guard is what fires
+    (tmp_path / "discovery.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="absolute standardized coefficients"):
+        load_discovery(tmp_path)
+
+
 def test_load_discovery_rejects_retuned_threshold(tmp_path: Path):
     # A rerun that quietly retunes the threshold (but keeps mask self-consistent and re-hashes)
     # is caught by the largest_gap re-derivation.

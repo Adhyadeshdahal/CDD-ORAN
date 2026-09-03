@@ -190,6 +190,40 @@ def test_valid_manifest_still_loads_after_rederivation(tmp_path: Path):
     assert dataset_hash(rows) == manifest["dataset_hash"]
 
 
+# --- R2-1: warmup must be bound to the rows, and the scm_identity blob itself checked ----------
+def test_load_rejects_tampered_warmup(tmp_path: Path):
+    # warmup enters neither scm_hash nor dataset_hash; it is bound only via the row time coords.
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["config"]["warmup"] = 999  # rows still start at time == original warmup (2)
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="warmup"):
+        load_dataset(tmp_path)
+
+
+def test_load_rejects_tampered_scm_identity_blob(tmp_path: Path):
+    # Editing scm_identity.b2 while leaving scm_hash untouched must not load.
+    write_dataset(_CFG, tmp_path)
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest["scm_identity"]["b2"] = 999.0  # scm_hash left as-is
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="scm_identity"):
+        load_dataset(tmp_path)
+
+
+def test_genuine_dataset_loads_with_warmup_and_identity_bound(tmp_path: Path):
+    # A real dataset satisfies the new warmup-time and scm_identity binds and loads unchanged.
+    manifest = write_dataset(_CFG, tmp_path)
+    rows, loaded = load_dataset(tmp_path)
+    assert loaded == json.loads((tmp_path / "manifest.json").read_text())
+    assert loaded["scm_hash"] == manifest["scm_hash"]
+    assert dataset_hash(rows) == manifest["dataset_hash"]
+    # Every episode's recorded times are the contiguous warmup..warmup+steps-1 block.
+    for e in range(_CFG.n_episodes):
+        te = np.sort(rows.time[rows.episode == e])
+        assert te.tolist() == list(range(_CFG.warmup, _CFG.warmup + _CFG.steps_per_episode))
+
+
 # --- Finding #6: rows.npz + manifest.json publish is an atomic pair ------------------------
 def test_manifest_write_failure_after_config_change_keeps_prior_pair(tmp_path: Path, monkeypatch):
     import cdd_oran.e1slice.dataset as ds

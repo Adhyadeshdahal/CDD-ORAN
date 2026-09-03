@@ -325,7 +325,8 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
 
     if manifest.get("schema_version") != SCHEMA_VERSION:
         bad(f"{man_file}: schema_version {manifest.get('schema_version')!r} != {SCHEMA_VERSION!r}")
-    for key in ("n_rows", "n_episodes", "columns", "config", "seeds", "dataset_hash", "scm_hash"):
+    for key in ("n_rows", "n_episodes", "columns", "config", "seeds", "dataset_hash",
+                "scm_hash", "scm_identity"):
         if key not in manifest:
             bad(f"{man_file}: missing required field '{key}'")
     if manifest["columns"] != list(_COLUMNS):
@@ -370,6 +371,21 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
     if not np.all(counts == steps):
         bad(f"{rows_file}: episodes do not all have steps_per_episode={steps} rows")
 
+    # Bind ``warmup`` to the rows. warmup enters neither scm_hash nor dataset_hash, but the
+    # recorded ``time`` coordinate is proof of it: warmup steps advance env.time before the first
+    # row is recorded, so every episode's recorded times are exactly the contiguous block
+    # ``warmup .. warmup+steps-1``. A tampered manifest.config.warmup no longer matches the rows.
+    warmup = int(config["warmup"])
+    expected_times = np.arange(warmup, warmup + steps, dtype=rows.time.dtype)
+    for e in uniq.tolist():
+        episode_times = np.sort(rows.time[rows.episode == e])
+        if not np.array_equal(episode_times, expected_times):
+            bad(
+                f"{rows_file}: episode {e} times {episode_times.tolist()} != contiguous "
+                f"warmup..warmup+steps-1 ({warmup}..{warmup + steps - 1}); "
+                f"manifest.config.warmup is not bound to the rows"
+            )
+
     recomputed = dataset_hash(rows)
     if recomputed != manifest["dataset_hash"]:
         bad(f"{rows_file}: dataset_hash {recomputed} != manifest {manifest['dataset_hash']}")
@@ -381,6 +397,11 @@ def _validate_loaded_dataset(rows: E1Rows, manifest: dict[str, Any], out: Path) 
     recomputed_scm = scm_hash(cfg)
     if recomputed_scm != manifest["scm_hash"]:
         bad(f"{man_file}: scm_hash {manifest['scm_hash']} != recomputed {recomputed_scm}")
+    # Also bind the human-readable scm_identity blob itself (not just its hash): it was written
+    # from ``scm_identity(cfg)``, so exact dict equality holds for a correct manifest but a hand-
+    # edited coefficient (e.g. scm_identity.b2) that left scm_hash untouched is rejected.
+    if manifest["scm_identity"] != scm_identity(cfg):
+        bad(f"{man_file}: scm_identity does not match the config-derived SCM")
 
 
 def load_dataset(out_dir: str | Path) -> tuple[E1Rows, dict[str, Any]]:

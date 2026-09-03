@@ -276,7 +276,7 @@ def load_discovery(
         raise ValueError(f"{disc_file}: method {record['method']!r} != frozen {FROZEN_METHOD!r}")
     if float(record["floor"]) != FROZEN_FLOOR:
         raise ValueError(f"{disc_file}: floor {record['floor']} != frozen {FROZEN_FLOOR}")
-    if not np.allclose(scores, np.abs(coefs)):
+    if not np.array_equal(scores, np.abs(coefs)):
         raise ValueError(f"{disc_file}: scores are not the absolute standardized coefficients")
     expected_threshold = float(largest_gap(scores.ravel(), FROZEN_FLOOR))
     if threshold != expected_threshold:

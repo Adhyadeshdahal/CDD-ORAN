@@ -281,6 +281,22 @@ def _replicate_index(rep_dir: Path) -> int | None:
     return None
 
 
+def _int_eq(value: Any, expected: int) -> bool:
+    """True iff ``value`` is an integral seed label EXACTLY equal to ``expected``.
+
+    Compares without truncation: a non-integral JSON value like ``0.9`` (which ``int()`` would
+    silently floor to ``0``) is rejected, and booleans (``bool`` is an ``int`` subclass) never
+    count as a numeric seed.
+    """
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, int):
+        return value == expected
+    if isinstance(value, float):
+        return value.is_integer() and value == float(expected)
+    return False
+
+
 def seeds_match_replicate(rep_dir: Path, r: int, journal: dict[str, Any]) -> bool:
     """True iff the seeds PERSISTED in this replicate's artifacts equal ``replicate_seeds(r)``.
 
@@ -293,18 +309,18 @@ def seeds_match_replicate(rep_dir: Path, r: int, journal: dict[str, Any]) -> boo
     seeds reject.
     """
     expected = replicate_seeds(r)
-    if "replicate" in journal and int(journal["replicate"]) != r:
+    if "replicate" in journal and not _int_eq(journal["replicate"], r):
         return False
     checks: list[tuple[Path, Callable[[dict[str, Any]], bool]]] = [
         (rep_dir / "manifest.json",
-         lambda m: int(m["seeds"]["env_seed"]) == expected["env_seed"]),
+         lambda m: _int_eq(m["seeds"]["env_seed"], expected["env_seed"])),
         (rep_dir / "split.json",
-         lambda sp: int(sp["config"]["split_seed"]) == expected["split_seed"]),
+         lambda sp: _int_eq(sp["config"]["split_seed"], expected["split_seed"])),
     ]
     for arm in ARMS:
         checks.append((
             rep_dir / "arms" / arm / "arm_meta.json",
-            lambda meta: int(meta["config"]["weight_seed"]) == expected["weight_seed"],
+            lambda meta: _int_eq(meta["config"]["weight_seed"], expected["weight_seed"]),
         ))
     for path, predicate in checks:
         if not path.exists():
