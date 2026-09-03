@@ -229,3 +229,72 @@ def test_discover_refuses_stale_downstream_without_force(tmp_path: Path):
         write_discovery(tmp_path, DiscoveryConfig())
     write_discovery(tmp_path, DiscoveryConfig(), force=True)
     assert not (tmp_path / "metrics.json").exists()
+
+
+# --- Finding #5: frozen-constant + score/coef/threshold re-derivation on load ------------------
+def _rehash(record: dict) -> None:
+    """Recompute content_hash so a targeted guard (not the content_hash guard) is what rejects."""
+    payload = {k: v for k, v in record.items() if k != "content_hash"}
+    record["content_hash"] = hashlib.sha256(canonical_json(payload).encode()).hexdigest()
+
+
+def test_valid_discovery_loads_after_rederivation(tmp_path: Path):
+    # The new re-derivations leave a correctly-generated discovery.json loadable and unchanged.
+    _prepare_dataset(tmp_path)
+    before = (tmp_path / "discovery.json").read_text()
+    load_discovery(tmp_path)
+    assert (tmp_path / "discovery.json").read_text() == before
+
+
+@pytest.mark.parametrize(
+    "mutate, match",
+    [
+        pytest.param(lambda d: d.__setitem__("protocol_commit", "0" * 40), "protocol_commit",
+                     id="protocol_commit"),
+        pytest.param(lambda d: d.__setitem__("floor", 0.5), "floor", id="floor"),
+        pytest.param(lambda d: d.__setitem__("method", "otsu"), "method", id="method"),
+        pytest.param(
+            lambda d: d["coefficients"][0].__setitem__(0, d["coefficients"][0][0] + 1.0),
+            "absolute standardized coefficients", id="coefficient",
+        ),
+    ],
+)
+def test_load_discovery_rejects_frozen_constant_or_relation_violation(
+    tmp_path: Path, mutate, match: str
+):
+    _prepare_dataset(tmp_path)
+    record = json.loads((tmp_path / "discovery.json").read_text())
+    mutate(record)
+    _rehash(record)  # keep content_hash consistent so the NEW guard is what fires
+    (tmp_path / "discovery.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match=match):
+        load_discovery(tmp_path)
+
+
+def test_load_discovery_rejects_retuned_threshold(tmp_path: Path):
+    # A rerun that quietly retunes the threshold (but keeps mask self-consistent and re-hashes)
+    # is caught by the largest_gap re-derivation.
+    _prepare_dataset(tmp_path)
+    record = json.loads((tmp_path / "discovery.json").read_text())
+    scores = np.asarray(record["scores"], dtype=np.float64)
+    new_threshold = float(record["threshold"]) + 1.0
+    record["threshold"] = new_threshold
+    record["binary_mask"] = (scores >= new_threshold).astype(int).tolist()  # keep mask consistent
+    _rehash(record)
+    (tmp_path / "discovery.json").write_text(json.dumps(record, indent=2, sort_keys=True))
+    with pytest.raises(ValueError, match="largest_gap"):
+        load_discovery(tmp_path)
+
+
+# --- Finding #7: a forced re-split must clear stale discovery/recovery -------------------------
+def test_forced_split_clears_stale_discovery_and_recovery(tmp_path: Path):
+    _prepare_dataset(tmp_path)  # writes dataset + split + discovery.json
+    (tmp_path / "recovery.json").write_text("{}")  # a stale recovery output
+    assert (tmp_path / "discovery.json").exists()
+    # Without force, the stale downstream outputs block the re-split.
+    with pytest.raises(ValueError, match="downstream artifacts already exist"):
+        write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0))
+    # With force, both discovery.json and recovery.json are cleared.
+    write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0), force=True)
+    assert not (tmp_path / "discovery.json").exists()
+    assert not (tmp_path / "recovery.json").exists()

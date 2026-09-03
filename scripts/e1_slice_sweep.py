@@ -270,11 +270,60 @@ def save_journal(rep_dir: Path, journal: dict[str, Any]) -> None:
     _atomic_write_text(_journal_path(rep_dir), json.dumps(journal, indent=2, sort_keys=True))
 
 
+def _replicate_index(rep_dir: Path) -> int | None:
+    """Parse the replicate index ``r`` from a ``replicate-NN`` directory name, else ``None``."""
+    name = rep_dir.name
+    if name.startswith("replicate-"):
+        try:
+            return int(name.rsplit("-", 1)[1])
+        except ValueError:
+            return None
+    return None
+
+
+def seeds_match_replicate(rep_dir: Path, r: int, journal: dict[str, Any]) -> bool:
+    """True iff the seeds PERSISTED in this replicate's artifacts equal ``replicate_seeds(r)``.
+
+    Guards against a copied/stale run being reported under a foreign replicate index: a hash-
+    and binding-valid ``replicate-09`` dir dropped onto ``replicate-00`` still carries env_seed
+    9 / weight_seed 9 in its own artifacts and ``replicate: 9`` in its journal. We read the
+    ACTUAL seeds (never the expected ones) from ``manifest.json``, ``split.json`` and every arm's
+    ``arm_meta.json`` and require them -- and the journal's own recorded replicate -- to match r.
+    Artifacts that are not present yet are skipped (nothing to contradict); present-but-wrong
+    seeds reject.
+    """
+    expected = replicate_seeds(r)
+    if "replicate" in journal and int(journal["replicate"]) != r:
+        return False
+    checks: list[tuple[Path, Callable[[dict[str, Any]], bool]]] = [
+        (rep_dir / "manifest.json",
+         lambda m: int(m["seeds"]["env_seed"]) == expected["env_seed"]),
+        (rep_dir / "split.json",
+         lambda sp: int(sp["config"]["split_seed"]) == expected["split_seed"]),
+    ]
+    for arm in ARMS:
+        checks.append((
+            rep_dir / "arms" / arm / "arm_meta.json",
+            lambda meta: int(meta["config"]["weight_seed"]) == expected["weight_seed"],
+        ))
+    for path, predicate in checks:
+        if not path.exists():
+            continue
+        try:
+            if not predicate(_load_json(path)):
+                return False
+        except (OSError, KeyError, json.JSONDecodeError, TypeError, ValueError):
+            return False
+    return True
+
+
 def stage_valid(rep_dir: Path, stage: Stage, journal: dict[str, Any]) -> bool:
     """True iff the stage completed cleanly and its full artifact chain still validates.
 
     Existence alone is never sufficient: every journaled artifact must re-hash to its
-    recorded digest, and the stage's semantic binding check (if any) must pass.
+    recorded digest, the stage's semantic binding check (if any) must pass, and the seeds
+    persisted in the replicate's artifacts must match this replicate's frozen seed assignment
+    (so a copied/stale run cannot masquerade as a different seed).
     """
     rec = journal.get("stages", {}).get(stage.name)
     if not rec or rec.get("returncode") != 0:
@@ -292,6 +341,9 @@ def stage_valid(rep_dir: Path, stage: Stage, journal: dict[str, Any]) -> bool:
                 return False
         except (OSError, KeyError, json.JSONDecodeError):
             return False
+    r = _replicate_index(rep_dir)
+    if r is not None and not seeds_match_replicate(rep_dir, r, journal):
+        return False
     return True
 
 
@@ -343,7 +395,17 @@ def run_stage(
         else:
             missing.append(name)
 
-    ok = rc == 0 and not missing
+    # A fresh run must satisfy the same semantic binding check that resume enforces: rc==0 with
+    # all artifacts present but a broken cross-artifact provenance binding is a FAILED stage, not
+    # a silent success. Validate immediately so the failure is journaled and later stages re-run.
+    validated = True
+    if rc == 0 and not missing and stage.validate is not None:
+        try:
+            validated = bool(stage.validate(rep_dir))
+        except (OSError, KeyError, json.JSONDecodeError):
+            validated = False
+
+    ok = rc == 0 and not missing and validated
     journal.setdefault("stages", {})[stage.name] = {
         "command": argv,
         "start_utc": start,
@@ -352,11 +414,14 @@ def run_stage(
         "log": log_rel,
         "artifacts": artifacts,
         "missing_artifacts": missing,
+        "validated": validated,
         "ok": ok,
     }
     save_journal(rep_dir, journal)
     if missing:
         print(f"{prefix} FAILED: missing artifacts {missing}")
+    elif not validated:
+        print(f"{prefix} FAILED: semantic validation of stage '{stage.name}' did not hold")
     return ok
 
 
@@ -665,10 +730,12 @@ def run_all(out: Path, force_unlock: bool) -> int:
     print(f"  succeeded {summary['n_replicates_succeeded']}/{N_REPLICATES}, complete={summary['complete']}")
     print(f"  -> {summ}")
     print(f"  -> {jsonl}")
-    if failed:
-        for s in failed:
-            print(f"  FAILED replicate-{s['replicate']:02d} at stage '{s['failed_stage']}' "
-                  f"(rc {s['returncode']})")
+    for s in failed:
+        print(f"  FAILED replicate-{s['replicate']:02d} at stage '{s['failed_stage']}' "
+              f"(rc {s['returncode']})")
+    # Exit nonzero on ANY replicate failure OR an incomplete aggregate: a semantically invalid
+    # sweep (complete=False) must never report success even if every run-status looked clean.
+    if failed or not summary["complete"]:
         return 1
     return 0
 
