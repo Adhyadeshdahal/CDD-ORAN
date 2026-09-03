@@ -12,7 +12,7 @@ scientific contract.
 | 001 | Make E1 artifacts fail closed | P1 | M | - | DONE (merged c5d3663) |
 | 002 | Remove target leakage from discovery calibration | P1 | M | - | DONE (merged c5d3663) |
 | 003 | Add the learned E1 discovery arm | P1 | L | 001, 002 | DONE (merged afc88de) |
-| 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | DONE (merged 7abaa75) |
+| 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | RUNNER DONE (7abaa75); measurement digest pending re-run — see Post-merge review |
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
@@ -54,3 +54,29 @@ repository-wide formatting diff tonight.
   locked benchmark says downstream scientific results are uninterpretable until it is.
 - Add periodic checkpoints to the legacy training stack tonight: useful, but outside the
   current v2 critical path. Revisit before long CDL sweeps.
+
+## Post-merge review remediation (2026-09-03)
+
+A 10-finding review of the merged overnight queue was independently verified (zero false
+positives). Key corrections:
+
+- **E1 recovery is NOT green.** The learned discovery result is honest *partial* recovery (all
+  NCP->KPI edges, both KPI->KPI edges missed; overall recall 0.667). Per the locked contract,
+  E2-E5 decision results remain uninterpretable until a method clears the E1 recovery gate. See
+  `docs/benchmark/E1_DISCOVERY_RESULT.md` (Gate status).
+- **004 measurement not backed by the checkout.** The 10-seed envelope's `runs/` and report were
+  gitignored and the worktree was pruned, so the numbers were unverifiable from the repo. Only the
+  runner (`cd3b0f4`) is committed. Remediation: re-run the sweep on the hardened runner and commit
+  a small verifiable digest (`summary.json` + provenance + per-replicate hashes), bulk runs kept
+  gitignored.
+
+Fix units in flight (guards/validation only — no frozen E1 number changes):
+
+- **A (docs/claims):** correct the "green" overclaim + two wording narrowings (protocol-predates,
+  registered-parameter match). — merging first.
+- **C (corruption + guard):** #8 stale calibrated posterior in legacy no-cal discovery; #9
+  `paired_regret` action-domain guard.
+- **B (provenance):** #3 seed-label validation, #4 sweep exit-code gate, #5 scm_hash/frozen-const
+  rehash, #6 atomic dataset publish, #7 stale-descendant cleanup.
+
+Merge order A -> C -> B, then the 004 re-run + digest. Dispositions finalized as each lands.

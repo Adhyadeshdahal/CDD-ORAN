@@ -3,10 +3,13 @@
 This contract is **frozen before it is executed**. It is committed on branch
 `agent/003-e1-learned-discovery` in the commit `docs: freeze E1 discovery protocol`, and that
 commit SHA is recorded inside every `discovery.json` this method produces. The ordering is the
-anti-p-hacking guarantee: the method is fixed on disk before any E1 ground truth is read.
+anti-p-hacking guarantee: the discovery *method* is fixed on disk before it is run against E1
+truth — that is, before it produces any recovery number. (E1's ground-truth graph was defined and
+tested earlier, when the SCM was built; the guarantee is the narrower, defensible one — that this
+method was not revised after its own recovery result was seen.)
 
-Nothing in this protocol may be revised to improve a recovery number after E1 truth has been
-inspected. If the first frozen execution recovers the graph imperfectly (or `largest_gap` finds
+Nothing in this protocol may be revised to improve a recovery number after this method's recovery
+result has been inspected. If the first frozen execution recovers the graph imperfectly (or `largest_gap` finds
 no valid split), that outcome is **recorded and reported as-is** — a null or partial recovery is
 a valid scientific result. Revising the method after seeing truth is forbidden.
 
@@ -75,7 +78,11 @@ parent hash, shape, numeric field, or the content hash differs.
 
 The discovered arm uses the **frozen binary mask** and the **exact same per-output MLP, rows,
 train IDs, model config, and weight seed** as the oracle and dense arms — the identical
-644-parameter architecture; only the fixed mask differs. Its `arm_meta.json` records the
+644-parameter architecture; only the fixed mask differs. This is a **registered-parameter** match:
+architecture and parameter count are identical, but a masked-out input contributes zero signal and
+its weights are never trained, so the oracle and discovered arms have strictly fewer *effective*
+free parameters than the dense arm. The comparison controls architecture and parameter budget, not
+effective capacity. Its `arm_meta.json` records the
 `discovery.json` content hash, and evaluation/verification bind the discovered arm to the frozen
 graph (a changed discovery artifact invalidates eval/verify).
 

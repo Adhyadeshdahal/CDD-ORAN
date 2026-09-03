@@ -6,6 +6,12 @@ KPI->KPI edges missed). Per the frozen discipline this is **not tuned**: it is a
 outcome, and the KPI->KPI floor is a real property of this randomized, temporally ordered, linear
 noiseless E1 control under a label-free OLS + `largest_gap` rule.
 
+**Gate status: the E1 recovery gate is NOT passed.** `SPEC.md` (Expected result) requires
+near-perfect recovery *including correct orientation of the two KPI->KPI edges*; this run recovers
+neither (overall recall 0.667, KPI->KPI recall 0.000). This is therefore an honest partial-recovery
+result, not a green E1 gate. Per the locked benchmark, downstream E2-E5 decision results remain
+uninterpretable until a discovery method clears this gate — a bar this frozen method does not meet.
+
 ## Provenance (the freeze predates the result)
 
 - Protocol commit (frozen BEFORE any recovery): `e5312a696a0ed5f9d590e9ad766bdbfdad53a16c`
@@ -82,7 +88,11 @@ Label-free threshold `largest_gap(scores.ravel(), floor=1e-3)` = **0.6742** (tie
 | dense | 1.433e-06 | 5.351e-04 | 4.731e-07 |
 | discovered | 1.036e-02 | 6.038e-02 | 9.817e-03 |
 
-All three arms share the identical 644-parameter per-output MLP; only the fixed mask differs.
+All three arms share the identical 644-parameter per-output MLP; only the fixed mask differs. This
+is a **registered-parameter** match, not an effective-capacity match: a masked-out input's weights
+receive zero signal and are never trained, so the oracle and discovered arms have strictly fewer
+effective free parameters than the dense arm. The comparison controls architecture and parameter
+budget, not effective capacity.
 The discovered arm's higher error is the direct consequence of the two missing KPI->KPI parents:
 its K2/K3 heads cannot see K0/K1, so they cannot represent `K2 = P2 + 0.5·K0` or
 `K3 = P3 + 0.5·K1`.
