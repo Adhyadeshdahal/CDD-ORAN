@@ -1,0 +1,84 @@
+{
+  "git_dirty": true,
+  "git_sha": "b5d268431ddf4a16b25db4f85217f4e50deb9b03",
+  "git_status_short": " M cdd_oran/e1slice/evaluate.py\n M cdd_oran/e1slice/split.py\n M scripts/e1_slice.py\n?? cdd_oran/e1slice/discovery_v2.py\n?? scripts/e1_slice_recovery_v2_sweep.py\n?? tests/test_e1slice_discovery_v2.py\n?? tests/test_e1slice_recovery_v2_sweep.py",
+  "launch_utc": "2026-09-04T07:35:20.323121+00:00",
+  "numpy_version": "2.4.2",
+  "plan": "006-e1-kpi-kpi-discovery",
+  "protocol_commit": "c66b81d3244a0395266d4410640a0065a0816102",
+  "python_version": "3.12.13",
+  "settings": {
+    "dataset": {
+      "episodes": 48,
+      "obs_noise_scale": 0.0,
+      "steps": 16,
+      "warmup": 2
+    },
+    "graph_blocks": [
+      "overall",
+      "ncp_kpi",
+      "kpi_kpi"
+    ],
+    "n_replicates": 10,
+    "protocol_commit": "c66b81d3244a0395266d4410640a0065a0816102",
+    "recovery_only": true,
+    "seed_matrix": {
+      "0": {
+        "env_seed": 0,
+        "split_seed": 0,
+        "weight_seed": 0
+      },
+      "1": {
+        "env_seed": 1,
+        "split_seed": 0,
+        "weight_seed": 1
+      },
+      "2": {
+        "env_seed": 2,
+        "split_seed": 0,
+        "weight_seed": 2
+      },
+      "3": {
+        "env_seed": 3,
+        "split_seed": 0,
+        "weight_seed": 3
+      },
+      "4": {
+        "env_seed": 4,
+        "split_seed": 0,
+        "weight_seed": 4
+      },
+      "5": {
+        "env_seed": 5,
+        "split_seed": 0,
+        "weight_seed": 5
+      },
+      "6": {
+        "env_seed": 6,
+        "split_seed": 0,
+        "weight_seed": 6
+      },
+      "7": {
+        "env_seed": 7,
+        "split_seed": 0,
+        "weight_seed": 7
+      },
+      "8": {
+        "env_seed": 8,
+        "split_seed": 0,
+        "weight_seed": 8
+      },
+      "9": {
+        "env_seed": 9,
+        "split_seed": 0,
+        "weight_seed": 9
+      }
+    },
+    "split": {
+      "split_seed": 0,
+      "test_fraction": 0.25
+    }
+  },
+  "torch_version": "2.10.0+cu128",
+  "uv_lock_sha256": "51069062bef708fca159cffb65bdc1013816d5fc4c55d56eadc3cb7c200e401a"
+}

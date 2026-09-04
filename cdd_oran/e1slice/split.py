@@ -32,7 +32,10 @@ from cdd_oran.e1slice.dataset import (
 # Downstream stages that must not survive a re-``split`` unless ``force`` is given.
 # discovery.json/recovery.json are included so a forced re-split cannot leave a graph or
 # recovery result still bound to the previous (now-replaced) split.
-_SPLIT_DESCENDANTS = ("discovery.json", "arms", "metrics.json", "recovery.json")
+_SPLIT_DESCENDANTS = (
+    "discovery.json", "discovery_v2.json", "arms", "metrics.json", "recovery.json",
+    "recovery_v2.json",
+)
 
 
 @dataclass(frozen=True)

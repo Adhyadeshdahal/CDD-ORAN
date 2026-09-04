@@ -33,7 +33,14 @@ from cdd_oran.e1slice.discovery import (
     load_discovery,
     write_discovery,
 )
-from cdd_oran.e1slice.evaluate import evaluate_dataset, predict, score_recovery, verify_dataset
+from cdd_oran.e1slice.discovery_v2 import write_discovery_v2
+from cdd_oran.e1slice.evaluate import (
+    evaluate_dataset,
+    predict,
+    score_recovery,
+    score_recovery_v2,
+    verify_dataset,
+)
 from cdd_oran.e1slice.model import Arm, ModelConfig, save_arm, train_arm
 from cdd_oran.e1slice.split import SplitConfig, load_split, write_split
 
@@ -77,6 +84,35 @@ def _cmd_discover(args: argparse.Namespace) -> int:
         f"threshold {record['threshold']:.4f}) -> {Path(args.dataset) / 'discovery.json'}"
     )
     print(f"  content_hash {record['content_hash'][:12]}  protocol_commit {record['protocol_commit'][:12]}")
+    return 0
+
+
+def _cmd_discover_v2(args: argparse.Namespace) -> int:
+    # v2 primary discovery uses the FROZEN partial-correlation score + per-target largest_gap with
+    # FROZEN_FLOOR=0.0 (not overridable), recording protocol_commit in discovery_v2.json.
+    record = write_discovery_v2(args.dataset, force=args.force)
+    mask = record["binary_mask"]
+    n_edges = int(sum(sum(row) for row in mask))
+    thr = ", ".join(f"{t:.4f}" for t in record["threshold"])
+    print(
+        f"discovered-v2 {n_edges} edges (score {record['score_method']}, "
+        f"threshold {record['threshold_method']} per-target=[{thr}]) "
+        f"-> {Path(args.dataset) / 'discovery_v2.json'}"
+    )
+    print(f"  content_hash {record['content_hash'][:12]}  protocol_commit {record['protocol_commit'][:12]}")
+    return 0
+
+
+def _cmd_recover_v2(args: argparse.Namespace) -> int:
+    record = score_recovery_v2(args.dataset)
+    rec = record["recovery"]
+    for block in ("overall", "ncp_kpi", "kpi_kpi"):
+        b = rec[block]
+        print(
+            f"recover-v2 {block:>8}: P {b['precision']:.3f}  R {b['recall']:.3f}  F1 {b['f1']:.3f}  "
+            f"(tp {b['tp']} fp {b['fp']} fn {b['fn']})"
+        )
+    print(f"  missed {len(rec['missed'])} edge(s); recovery_v2.json content_hash {record['content_hash'][:12]}")
     return 0
 
 
@@ -179,6 +215,17 @@ def _build_parser() -> argparse.ArgumentParser:
     dis.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
     dis.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
     dis.set_defaults(func=_cmd_discover)
+
+    d2 = sub.add_parser(
+        "discover-v2", help="v2 partial-correlation label-free graph from train rows -> discovery_v2.json"
+    )
+    d2.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    d2.add_argument("--force", action="store_true", help="overwrite existing downstream artifacts")
+    d2.set_defaults(func=_cmd_discover_v2)
+
+    rc2 = sub.add_parser("recover-v2", help="POST-FREEZE: score the v2 discovered graph vs E1 truth")
+    rc2.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
+    rc2.set_defaults(func=_cmd_recover_v2)
 
     tr = sub.add_parser("train", help="train the oracle + dense + discovered arms on the split")
     tr.add_argument("--dataset", type=str, required=True, help="persisted dataset directory")
