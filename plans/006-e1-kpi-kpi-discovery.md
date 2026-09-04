@@ -129,10 +129,16 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
       near-perfect separation is a property of the noiseless control, not a hard-won result.
 - [x] Full verification passes; artifacts fail-closed. (Merged `8a88829`; adversarial review verdict
       GENUINE — no leakage/triviality/deviation.)
-- [ ] Delta report + `E1_DISCOVERY_RESULT_V2.md` + trained three-arm prediction envelope — **phase 3**.
+- [x] `E1_DISCOVERY_RESULT_V2.md` (as-run, Gate status PASSED) + delta report
+      (`reports/2026-09-04-e1-v2-partial-correlation-recovery/`, local) written. Three-arm
+      prediction handled by **mask-identity** (user's choice): discovered mask == oracle mask
+      bit-for-bit on all seeds (guarded test), so `MSE(discovered) = MSE(oracle)` by construction —
+      no heavy retrain.
 
-Recovery deliverable merged to `feat/v2` at `8a88829` (2026-09-04). Remaining: phase 3 (trained
-three-arm envelope for the prediction payoff, the as-run result doc, and the delta report).
+**Plan 006 COMPLETE.** Merged to `feat/v2`: recovery `8a88829`, result doc `85dd09a`. E1 recovery
+gate PASSED (6/6 edges, all 10 seeds); E2-E5 no longer blocked by E1. Adversarial review verdict:
+GENUINE. Anti-p-hacking discipline intact (two pre-execution defects caught before any run; every
+fix structural and truth-free).
 
 ## STOP conditions
 
