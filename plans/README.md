@@ -14,7 +14,7 @@ scientific contract.
 | 003 | Add the learned E1 discovery arm | P1 | L | 001, 002 | DONE (merged afc88de) |
 | 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | DONE (runner 7abaa75; digest committed under docs/benchmark/plan004_envelope_digest/) |
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
-| 006 | KPI->KPI-capable E1 discovery (fresh freeze) | P1 | L | 003, 004 | IN PROGRESS (protocol frozen f3dfb6b; implementing) |
+| 006 | KPI->KPI-capable E1 discovery (fresh freeze) | P1 | L | 003, 004 | IN PROGRESS (protocol re-frozen 251938c; implementing) |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
 
