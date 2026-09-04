@@ -30,6 +30,14 @@ result.
   The persisted quantity (`|partial correlation|`) and the per-target `largest_gap` threshold are
   **unchanged**. Diagnosed before any discovery ran and before any E1 ground truth was read, so no
   recovery number informed it.
+- **2026-09-04, before first execution (second pre-execution revision, permitted by §9).** The §3.4
+  fix made every non-parent score exactly `0`, which exposed that the inherited positive `largest_gap`
+  floor (`1e-3`) excludes the `0 -> signal` separating gap and forces the per-target cut inside the
+  `~1` signal cluster — dropping a true co-parent on a ULP-level tie, a float lottery that would
+  spuriously reproduce the v1 KPI->KPI miss. This revision pins **`FROZEN_FLOOR = 0.0` for V2** (§4);
+  only that one constant changes, and the score, the per-target `largest_gap` mechanism, persistence,
+  and §5-§9 are unchanged. Derived from the pure `largest_gap` function and the §3.4 structure, before
+  any discovery ran and before any E1 ground truth was read.
 
 ---
 
@@ -156,7 +164,18 @@ re-imports exactly the cross-target confound V2 exists to remove.
 
 **Primary, persisted per-target rule.** For each target row `j`, the threshold is
 `largest_gap(scores[j, :], floor = FROZEN_FLOOR)` from `cdd_oran.analysis.auto_threshold` — the same
-label-free gap finder used in v1, now applied **per row instead of on the pooled vector**. This is
+label-free gap finder used in v1, now applied **per row instead of on the pooled vector**.
+
+**`FROZEN_FLOOR` is pinned to `0.0` for V2** (distinct from v1's pooled-CMI `1e-3`). This is *forced*
+by §3.4-branch-1, not chosen against any recovery number: since every non-parent score is exactly
+`0`, the separating boundary is the `0 -> signal` gap, whose lower endpoint is `0`. `largest_gap` only
+considers gaps whose lower endpoint is `>= floor`, so any positive floor would **exclude exactly the
+separating gap** and force the cut into the `~1` signal cluster — dropping a true co-parent whenever a
+row's two parent scores differ at the ULP level (the generic case, since each `|rho|` rounds to
+`1 +/- 1 ULP` independently). `floor = 0.0` makes the `0 -> signal` gap eligible, so the per-target
+cut lands near `0.5` and recovers every true parent, single- or multi-parent, without a
+floating-point tie. The all-equal-row STOP below still guards a degenerate all-zeros row, so
+`floor = 0.0` never sweeps in an empty row. This is
 justified a-priori by the noiseless-control structure of §3.2: within a single target's row the true
 edges cluster near `1` and the non-edges near `0`, so the row's own largest gap is the separating
 boundary between "residual-association complete" and "residual-association absent". No boundary
