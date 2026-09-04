@@ -118,14 +118,21 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
 
 ## Done criteria
 
-- [ ] `docs/benchmark/E1_DISCOVERY_PROTOCOL_V2.md` frozen; its commit SHA recorded in every
-      produced artifact.
-- [ ] Selection rule justified on structure alone; pre-registration committed before first run.
-- [ ] Method run once against 003 rows AND across the 004 10-seed envelope; per-seed recovery
-      reported (overall / NCP->KPI / KPI->KPI); no seed dropped.
-- [ ] Gate outcome stated honestly (green only if KPI->KPI recovers across seeds).
-- [ ] Full verification passes; artifacts fail-closed.
-- [ ] Delta report compares against the 003 single-run and 004 envelope without replacing them.
+- [x] `docs/benchmark/E1_DISCOVERY_PROTOCOL_V2.md` frozen (`c66b81d`); its commit SHA recorded in
+      every produced artifact.
+- [x] Selection rule justified on structure alone; pre-registration committed before first run.
+- [x] Method run once against 003 rows AND across the 004 10-seed envelope; per-seed recovery
+      reported (overall / NCP->KPI / KPI->KPI = 1.000 all seeds); no seed dropped. Reproducible
+      from committed driver `scripts/e1_slice_recovery_v2_sweep.py` + digest
+      `docs/benchmark/plan006_recovery_digest/`.
+- [x] Gate outcome stated honestly: E1 recovery GREEN (both KPI->KPI edges recovered across seeds);
+      near-perfect separation is a property of the noiseless control, not a hard-won result.
+- [x] Full verification passes; artifacts fail-closed. (Merged `8a88829`; adversarial review verdict
+      GENUINE — no leakage/triviality/deviation.)
+- [ ] Delta report + `E1_DISCOVERY_RESULT_V2.md` + trained three-arm prediction envelope — **phase 3**.
+
+Recovery deliverable merged to `feat/v2` at `8a88829` (2026-09-04). Remaining: phase 3 (trained
+three-arm envelope for the prediction payoff, the as-run result doc, and the delta report).
 
 ## STOP conditions
 
