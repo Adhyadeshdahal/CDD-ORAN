@@ -5,11 +5,13 @@
 > ordering below is the anti-p-hacking guarantee — do not run the method against E2 truth until
 > the protocol doc is committed and its SHA is recorded in the artifacts.
 >
-> **STATUS: DRAFT (registered, not frozen).** The method choices marked **[PROPOSED — confirm
-> before freeze]** are the orchestrator's recommendation and are NOT yet locked. Nothing about
-> E2 truth has been examined to write this plan; it is derived only from the declared E2
-> generative mechanism. The freeze (committing `E2_DISCOVERY_PROTOCOL.md`) happens only after
-> the marked decisions are confirmed.
+> **STATUS: DECISION-FROZEN (2026-09-04); protocol doc not yet authored.** The three method
+> decisions are confirmed (orchestrator + user review). The exact estimator, distance geometry,
+> and threshold parameters are frozen at the decision level here and become an executable
+> specification in `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` — **the single remaining blocker to
+> the freeze commit.** Nothing about E2 truth was examined to write this plan; it is derived only
+> from the declared E2 generative mechanism. The freeze is the commit of the protocol doc, whose
+> SHA is then stamped into every artifact.
 
 ## Status
 
@@ -18,7 +20,7 @@
 - **Risk**: HIGH (scientific-integrity risk — anti-p-hacking; PLUS a claim-scope risk, see the firewall)
 - **Depends on**: Plan 006 (E1 discovery-method prerequisite cleared), `E2V2Env` (committed `8d70a4f`)
 - **Category**: scientific method + nonlinear causal discovery
-- **Registered at**: (this commit), 2026-09-04
+- **Registered at**: `e290255` (draft), amended (this commit), 2026-09-04
 
 ## What this plan is — and is NOT (read first)
 
@@ -37,8 +39,9 @@ Two separate things must never be conflated:
    **not** touch, reopen, improve, or re-tune that gate. **E2 discovery is
    methodological/exploratory — it is NOT evidence for the E2 decision-value hypothesis.** A green
    E2 discovery would extend the discovery pipeline's validated operating range to nonlinear
-   mechanisms; it would say nothing about whether E2's decision gap is real. That firewall is a
-   STOP condition below.
+   mechanisms; it says nothing about whether E2's decision gap is real. A *failed* E2 discovery
+   extension means "this method did not establish nonlinear recovery here," NOT "the E2 decision
+   hypothesis is disproven." That firewall is a STOP condition below.
 
 ## Root cause: why E1's partial-correlation rule must NOT be carried over (a-priori, structural)
 
@@ -60,79 +63,129 @@ Pearson/Spearman):
   not the conditional mean linearly. `P1` is a true parent of `K0,K1,K3,K4` largely through this
   channel; a linear score sees almost nothing.
 
-Therefore the E2 edge score must be a **general statistical dependence measure** (zero iff
-independence; sensitive to arbitrary non-monotonic association), not a linear one. This is the
-a-priori justification, written in structural terms only — no reference to any recovered edge
-or magnitude.
+Therefore the E2 edge score must be a **general statistical dependence measure** (sensitive to
+arbitrary non-monotonic association), not a linear one. This is the a-priori justification,
+written in structural terms only — no reference to any recovered edge or magnitude.
 
-## Frozen method (PROPOSED — confirm before freeze)
+## Frozen method (decisions confirmed 2026-09-04; exact spec pinned in the protocol doc)
 
-1. **Edge score = bias-corrected PARTIAL (conditional) distance correlation** per (target,
-   candidate). **[PROPOSED — confirm before freeze]**
-   - *Distance correlation* (Szekely-Rizzo-Bakirov 2007) is 0 **iff** independence and detects
-     arbitrary non-monotonic/even dependence — it fixes the blind spot above. It is
-     bandwidth-free (an advantage over HSIC, whose kernel bandwidth would itself need a frozen,
-     structurally-justified choice).
-   - The *partial* form (partial distance correlation, Szekely-Rizzo 2014) conditions on the
-     other candidate parents. This is the **direct nonlinear generalization of E1's partial
-     correlation** and is required to remove **shared-parent confounding**: two KPIs that share a
-     param (e.g. `K0,K1` both use `P0,P1`) are marginally dependent, so a *marginal* score would
-     hallucinate a `KPI->KPI` edge. Conditioning on the shared param removes that.
-   - Use the **bias-corrected / unbiased dCov estimator** (dCor*, Szekely-Rizzo 2013): empirical
-     distance correlation of independent variables has positive finite-sample bias, so a naive
-     near-zero threshold is unsafe. The bias-corrected statistic centers non-edges near 0 (can go
-     slightly negative), keeping the label-free gap honest.
-2. **Threshold applied per-target (per-row), never pooled** — same structural reason as E1
-   (heterogeneous targets have different score scales; pooling straddles them). Rule: a
-   largest-gap analogue on each target's score vector with a frozen floor, OR a permutation-null
-   calibration per candidate. **[PROPOSED — confirm before freeze; exact rule pinned in the
-   protocol doc.]** The choice must be justified structurally and frozen before running.
-3. **Candidate graph = full 14-wide `(K, P+K)` layout.** Each of the 6 KPI targets searches all 8
-   params + all 6 other KPIs as candidate parents. `KPI->KPI` candidates are **included** so the
-   method must actively *reject* them (E2's true graph is NCP->KPI only). This is the stronger
-   test — restricting to NCP-only would make "no false KPI->KPI edges" trivially true. **[PROPOSED
-   — confirm before freeze.]**
-4. **Cross-check (reported, not the selector): stability selection over the seed envelope** —
-   per-edge selection frequency across seeds, as a reported heuristic (coarse CI at B=10), never
-   altering the persisted mask. Same stance as E1.
-5. **Rejected as primary**: any linear score (partial correlation, |beta|, Pearson/Spearman) —
-   fails by the root cause above; marginal (unconditional) dependence — confounded by shared
-   parents; pooled thresholding — the `largest_gap` straddling trap. May appear only as
-   clearly-labelled diagnostics that never alter the persisted mask.
+1. **Edge score = magnitude of the U-centered partial distance correlation, `|pdCor|`.**
+   - Estimator: the **U-centered (unbiased) estimator of squared distance covariance**
+     (Szekely-Rizzo 2013/2014); partial distance correlation via the projection construction of
+     Szekely-Rizzo 2014 on the U-centered distance matrices. The sample partial statistic is
+     **signed and may be negative**; the **edge score is `abs(pdCor)`** and the **signed value is
+     retained as a diagnostic** (reported, never the selector).
+   - **This is a nonlinear conditional-ASSOCIATION score, NOT a conditional-independence
+     certificate.** Ordinary distance correlation's "zero iff independence" does **not** transfer
+     to the partial statistic: `pdCor = 0` is *not* equivalent to conditional independence
+     (Szekely-Rizzo 2014, explicit). The protocol states this limit.
+   - **Not "bias-corrected dCor" (ambiguous) and not "parameter-free".** The unbiased object is
+     squared distance *covariance*. "Bandwidth-free" removes a kernel bandwidth, but the
+     **distance geometry is a frozen choice**: per-column standardization (z-score on the frozen
+     dataset), Euclidean distance, distance exponent `alpha = 1`, and the explicit construction of
+     the **13-dimensional conditioning vector** (the other 13 candidates, each standardized,
+     stacked into one Euclidean space). All pinned in the protocol.
+   - **Denominator guard.** When the normalization denominator (product of the U-centered
+     self-distance variances) falls below a frozen epsilon, `pdCor` is undefined → report `NaN`,
+     the edge is **not selected** (fail-closed), and the candidate is flagged. Degenerate-candidate
+     guard, analogous to E1's collinearity STOP.
+
+2. **Threshold = per-candidate permutation-null test, per-target, never pooled. (RESOLVED.)**
+   - For each (candidate `i` -> target `j`): hold the conditioning vector fixed, permute the
+     candidate column over `B_perm` frozen permutations, recompute `|pdCor|`, and form a one-sided
+     null. Select the edge iff observed `|pdCor|` exceeds the null at a frozen level with
+     **per-target multiplicity control (BH-FDR at a frozen `q`)**. `B_perm`, `q`, and the
+     permutation RNG seed are frozen constants; **none is truth-informed** and the permutation
+     uses no ground truth.
+   - Chosen over a raw per-target largest-gap because the U-centered statistic scatters around 0
+     (incl. negative) and true width-channel edges may be weak, so a gap on a noisy signed
+     statistic is unstable. The per-target largest-gap value is retained as a **reported
+     diagnostic** only.
+   - The permutation tests association-given-the-fixed-conditioning-set — a frozen benchmark
+     heuristic, consistent with the association (not CI-certificate) reading above.
+
+3. **Candidate graph = temporal 14-wide layout. (RESOLVED; wording corrected.)**
+   - input `X = [P0..P7, K0_t..K5_t]` (8 params + 6 **lagged** KPIs); target
+     `Y = [K0_{t+1}..K5_{t+1}]` (6). **Score matrix shape `(6, 14)`.**
+   - The 6 KPI candidates are the **lagged** `K_t`, NOT contemporaneous KPIs — there are **no
+     same-time KPI->KPI edges**; direction comes from the frozen temporal ordering (`t -> t+1`),
+     since dCor itself is nondirectional.
+   - This yields **48 NCP->KPI candidates** (6x8) and **36 lagged KPI->KPI candidates** (6x6);
+     ground truth has **16 true NCP->KPI edges and zero true KPI->KPI edges** — all 36 KPI->KPI
+     candidates are true-negatives the method must reject. **Report the KPI->KPI false-positive
+     count (out of 36) and rejection rate = 1 - FP/36** explicitly (per seed + aggregate).
+
+4. **Full-conditioning caveat (causal-interpretation limit).** Conditioning each candidate on all
+   13 others is an E1-compatible stress test, but it can **overcondition** or **open collider
+   paths** when lagged-KPI candidates are descendants. The score is therefore a **benchmark
+   heuristic**: it certifies neither conditional independence nor causal direction (direction is
+   supplied only by the frozen temporal ordering). The protocol states this limit explicitly.
+
+5. **Cross-check (reported, not the selector): stability selection over the seed envelope** — as
+   E1. Per-edge selection frequency across seeds; coarse CI at B=10; never alters the persisted
+   mask.
+
+6. **Rejected as primary**: any linear score (root cause above); marginal/unconditional
+   dependence (shared-parent confounding hallucinates lagged KPI->KPI edges); pooled thresholding
+   (the `largest_gap` straddling trap). Diagnostics only, never altering the persisted mask.
 
 ## Honest difficulty stance (locked)
 
 Unlike E1, E2 recovery is **not expected to be a clean 0/1 by construction.** Conditioning a
-nonlinear dependence measure on ~13 other candidates with finite samples is the genuine
-methodological challenge — this is *why E2 is where discovery becomes non-trivial.* **A partial
-or non-green E2 recovery is a VALID recorded boundary result, not a defect to tune away.** We do
-NOT add noise, alter the E2 SCM, or restrict the candidate graph to manufacture a cleaner number.
-E2 is noiseless (like E1); its difficulty comes from nonlinearity and conditioning, not noise.
+nonlinear dependence measure on 13 other candidates with finite samples is the genuine
+methodological challenge — this is *why E2 is where discovery becomes non-trivial.* **A partial or
+non-green E2 recovery is a VALID recorded boundary result, not a defect to tune away**, provided it
+is reported as-run and does not trigger threshold changes, seed dropping, retraining, or reopening
+the decision gate. We do NOT add noise, alter the E2 SCM, or restrict the candidate graph to
+manufacture a cleaner number. E2 is noiseless (like E1); its difficulty comes from nonlinearity and
+conditioning, not noise.
+
+## Reporting format and numerical halt conditions (frozen)
+
+**Reporting format** (written into the persisted artifacts + result doc):
+- Per (target, candidate): **signed `pdCor`**, **`|pdCor|`** (edge score), permutation p-value,
+  selected bit.
+- Per target: applied threshold decision, selected parents, the BH-FDR `q` used.
+- **Negative unbiased estimates** are reported as-is in the signed diagnostic and folded by
+  `abs()` for the score — **never silently clipped** to 0.
+- **Denominator-guard hits** (undefined `pdCor`) are reported as `NaN`, flagged, counted, and
+  fail-closed to not-selected.
+- Aggregate: precision / recall / F1 overall + `NCP->KPI`; **KPI->KPI FP count (of 36) and
+  rejection rate**; per seed and across the 10-seed envelope; no seed dropped.
+
+**Numerical halt conditions** (distinct from the scientific STOPs — these mean "the run is broken;
+fix the code/geometry, do NOT report a result"):
+- Score matrix contains `NaN`/`inf` **outside** the declared denominator-guard path → HALT.
+- The denominator guard fires on more than a frozen fraction of candidates → HALT and diagnose the
+  distance geometry / standardization (do not silently drop edges).
+- The permutation null is degenerate (zero variance) for a selected candidate → HALT.
 
 ## The freeze manifest (all seven frozen BEFORE any E2 truth is examined)
 
-The protocol doc `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` must fix, in structural terms:
+`docs/benchmark/E2_DISCOVERY_PROTOCOL.md` must fix, in structural terms:
 
 1. **Data generation** — observational dataset from `E2V2Env` **TRUE SCM (decoy OFF)**; exogenous
    params `P0..P7` sampled **mutually independently** over their registered ID ranges (so
-   non-parents have exact-zero population dependence); `N` rows per seed (frozen constant); one-step
-   KPI outputs aligned across the actuation-latency split; noiseless. Generation code committed;
-   dataset content-hashed.
-2. **Candidate graph** — the full 14-wide `(K, P+K)` layout (item 3 above).
-3. **Nonlinear dependence score** — bias-corrected partial distance correlation (item 1 above);
-   estimator fully specified, no free bandwidth.
-4. **Label-free threshold** — per-target rule (item 2 above); frozen, truth-free.
-5. **Recovery metrics** — precision / recall / F1 overall + `NCP->KPI` + `KPI->KPI`-rejection,
-   plus per-target, vs `E2V2Env().true_adj_matrix()`, read **only after** the mask is persisted and
-   hashed. Written to a separate `recovery.json`-style record.
+   non-parents have exact-zero population dependence); `N` rows per seed (frozen); one-step KPI
+   outputs **aligned across the actuation-latency split** (`X` at `t`, `Y = K_{t+1}`); noiseless.
+   Generation code committed; dataset content-hashed.
+2. **Candidate graph** — the temporal 14-wide `(6, 14)` layout (method item 3).
+3. **Nonlinear dependence score** — U-centered partial distance correlation, `|pdCor|`, with the
+   frozen distance geometry and denominator guard (method item 1). Fully specified, no free
+   parameter.
+4. **Label-free threshold** — per-candidate permutation null, per-target BH-FDR at frozen `q`,
+   frozen `B_perm` and permutation RNG seed (method item 2). Truth-free.
+5. **Recovery metrics + reporting** — precision / recall / F1 overall + `NCP->KPI` +
+   `KPI->KPI`-rejection, per-target, plus the reporting format above; vs
+   `E2V2Env().true_adj_matrix()`, read **only after** the mask is persisted and hashed.
 6. **Seed envelope** — 10 seeds (0..9), `env_seed = weight_seed = r`, sampling_seed frozen;
-   per-seed recovery reported, **no seed dropped.**
-7. **STOP criteria** — see below.
+   per-seed recovery reported, no seed dropped.
+7. **STOP criteria** (scientific) + **numerical halt conditions** — see below and above.
 
 ## Scope
 
 **In scope**: a new label-free E2 discovery module (`cdd_oran/e2slice/` or a shared discovery core
-reused from `e1slice`); a fresh frozen protocol `docs/benchmark/E2_DISCOVERY_PROTOCOL.md`; new
+reused from `e1slice`); the fresh frozen protocol `docs/benchmark/E2_DISCOVERY_PROTOCOL.md`; new
 tests; the frozen protocol commit; a run on the frozen dataset + across the 10-seed envelope; a
 digest `docs/benchmark/plan007_recovery_digest/`; an as-run result doc
 `docs/benchmark/E2_DISCOVERY_RESULT.md`; a dated delta report under `reports/` only after results
@@ -141,18 +194,18 @@ exist.
 **Out of scope**:
 - Any **training/planning arm** — no MLP arms, no oracle/dense/discovered MSE envelope. Discovery
   recovery only. (Training re-enters only if the project *intentionally registers a new E2
-  benchmark*, which is a separate decision, not this plan.)
-- The **decoy** device (`decoy_omit_p0_k5`, `P0->K5`) — it belongs to the decision gate, not
-  discovery; discovery runs against the true SCM.
+  benchmark*, a separate decision, not this plan.)
+- The **decoy** device (`decoy_omit_p0_k5`, `P0->K5`) — it belongs to the decision gate; discovery
+  runs against the true SCM.
 - **Reopening / re-tuning the recorded E2 decision null** (`GATE_CONTRACT_E2.md`, commit `8d70a4f`).
 - Changing the E2 SCM / truth; any `E2V2Env`/true-adjacency import inside discovery; E3-E5; legacy
   training; retuning after seeing a recovery number.
 
 ## Freeze ordering (mandatory)
 
-1. Confirm the **[PROPOSED]** decisions (orchestrator + user). Write
-   `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` capturing the frozen method in structural terms (no
-   reference to any specific E2 edge or magnitude). Commit it. **This commit's SHA is the freeze.**
+1. Decisions confirmed (done). Author `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` as the executable
+   spec of the frozen method (structural terms only — no reference to any specific E2 edge or
+   magnitude). Review, then **commit it. This commit's SHA is the freeze.**
 2. Implement the discovery module + tests to record that SHA as `protocol_commit` in every
    artifact; discovery reads NO ground truth and does not import `E2V2Env`.
 3. Generate the frozen dataset; run discovery once, then across the 10-seed envelope. Persist
@@ -172,20 +225,21 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
 
 ## Done criteria
 
-- [ ] `[PROPOSED]` decisions confirmed with the user; protocol frozen and committed; its SHA
-      recorded in every produced artifact.
+- [ ] `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` frozen (committed); its SHA recorded in every
+      produced artifact. Estimator, distance geometry, denominator guard, threshold rule, and
+      reporting format all pinned as an executable spec.
 - [ ] Selection rule justified on the declared mechanism structure alone; pre-registration
       committed before first run against truth.
-- [ ] Method run on the frozen dataset AND across the 10-seed envelope; per-seed recovery
-      reported (overall / `NCP->KPI` / `KPI->KPI`-rejection); no seed dropped. Reproducible from a
-      committed sweep driver + `docs/benchmark/plan007_recovery_digest/`.
+- [ ] Method run on the frozen dataset AND across the 10-seed envelope; per-seed recovery + the
+      KPI->KPI FP count / rejection rate reported; no seed dropped. Reproducible from a committed
+      sweep driver + `docs/benchmark/plan007_recovery_digest/`.
 - [ ] Gate outcome stated **honestly** — green OR partial/null, whichever it is, is a valid
       recorded boundary result. No tuning to hit specific edges.
 - [ ] Result doc explicitly restates the firewall: E2 discovery is method validation, NOT E2
       decision-value evidence; the E2 decision null (`8d70a4f`) stands untouched.
 - [ ] Full verification passes; artifacts fail-closed; adversarial review verdict recorded.
 
-## STOP conditions
+## STOP conditions (scientific)
 
 - The method would have to see ground truth (or a truth-informed threshold) to select edges.
 - The score/threshold is chosen or adjusted to hit specific E2 edges, or revised after its
@@ -196,3 +250,6 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
 - Adding noise, the decoy, or any SCM change to manufacture a cleaner recovery.
 - A training/planning arm is added without the project intentionally registering a *new* E2
   benchmark first.
+
+(Numerical halt conditions — broken-run guards, not scientific nulls — are listed under "Reporting
+format and numerical halt conditions" above.)

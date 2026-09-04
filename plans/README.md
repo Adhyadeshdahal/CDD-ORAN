@@ -15,7 +15,7 @@ scientific contract.
 | 004 | Measure the E1 multi-seed envelope | P2 | M | 003 | DONE (runner 7abaa75; digest committed under docs/benchmark/plan004_envelope_digest/) |
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 | 006 | KPI->KPI-capable E1 discovery (fresh freeze) | P1 | L | 003, 004 | DONE (merged 85dd09a; E1 recovery gate PASSED, 6/6 edges all 10 seeds; review GENUINE) |
-| 007 | E2 nonlinear label-free discovery (fresh freeze) | P1 | L | 006, E2V2Env (8d70a4f) | DRAFT (registered, not frozen; method proposed pending confirm — see plan) |
+| 007 | E2 nonlinear label-free discovery (fresh freeze) | P1 | L | 006, E2V2Env (8d70a4f) | DECISION-FROZEN (3 decisions confirmed; protocol doc E2_DISCOVERY_PROTOCOL.md is the last blocker before freeze commit) |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
 
