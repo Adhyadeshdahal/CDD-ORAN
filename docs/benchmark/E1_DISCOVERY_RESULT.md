@@ -1,5 +1,9 @@
 # E1 learned-discovery result (frozen protocol, single run)
 
+> **Superseded for the E1 gate by `E1_DISCOVERY_RESULT_V2.md`.** The v2 partial-correlation method
+> recovers both KPI->KPI edges and clears the recovery gate; the v1 numbers below are unchanged and
+> stand as the record of the v1 method.
+
 This is the **as-run** result of the frozen protocol in `E1_DISCOVERY_PROTOCOL.md`, executed
 once and reported **as-is**. The recovery is **partial** (all NCP->KPI edges recovered, both
 KPI->KPI edges missed). Per the frozen discipline this is **not tuned**: it is a valid scientific

@@ -212,6 +212,22 @@ def test_does_not_import_env_truth():
     assert not hasattr(disc, "E1V2Env")
 
 
+@pytest.mark.parametrize("env_seed", list(range(10)))
+def test_discovered_mask_equals_oracle_true_mask_on_real_e1(tmp_path: Path, env_seed: int):
+    # Phase-3 mask-identity guard: on the REAL E1 SCM, v2 recovers the exact true graph, so the
+    # discovered (K, P+K) mask is bit-for-bit the ORACLE mask (E1 true adjacency in the candidate
+    # layout). arm_mask reads env truth (it is the oracle reference), used HERE only for comparison;
+    # discovery itself reads no truth. Guards the by-construction MSE-parity argument in phase 3.
+    from cdd_oran.e1slice.model import arm_mask
+
+    write_dataset(E1DatasetConfig(n_episodes=16, steps_per_episode=12, warmup=2, env_seed=env_seed), tmp_path)
+    write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0))
+    record = write_discovery_v2(tmp_path)
+    discovered = np.asarray(record["binary_mask"], dtype=int)
+    oracle = arm_mask("oracle").cpu().numpy().astype(int)
+    np.testing.assert_array_equal(discovered, oracle)
+
+
 _CFG = E1DatasetConfig(n_episodes=12, steps_per_episode=8, warmup=2, env_seed=0)
 
 
