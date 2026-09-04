@@ -18,6 +18,19 @@ Every design choice below is justified in **structural** terms — the geometry 
 map and the algebra of standardization — never by any coefficient value already observed in a frozen
 result.
 
+## Revision history
+
+- **2026-09-04, before first execution (permitted by §9).** The original freeze (`f3dfb6b`) made a
+  vanishing *target* residual (`||r_{j|i}||^2 / n < EPS_COND`) a STOP. That was a defect: in the
+  noiseless linear E1 control the other inputs explain each target exactly, so **every non-parent
+  edge** has a zero target residual — the STOP would fire on the first non-parent of every target and
+  the method could never produce a mask, contradicting §3.2/§4/§9 which assume non-parent scores ~0.
+  This revision (§3.4) makes a zero target residual a **definition** (`rho := 0`, edge absent — the
+  standard 0/0 resolution of a semi-partial correlation), keeping the genuine input-collinearity STOP.
+  The persisted quantity (`|partial correlation|`) and the per-target `largest_gap` threshold are
+  **unchanged**. Diagnosed before any discovery ran and before any E1 ground truth was read, so no
+  recovery number informed it.
+
 ---
 
 ## 1. Freeze preamble
@@ -114,16 +127,25 @@ moment block; this choice does not change any persisted `rho` or score.
   in v1.
 - Require the full augmented input design `[X | 1]` to be full column rank; a rank-deficient design
   is non-identifiable and is a recorded **STOP**, not a worked-around case (v1 pattern).
-- **Near-collinearity guard (recorded STOP, never a silent workaround).** For each input `i`, the
-  quantity `||r_i||^2 / n` equals `1 - R^2_i`, where `R^2_i` is input `i` regressed on all other
-  inputs (standardized, so `var(X_i) = 1`). This is target-independent — compute it once per input.
-  If `min_i (||r_i||^2 / n) < EPS_COND`, input `i` is (near-)linearly determined by the other
-  inputs, the partial-correlation denominator `||r_i||` is numerically unstable, and discovery
-  records a **STOP** naming the offending input(s). Likewise, if for any `(j, i)` the target residual
-  norm `||r_{j|i}||^2 / n < EPS_COND`, target `j` is (near-)deterministically explained by the other
-  inputs and its partial correlations are ill-posed — a recorded **STOP**. `EPS_COND` is a fixed
-  numerical near-singularity tolerance (documented constant at machine-precision scale, `1e-8`); it
-  is a rank/conditioning guard that only ever *rejects*, and it never *selects* an edge.
+- **Zero-residual resolution and near-collinearity guard.** For each candidate edge `(j, i)`, resolve
+  the partial correlation in this fixed order — the first branch that applies wins:
+  1. **Target fully explained -> edge absent (a definition, NOT a STOP).** If
+     `||r_{j|i}||^2 / n < EPS_COND`, the other inputs already explain target `j`, so input `i` carries
+     no unique signal: define `rho_{ji} := 0` (score 0, edge absent). This is the standard `0/0`
+     resolution of a semi-partial correlation and is exactly the §3.2 semantics
+     (`non-parent -> |rho| -> 0`). In the noiseless linear E1 control this branch fires on **every**
+     non-parent edge and is the correct answer, not a failure.
+  2. **Genuine input collinearity -> recorded STOP.** Else if `||r_i||^2 / n < EPS_COND` — where
+     `||r_i||^2 / n` equals `1 - R^2_i`, input `i` regressed on all other inputs (standardized, so
+     `var(X_i) = 1`; target-independent, computed once per input) — input `i` is (near-)linearly
+     determined by the other inputs and the partial-correlation denominator `||r_i||` is numerically
+     unstable: discovery records a **STOP** naming the offending input(s). This is a genuine
+     non-identifiability, distinct from an absent edge.
+  3. **Well-posed.** Else `rho_{ji}` is the §3.1 ratio.
+
+  `EPS_COND` is a fixed numerical near-singularity tolerance (documented constant at machine-precision
+  scale, `1e-8`). Branch 1 only ever assigns score `0` (it can never *select* an edge); branch 2 only
+  ever *rejects*. Neither branch can select an edge, so neither can inflate recovery.
 
 ## 4. Threshold and mask — label-free, per-target
 
