@@ -230,7 +230,7 @@ def _self_check():
     fd = 3
     pool = 256
     batch_size = 32
-    n_strong = 204  # 80% of the pool
+    n_strong = 204
     threshold = 0.16  # training-scale calibrated threshold
 
     s = torch.zeros(pool, fd)
@@ -251,8 +251,8 @@ def _self_check():
         def update_mask(self, s_batch, a_batch):
             strong = s_batch[:, 0, 0].mean().item()
             # Raw step CMI on the model's real (unscaled) magnitude:
-            self._eval_cmi_acc[0, 1] += strong * 80.0  # strong true edge
-            self._eval_cmi_acc[0, 2] += (1.0 - strong) * 2.0  # noise edge
+            self._eval_cmi_acc[0, 1] += strong * 80.0
+            self._eval_cmi_acc[0, 2] += (1.0 - strong) * 2.0
             self._eval_step_count += 1
             if self._eval_step_count >= self.eval_steps:
                 avg = self._eval_cmi_acc / self.eval_steps

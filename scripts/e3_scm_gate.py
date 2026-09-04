@@ -40,8 +40,6 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-# Allow direct execution (``python scripts/e3_scm_gate.py``) as well as ``-m``: put the repo root
-# on the path before importing the package.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)

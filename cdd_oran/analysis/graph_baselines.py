@@ -20,7 +20,7 @@ def collect_transitions(env, num, act_dim):
     neutral = np.zeros(act_dim)
     pairs = []
     for _ in range(num):
-        env.reset()  # random params -> KPI response next step
+        env.reset()
         s_t = state_to_tensor(env.get_state())
         env.step(neutral)
         s_tp1 = state_to_tensor(env.get_state())
@@ -38,13 +38,13 @@ def _correlation_graph(causal, transitions, num_params, device):
     st = transitions[:, 0].to(device).float()
     stp1 = transitions[:, 1].to(device).float()
     sd = causal.shape[0]
-    src = st  # (N, sd) every feature is a candidate source (NCP + KPI)
-    kpi_next = stp1[:, num_params:]  # (N, K) KPI targets
+    src = st
+    kpi_next = stp1[:, num_params:]
     src_c = src - src.mean(0, keepdim=True)
     kpi_c = kpi_next - kpi_next.mean(0, keepdim=True)
-    num = kpi_c.t() @ src_c  # (K, sd)
+    num = kpi_c.t() @ src_c
     den = kpi_c.pow(2).sum(0).sqrt().unsqueeze(1) * src_c.pow(2).sum(0).sqrt().unsqueeze(0)
-    corr = (num / (den + 1e-8)).abs()  # (K, sd)
+    corr = (num / (den + 1e-8)).abs()
 
     n_edges = int(causal[num_params:, :].sum().item())  # full causal edge count (both blocks)
     graph = torch.zeros((sd, sd), dtype=torch.bool, device=device)
@@ -159,7 +159,7 @@ def _demo():
     full = build_override_graph("full", cdl, env)
     assert full[num_params:, :num_params].all(), "full must set all NCP->KPI edges"
 
-    causal_edges = int(graph[:, :-1][num_params:, :].sum())  # both blocks
+    causal_edges = int(graph[:, :-1][num_params:, :].sum())
     transitions = torch.randn(64, 2, sd)
     corr = build_override_graph("correlation", cdl, env, transitions)
     assert int(corr[num_params:, :].sum()) == causal_edges, "must rank-match full causal count"

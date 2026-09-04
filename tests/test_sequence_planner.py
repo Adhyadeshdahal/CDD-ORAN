@@ -82,7 +82,6 @@ def _cumulative_over_sequence(factory, snap, param_id, actions) -> float:
     return float(sum(_R(k) for k in scored))
 
 
-# --- (a) H=1 == the v2_regret H=1 selection oracle -------------------------------------------
 def test_h1_matches_v2_regret_selection_oracle():
     grid = [-1.0, 0.0, 1.0, 2.0]
     snap = _start_snapshot()
@@ -97,7 +96,6 @@ def test_h1_matches_v2_regret_selection_oracle():
     assert act1 == oracle_action
 
 
-# --- (b) FH == independent brute-force optimum; emits H distinct-capable actions --------------
 def test_fh_equals_independent_bruteforce_and_emits_distinct_actions():
     grid = [0.0, 1.0]
     snap = _start_snapshot()
@@ -118,7 +116,6 @@ def test_fh_equals_independent_bruteforce_and_emits_distinct_actions():
     assert fh[0] != fh[1]  # the planner CAN emit distinct per-step actions
 
 
-# --- (c) FM uses PREDICTED state only, never the true divergence ------------------------------
 def test_fm_uses_predicted_model_only():
     grid = [0.0, 1.0]
     snap = _start_snapshot()
@@ -138,18 +135,16 @@ def test_fm_uses_predicted_model_only():
     assert fm != greedy_true  # FM ignored the true divergence -> used predicted state only
 
 
-# --- (d) FH == FM when there is no cross-step coupling ----------------------------------------
 def test_fh_equals_fm_without_coupling():
     grid = [0.0, 1.0, 2.0]
     snap = _start_snapshot()
-    factory = lambda: FixtureModel(chain_coeff=0.0)  # no horizon gap  # noqa: E731
+    factory = lambda: FixtureModel(chain_coeff=0.0)  # noqa: E731
 
     fh = exhaustive_fh(factory, snap, 0, grid, 3, _R)
     fm = greedy_fm(factory, snap, 0, grid, 3, _R)
     assert fh == fm
 
 
-# --- (e) lexicographic tie-break is stable ---------------------------------------------------
 def test_lexicographic_tiebreak_stable():
     grid = [0.0, 1.0, 2.0]
     snap = _start_snapshot()
@@ -162,7 +157,6 @@ def test_lexicographic_tiebreak_stable():
     assert fm == [grid[0], grid[0], grid[0]]
 
 
-# --- (f) exact call list: H apply-advances + 1 terminal advance, only {k2..k_{H+1}} scored ----
 class _CountingModel(FixtureModel):
     def __init__(self, chain_coeff=2.0):
         super().__init__(chain_coeff=chain_coeff)
@@ -185,7 +179,6 @@ def test_call_list_and_scored_window():
     factory_holder = {"m": counter}
 
     def factory():
-        # single reused counter instance so we can inspect its call counts after one rollout
         return factory_holder["m"]
 
     actions = [0.0, 1.0, 0.0]

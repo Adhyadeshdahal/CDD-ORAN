@@ -39,12 +39,12 @@ def safe_exp(x: float) -> float:
 # Frozen per-KPI (mean, std) standardization constants (Q4). Provenance:
 # get_env_ii_mean_std(param_ranges=ID, seed=0, num_samples=1_000_000) over compute_kpis_ii.
 KPI_MEAN_STD: list[tuple[float, float]] = [
-    (21.482606, 27.694787),  # K0
-    (26.776967, 34.651755),  # K1
-    (40.931657, 44.767996),  # K2
-    (14.975340, 32.369335),  # K3
-    (18.755966, 40.460422),  # K4
-    (-10.140367, 12.583744),  # K5
+    (21.482606, 27.694787),
+    (26.776967, 34.651755),
+    (40.931657, 44.767996),
+    (14.975340, 32.369335),
+    (18.755966, 40.460422),
+    (-10.140367, 12.583744),
 ]
 
 
@@ -54,17 +54,16 @@ class E2V2Env(V2Env):
 
     # ID param ranges (non-ood branch, env_ii.py:56-65).
     id_ranges = [
-        (-100.0, 100.0),  # P0
-        (-10.0, 50.0),    # P1
-        (-20.0, 20.0),    # P2
-        (-60.0, 60.0),    # P3
-        (-20.0, 20.0),    # P4
-        (-50.0, 150.0),   # P5
-        (-60.0, 65.0),    # P6
-        (-100.0, 150.0),  # P7
+        (-100.0, 100.0),
+        (-10.0, 50.0),
+        (-20.0, 20.0),
+        (-60.0, 60.0),
+        (-20.0, 20.0),
+        (-50.0, 150.0),
+        (-60.0, 65.0),
+        (-100.0, 150.0),
     ]
 
-    # Frozen standardization (as literals; see KPI_MEAN_STD provenance).
     mean = np.array([m for m, _ in KPI_MEAN_STD], dtype=float)
     std = np.array([s for _, s in KPI_MEAN_STD], dtype=float)
 
@@ -79,7 +78,6 @@ class E2V2Env(V2Env):
     ]
     _DECOY_OMITTED_EDGE = (5, 0)  # P0 -> K5
 
-    # xApp maps / directions / thresholds (env_ii.py:74-87).
     kpi_to_xapp = {0: 0, 1: 1, 2: 2, 3: 3, 4: 3, 5: 4}
     xapp_kpi_indices = [(0,), (1,), (2,), (3, 4), (5,)]
     xapp_param_indices = [(0, 1), (0, 1, 2), (0, 3), (4, 5, 1), (0, 6, 7)]
@@ -98,7 +96,6 @@ class E2V2Env(V2Env):
         self._decoy_p0_ref = 0.0
         super().__init__(env_seed=env_seed, obs_noise_scale=obs_noise_scale, episode=episode)
 
-    # --- decoy reference capture -------------------------------------------------------------
     def reset(self, episode: int | None = None):
         state = super().reset(episode=episode)
         self._decoy_p0_ref = float(self.prev_params[0])
@@ -110,7 +107,6 @@ class E2V2Env(V2Env):
         # which stays fixed through the H=1 rollout even after apply_action moves the live P0.
         self._decoy_p0_ref = float(self.prev_params[0])
 
-    # --- mechanism ---------------------------------------------------------------------------
     def _update_kpis(self, prev_params: np.ndarray, prev_kpis: np.ndarray) -> np.ndarray:
         p = np.asarray(prev_params, dtype=float)
         # Decoy: use the frozen committed P0 for the K5 term only (edge (5,0) omitted); the
@@ -124,7 +120,6 @@ class E2V2Env(V2Env):
         k5 = -35.0 * exp(-((p[7] + p0_k5 - 25.0) ** 2) / (2.0 * safe_exp(p[6]) ** 2))
         return np.array([k0, k1, k2, k3, k4, k5], dtype=float)
 
-    # --- structure ---------------------------------------------------------------------------
     @property
     def adjacency_edges(self) -> list[tuple[int, int]]:
         """TRUE edges, or TRUE minus (5,0) when the decoy omits P0->K5."""

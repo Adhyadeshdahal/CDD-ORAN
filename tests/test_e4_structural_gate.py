@@ -64,9 +64,6 @@ class _FastKwargs(TypedDict):
 _FAST: _FastKwargs = {"corpus_n_obs": 4000, "corpus_n_do": 1000, "corpus_pool_do": 1000}
 
 
-# --------------------------------------------------------------------------------------
-# True generator: full PASS on both acceptance clauses.
-# --------------------------------------------------------------------------------------
 def test_e4_structural_gate_passes():
     # Runs the FULL frozen env-corpus (BLOCKER 1 fix): the true env's GENERATED transitions must
     # match the frozen closed-form within stat_tol, in addition to the analytic clauses.
@@ -83,7 +80,6 @@ def test_e4_structural_gate_passes():
     assert ec.empirical["mech_err_obs"] == 0.0 and ec.empirical["mech_err_do"] == 0.0
 
 
-# --- (a) exact clipped-normal moments and the naive 90:10 pooled line -------------------
 def test_frozen_moments_and_pooled_line_to_tol_zero():
     p, var_a, cov_az = clipped_normal_moments(PRIMARY_LAM)
     assert abs(p - FROZEN_P) <= TOL_ZERO
@@ -97,7 +93,6 @@ def test_frozen_moments_and_pooled_line_to_tol_zero():
     assert b_pool > 3.0
 
 
-# --- (b) a_oracle=0, a_naive=0.66, gap_norm == frozen (single-state, exact to tol_zero) --
 def test_frozen_actions_and_gap_norm():
     true_env = default_env_factory(0)
     gap_norm, d, a_oracle_idx, a_naive_idx = _gap_norm(true_env, FROZEN_B_POOL, FROZEN_C_POOL)
@@ -107,7 +102,6 @@ def test_frozen_actions_and_gap_norm():
     assert abs(d - FROZEN_D_STATE) <= TOL_ZERO
 
 
-# --- (c) lambda=0 factor-removal control collapses the gap to exactly 0 -----------------
 def test_lambda_zero_control_gap_is_zero():
     b_pool_c, c_pool_c = pooled_line(CONTROL_LAM, alpha=-1.0, theta=2.5)
     assert abs(b_pool_c - (-1.0)) <= TOL_ZERO  # confounding removed ⇒ true slope recovered
@@ -118,7 +112,6 @@ def test_lambda_zero_control_gap_is_zero():
     assert abs(gap_c) <= TOL_ZERO
 
 
-# --- (d) geometry bank is exactly seeds 0..63 -------------------------------------------
 def test_bank_is_seeds_0_to_63():
     bank = build_bank()
     assert bank.feasible
@@ -126,7 +119,6 @@ def test_bank_is_seeds_0_to_63():
     assert len(bank.snaps) == 64
 
 
-# --- (e) BOTH clauses gate: a bad control (lambda != 0) is REJECTED ----------------------
 def test_bad_control_is_rejected_in_process():
     # Control env that does NOT remove Z->A_behavior (lambda stays at the primary coupling):
     # the pooled line is still sign-reversed, so the control gap is large and the gate FAILS.
@@ -167,15 +159,13 @@ def test_script_runs_as_documented_command():
     assert proc.returncode == 0, f"gate exited {proc.returncode}:\n{proc.stdout}\n{proc.stderr}"
     assert "RESULT: PASS" in proc.stdout
     assert "DEFERRED" in proc.stdout
-    assert "env-corpus (primary" in proc.stdout  # empirical-vs-frozen table is printed
+    assert "env-corpus (primary" in proc.stdout
 
 
-# --------------------------------------------------------------------------------------
 # ENV-CORPUS REJECTION POWER (circularity fix, review-e4-gate.md BLOCKER 1).
 # The analytic clauses re-derive the frozen algebra and cannot see the env; these broken envs
 # keep the DECLARED metadata/attrs but GENERATE data that violates the design, so ONLY the
 # env-corpus validation can reject them.
-# --------------------------------------------------------------------------------------
 class _BrokenNoConfounding(E4V2Env):
     """Both functional latent edges deleted: behavior ≡ 0.5 (no Z->A_behavior) and K_out=-A
     (no Z->K_out), while the declared attrs (lam/alpha/theta) and LATENT_EDGES metadata stay."""
@@ -234,16 +224,14 @@ def test_env_corpus_true_env_generates_frozen_moments():
 
 
 def test_generate_corpus_pairs_committed_action_and_Z():
-    # Every generated transition satisfies the exact mechanism against the committed (A, Z).
     probe = default_env_factory(0)
+    # Every generated transition satisfies the exact mechanism against the committed (A, Z).
     a, z, k = generate_corpus(probe, E4V2Env.MODE_OBS, 500)
     assert np.max(np.abs(k - (probe.alpha * a + probe.theta * z + probe.c))) == 0.0
-    assert a.min() >= 0.0 and a.max() <= 1.0  # clipped behavior policy stays in the action space
+    assert a.min() >= 0.0 and a.max() <= 1.0
 
 
-# --------------------------------------------------------------------------------------
 # (f) obs vs do modes: same Z enters K_out both ways, A ⊥ Z under do, A=A_behavior under obs.
-# --------------------------------------------------------------------------------------
 def test_behavior_action_is_clipped_policy_of_Z():
     env = E4V2Env(env_seed=3, lam=1.0, mode=E4V2Env.MODE_OBS)
     eta = env._draw_eta(env.time)
@@ -256,7 +244,7 @@ def test_behavior_action_is_clipped_policy_of_Z():
 def test_do_action_is_independent_of_Z():
     env = E4V2Env(env_seed=3, lam=1.0, mode=E4V2Env.MODE_DO)
     a1 = env.generate_action()
-    env.Z = env.Z + 123.456  # perturb the latent
+    env.Z = env.Z + 123.456
     a2 = env.generate_action()
     assert a1 == a2  # do-action drawn from its own tape slot, never reads Z
     assert a1 in set(np.round(V_GRID, 2))
@@ -272,8 +260,8 @@ def test_same_Z_enters_K_out_under_both_modes():
     def roll(env, v):
         env.reset(episode=0)
         env.apply_action(0, v)
-        env.advance()  # warm-up
-        return float(env.advance()[0])  # terminal K_out
+        env.advance()
+        return float(env.advance()[0])
 
     k_do = roll(do_env, 0.3)
     k_obs = roll(obs_env, 0.3)
@@ -283,15 +271,12 @@ def test_same_Z_enters_K_out_under_both_modes():
     assert math.isclose(k_do, -1.0 * 0.3 + 2.5 * z0 + 0.0, rel_tol=0.0, abs_tol=TOL_ZERO)
 
 
-# --------------------------------------------------------------------------------------
-# (g) H=1 one-step latency; latent == observed at noise 0.
-# --------------------------------------------------------------------------------------
 def test_h1_latency_action_hits_second_advance():
     env = E4V2Env(env_seed=1, mode=E4V2Env.MODE_DO)
     init_a = float(env.prev_params[0])
     z0 = env.Z
     env.reset(episode=0)
-    v = init_a + 0.4  # clearly different from the initial action
+    v = init_a + 0.4
     env.apply_action(0, v)
     k1 = float(env.advance()[0])  # warm-up: reflects the PRE-decision (init) action, not v
     k2 = float(env.advance()[0])  # terminal: reflects v
@@ -306,9 +291,6 @@ def test_noise_off_latent_equals_observed():
     assert np.allclose(env.latent_kpis(), env.observed_kpis(), atol=0.0)
 
 
-# --------------------------------------------------------------------------------------
-# (h) snapshot/restore carries pending + committed Z.
-# --------------------------------------------------------------------------------------
 def test_snapshot_restore_carries_Z():
     env = E4V2Env(env_seed=5, mode=E4V2Env.MODE_DO)
     for _ in range(3):
@@ -317,7 +299,6 @@ def test_snapshot_restore_carries_Z():
     z_pending, z_committed = float(env.Z), float(env.prev_Z)
     assert snap[5] == z_pending and snap[6] == z_committed
 
-    # Roll forward on a clone, then restore and confirm exact replay of the scored outcome.
     env.apply_action(0, 0.8)
     env.advance()
     k_after_first = float(env.advance()[0])
@@ -329,9 +310,6 @@ def test_snapshot_restore_carries_Z():
     assert float(env.advance()[0]) == k_after_first
 
 
-# --------------------------------------------------------------------------------------
-# Focused frozen-constant invariants.
-# --------------------------------------------------------------------------------------
 def test_standardization_and_adjacency_constants():
     assert E4V2Env.mu[0] == MU_OUT == -0.5
     assert E4V2Env.sigma[0] == SIGMA_OUT == math.sqrt(1.0 / 12.0)

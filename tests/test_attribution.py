@@ -93,9 +93,6 @@ def _disc_sampler(env, seed=0, fill=0.3):
     )
 
 
-# --------------------------------------------------------------------------- #
-# (a/BLOCKER 3) oracle uses the true adjacency; rejects a supplied sampler.
-# --------------------------------------------------------------------------- #
 def test_oracle_uses_true_adjacency_without_artifacts():
     cfg = _cfg(structure_source="oracle")
     env = get_env(cfg)
@@ -125,7 +122,7 @@ def test_oracle_rejects_supplied_discovered_sampler():
     fd = env.get_state_dim()
     true_adj = np.asarray(env.true_adj_matrix, dtype=bool)
 
-    leak = _disc_sampler(env, seed=0, fill=0.9)  # dense discovered posterior
+    leak = _disc_sampler(env, seed=0, fill=0.9)
     model = get_model(cfg, env, sampler=leak)
     assert model.sampler is not leak, "oracle must ignore the caller-supplied sampler"
 
@@ -134,9 +131,6 @@ def test_oracle_rejects_supplied_discovered_sampler():
         assert np.array_equal(draw[member, :, :fd].cpu().numpy().astype(bool), true_adj)
 
 
-# --------------------------------------------------------------------------- #
-# (b/MAJOR 7) residual disabled -> representation-level identity + zero.
-# --------------------------------------------------------------------------- #
 def test_residual_disabled_is_representation_level_identity():
     sampler = _disc_sampler(get_env(_cfg()))
     model = _tiny_cdl(residual_enabled=False, sampler=sampler)
@@ -152,7 +146,7 @@ def test_residual_disabled_is_representation_level_identity():
     # Representation-level identity: same tensor object, not just numeric equality.
     assert diag["mu_total"].data_ptr() == diag["mu_graph"].data_ptr()
     assert float(diag["residual_magnitude_ratio"]) == 0.0
-    assert float(diag["fraction_aggregate"]) == 0.0  # legacy alias
+    assert float(diag["fraction_aggregate"]) == 0.0
     assert float(diag["delta"].abs().sum()) == 0.0
 
     comps = model.predict_components(s, a, structures=_structs(1))
@@ -165,15 +159,11 @@ def test_residual_enabled_default_has_residual_module():
     residual_ids = {id(p) for p in model.residual.parameters()}
     opt_ids = {id(p) for group in model.opt.param_groups for p in group["params"]}
     assert residual_ids <= opt_ids
-    # With a residual, the two component tensors are distinct objects.
     s, a = torch.rand(5, STATE_DIM), torch.rand(5, ACTION_DIM)
     comps = model.predict_components(s, a, structures=_structs(2))
     assert comps["mu_total"].data_ptr() != comps["mu_graph"].data_ptr()
 
 
-# --------------------------------------------------------------------------- #
-# (BLOCKER 1 / MINOR 9) ensemble-mean MSE + mixture NLL closed forms.
-# --------------------------------------------------------------------------- #
 def test_single_member_mixture_collapses_to_normal_nll():
     target = torch.tensor([[1.0, 2.0]])
     mu = torch.zeros(1, 1, 2)
@@ -188,7 +178,7 @@ def test_single_member_mixture_collapses_to_normal_nll():
 def test_two_member_ensemble_mean_mse_and_mixture_nll():
     """MINOR #9: distinct means AND variances catch the ensemble-mean MSE (not mean of squared
     errors) and the mixture NLL (not mean of component NLLs)."""
-    mu = torch.tensor([[[0.0]], [[2.0]]])  # (2, 1, 1)
+    mu = torch.tensor([[[0.0]], [[2.0]]])
     std = torch.tensor([[[1.0]], [[2.0]]])
     target = torch.tensor([[1.0]])
     metrics = mixture_metrics(mu, std, target)
@@ -205,9 +195,6 @@ def test_two_member_ensemble_mean_mse_and_mixture_nll():
     assert abs(expected_nll - mean_component_nll) > 1e-3
 
 
-# --------------------------------------------------------------------------- #
-# (BLOCKER 2) paired residual delta in a scored row; 0 for no-residual variants.
-# --------------------------------------------------------------------------- #
 def test_score_variant_reports_paired_residual_delta():
     cfg = _cfg(predict_members=2)
     env = get_env(cfg)
@@ -266,9 +253,6 @@ def test_comparison_table_has_all_four_variant_rows(tmp_path):
     assert "dMSE_residual" in markdown
 
 
-# --------------------------------------------------------------------------- #
-# (BLOCKER 8) runtime validation of both knobs.
-# --------------------------------------------------------------------------- #
 def test_config_rejects_bad_structure_source():
     with pytest.raises(ValueError, match="structure_source"):
         load_config("env_i_cdl.yaml", ["model.structure_source=bogus"])
@@ -285,9 +269,6 @@ def test_set_residual_enabled_false_is_python_false():
     assert cfg.model.residual_enabled is False
 
 
-# --------------------------------------------------------------------------- #
-# (BLOCKER 4 / MAJOR 6 / MINOR 10) run_attribution + load_run integration.
-# --------------------------------------------------------------------------- #
 def _write_enum(path, env):
     fd = env.get_state_dim()
     full = np.zeros((fd, fd + 1), dtype=bool)
@@ -370,7 +351,7 @@ def test_run_attribution_integration_and_shared_inputs(tmp_path):
     mlp = replace(load_config("env_i_mlp.yaml"), device="cpu")
 
     full = _make_cdl_run(tmp_path / "full", env, base, residual_enabled=True)
-    so = _make_cdl_run(tmp_path / "so", env, base, residual_enabled=False)  # same posterior bytes
+    so = _make_cdl_run(tmp_path / "so", env, base, residual_enabled=False)
     oracle = _make_cdl_run(tmp_path / "oracle", env, base, structure_source="oracle")
     dense = _make_mlp_run(tmp_path / "dense", env, mlp)
 

@@ -79,9 +79,6 @@ def _r_kb(k):
     return float(k[1])  # §1.5 R(k) = k^B (second KPI)
 
 
-# --- Step 1: exact timeline -----------------------------------------------------------------
-
-
 def test_h1_timeline_scored_window_and_warmup():
     """§1.4: warm-up k_1 = g(0) = −3 (unscored); single scored k_2 = g(a_1); return = k_2."""
     env = _H1Env()
@@ -119,9 +116,6 @@ def test_h2_timeline_two_step_chain():
     assert np.array_equal(res.scored_kpis[1], np.array([0.0, -2.0]))  # k_3
     assert res.step_returns == pytest.approx((1.0, -2.0))
     assert res.cumulative_return == pytest.approx(-1.0)
-
-
-# --- Step 2: exhaustive oracle, tie-break, guard --------------------------------------------
 
 
 def test_h1_oracle_finds_grid_optimum():
@@ -205,9 +199,6 @@ def test_non_finite_cumulative_return_rejected():
         rollout_open_loop(lambda: _H2Env(), env.snapshot(), [(0, 1.0), (0, 0.0)], lambda k: 1e308)
 
 
-# --- Step 3: paired, unclamped cumulative regret --------------------------------------------
-
-
 def test_h1_paired_regret_is_one():
     """§1.4: planner a_1=1 (return 0) vs oracle a_1=2 (return 1) → regret 1."""
     env = _H1Env()
@@ -240,10 +231,8 @@ def test_regret_is_unclamped_when_oracle_is_suboptimal(monkeypatch):
     in-grid sequence whose return (0) is below the planner's realized return (1)."""
     env = _H1Env()
     snap = env.snapshot()
-    grid = [(0, 0.0), (0, 1.0), (0, 2.0)]  # planner action (0,2.0) is IN this grid
+    grid = [(0, 0.0), (0, 1.0), (0, 2.0)]
 
-    # A buggy/sub-optimal oracle: it reports an in-grid sequence returning 0 as "best", below the
-    # planner's realized 1. Same pure _r_k0 scores this rollout, so the R contract is not violated.
     subopt_rollout = rollout_open_loop(lambda: _H1Env(), snap, [(0, 1.0)], _r_k0)  # k_2=0 → return 0
     assert subopt_rollout.cumulative_return == pytest.approx(0.0)
 
@@ -273,9 +262,6 @@ def test_paired_regret_rejects_out_of_domain_planner_action():
         paired_regret(lambda: _H1Env(), env.snapshot(), [(0, 2.0)], grid, _r_k0)
 
 
-# --- invalid inputs -------------------------------------------------------------------------
-
-
 def test_empty_actions_rejected():
     with pytest.raises(ValueError, match="non-empty"):
         rollout_open_loop(lambda: _H1Env(), _H1Env().snapshot(), [], _r_k0)
@@ -299,9 +285,6 @@ def test_non_finite_score_rejected():
 def test_empty_option_set_rejected():
     with pytest.raises(ValueError, match="non-empty"):
         enumerate_open_loop(lambda: _H1Env(), _H1Env().snapshot(), [], 1, _r_k0)
-
-
-# --- Step 4: CRN under divergent actions + caller non-mutation ------------------------------
 
 
 class _ProcProbeEnv(V2Env):
@@ -346,7 +329,7 @@ def test_crn_paired_under_divergent_actions():
 
     # process-noise tape: identical coordinates → byte-identical draws despite different actions
     assert env_a.proc_log == env_b.proc_log
-    assert env_a.time == env_b.time  # matching final logical coordinate
+    assert env_a.time == env_b.time
 
     # observation-noise tape at the (shared) final coordinate is byte-identical too. Compare the
     # tape draws directly (reconstructing via observed − latent would fold in each arm's own,
@@ -376,15 +359,10 @@ def test_caller_env_and_snapshot_unchanged_after_paired_eval():
 
     paired_regret(lambda: _H2Env(), snap, [(0, 1.0), (0, 0.0)], [(0, 0.0), (0, 1.0)], _r_kb)
 
-    # snapshot arrays untouched
     for a, b in zip(snap, snap_before, strict=True):
         assert np.array_equal(a, b) if isinstance(a, np.ndarray) else a == b
-    # caller env committed state untouched
     for a, b in zip(caller.snapshot(), committed_before, strict=True):
         assert np.array_equal(a, b) if isinstance(a, np.ndarray) else a == b
-
-
-# --- Step 5: cross-check E2/E3 gate-local rollout arithmetic (NO migration) -----------------
 
 
 def test_cross_check_e3_gate_local_rollout():
@@ -402,7 +380,7 @@ def test_cross_check_e3_gate_local_rollout():
     def factory():
         return E3V2Env(truncate_fanout=False)
 
-    values = [0.3, 0.7, 0.1]  # H=3 P0 sequence
+    values = [0.3, 0.7, 0.1]
     kernel = rollout_open_loop(factory, snap, [(0, v) for v in values], _R)
     gate_scored = _rollout_sequence_scored(factory, snap, 0, values)
     gate_return = float(sum(_R(k) for k in gate_scored))

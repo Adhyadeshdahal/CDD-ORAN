@@ -24,7 +24,6 @@ def safe(x):
     return x if abs(x) > 1e-1 else 1e-1
 
 
-# --- KPI update functions (scalar; math.exp). prev_kpis carries the previous step. ---
 def update_kpi0(p, k):  # P0 (center), P1 (scale)
     return 80 * exp(-(p[0] ** 2) / (2 * safe(p[1]) ** 2))
 
@@ -148,7 +147,6 @@ class ORANEnvironment3(BaseORANEnv):
             for kpi in self.kpis:
                 noise = np.random.normal(0, self.noise_scale)
                 state[kpi.name] = (state[kpi.name] + noise).astype(np.float32)
-        # ponytail: drift is a single opt-in observation-drift knob; OFF by default.
         if self.drift > 0:
             state["kpi0"] = (state["kpi0"] + np.float32(self.drift * self.cur_step)).astype(
                 np.float32
@@ -157,7 +155,6 @@ class ORANEnvironment3(BaseORANEnv):
 
 
 if __name__ == "__main__":
-    # Pure-Python self-check: reset/step, dim consistency, adjacency == declared edges.
     env = ORANEnvironment3()
     assert env.num_params == 9 and env.num_kpis == 7, (env.num_params, env.num_kpis)
 
@@ -169,7 +166,6 @@ if __name__ == "__main__":
     assert len(next_state) == 16, len(next_state)
     assert isinstance(reward, float), type(reward)
 
-    # Ground-truth adjacency must equal the declared edge list, and nothing else.
     n = env.num_params + env.num_kpis
     expected = np.zeros((n, n), dtype=np.float32)
     for kpi_index, source in ADJACENCY_EDGES:

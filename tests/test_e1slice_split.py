@@ -63,7 +63,6 @@ def test_write_split_binds_to_dataset_hash(tmp_path: Path):
     assert (tmp_path / "split.json").exists()
     assert record["dataset_hash"] == manifest["dataset_hash"]
     assert load_split(tmp_path) == record
-    # Split partitions the dataset's episodes with no overlap.
     assert set(record["train_episodes"]).isdisjoint(record["test_episodes"])
     assert (
         set(record["train_episodes"]) | set(record["test_episodes"])
@@ -93,7 +92,7 @@ def test_load_split_rejects_mismatched_dataset_binding(tmp_path: Path):
     manifest = write_dataset(_CFG, tmp_path)
     write_split(tmp_path, SplitConfig(test_fraction=0.2, split_seed=0))
     # Self-validation passes, but binding to a different dataset_hash must be refused.
-    load_split(tmp_path)  # no binding args -> OK
+    load_split(tmp_path)
     with pytest.raises(ValueError, match="dataset_hash"):
         load_split(tmp_path, expected_dataset_hash="f" * 64)
     # Coverage binding: a missing episode id in the union is rejected.
@@ -105,7 +104,7 @@ def test_load_split_rejects_mismatched_dataset_binding(tmp_path: Path):
 def test_write_split_refuses_stale_downstream_without_force(tmp_path: Path):
     write_dataset(_CFG, tmp_path)
     write_split(tmp_path, SplitConfig(test_fraction=0.2, split_seed=0))
-    (tmp_path / "metrics.json").write_text("{}")  # stale downstream artifact
+    (tmp_path / "metrics.json").write_text("{}")
     with pytest.raises(ValueError, match="downstream artifacts already exist"):
         write_split(tmp_path, SplitConfig(test_fraction=0.3, split_seed=1))
     write_split(tmp_path, SplitConfig(test_fraction=0.3, split_seed=1), force=True)

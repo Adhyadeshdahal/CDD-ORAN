@@ -45,7 +45,6 @@ from cdd_oran.config import DEFAULT_CONFIG
 from cdd_oran.envs.base import BaseORANEnv
 from cdd_oran.envs.stats_cache import get_cached_mean_std
 
-# Env III parity knobs.
 DEFAULT_NOISE_SCALE = 0.05
 # Latent-confounder strength (normalised KPI units) shared by K6 and K7.
 DEFAULT_Z_SCALE = 0.30
@@ -58,7 +57,6 @@ def safe(x):
     return x if abs(x) > 1e-1 else 1e-1
 
 
-# --- KPI update functions (scalar; math.exp). prev_kpis carries the previous step. ---
 def update_kpi0(p, k):  # P0 (center), P1 (scale)
     return 80 * exp(-(p[0] ** 2) / (2 * safe(p[1]) ** 2))
 
@@ -207,7 +205,6 @@ class ORANEnvironment4(BaseORANEnv):
             for kpi_index, gain in zip(CONFOUNDED_KPIS, Z_GAINS, strict=True):
                 name = self.kpis[kpi_index].name
                 state[name] = (state[name] + np.float32(gain * z)).astype(np.float32)
-        # ponytail: drift is a single opt-in observation-drift knob; OFF by default.
         if self.drift > 0:
             state["kpi0"] = (state["kpi0"] + np.float32(self.drift * self.cur_step)).astype(
                 np.float32
@@ -216,11 +213,9 @@ class ORANEnvironment4(BaseORANEnv):
 
 
 if __name__ == "__main__":
-    # Pure-Python assert self-check: no training, no smoke run.
     env = ORANEnvironment4()
     assert env.num_params == 10 and env.num_kpis == 8, (env.num_params, env.num_kpis)
 
-    # reset / step work; state & action dims consistent.
     state = env.reset()
     assert len(state) == env.get_state_dim() == 18, (len(state), env.get_state_dim())
     next_state, reward, done, info = env.step((0, 5, 0))
@@ -228,7 +223,6 @@ if __name__ == "__main__":
     assert isinstance(reward, float), type(reward)
     assert env.get_action_dim() == 3, env.get_action_dim()
 
-    # true_adj_matrix == declared real edges, and nothing else.
     n = env.num_params + env.num_kpis
     expected = np.zeros((n, n), dtype=np.float32)
     for kpi_index, source in ADJACENCY_EDGES:
@@ -259,7 +253,6 @@ if __name__ == "__main__":
     assert float(s_lo["kpi7"][0]) != float(s_hi["kpi7"][0]), (s_lo["kpi7"], s_hi["kpi7"])
     assert float(s_lo["kpi0"][0]) == float(s_hi["kpi0"][0]), "Z leaked into a non-target KPI"
 
-    # With drift OFF (default), the env is deterministic under a fixed seed.
     def rollout():
         e = ORANEnvironment4()
         np.random.seed(7)

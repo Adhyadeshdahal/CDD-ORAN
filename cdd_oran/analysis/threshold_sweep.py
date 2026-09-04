@@ -48,14 +48,14 @@ def sweep(run_dir: str | Path, grid: np.ndarray) -> dict:
     model = get_model(cfg, env)
     model.load_model(run_dir / "checkpoint.pt")
 
-    cmi = model.get_causal_graph().cpu().detach().numpy()  # (fd, fd+1)
+    cmi = model.get_causal_graph().cpu().detach().numpy()
     fd = cmi.shape[0]
-    gt = env.true_adj_matrix  # (fd, fd)
+    gt = env.true_adj_matrix
 
     rows = []
     for thr in grid:
         binary = cmi >= float(thr)
-        pred = binary[:, :-1].copy()  # drop action column
+        pred = binary[:, :-1].copy()
         np.fill_diagonal(pred[:fd, :fd], 0)
         rows.append({"threshold": float(thr), **_prf(pred.astype(int), gt)})
 

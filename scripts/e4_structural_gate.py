@@ -45,8 +45,6 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-# Allow direct execution (``python scripts/e4_structural_gate.py``) as well as ``-m``: put the repo
-# root on the path before importing the package.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
@@ -55,7 +53,7 @@ from cdd_oran.analysis.v2_regret import PanelXApp, reward  # noqa: E402
 from cdd_oran.envs.v2.e4 import MU_OUT, SIGMA_OUT, E4V2Env  # noqa: E402
 
 # --- FROZEN protocol constants (GATE_CONTRACT_E4.md) ------------------------------------------
-SEED_POOL = range(4096)  # env_seed = 0..4095
+SEED_POOL = range(4096)
 EPISODE = 0
 NEUTRAL_STEPS = 3
 N_STATES = 64
@@ -94,7 +92,7 @@ TOL_ZERO = 1e-12
 # ``tol_zero``), sized from N so the TRUE env passes comfortably and a broken env (no confounding,
 # pooled slope ~= -1, or a mis-scaled/absent mechanism) FAILS by a wide margin.
 CORPUS_SEED = 0            # single frozen env_seed; a walk over distinct time coordinates is i.i.d.
-CORPUS_N_OBS = 90000       # observational transitions
+CORPUS_N_OBS = 90000
 CORPUS_N_DO = 20000        # interventional transitions (do-slope / do-independence sample)
 CORPUS_POOL_DO = 10000     # do rows entering the 90:10 pool (90000:10000 == 90:10)
 STAT_TOL = 0.15            # statistical tolerance; TRUE-env max error ~0.10 (do slope), broken >=0.19
@@ -150,7 +148,6 @@ def _select_argmax(k_hat: np.ndarray) -> int:
     return int(np.argmax(_hinge_scores(k_hat)))
 
 
-# --- default injectable factories -------------------------------------------------------------
 def default_env_factory(seed: int) -> E4V2Env:
     """True env under test: frozen primary E4 SCM, interventional mode, noise OFF."""
     return E4V2Env(env_seed=seed, obs_noise_scale=0.0, lam=PRIMARY_LAM, mode=E4V2Env.MODE_DO)
@@ -197,7 +194,6 @@ def build_bank(env_factory: Callable[[int], E4V2Env] = default_env_factory) -> B
     return res
 
 
-# --- per-state structural gap -----------------------------------------------------------------
 def _gap_norm(true_env: E4V2Env, b_pool: float, c_pool: float) -> tuple[float, float, int, int]:
     """Return ``(gap_norm, D, a_oracle_idx, a_naive_idx)`` for one state.
 
@@ -206,7 +202,7 @@ def _gap_norm(true_env: E4V2Env, b_pool: float, c_pool: float) -> tuple[float, f
     degenerate ``D <= tol_zero``.
     """
     k_true = np.array([true_env.score_interventional_mean(v) for v in V_GRID], dtype=float)
-    g_true = _hinge_scores(k_true)  # realized true return per action
+    g_true = _hinge_scores(k_true)
     g_star = float(g_true.max())
     d = g_star - float(g_true.min())
     if d <= TOL_ZERO:
@@ -325,7 +321,6 @@ def validate_env_corpus(
         "pooled_intercept": c_pool_f,
     }
 
-    # env-generated corpora.
     ao, zo, ko = generate_corpus(probe, E4V2Env.MODE_OBS, n_obs)
     ad, zd, kd = generate_corpus(probe, E4V2Env.MODE_DO, n_do)
 
@@ -352,7 +347,6 @@ def validate_env_corpus(
         "mech_err_do": mech_do,
     }
 
-    # statistical-tolerance checks against the frozen closed-form.
     for key in res.frozen:
         got, frozen = res.empirical[key], res.frozen[key]
         if abs(got - frozen) > STAT_TOL:
@@ -361,7 +355,6 @@ def validate_env_corpus(
                 f"[env-corpus:{label}] {key}={got:.6f} != frozen {frozen:.6f} "
                 f"(|diff|={abs(got - frozen):.6f} > stat_tol {STAT_TOL})"
             )
-    # exact mechanism identity on every sampled transition.
     for mode, err in (("obs", mech_obs), ("do", mech_do)):
         if err > MECH_TOL:
             res.ok = False

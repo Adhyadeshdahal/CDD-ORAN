@@ -242,7 +242,6 @@ def test_calibrated_posterior_save_load_roundtrip_and_flag(tmp_path):
     assert loaded.calibrator is not None
     np.testing.assert_allclose(loaded.calibrator.x_, calibrated.calibrator.x_)
     np.testing.assert_allclose(loaded.calibrator.y_, calibrated.calibrator.y_)
-    # Sampling still works from the loaded artifact.
     graph = loaded.sample(np.random.default_rng(0))
     assert graph.shape == (post.n_nodes, post.n_nodes)
 

@@ -31,10 +31,6 @@ from __future__ import annotations
 
 import pytest
 
-# ---------------------------------------------------------------------------
-# Toy dynamics  (no imports from cdd_oran — fully self-contained)
-# ---------------------------------------------------------------------------
-
 ACTION_GRID = [0.0, 1.0]
 HORIZON = 2
 
@@ -60,22 +56,15 @@ def _rollout(actions: tuple[float, ...], p0: float = 0.0, kA0: float = 0.0, kB0:
     """
     p1, p2 = actions[0], actions[1]
 
-    # warm-up advance (k1, UNSCORED)
     _kA1, _kB1 = _step(kA0, kB0, p0)
 
-    # scored advance 1  (k2 = g(p1, k1))
     kA2, kB2 = _step(kA_prev=_kA1, kB_prev=_kB1, p=p1)
 
-    # scored advance 2  (k3 = g(p2, k2))
     kA3, kB3 = _step(kA_prev=kA2, kB_prev=kB2, p=p2)
 
-    G = kB2 + kB3  # R(k) = k^B, γ = 1
+    G = kB2 + kB3
     return (kB2, kB3), G
 
-
-# ---------------------------------------------------------------------------
-# Analytical ground truth
-# ---------------------------------------------------------------------------
 
 def _oracle_return() -> float:
     """Enumerate all action pairs, return max G."""
@@ -93,7 +82,6 @@ def _myopic_greedy_walk() -> tuple[tuple[float, ...], float]:
     against a constant. Summed static regret is 0 by construction (greedy selects the local
     argmax) — the point of §1.5 is that this 0 is NOT the cumulative dynamic regret.
     """
-    # warm-up advance (k1, UNSCORED): committed pre-decision state
     kA, kB = _step(0.0, 0.0, 0.0)
     actions: list[float] = []
     summed_regret = 0.0
@@ -103,24 +91,19 @@ def _myopic_greedy_walk() -> tuple[tuple[float, ...], float]:
         chosen = max(ACTION_GRID, key=lambda a: local_returns[a])
         summed_regret += local_best - local_returns[chosen]
         actions.append(chosen)
-        kA, kB = _step(kA, kB, chosen)  # commit chosen action, advance scored step
+        kA, kB = _step(kA, kB, chosen)
     return tuple(actions), summed_regret
 
 
-# Known values
 ORACLE_ACTION = (0.0, 1.0)
 PLANNER_ACTION = (1.0, 0.0)
 
 G_ORACLE = 1.0
 G_PLANNER = -1.0
 
-CUMULATIVE_REGRET = G_ORACLE - G_PLANNER  # 2.0
-MYOPIC_REGRET_ACTUAL = 1.0  # G_oracle − G_myopic, verified independently below
+CUMULATIVE_REGRET = G_ORACLE - G_PLANNER
+MYOPIC_REGRET_ACTUAL = 1.0
 
-
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
 
 class TestReferenceMetricMatchesKnownValues:
     """The reference implementation must match the analytical oracle."""
@@ -149,7 +132,6 @@ class TestReferenceMetricMatchesKnownValues:
         """Myopic greedy walk enumerates (1, 1) — each step individually optimal."""
         myopic_actions, _ = _myopic_greedy_walk()
         assert myopic_actions == (1.0, 1.0)
-        # each chosen action is the local argmax, so its scored kB is the per-step best
         (kB2, kB3), _ = _rollout(myopic_actions)
         assert kB2 == pytest.approx(1.0)  # p1=1 maximizes kB2
         assert kB3 == pytest.approx(-1.0)  # p2=1 maximizes kB3 given p1=1
@@ -175,10 +157,8 @@ class TestMyopicRegretMismatch:
         computed cumulative (dynamic) regret is 2 (planner) / 1 (myopic vs oracle)."""
         myopic_actions, summed_static_regret = _myopic_greedy_walk()
 
-        # summed per-step static regret, computed by enumeration, is exactly 0
         assert summed_static_regret == pytest.approx(0.0)
 
-        # dynamic regrets, independently computed via full rollouts, are NOT 0
         _, G_oracle = _rollout(ORACLE_ACTION)
         _, G_planner = _rollout(PLANNER_ACTION)
         _, G_myopic = _rollout(myopic_actions)
@@ -188,7 +168,6 @@ class TestMyopicRegretMismatch:
         assert planner_dynamic_regret == pytest.approx(2.0)
         assert myopic_dynamic_regret == pytest.approx(1.0)
 
-        # the crux (§1.5, B2): summed static regret cannot stand in for dynamic regret
         assert summed_static_regret != pytest.approx(myopic_dynamic_regret)
 
     def test_myopic_action_is_not_oracle(self):

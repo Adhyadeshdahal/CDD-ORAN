@@ -33,18 +33,12 @@ from scripts.e1_scm_gate import (
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-# --------------------------------------------------------------------------------------
-# True generator: full 4-clause PASS.
-# --------------------------------------------------------------------------------------
 def test_e1_scm_gate_all_clauses_pass():
     result = run_e1_scm_gate()
     assert result.passed, "E1 SCM gate failed:\n" + "\n".join(result.failures)
     assert result.clauses == {"a": True, "b": True, "c": True, "d": True}
 
 
-# --------------------------------------------------------------------------------------
-# Mutation harness: build injectable factories over a wrong-generator subclass.
-# --------------------------------------------------------------------------------------
 def _factories(cls: type[E1V2Env]) -> tuple[Callable[[int], E1V2Env], Callable[[int, int], E1V2Env]]:
     def env_factory(seed: int) -> E1V2Env:
         return cls(env_seed=seed, obs_noise_scale=0.0)
@@ -165,9 +159,6 @@ def test_gate_rejects_spurious_nondescendant_edge():
     assert _failures_for(result, "[b]")
 
 
-# --------------------------------------------------------------------------------------
-# Focused env invariants (unchanged).
-# --------------------------------------------------------------------------------------
 def test_one_step_latency_action_delayed():
     # An action applied now must NOT affect the immediately-next latent KPI; it affects the
     # one after (SEMANTICS one-step latency).
@@ -218,7 +209,7 @@ def test_direct_param_effects_match_locked_analytic_values():
     def do_first_latent(param_id, value):
         env.restore(snap)
         env.apply_action(param_id, value)
-        env.advance()  # warm-up
+        env.advance()
         return env.advance()
 
     d_p0 = abs(do_first_latent(0, DO_HIGH)[0] - do_first_latent(0, DO_LOW)[0])
@@ -226,9 +217,7 @@ def test_direct_param_effects_match_locked_analytic_values():
     assert d_p0 / float(E1V2Env.sigma[0]) >= MIN_EFF
 
 
-# --------------------------------------------------------------------------------------
 # Invocation smoke test (review MINOR 7): the documented direct-path command runs green.
-# --------------------------------------------------------------------------------------
 def test_script_runs_as_documented_command():
     proc = subprocess.run(
         [sys.executable, str(_REPO_ROOT / "scripts" / "e1_scm_gate.py")],

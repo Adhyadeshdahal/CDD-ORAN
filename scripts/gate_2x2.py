@@ -130,7 +130,6 @@ def build(cells, planner="QACM"):
 
 
 def _selftest():
-    # discovered-quantile: 2 xApp-decisions, both satisfied, utils 0.6/0.8
     d_q = {"steps": [{"panels": [{"planner_utilities": {"QACM": [0.6, 0.8]},
                                   "planner_satisfied": {"QACM": [1, 1]}}]}]}
     u, s = qacm_values(d_q)
@@ -151,7 +150,6 @@ def _selftest():
     print("selftest OK")
 
 
-# test hooks that take parsed dicts instead of dirs
 def cell_metrics_from_data(datas, planner="QACM"):
     utils, sats = [], []
     for data in datas:

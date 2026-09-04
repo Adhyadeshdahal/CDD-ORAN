@@ -453,7 +453,7 @@ def main(
 
         if enum_source == "oracle":
             enum = build_oracle_enumeration_graph(env)
-        else:  # "path"
+        else:
             if not enum_graph:
                 raise ValueError("--enum-source=path requires --enum-graph")
             enum, _ = load_enumeration_graph(enum_graph)

@@ -76,7 +76,7 @@ def arm_mask(arm: Arm) -> torch.Tensor:
     """
     p, k = E1V2Env.num_params, E1V2Env.num_kpis
     if arm == "oracle":
-        adj = E1V2Env(env_seed=0).true_adj_matrix()  # (p+k, p+k) float32
+        adj = E1V2Env(env_seed=0).true_adj_matrix()
         mask = adj[p : p + k, : p + k]
     elif arm == "dense":
         mask = np.ones((k, p + k), dtype=np.float32)
@@ -99,12 +99,12 @@ def validate_explicit_mask(mask: npt.NDArray[Any] | torch.Tensor) -> torch.Tenso
 class OneStepPredictor(nn.Module):
     """Per-output masked MLP: y_j = head_j(x * mask_j)."""
 
-    mask: torch.Tensor  # registered buffer; annotated so the checker sees a Tensor
+    mask: torch.Tensor
 
     def __init__(self, mask: torch.Tensor, hidden: tuple[int, ...]) -> None:
         super().__init__()
         num_outputs, in_dim = mask.shape
-        self.register_buffer("mask", mask)  # (num_outputs, in_dim); saved, not trained
+        self.register_buffer("mask", mask)
         self.heads = nn.ModuleList(
             [self._make_head(in_dim, hidden) for _ in range(num_outputs)]
         )
@@ -313,7 +313,7 @@ def load_arm(dataset_dir: str | Path, arm: Arm) -> tuple[OneStepPredictor, dict[
         resolved_mask = arm_mask(arm)
 
     raw = dict(meta["config"])
-    raw["hidden"] = tuple(raw["hidden"])  # JSON has no tuples; restore the arch shape
+    raw["hidden"] = tuple(raw["hidden"])
     cfg = ModelConfig(**raw)
     model = OneStepPredictor(resolved_mask, cfg.hidden)
     # register_buffer aliases resolved_mask, and load_state_dict copies the checkpoint buffer INTO

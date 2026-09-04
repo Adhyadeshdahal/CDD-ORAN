@@ -46,7 +46,6 @@ def gate_result():
     return run_e3_decision_gate()
 
 
-# --- (a) bank -------------------------------------------------------------------------------
 def test_bank_reproduces_exact_seeds():
     bank = build_bank(E3V2Env)
     assert bank.feasible
@@ -54,11 +53,10 @@ def test_bank_reproduces_exact_seeds():
     assert bank.seeds == _EXPECTED_SEEDS
 
 
-# --- (b) vectorized oracle == clone rollout -------------------------------------------------
 def test_vectorized_oracle_matches_clone_rollout():
     bank = build_bank(E3V2Env)
-    snap = bank.snaps[0]  # seed 16
-    G = vectorized_G(snap, 1.0, 1.0, 1.0)  # full model coeffs
+    snap = bank.snaps[0]
+    G = vectorized_G(snap, 1.0, 1.0, 1.0)
 
     def clone_G(indices):
         actions = [float(GRID[j]) for j in indices]
@@ -76,7 +74,6 @@ def test_vectorized_oracle_matches_clone_rollout():
     assert max_err <= TOL_ZERO, f"vectorized vs clone max abs err {max_err:.3e} > {TOL_ZERO}"
 
 
-# --- (c) truncated control is structurally zero ---------------------------------------------
 def test_truncated_control_gap_is_zero(gate_result):
     assert gate_result.feasible
     # every per-state gap_T_norm must be ~0 (greedy == exhaustive on the separable truncated model)
@@ -85,7 +82,6 @@ def test_truncated_control_gap_is_zero(gate_result):
     assert gate_result.mean_abs_gap_T_norm <= TOL_ZERO
 
 
-# --- (d) FH > FM raw cumulative R on anchor seeds -------------------------------------------
 def test_fh_beats_fm_raw_on_anchor_seeds(gate_result):
     by_seed = {s["seed"]: s for s in gate_result.per_state}
     anchors = [16, 62, 81]
@@ -112,7 +108,7 @@ def test_per_state_records_all_mandated_diagnostics(gate_result):
     for s in gate_result.per_state:
         assert required.issubset(s.keys()), f"missing {required - set(s.keys())}"
         for arm in ("FH", "FM", "TH", "TM"):
-            assert len(s[f"seq_{arm}"]) == 3  # H=3 emitted P0 values
+            assert len(s[f"seq_{arm}"]) == 3
             # regret is the unclamped G_star - G_arm
             assert s[f"regret_{arm}"] == pytest.approx(s["G_star"] - s[f"G_{arm}"], abs=TOL_ZERO)
         # normalized quantities consistent with their raw + D3
@@ -121,7 +117,6 @@ def test_per_state_records_all_mandated_diagnostics(gate_result):
         assert s["fh_vs_th"] == pytest.approx(s["G_FH"] - s["G_TH"], abs=TOL_ZERO)
 
 
-# --- (e) acceptance gates on BOTH clauses ---------------------------------------------------
 def test_acceptance_gates_on_truncated_control():
     """Inject a non-truncated 'truncated' model: gap_T_norm becomes gap_H_norm > tol, so the
     factor-removal clause must fail and the whole gate must reject (passed False)."""
@@ -150,7 +145,6 @@ def test_cli_exit_status_gates_on_both_clauses():
     assert "RESULT: FAIL" in bad.stdout
 
 
-# --- (f) env invariants ---------------------------------------------------------------------
 def test_h3_latency():
     """apply_action's effect surfaces one advance later (SEMANTICS §1.1)."""
     env = E3V2Env(env_seed=16)
@@ -162,8 +156,8 @@ def test_h3_latency():
 
     env.restore(snap)
     env.apply_action(0, committed_p0 + 0.5)
-    k1 = env.advance()  # warm-up: reflects pre-decision P0
-    k2_moved = env.advance()  # terminal: reflects the moved P0 in K0
+    k1 = env.advance()
+    k2_moved = env.advance()
 
     env.restore(snap)
     k1_neutral = env.advance()

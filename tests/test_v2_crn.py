@@ -25,8 +25,6 @@ def _make(noise: float = 0.0, seed: int = 7, episode: int = 0) -> E1V2Env:
     return E1V2Env(env_seed=seed, obs_noise_scale=noise, episode=episode)
 
 
-# --- stable tape ------------------------------------------------------------
-
 def test_repeated_observation_at_one_coordinate_is_identical():
     env = _make(noise=0.5)
     env.step(0, 0.3)
@@ -44,8 +42,6 @@ def test_initial_params_are_coordinate_keyed_and_stable():
     c = _make(noise=0.0, seed=3, episode=5)
     assert not np.array_equal(a.params, c.params)
 
-
-# --- cross-arm byte-identical exogenous draws (the BLOCKER acceptance) -------
 
 def test_cross_arm_byte_identical_noise_under_different_actions():
     """Two arms that apply DIFFERENT actions still index the same (episode,time,var)
@@ -69,7 +65,7 @@ def test_cross_arm_byte_identical_noise_under_different_actions():
         # arm B reads the tape extra times; that must not desynchronize anything.
         _ = arm_b.observed_kpis()
 
-        assert arm_a.time == arm_b.time  # matching logical coordinate
+        assert arm_a.time == arm_b.time
         eps_a, eps_b = tape_eps(arm_a), tape_eps(arm_b)
         # the exogenous draws are byte-identical across arms despite different actions
         assert np.array_equal(eps_a, eps_b)
@@ -77,8 +73,6 @@ def test_cross_arm_byte_identical_noise_under_different_actions():
         assert np.array_equal(arm_a.observed_kpis(), arm_a.latent_kpis() + eps_a)
         assert np.array_equal(arm_b.observed_kpis(), arm_b.latent_kpis() + eps_b)
 
-
-# --- noise semantics --------------------------------------------------------
 
 def test_noise_off_latent_equals_observed():
     env = _make(noise=0.0)
@@ -118,8 +112,6 @@ def test_distinct_variables_draw_independently():
     assert len(set(np.round(eps, 12))) > 1
 
 
-# --- global RNG isolation ---------------------------------------------------
-
 def test_module_level_numpy_state_unchanged_across_rollout():
     # numpy's stub types get_state() as the legacy=False dict overload; the default
     # (legacy=True) returns the MT19937 tuple we compare positionally below.
@@ -134,8 +126,6 @@ def test_module_level_numpy_state_unchanged_across_rollout():
     assert before[2:] == after[2:]
 
 
-# --- snapshot / diverge / restore -------------------------------------------
-
 def test_snapshot_diverge_restore_reproduces_continuation():
     scale = 0.4
     env = _make(noise=scale, seed=21)
@@ -143,7 +133,6 @@ def test_snapshot_diverge_restore_reproduces_continuation():
     env.step(1, 0.5)
     snap = env.snapshot()
 
-    # canonical continuation from the snapshot
     ref = _make(noise=scale, seed=21)
     ref.restore(snap)
     ref.step(2, 0.3)

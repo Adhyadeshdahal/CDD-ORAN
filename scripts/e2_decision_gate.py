@@ -44,7 +44,7 @@ from cdd_oran.analysis.v2_regret import (  # noqa: E402
 from cdd_oran.envs.v2.e2 import E2V2Env, safe_exp  # noqa: E402
 
 # --- FROZEN protocol constants (GATE_CONTRACT_E2.md) ------------------------------------------
-SEED_POOL = range(4096)  # env_seed = 0..4095
+SEED_POOL = range(4096)
 EPISODE = 0
 NEUTRAL_STEPS = 3
 N_PER_CLASS = 32

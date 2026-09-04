@@ -203,7 +203,6 @@ def run_e1_scm_gate(
 
     for si, snap in enumerate(bank):
         params, prev_params, prev_kpis = snap[0], snap[1], snap[2]
-        # Precompute do(high)/do(low) rollouts for every param at this state.
         roll_high = {p: _do_rollout(env, snap, p, DO_HIGH, H_DESC) for p in range(4)}
         roll_low = {p: _do_rollout(env, snap, p, DO_LOW, H_DESC) for p in range(4)}
 
@@ -311,7 +310,7 @@ def run_e1_scm_gate(
         #     on the neutral (on-manifold) bank state AND on preregistered OFF-manifold states.
         analytic = _analytic_next(prev_params, prev_kpis)
         env.restore(snap)
-        rolled = env.advance()  # neutral advance -> next latent
+        rolled = env.advance()
         if np.max(np.abs(analytic - rolled)) > TOL_ZERO:
             clause_d = False
             result.failures.append(

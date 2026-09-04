@@ -85,15 +85,14 @@ def test_write_load_roundtrip_and_manifest(tmp_path: Path):
 
     rows, loaded_manifest = load_dataset(tmp_path)
     assert loaded_manifest == json.loads((tmp_path / "manifest.json").read_text())
-    # Reloaded rows reproduce the persisted content hash exactly.
     assert dataset_hash(rows) == manifest["dataset_hash"]
 
 
 def test_load_rejects_a_single_tampered_row_byte(tmp_path: Path):
     write_dataset(_CFG, tmp_path)
-    # Flip one value in the persisted rows: the recomputed dataset_hash must no longer match.
     with np.load(tmp_path / "rows.npz") as data:
         cols = {name: data[name] for name in data.files}
+    # Flip one value in the persisted rows: the recomputed dataset_hash must no longer match.
     cols["x_params"][0, 0] += 1.0
     np.savez(tmp_path / "rows.npz", **cols)
     with pytest.raises(ValueError, match="dataset_hash"):
@@ -131,10 +130,9 @@ def test_nonzero_observation_noise_is_rejected():
 
 def test_generate_refuses_to_clobber_downstream_without_force(tmp_path: Path):
     write_dataset(_CFG, tmp_path)
-    (tmp_path / "split.json").write_text("{}")  # a stale downstream artifact
+    (tmp_path / "split.json").write_text("{}")
     with pytest.raises(ValueError, match="downstream artifacts already exist"):
         write_dataset(_CFG, tmp_path)
-    # With force, the known descendant is cleared and generation republishes cleanly.
     write_dataset(_CFG, tmp_path, force=True)
     assert not (tmp_path / "split.json").exists()
 
@@ -144,10 +142,8 @@ def test_forced_generate_clears_stale_discovery_and_recovery(tmp_path: Path):
     write_dataset(_CFG, tmp_path)
     (tmp_path / "discovery.json").write_text("{}")
     (tmp_path / "recovery.json").write_text("{}")
-    # Without force, their presence blocks the rerun.
     with pytest.raises(ValueError, match="downstream artifacts already exist"):
         write_dataset(_CFG, tmp_path)
-    # With force, guard_descendants removes both stale outputs.
     write_dataset(_CFG, tmp_path, force=True)
     assert not (tmp_path / "discovery.json").exists()
     assert not (tmp_path / "recovery.json").exists()
@@ -205,14 +201,13 @@ def test_load_rejects_tampered_scm_identity_blob(tmp_path: Path):
     # Editing scm_identity.b2 while leaving scm_hash untouched must not load.
     write_dataset(_CFG, tmp_path)
     manifest = json.loads((tmp_path / "manifest.json").read_text())
-    manifest["scm_identity"]["b2"] = 999.0  # scm_hash left as-is
+    manifest["scm_identity"]["b2"] = 999.0
     (tmp_path / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True))
     with pytest.raises(ValueError, match="scm_identity"):
         load_dataset(tmp_path)
 
 
 def test_genuine_dataset_loads_with_warmup_and_identity_bound(tmp_path: Path):
-    # A real dataset satisfies the new warmup-time and scm_identity binds and loads unchanged.
     manifest = write_dataset(_CFG, tmp_path)
     rows, loaded = load_dataset(tmp_path)
     assert loaded == json.loads((tmp_path / "manifest.json").read_text())
@@ -228,13 +223,11 @@ def test_genuine_dataset_loads_with_warmup_and_identity_bound(tmp_path: Path):
 def test_manifest_write_failure_after_config_change_keeps_prior_pair(tmp_path: Path, monkeypatch):
     import cdd_oran.e1slice.dataset as ds
 
-    # A valid dataset from config A is on disk.
     write_dataset(_CFG, tmp_path)
     old_rows = (tmp_path / "rows.npz").read_bytes()
     old_manifest = (tmp_path / "manifest.json").read_text()
     old_dataset_hash = json.loads(old_manifest)["dataset_hash"]
 
-    # Republish a DIFFERENT config B (its rows differ), but the manifest staging fails mid-write.
     cfg_b = replace(_CFG, n_episodes=_CFG.n_episodes + 2)
 
     def boom(tmp, text):
@@ -250,6 +243,5 @@ def test_manifest_write_failure_after_config_change_keeps_prior_pair(tmp_path: P
     assert (tmp_path / "manifest.json").read_text() == old_manifest
     assert not (tmp_path / "rows.npz.tmp").exists()
     assert not (tmp_path / "manifest.json.tmp").exists()
-    # And the surviving pair still loads and binds.
     _, manifest = load_dataset(tmp_path)
     assert manifest["dataset_hash"] == old_dataset_hash

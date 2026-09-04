@@ -76,15 +76,15 @@ def _cmi_head_grad_step(model, s_t, s_tp1, a_batch, optimizer):
     use_informed = torch.rand(bs, device=model.device) > 0.5
     random_drop = torch.randint(fd + 1, (bs,), device=model.device)
     drop_idx = torch.where(use_informed, changed, random_drop)
-    mask = F.one_hot(drop_idx, fd + 1).bool()  # (bs, fd+1)
+    mask = F.one_hot(drop_idx, fd + 1).bool()
 
     model.models.train()
     parameters = model._stacked_parameters()
     feats = model._batched_forward(
         parameters, s_t, a_batch, features=None, features_in_dim=None, return_features=True
-    )  # (fd, bs, fd+1, feat)
+    )
     mu, std = model._batched_forward(parameters, features=feats, features_in_dim=0)
-    targets = s_tp1.transpose(0, 1).unsqueeze(-1)  # (fd, bs, 1)
+    targets = s_tp1.transpose(0, 1).unsqueeze(-1)
     full_loss = model._nll(mu, std, targets).mean()
 
     masked_feats = feats.masked_fill(mask.unsqueeze(0).unsqueeze(-1), float("-inf"))
@@ -235,7 +235,6 @@ def run_discovery(
         "Discovery: collected %d transitions on %s (state_dim=%d)", s.shape[0], cfg.environment, state_dim
     )
 
-    # 1) Train ONLY the CMI/max-pool structure signal.
     optimizer = torch.optim.Adam(model.models.parameters(), lr=cfg.model.lr)
     rng = torch.Generator().manual_seed(seed)
     batch_size = cfg.model.batch_size
@@ -249,7 +248,6 @@ def run_discovery(
         if step % max(train_steps // 5, 1) == 0:
             logger.info("Discovery train step %d/%d structure NLL=%.4f", step, train_steps, last_loss.item())
 
-    # 2) Converge mask_CMI (crisp enumeration source) to steady state, then persist a run dir.
     _converge_mask_cmi(model, s, a, s_next, batch_size, cmi_batches)
     state_edges = int(model.get_binary_graph()[:, :state_dim].sum())
     logger.info("Discovery: converged mask_CMI -> %d enumeration state edges", state_edges)
@@ -287,7 +285,6 @@ def run_discovery(
     #    threshold; fails loudly on zero state edges). No ground truth is read here.
     freeze_enumeration_graph(run_dir, enum_path, device=device)
 
-    # 4) Per-edge inclusion posterior from the frozen predictor's bootstrap frequencies.
     raw_post = GraphPosterior.from_bootstrap(
         run_dir, B=B, n_transitions=n_transitions, seed=seed, device=device
     )
@@ -329,7 +326,7 @@ def run_discovery(
         B=B, n_transitions=n_transitions, seed=seed, device=device,
     )
     calibrator = IsotonicCalibrator().fit(scores, labels)
-    calibrated = raw_post.apply_calibrator(calibrator)  # meta.calibrated = True
+    calibrated = raw_post.apply_calibrator(calibrator)
     calibrated.node_names = node_names(env)
     calibrated.meta = {
         **calibrated.meta,

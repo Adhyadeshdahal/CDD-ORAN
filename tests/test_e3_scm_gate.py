@@ -33,18 +33,12 @@ from scripts.e3_scm_gate import (
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-# --------------------------------------------------------------------------------------
-# True generator: full 5-clause PASS.
-# --------------------------------------------------------------------------------------
 def test_e3_scm_gate_all_clauses_pass():
     result = run_e3_scm_gate()
     assert result.passed, "E3 SCM gate failed:\n" + "\n".join(result.failures)
     assert result.clauses == {"a": True, "b": True, "c": True, "d": True, "e": True}
 
 
-# --------------------------------------------------------------------------------------
-# Mutation harness: injectable factories over a wrong-generator subclass.
-# --------------------------------------------------------------------------------------
 def _factories(
     cls: type[E3V2Env],
 ) -> tuple[Callable[[int], E3V2Env], Callable[[int, int], E3V2Env]]:
@@ -177,9 +171,6 @@ def test_gate_rejects_p0_to_k1_impostor():
     assert _failures_for(result, "[c.i]"), "declared K0->K1 edge inert off manifold"
 
 
-# --------------------------------------------------------------------------------------
-# Focused env invariants.
-# --------------------------------------------------------------------------------------
 def test_standardization_equals_exact_sqrt():
     expected_sigma = np.array(
         [
@@ -217,7 +208,7 @@ def test_cascade_timing_p0_reaches_k2_k3_at_t_plus_3():
     def rollout(value):
         env.restore(snap)
         env.apply_action(0, value)
-        env.advance()  # warm-up
+        env.advance()
         return [env.advance() for _ in range(3)]
 
     hi, lo = rollout(DO_HIGH), rollout(DO_LOW)
@@ -241,7 +232,7 @@ def test_direct_param_effects_meet_min_eff():
     def do_first_latent(param_id, value):
         env.restore(snap)
         env.apply_action(param_id, value)
-        env.advance()  # warm-up
+        env.advance()
         return env.advance()
 
     for param_id, child in {0: 0, 1: 2, 2: 3, 3: 4}.items():
@@ -279,9 +270,6 @@ def test_noise_off_latent_equals_observed():
     assert np.allclose(env.latent_kpis(), env.observed_kpis(), atol=0.0)
 
 
-# --------------------------------------------------------------------------------------
-# Invocation smoke test: the documented direct-path command runs green.
-# --------------------------------------------------------------------------------------
 def test_script_runs_as_documented_command():
     proc = subprocess.run(
         [sys.executable, str(_REPO_ROOT / "scripts" / "e3_scm_gate.py")],

@@ -59,7 +59,6 @@ class V2Env:
         self.prev_kpis: np.ndarray
         self.reset()
 
-    # --- coordinate-keyed exogenous tape (SEMANTICS §4/§5) --------------------
     def _coord_rng(self, namespace: int, variable: int, time: int) -> np.random.Generator:
         """Derive the per-coordinate generator for ``(env_seed, episode, time, ns, variable)``.
 
@@ -81,11 +80,9 @@ class V2Env:
         """
         return float(self._coord_rng(self._NS_PROC, variable, time).standard_normal())
 
-    # --- mechanism (subclass) -------------------------------------------------
     def _update_kpis(self, prev_params: np.ndarray, prev_kpis: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    # --- lifecycle ------------------------------------------------------------
     def reset(self, episode: int | None = None) -> dict[str, np.ndarray]:
         """Re-initialize at ``time = 0``; initial params come from the tape (§4)."""
         if episode is not None:
@@ -102,7 +99,6 @@ class V2Env:
         self.prev_kpis = np.zeros(self.num_kpis, dtype=float)
         return self.latent_state()
 
-    # --- SEMANTICS §1.1 apply/advance split -----------------------------------
     def apply_action(self, param_id: int, value: float) -> None:
         """Write one param coordinate into the pending param vector (no KPI advance)."""
         self.params[int(param_id)] = float(value)
@@ -124,7 +120,6 @@ class V2Env:
         """A no-op step: advance with no action applied (params held)."""
         return self.advance()
 
-    # --- accessors ------------------------------------------------------------
     def latent_kpis(self) -> np.ndarray:
         """Raw noiseless latent KPI vector ``k_t`` (SEMANTICS §2, PD3)."""
         return self.prev_kpis.copy()
@@ -151,7 +146,6 @@ class V2Env:
     def latent_state(self) -> dict[str, np.ndarray]:
         return {"params": self.prev_params.copy(), "kpis": self.prev_kpis.copy()}
 
-    # --- deterministic snapshot/restore (gate rollouts) -----------------------
     def snapshot(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
         """Save committed + pending state AND the logical coordinates (episode, time).
 

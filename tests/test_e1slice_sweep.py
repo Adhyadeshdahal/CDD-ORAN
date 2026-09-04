@@ -29,9 +29,6 @@ from cdd_oran.e1slice.aggregate import (
 from scripts import e1_slice_sweep as sweep
 
 
-# ---------------------------------------------------------------------------
-# Fake fast stages (no torch, no training).
-# ---------------------------------------------------------------------------
 def _fake_stage(name: str, counter: Path, *, exit_code: int = 0) -> sweep.Stage:
     """A stage whose subprocess bumps ``counter`` and writes ``<rep>/<name>.json``."""
 
@@ -54,9 +51,6 @@ def _read_counter(counter: Path) -> int:
     return int(counter.read_text()) if counter.exists() else 0
 
 
-# ---------------------------------------------------------------------------
-# Frozen matrix / dry run.
-# ---------------------------------------------------------------------------
 def test_plan_names_exactly_ten_collision_free_dirs(tmp_path: Path) -> None:
     dirs = [sweep.replicate_dir(tmp_path, r) for r in range(sweep.N_REPLICATES)]
     assert len(dirs) == 10
@@ -87,9 +81,6 @@ def test_build_stages_is_the_frozen_seven_stage_chain() -> None:
     assert names == ["generate", "split", "discover", "train", "eval", "verify", "recover"]
 
 
-# ---------------------------------------------------------------------------
-# Journal + resume.
-# ---------------------------------------------------------------------------
 def test_full_run_journals_every_stage(tmp_path: Path) -> None:
     counter = tmp_path / "counter"
     stages = [_fake_stage(n, counter) for n in ("a", "b", "c")]
@@ -126,7 +117,7 @@ def test_resume_after_interrupt_completes_without_recomputing(tmp_path: Path) ->
     # Resume the full chain: a, b validated + skipped, only c runs.
     status = sweep.run_replicate(tmp_path, 0, [a, b, c])
     assert status["status"] == "succeeded"
-    assert _read_counter(counter) == 3  # +1 for c only
+    assert _read_counter(counter) == 3
 
 
 def test_resume_rejects_a_corrupted_artifact(tmp_path: Path) -> None:
@@ -134,8 +125,8 @@ def test_resume_rejects_a_corrupted_artifact(tmp_path: Path) -> None:
     stages = [_fake_stage(n, counter) for n in ("a", "b", "c")]
     sweep.run_replicate(tmp_path, 0, stages)
     assert _read_counter(counter) == 3
-    # Corrupt b's artifact bytes: b no longer hashes to its journaled digest.
     rep = sweep.replicate_dir(tmp_path, 0)
+    # Corrupt b's artifact bytes: b no longer hashes to its journaled digest.
     (rep / "b.json").write_text("tampered")
     sweep.run_replicate(tmp_path, 0, stages)
     # a stays valid (skip); b + c re-run.
@@ -176,9 +167,7 @@ def test_failed_replicate_does_not_block_later_replicates(tmp_path: Path) -> Non
     assert s1["status"] == "succeeded"
 
 
-# ---------------------------------------------------------------------------
 # Finding #3: persisted seeds must match the replicate (no copied/stale seeds).
-# ---------------------------------------------------------------------------
 def _write_seed_artifacts(
     rep: Path, *, env_seed: float, split_seed: float, weight_seed: float
 ) -> None:
@@ -260,9 +249,7 @@ def test_resume_rejects_a_copied_replicate_with_foreign_seeds(tmp_path: Path) ->
     assert _read_counter(counter) == 4  # a + b both re-ran
 
 
-# ---------------------------------------------------------------------------
 # Finding #4: a semantically invalid sweep must not exit 0.
-# ---------------------------------------------------------------------------
 def _validating_stage(name: str, counter: Path, *, ok: bool) -> sweep.Stage:
     """A fast stage that runs cleanly but whose semantic validator returns ``ok``."""
     base = _fake_stage(name, counter)
@@ -320,9 +307,6 @@ def test_run_all_exits_zero_only_when_complete(tmp_path: Path, monkeypatch) -> N
     assert _run_all_with(monkeypatch, tmp_path / "good", complete=True) == 0
 
 
-# ---------------------------------------------------------------------------
-# Bootstrap / pairing math (fixed arrays, no SciPy).
-# ---------------------------------------------------------------------------
 def test_envelope_on_fixed_array() -> None:
     env = envelope([1.0, 2.0, 3.0, 4.0])
     assert env["n"] == 4
@@ -376,9 +360,6 @@ def test_paired_summary_bundles_envelope_and_ci() -> None:
     assert "ci_low" in ps["bootstrap_ci"] and "ci_high" in ps["bootstrap_ci"]
 
 
-# ---------------------------------------------------------------------------
-# Aggregation determinism against synthetic artifacts.
-# ---------------------------------------------------------------------------
 def _write_synthetic_replicate(out: Path, r: int) -> None:
     rep = sweep.replicate_dir(out, r)
     (rep / "arms").mkdir(parents=True, exist_ok=True)
@@ -446,10 +427,8 @@ def test_aggregation_envelopes_and_completeness(tmp_path: Path, monkeypatch) -> 
     kk = summary["graph_recovery"]["kpi_kpi"]["recall"]
     assert kk["min"] == 0.0 and kk["max"] == 1.0
     assert kk["mean"] == pytest.approx(0.1)
-    # paired diff present with bootstrap CI
     diff = summary["paired_mse_diff"]["dense_minus_oracle"]
     assert "bootstrap_ci" in diff and len(diff["diffs"]) == 10
-    # every child hash carried through
     assert summary["replicates"][0]["child_hashes"]["dataset_hash"] == "ds00"
 
 
@@ -480,22 +459,18 @@ def test_write_outputs_emits_jsonl_and_summary(tmp_path: Path, monkeypatch) -> N
     assert all(json.loads(line)["replicate"] == i for i, line in enumerate(lines))
 
 
-# ---------------------------------------------------------------------------
-# Lock (collision STOP guard).
-# ---------------------------------------------------------------------------
 def test_lock_blocks_a_second_holder(tmp_path: Path) -> None:
     out = tmp_path / "sweep"
     lock = sweep.acquire_lock(out, force_unlock=False)
     with pytest.raises(SystemExit):
         sweep.acquire_lock(out, force_unlock=False)
     sweep.release_lock(lock)
-    # released -> can re-acquire
     lock2 = sweep.acquire_lock(out, force_unlock=False)
     sweep.release_lock(lock2)
 
 
 def test_force_unlock_breaks_a_stale_lock(tmp_path: Path) -> None:
     out = tmp_path / "sweep"
-    sweep.acquire_lock(out, force_unlock=False)  # leak it (simulate a crash)
+    sweep.acquire_lock(out, force_unlock=False)
     lock2 = sweep.acquire_lock(out, force_unlock=True)
     sweep.release_lock(lock2)

@@ -11,5 +11,5 @@ class RandomPolicy:
         bin_id = np.random.randint(0, self.action_space[1] + 1)
         index = np.random.randint(
             0, self.action_space[param_id + 2] + 1
-        )  # Use per-param bin-length from action_space
+        )
         return [param_id, bin_id, index]

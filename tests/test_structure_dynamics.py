@@ -68,7 +68,7 @@ def test_structure_enforces_parent_exclusion_with_known_weights():
 
     def mu_of(values, presence):
         feats = _feats_first_channel(values)
-        structure = torch.tensor([presence], dtype=torch.float32)  # (1, ns)
+        structure = torch.tensor([presence], dtype=torch.float32)
         mu, std = sp.head(feats, structure)
         assert torch.allclose(std, torch.full_like(std, 1.0 + 1e-4)), "log_std weight is 0"
         return float(mu.detach().reshape(()))
@@ -119,9 +119,9 @@ def test_absent_parent_input_invariance_end_to_end():
     struct_k = model._normalize_structures(structs, kpi_rows)  # forces self/action, keeps 0 off
     assert not bool(struct_k[0, 0, 0]), "source 0 must remain absent for KPI child 0"
 
-    mu_before, _ = model._graph_means(s, a, kpi_rows, struct_k)  # (1, k, batch, 1)
+    mu_before, _ = model._graph_means(s, a, kpi_rows, struct_k)
     s_changed = s.clone()
-    s_changed[:, 0] = s_changed[:, 0] + 100.0  # perturb the ABSENT parent's input
+    s_changed[:, 0] = s_changed[:, 0] + 100.0
     mu_after, _ = model._graph_means(s_changed, a, kpi_rows, struct_k)
 
     # KPI child 0's graph mean must be EXACTLY invariant to the absent parent's input.
@@ -238,8 +238,8 @@ def test_predict_accepts_full_and_sliced_structures():
     s = torch.rand(4, STATE_DIM)
     a = torch.rand(4, ACTION_DIM)
     k = STATE_DIM - KPI_START
-    full = _structs(1)  # (1, fd, ns)
-    sliced = full[:, KPI_START:, :]  # (1, k, ns)
+    full = _structs(1)
+    sliced = full[:, KPI_START:, :]
     m_full = model.predict_next_state(s, a, structures=full).mean
     m_sliced = model.predict_next_state(s, a, structures=sliced).mean
     torch.testing.assert_close(m_full, m_sliced)
@@ -250,7 +250,7 @@ def test_default_sampler_is_used_when_structures_omitted():
     model = _model(sampler=_FixedSampler(_structs(1)))
     s = torch.rand(3, STATE_DIM)
     a = torch.rand(3, ACTION_DIM)
-    dist = model.predict_next_state(s, a)  # no structures -> injected sampler, m=1
+    dist = model.predict_next_state(s, a)
     assert dist.mean.shape == (3, STATE_DIM - KPI_START)
 
 
@@ -259,7 +259,7 @@ def test_missing_sampler_fails_loudly():
     s = torch.rand(2, STATE_DIM)
     a = torch.rand(2, ACTION_DIM)
     try:
-        model.predict_next_state(s, a)  # no structures, no sampler
+        model.predict_next_state(s, a)
     except ValueError as error:
         assert "sampler" in str(error)
     else:
@@ -327,16 +327,15 @@ def test_residual_diagnostics_return_components_with_correct_algebra():
     a = torch.rand(5, ACTION_DIM)
     diag = model.residual_diagnostics(s, a, structures=_structs(2))
 
-    mu_graph = diag["mu_graph"]  # (m, k, batch, 1)
-    delta = diag["delta"]  # (batch, k)
-    mu_total = diag["mu_total"]  # (m, k, batch, 1)
+    mu_graph = diag["mu_graph"]
+    delta = diag["delta"]
+    mu_total = diag["mu_total"]
     m, k, batch, _ = mu_graph.shape
     assert delta.shape == (batch, k)
     assert torch.all(delta.abs() <= model.residual_bound + 1e-6), "delta must be tanh-bounded"
 
-    delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
+    delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)
     torch.testing.assert_close(mu_total, mu_graph + delta_rows)
-    # The reported abs residual matches delta.
     torch.testing.assert_close(diag["abs_mean_residual"], delta.abs().mean(dim=0))
 
 
@@ -353,9 +352,7 @@ def test_train_step_runs_and_updates_residual_params():
     )
 
 
-# --------------------------------------------------------------------------- #
 # Enumeration-artifact validation (review v2 BLOCKER B).
-# --------------------------------------------------------------------------- #
 def _env_i_cfg(enum_path=None, posterior_path=None):
     cfg = load_config("env_i_cdl.yaml")
     model = cfg.model
@@ -388,7 +385,7 @@ def _write_enum(path, state_graph, env, *, environment="EnvironmentI",
 def test_valid_enumeration_artifact_accepted_and_enumerates_conflicts(tmp_path):
     env = get_env(_env_i_cfg())
     enum = _write_enum(tmp_path / "enum.json", env.true_adj_matrix, env)
-    model = get_model(_env_i_cfg(enum_path=enum), env)  # validates against the env
+    model = get_model(_env_i_cfg(enum_path=enum), env)
     graph = model.get_binary_graph()[:, :-1].cpu().numpy()
     edges = detect_conflict_edges(graph, env)
     assert len(edges) > 0, "a valid enumeration graph must yield at least one conflict"
@@ -426,9 +423,7 @@ def test_wrong_env_enumeration_artifact_rejected(tmp_path):
         get_model(_env_i_cfg(enum_path=bad_kind), env)
 
 
-# --------------------------------------------------------------------------- #
 # Self-contained run artifacts: stage + hash-verify (review v2 MAJOR).
-# --------------------------------------------------------------------------- #
 def _calibrated_posterior_file(path, env):
     from cdd_oran.analysis.graph_posterior import GraphPosterior
 

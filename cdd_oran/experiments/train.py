@@ -113,7 +113,7 @@ def main(cfg: ExperimentConfig = DEFAULT_CONFIG, resume=False, run_dir=None):
         seed_everything(cfg.seed, cfg.deterministic)
     model = get_model(cfg, env, sampler=sampler)
     if artifact_manifest is not None:
-        model.artifact_manifest = artifact_manifest  # persisted in the checkpoint
+        model.artifact_manifest = artifact_manifest
 
     if resume:
         if not checkpoint_path.exists():

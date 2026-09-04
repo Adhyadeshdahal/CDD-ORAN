@@ -45,10 +45,8 @@ from cdd_oran.e1slice.aggregate import envelope, paired_summary
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLAN = "004-e1-multiseed-envelope"
 
-# ---------------------------------------------------------------------------
 # FROZEN Plan 004 matrix. Changing any value here after execution starts is a
 # discipline violation; the run records these settings into summary.json.
-# ---------------------------------------------------------------------------
 N_REPLICATES = 10
 DATASET: dict[str, Any] = {"episodes": 48, "steps": 16, "warmup": 2, "obs_noise_scale": 0.0}
 SPLIT: dict[str, Any] = {"test_fraction": 0.25, "split_seed": 0}
@@ -74,9 +72,6 @@ def replicate_dir(out: Path, r: int) -> Path:
     return out / f"replicate-{r:02d}"
 
 
-# ---------------------------------------------------------------------------
-# Small deterministic helpers (atomic writes, hashing).
-# ---------------------------------------------------------------------------
 def _atomic_write_text(path: Path, text: str) -> None:
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(text, encoding="utf-8")
@@ -103,9 +98,6 @@ def _now() -> str:
     return datetime.now(UTC).isoformat()
 
 
-# ---------------------------------------------------------------------------
-# Stage model.
-# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Stage:
     """One step of a replicate pipeline.
@@ -247,9 +239,6 @@ def build_stages() -> tuple[Stage, ...]:
     )
 
 
-# ---------------------------------------------------------------------------
-# Journal (atomic, per replicate).
-# ---------------------------------------------------------------------------
 def _journal_path(rep_dir: Path) -> Path:
     return rep_dir / "journal.json"
 
@@ -363,9 +352,6 @@ def stage_valid(rep_dir: Path, stage: Stage, journal: dict[str, Any]) -> bool:
     return True
 
 
-# ---------------------------------------------------------------------------
-# Stage execution.
-# ---------------------------------------------------------------------------
 def _stream_subprocess(argv: list[str], log_path: Path, prefix: str) -> int:
     """Run ``argv`` from REPO_ROOT, tee combined stdout/stderr to ``log_path`` and console."""
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -467,9 +453,7 @@ def run_replicate(out: Path, r: int, stages: Iterable[Stage]) -> dict[str, Any]:
     return {"replicate": r, "seeds": replicate_seeds(r), "status": "succeeded", "failed_stage": None}
 
 
-# ---------------------------------------------------------------------------
 # Launch provenance (recorded once; re-read verbatim so aggregation stays byte-stable).
-# ---------------------------------------------------------------------------
 def _run(*args: str) -> str:
     result = subprocess.run(
         ["git", *args], cwd=str(REPO_ROOT), capture_output=True, text=True, check=False
@@ -524,9 +508,6 @@ def frozen_settings() -> dict[str, Any]:
     }
 
 
-# ---------------------------------------------------------------------------
-# Deterministic aggregation.
-# ---------------------------------------------------------------------------
 def _replicate_record(out: Path, r: int, stages: tuple[Stage, ...]) -> dict[str, Any]:
     """Read one replicate's verified outputs into a flat record. status success/failed."""
     rep_dir = replicate_dir(out, r)
@@ -633,7 +614,6 @@ def aggregate(out: Path, stages: tuple[Stage, ...] | None = None) -> dict[str, A
         summary["paired_mse_diff"] = {}
         return summary
 
-    # Graph recovery envelopes (per block, per metric).
     graph_env: dict[str, Any] = {}
     for block in GRAPH_BLOCKS:
         graph_env[block] = {
@@ -642,7 +622,6 @@ def aggregate(out: Path, stages: tuple[Stage, ...] | None = None) -> dict[str, A
         }
     summary["graph_recovery"] = graph_env
 
-    # Per-arm prediction-error envelopes.
     pred_env: dict[str, Any] = {}
     for arm in ARMS:
         pred_env[arm] = {
@@ -651,7 +630,6 @@ def aggregate(out: Path, stages: tuple[Stage, ...] | None = None) -> dict[str, A
         }
     summary["prediction"] = pred_env
 
-    # Paired MSE differences with deterministic bootstrap CI.
     paired: dict[str, Any] = {}
     for label, a_arm, b_arm in PAIRS:
         a = [rec["metrics"][a_arm]["mse"] for rec in succeeded]
@@ -677,9 +655,7 @@ def write_outputs(out: Path, summary: dict[str, Any]) -> tuple[Path, Path]:
     return jsonl, summ
 
 
-# ---------------------------------------------------------------------------
 # Lock (guards the collision STOP condition: two processes / one out dir).
-# ---------------------------------------------------------------------------
 def _lock_path(out: Path) -> Path:
     return out / ".sweep.lock"
 
@@ -711,9 +687,6 @@ def release_lock(path: Path) -> None:
         pass
 
 
-# ---------------------------------------------------------------------------
-# CLI.
-# ---------------------------------------------------------------------------
 def print_dry_run(out: Path) -> None:
     dirs = [replicate_dir(out, r) for r in range(N_REPLICATES)]
     unique = sorted({str(d) for d in dirs})

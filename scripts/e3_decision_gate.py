@@ -87,7 +87,6 @@ def _R(k: np.ndarray) -> float:
     return reward(np.asarray(k, dtype=float), _PANEL)
 
 
-# --- state bank ------------------------------------------------------------------------------
 def _committed_state(env_factory: Callable[[int], E3V2Env], seed: int):
     env = env_factory(seed)
     env.reset(episode=EPISODE)
@@ -117,7 +116,6 @@ def build_bank(env_factory: Callable[[int], E3V2Env] = E3V2Env) -> BankResult:
     return res
 
 
-# --- vectorized analytic cumulative return over V^3 ------------------------------------------
 def _panel_step_R(k0, k2, k3):
     """R for one scored step over panel {K0(dir0), K2(dir1), K3(dir1)}, broadcast over arrays."""
     z0 = (k0 - 0.5) / SIG01
@@ -151,7 +149,7 @@ def vectorized_G(snap, c10: float, c25: float, c35: float) -> np.ndarray:
     # k_4 (SCORED): k0=a3; K2/K3 carry a1 (the delayed harm surfaces two steps later).
     R4 = _panel_step_R(a3, P1c + c25 * c10 * a1, P2c + c35 * c10 * a1)
 
-    return R2 + R3 + R4  # broadcasts to (101,101,101)
+    return R2 + R3 + R4
 
 
 def _argmax_lex(G: np.ndarray) -> tuple[int, int, int]:
@@ -164,7 +162,6 @@ def _seq_to_indices(values) -> tuple[int, ...]:
     return tuple(int(np.argmin(np.abs(GRID - float(v)))) for v in values)
 
 
-# --- gate ------------------------------------------------------------------------------------
 @dataclass
 class GateResult:
     passed: bool = False
@@ -247,12 +244,10 @@ def run_e3_decision_gate(
                 "seed": seed,
                 "G_star": g_star,
                 "D3": d3,
-                # arm emitted sequences (P0 values, length H=3)
                 "seq_FH": _seq(fh_idx),
                 "seq_FM": _seq(fm_idx),
                 "seq_TH": _seq(th_idx),
                 "seq_TM": _seq(tm_idx),
-                # realized TRUE cumulative returns
                 "G_FH": G_FH,
                 "G_FM": G_FM,
                 "G_TH": G_TH,
@@ -262,13 +257,10 @@ def run_e3_decision_gate(
                 "regret_FM": g_star - G_FM,
                 "regret_TH": g_star - G_TH,
                 "regret_TM": g_star - G_TM,
-                # primary horizon gap (raw + normalized)
                 "gap_H": gap_H,
                 "gap_H_norm": gap_H / d3,
-                # truncated factor-removal control (raw + normalized)
                 "gap_T": gap_T,
                 "gap_T_norm": gap_T / d3,
-                # FH-vs-TH secondary structure diagnostic (raw + normalized)
                 "fh_vs_th": fh_vs_th,
                 "fh_vs_th_norm": fh_vs_th / d3,
             }

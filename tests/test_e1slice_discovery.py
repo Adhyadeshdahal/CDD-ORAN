@@ -102,7 +102,7 @@ def test_changing_held_out_rows_cannot_change_the_mask():
 def test_rejects_zero_variance_feature():
     rows = _synthetic_rows()
     dead = rows.x_params.copy()
-    dead[:, 3] = 1.0  # constant column -> zero variance
+    dead[:, 3] = 1.0
     rows = E1Rows(rows.episode, rows.time, dead, rows.x_kpis, rows.y_kpis)
     with pytest.raises(ValueError, match="zero-variance"):
         discover_graph(rows, _TRAIN)
@@ -111,7 +111,7 @@ def test_rejects_zero_variance_feature():
 def test_rejects_rank_deficient_design():
     rows = _synthetic_rows()
     dup = rows.x_kpis.copy()
-    dup[:, 0] = rows.x_params[:, 0]  # exact duplicate of an input column -> rank deficiency
+    dup[:, 0] = rows.x_params[:, 0]
     rows = E1Rows(rows.episode, rows.time, rows.x_params, dup, rows.y_kpis)
     with pytest.raises(ValueError, match="rank-deficient"):
         discover_graph(rows, _TRAIN)
@@ -149,8 +149,6 @@ def test_does_not_import_env_truth():
     # And the loaded module has no env truth bound in its namespace.
     assert not hasattr(disc, "E1V2Env")
 
-
-# --- persistence + binding + corruption (real small dataset) ---------------------------------
 
 _CFG = E1DatasetConfig(n_episodes=12, steps_per_episode=8, warmup=2, env_seed=0)
 
@@ -224,7 +222,7 @@ def test_load_discovery_rejects_wrong_candidate_shape(tmp_path: Path):
 
 def test_discover_refuses_stale_downstream_without_force(tmp_path: Path):
     _prepare_dataset(tmp_path)
-    (tmp_path / "metrics.json").write_text("{}")  # stale downstream artifact
+    (tmp_path / "metrics.json").write_text("{}")
     with pytest.raises(ValueError, match="downstream artifacts already exist"):
         write_discovery(tmp_path, DiscoveryConfig())
     write_discovery(tmp_path, DiscoveryConfig(), force=True)
@@ -239,7 +237,6 @@ def _rehash(record: dict) -> None:
 
 
 def test_valid_discovery_loads_after_rederivation(tmp_path: Path):
-    # The new re-derivations leave a correctly-generated discovery.json loadable and unchanged.
     _prepare_dataset(tmp_path)
     before = (tmp_path / "discovery.json").read_text()
     load_discovery(tmp_path)
@@ -305,13 +302,11 @@ def test_load_discovery_rejects_retuned_threshold(tmp_path: Path):
 
 # --- Finding #7: a forced re-split must clear stale discovery/recovery -------------------------
 def test_forced_split_clears_stale_discovery_and_recovery(tmp_path: Path):
-    _prepare_dataset(tmp_path)  # writes dataset + split + discovery.json
-    (tmp_path / "recovery.json").write_text("{}")  # a stale recovery output
+    _prepare_dataset(tmp_path)
+    (tmp_path / "recovery.json").write_text("{}")
     assert (tmp_path / "discovery.json").exists()
-    # Without force, the stale downstream outputs block the re-split.
     with pytest.raises(ValueError, match="downstream artifacts already exist"):
         write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0))
-    # With force, both discovery.json and recovery.json are cleared.
     write_split(tmp_path, SplitConfig(test_fraction=0.25, split_seed=0), force=True)
     assert not (tmp_path / "discovery.json").exists()
     assert not (tmp_path / "recovery.json").exists()

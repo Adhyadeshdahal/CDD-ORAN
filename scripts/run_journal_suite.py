@@ -27,8 +27,6 @@ from typing import Any
 
 import yaml
 
-# Run as a script (python scripts/run_journal_suite.py) puts scripts/ on sys.path, not
-# the repo root, so the in-process stats/emit imports of cdd_oran would fail. Add it.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 ENVS = ["EnvironmentI", "EnvironmentII", "EnvironmentIII"]
@@ -234,7 +232,6 @@ class Suite:
             return False
         return True
 
-    # ---- Stage 1: recovery (train CDL + threshold_sweep + edge_stability) ----
     def run_recovery(self):
         stage = 1
         for env in self.args.envs:
@@ -286,7 +283,6 @@ class Suite:
                         stab.pop("frequency_matrix", None)
                     entry["edge_stability"] = stab
 
-    # ---- Stage 2: world models (train MLP) ----
     def run_world_models(self):
         stage = 2
         for env in self.args.envs:
@@ -308,7 +304,6 @@ class Suite:
                     "graph": _read_json(run_dir / "metrics.json").get("graph"),
                 }
 
-    # ---- Stage 3: mitigation (evaluate CDL + MLP over mitigation seeds and overrides) ----
     def run_mitigation(self):
         stage = 3
         for env in self.args.envs:
@@ -403,7 +398,6 @@ class Suite:
         env, seed, mseed, override, model_kind = key
         self.satisfaction[env][seed][mseed].setdefault(override, {})[model_kind] = rates
 
-    # ---- Stage 4: risk sweep (evaluate CDL over planner.risk_kappa) ----
     def run_risk_sweep(self):
         stage = 4
         for env in self.args.envs:
@@ -429,7 +423,6 @@ class Suite:
                     if self._do(stage, f"risk kappa={kappa} {env} seed {seed}", argv):
                         self.risk_sweep[env][seed][kappa] = self._planner_utilities(cdl_run)
 
-    # ---- Stage 5: stats (in-process, existing stats module — robust seed-based recipe) ----
     def stats(self):
         import numpy as np
 
@@ -438,7 +431,6 @@ class Suite:
         for env in self.args.envs:
             cdl_by_planner: dict[str, dict] = {}
             mlp_by_planner: dict[str, dict] = {}
-            # satisfaction samples per planner per model, pooled across (seed, mseed).
             sat_cdl: dict[str, list] = {}
             sat_mlp: dict[str, list] = {}
             for seed in self.args.seeds:
@@ -452,7 +444,6 @@ class Suite:
                         # One paired scalar per (seed, mseed): the run's mean utility.
                         cdl_by_planner.setdefault(planner, {})[(seed, mseed)] = cdl[planner]
                         mlp_by_planner.setdefault(planner, {})[(seed, mseed)] = mlp[planner]
-                    # Satisfaction: read from the persisted v2 utilities.json (no env needed).
                     for planner, rate in (
                         self.satisfaction.get(env, {})
                         .get(seed, {})
@@ -499,7 +490,6 @@ class Suite:
                 row["wilcoxon_p_holm"] = float(p_holm)
                 row["wilcoxon_p_bh"] = float(p_bh)
 
-    # ---- Stage 6: emit summary + markdown table ----
     def emit(self):
         out_dir = Path(self.args.out)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -751,7 +741,6 @@ def _emit_selftest(args):
 
     from cdd_oran.analysis import stats as stats_module
 
-    # Synthetic v2 utilities.json -> per-planner satisfaction via stats (no env).
     v2 = {
         "version": 2,
         "algorithm_names": ["QACM", "ModelBasedMPPI"],
@@ -772,7 +761,6 @@ def _emit_selftest(args):
         os.remove(tmp_path)
     assert sat["ok"] and sat["source"] == "planner_satisfied (v2)", sat
 
-    # Synthetic paired per-seed means (CDL clearly above MLP) through compare_seeds.
     cdl = np.array([0.90, 0.92, 0.88])
     mlp = np.array([0.61, 0.59, 0.63])
     rows: list[dict[str, Any]] = []

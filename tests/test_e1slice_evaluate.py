@@ -146,10 +146,10 @@ def test_eval_refuses_stale_metrics_without_force(tmp_path: Path):
 @pytest.mark.parametrize(
     "pred, target",
     [
-        (np.zeros((2, 3)), np.zeros((2, 4))),  # shape mismatch
-        (np.zeros((0, 4)), np.zeros((0, 4))),  # empty
-        (np.zeros(4), np.zeros(4)),            # not 2-D
-        (np.full((2, 4), np.nan), np.zeros((2, 4))),  # non-finite
+        (np.zeros((2, 3)), np.zeros((2, 4))),
+        (np.zeros((0, 4)), np.zeros((0, 4))),
+        (np.zeros(4), np.zeros(4)),
+        (np.full((2, 4), np.nan), np.zeros((2, 4))),
     ],
 )
 def test_regression_metrics_rejects_bad_inputs(pred, target):

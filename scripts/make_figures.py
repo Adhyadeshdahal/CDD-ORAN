@@ -29,7 +29,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-# Run-as-script puts scripts/ on sys.path, not the repo root; add it for the viz import.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Importing panels applies its rcParams (shared style) and gives us the planner styles.

@@ -70,15 +70,15 @@ def _self_check() -> None:
     num_params = 3
     fd = 5  # nodes: 0,1,2 = NCP; 3,4 = KPI
     gt = np.zeros((fd, fd), dtype=int)
-    gt[3, 0] = 1  # NCP->KPI
-    gt[3, 1] = 1  # NCP->KPI
-    gt[4, 0] = 1  # NCP->KPI
+    gt[3, 0] = 1
+    gt[3, 1] = 1
+    gt[4, 0] = 1
     gt[4, 3] = 1  # KPI->KPI (parent col 3 >= num_params)
 
     pred = np.zeros((fd, fd), dtype=int)
-    pred[3, 0] = 1  # TP  (ncp)
-    pred[4, 0] = 1  # TP  (ncp)
-    pred[3, 2] = 1  # FP  (ncp)
+    pred[3, 0] = 1
+    pred[4, 0] = 1
+    pred[3, 2] = 1
     # misses gt[3,1] (ncp) and gt[4,3] (kpi)
 
     out = recovery_by_edge_type(pred, gt, num_params)
@@ -93,7 +93,6 @@ def _self_check() -> None:
     missed = {(m["child"], m["parent"], m["type"]) for m in out["missed"]}
     assert missed == {(3, 1, "ncp_kpi"), (4, 3, "kpi_kpi")}, missed
 
-    # node_names labelling is passed through when provided.
     named = recovery_by_edge_type(pred, gt, num_params, ["p0", "p1", "p2", "k0", "k1"])
     assert named["missed"][0]["parent_name"] in {"p1", "k0"}
 

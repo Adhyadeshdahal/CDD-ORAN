@@ -40,10 +40,8 @@ from cdd_oran.analysis.edge_stability import collect_transitions
 from cdd_oran.policies import RandomPolicy
 from cdd_oran.utils.seeding import seed_everything
 
-# Canonical row order for the comparison table.
 VARIANT_ORDER = ("full", "structure_only", "oracle", "dense")
 
-# A loaded run + everything the harness needs to validate + score it.
 LoadedRun = namedtuple("LoadedRun", ["cfg", "env", "model", "posterior_sha", "variant"])
 
 
@@ -66,9 +64,6 @@ def _is_cdl(model):
     return hasattr(model, "predict_components")
 
 
-# --------------------------------------------------------------------------- #
-# Metrics.
-# --------------------------------------------------------------------------- #
 def mixture_metrics(mu, std, target):
     """Ensemble-mean MSE + equal-weight Normal-mixture NLL (per-KPI + aggregate).
 
@@ -77,16 +72,16 @@ def mixture_metrics(mu, std, target):
     M)``, NOT the average of component NLLs. Single-member (``m == 1``) collapses to the ordinary
     Normal NLL. Returns tensors."""
     m = mu.shape[0]
-    mu_bar = mu.mean(dim=0)  # (batch, k)
-    se = (mu_bar - target) ** 2  # (batch, k)
-    tgt = target.unsqueeze(0).expand(m, -1, -1)  # (m, batch, k)
-    comp_logprob = Normal(mu, std).log_prob(tgt)  # (m, batch, k)
-    log_mix = torch.logsumexp(comp_logprob, dim=0) - math.log(m)  # (batch, k)
-    nll = -log_mix  # (batch, k)
+    mu_bar = mu.mean(dim=0)
+    se = (mu_bar - target) ** 2
+    tgt = target.unsqueeze(0).expand(m, -1, -1)
+    comp_logprob = Normal(mu, std).log_prob(tgt)
+    log_mix = torch.logsumexp(comp_logprob, dim=0) - math.log(m)
+    nll = -log_mix
     return {
-        "mse_per_kpi": se.mean(dim=0),  # (k,)
+        "mse_per_kpi": se.mean(dim=0),
         "mse": se.mean(),
-        "nll_per_kpi": nll.mean(dim=0),  # (k,)
+        "nll_per_kpi": nll.mean(dim=0),
         "nll": nll.mean(),
     }
 
@@ -137,7 +132,7 @@ def score_variant(name, model, transitions, attribution_seed=0):
     s = transitions["s"].to(device)
     a = transitions["a"].reshape(batch, -1).to(device)
     s_next = transitions["s_next"].to(device)
-    target = s_next[:, model.kpi_start :]  # (batch, k)
+    target = s_next[:, model.kpi_start :]
     k = target.shape[1]
     zeros_k = [0.0] * k
 
@@ -166,7 +161,7 @@ def score_variant(name, model, transitions, attribution_seed=0):
                 dnll_pk = list(zeros_k)
         else:  # dense MLP: no structure, no residual delta.
             dist = model.predict_next_state(s, a)
-            mu = dist.mean.unsqueeze(0)  # (1, batch, k)
+            mu = dist.mean.unsqueeze(0)
             std = dist.stddev.unsqueeze(0)
             total = mixture_metrics(mu, std, target)
             n_members = 1
@@ -393,7 +388,6 @@ def run_attribution(
 def _self_check():
     """Tiny CPU check: single-member mixture NLL collapses to the ordinary Normal NLL, and the
     two-member ensemble-mean MSE + mixture NLL match the closed form."""
-    # Single member -> ordinary Normal NLL, MSE on the mean.
     target = torch.tensor([[1.0, 2.0]])
     mu = torch.zeros(1, 1, 2)
     std = torch.ones(1, 1, 2)
@@ -402,8 +396,7 @@ def _self_check():
     expected_nll = 0.5 * math.log(2 * math.pi) + 0.5 * 2.5
     assert abs(float(one["nll"]) - expected_nll) < 1e-6
 
-    # Two members, distinct means + variances.
-    mu2 = torch.tensor([[[0.0]], [[2.0]]])  # (2, 1, 1)
+    mu2 = torch.tensor([[[0.0]], [[2.0]]])
     std2 = torch.tensor([[[1.0]], [[2.0]]])
     t2 = torch.tensor([[1.0]])
     two = mixture_metrics(mu2, std2, t2)

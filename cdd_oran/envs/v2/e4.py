@@ -72,7 +72,6 @@ class E4V2Env(V2Env):
     # Mandatory latent-edge SCM metadata / gate assertions (ruling Q7): the two Z-incident edges.
     LATENT_EDGES = [("Z", "A_behavior"), ("Z", "K_out")]
 
-    # Objective constants (single-KPI panel; ruling "Exact standardization and objective").
     kpi_thresholds = (0.0,)     # threshold_raw = 0.0
     directions = (0,)           # satisfy-above
     xapp_kpi_indices = [(0,)]
@@ -80,7 +79,6 @@ class E4V2Env(V2Env):
     xapp_param_indices = [(0,)]
     panel_kpi_ids = (0,)
 
-    # Data-collection modes.
     MODE_OBS = "obs"
     MODE_DO = "do"
 
@@ -120,7 +118,6 @@ class E4V2Env(V2Env):
         self.prev_Z: float
         super().__init__(env_seed=env_seed, obs_noise_scale=obs_noise_scale, episode=episode)
 
-    # --- dedicated exogenous draws (non-aliasing tape slots) ------------------
     def _draw_Z(self, time: int) -> float:
         """Latent ``Z_q ~ Normal(0,1)`` from the dedicated latent slot at coordinate ``time``."""
         return float(self._coord_rng(self._NS_LATENT, 0, int(time)).standard_normal())
@@ -134,9 +131,8 @@ class E4V2Env(V2Env):
         idx = int(self._coord_rng(self._NS_DOACT, 0, int(time)).integers(0, self._DO_GRID_N))
         return idx / (self._DO_GRID_N - 1)
 
-    # --- lifecycle (extends base with the latent Z bookkeeping) ---------------
     def reset(self, episode: int | None = None) -> dict[str, np.ndarray]:
-        super().reset(episode)  # time=0, params=init, prev_params=init, prev_kpis=zeros
+        super().reset(episode)
         # Z for the current coordinate (time 0); prev_Z pairs with the committed prev_params.
         self.Z = self._draw_Z(self.time)
         self.prev_Z = self.Z
@@ -161,7 +157,6 @@ class E4V2Env(V2Env):
             return self.behavior_action()
         return self._draw_do_action(self.time)
 
-    # --- SEMANTICS §1.1 apply/advance split (Z committed alongside params) ----
     def _update_kpis(self, prev_params: np.ndarray, prev_kpis: np.ndarray) -> np.ndarray:
         """``K_out = alpha*A_prev + theta*Z_prev + c`` on the COMMITTED (prev) action and latent.
 
@@ -187,7 +182,6 @@ class E4V2Env(V2Env):
         self.Z = self._draw_Z(self.time)  # dedicated-slot draw for the new coordinate
         return self.prev_kpis.copy()
 
-    # --- interventional-mean scoring (ruling Q10, choice B) -------------------
     def score_interventional_mean(self, a: float) -> float:
         """Latent-noiseless interventional-mean outcome ``E_Z[K_out | do(A=a)] = alpha*a + c``.
 
@@ -198,18 +192,16 @@ class E4V2Env(V2Env):
         """
         return self.alpha * float(a) + self.theta * 0.0 + self.c
 
-    # --- deterministic snapshot/restore (carry pending + committed Z) ---------
     def snapshot(self) -> tuple:
         base = super().snapshot()  # (params, prev_params, prev_kpis, episode, time)
         return (*base, float(self.Z), float(self.prev_Z))
 
     def restore(self, snap: tuple) -> None:
-        super().restore(snap)  # params/prev_params/prev_kpis + (episode,time) when present
+        super().restore(snap)
         if len(snap) >= 7:
             self.Z = float(snap[5])
             self.prev_Z = float(snap[6])
 
-    # --- adjacency ------------------------------------------------------------
     @property
     def adjacency_edges(self) -> list[tuple[int, int]]:
         """Observed structural edges: the single ``A -> K_out`` edge (Z is latent)."""

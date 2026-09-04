@@ -42,7 +42,7 @@ class _P0BlindEnv(E2V2Env):
 
     def _update_kpis(self, prev_params, prev_kpis):
         p = np.asarray(prev_params, dtype=float).copy()
-        p[0] = self._decoy_p0_ref  # P0-blind everywhere -> corrupts the control panel too
+        p[0] = self._decoy_p0_ref
         return E2V2Env._update_kpis(self, p, prev_kpis)
 
 
@@ -50,7 +50,6 @@ def _p0_blind_factory(seed: int) -> E2V2Env:
     return _P0BlindEnv(env_seed=seed, decoy_omit_p0_k5=True)
 
 
-# --- gate outcome ----------------------------------------------------------------------------
 @pytest.mark.xfail(
     strict=True,
     reason=(
@@ -116,7 +115,6 @@ def test_rejection_power_non_decoy_does_not_fire():
     )
 
 
-# --- bank feasibility ------------------------------------------------------------------------
 def test_bank_feasibility_32_plus_32():
     """(f): exactly 32 positive + 32 negative controls exist in seeds 0..4095."""
     bank = build_bank(_true_factory)
@@ -125,10 +123,9 @@ def test_bank_feasibility_32_plus_32():
     assert len(bank.negatives) == N_PER_CLASS
     pos_seeds = {s for s, _ in bank.positives}
     neg_seeds = {s for s, _ in bank.negatives}
-    assert pos_seeds.isdisjoint(neg_seeds)  # no state is both pos and neg
+    assert pos_seeds.isdisjoint(neg_seeds)
 
 
-# --- env invariants --------------------------------------------------------------------------
 def test_h1_call_list_latency():
     """(e): apply_action's effect surfaces one advance later (one-step latency, SEMANTICS §1.1).
 
@@ -142,22 +139,19 @@ def test_h1_call_list_latency():
     snap = env.snapshot()
     committed_p0 = float(snap[1][0])
 
-    # k2 under a large P0 move differs from k2 under the committed P0 (effect is real)...
     env.restore(snap)
     env.apply_action(0, committed_p0 + 60.0)
-    k1 = env.advance()  # warm-up
-    k2_moved = env.advance()  # terminal, reflects the moved P0
+    k1 = env.advance()
+    k2_moved = env.advance()
 
     env.restore(snap)
-    env.apply_action(0, committed_p0)  # no real change
+    env.apply_action(0, committed_p0)
     env.advance()
     k2_same = env.advance()
 
-    # warm-up k1 reflects pre-decision params only: identical to a pure neutral advance.
     env.restore(snap)
     k1_neutral = env.advance()
     assert np.allclose(k1, k1_neutral), "warm-up k1 must not reflect the applied action"
-    # terminal k2 does reflect the moved action on at least one P0-child KPI.
     assert not np.allclose(k2_moved, k2_same), "terminal k2 must reflect the applied P0"
 
 
@@ -186,7 +180,6 @@ def test_decoy_freezes_p0_in_k5_only():
 
     committed_p0 = float(snap[1][0])
     v_lo, v_hi = committed_p0 - 40.0, committed_p0 + 40.0
-    # True K5 moves with P0 (edge present); decoy K5 is frozen (edge omitted).
     assert not np.isclose(terminal_k5(true_env, v_lo), terminal_k5(true_env, v_hi))
     assert np.isclose(terminal_k5(decoy_env, v_lo), terminal_k5(decoy_env, v_hi))
     # Sanity: decoy K5 equals the TRUE K5 evaluated at the committed P0.

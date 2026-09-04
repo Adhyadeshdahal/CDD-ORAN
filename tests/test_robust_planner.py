@@ -30,17 +30,14 @@ from cdd_oran.planners.mppi import ModelBasedMPPI
 from cdd_oran.planners.qacm import QACM
 
 
-# --------------------------------------------------------------------------- #
-# (a) risk-averse vs mean aggregator select different actions.
-# --------------------------------------------------------------------------- #
 def test_risk_averse_aggregator_picks_safer_action_than_mean():
     # Two candidates scored under two members (rows = members, cols = candidates).
     # Candidate 0 is SAFE (identical cost across members); candidate 1 is RISKY
     # (low mean cost but high spread).
-    per_member = torch.tensor([[1.0, 0.0], [1.0, 1.8]])  # (m=2, n=2)
+    per_member = torch.tensor([[1.0, 0.0], [1.0, 1.8]])
 
     mean_agg = EnsembleAggregator(method="mean")
-    risk_agg = EnsembleAggregator(method="quantile", quantile=0.9)  # the default is risk-averse
+    risk_agg = EnsembleAggregator(method="quantile", quantile=0.9)
 
     mean_choice = int(torch.argmin(mean_agg.combine(per_member)))
     risk_choice = int(torch.argmin(risk_agg.combine(per_member)))
@@ -55,15 +52,12 @@ def test_risk_averse_aggregator_picks_safer_action_than_mean():
 
 
 def test_single_member_aggregation_is_passthrough():
-    per_member = torch.tensor([[0.3, 0.7, 0.1]])  # (m=1, n=3)
+    per_member = torch.tensor([[0.3, 0.7, 0.1]])
     for method in ("mean", "quantile", "kappa"):
         agg = EnsembleAggregator(method=method)
         torch.testing.assert_close(agg.combine(per_member), per_member[0])
 
 
-# --------------------------------------------------------------------------- #
-# (b) disagreement signal.
-# --------------------------------------------------------------------------- #
 def test_disagreement_is_positive_when_members_differ_and_zero_when_identical():
     std = torch.ones(2, 1, 1)
     differ = Normal(torch.tensor([[[1.0]], [[3.0]]]), std)
@@ -80,7 +74,7 @@ def test_disagreement_is_positive_when_members_differ_and_zero_when_identical():
 
 
 def test_disagreement_penalty_raises_cost_and_ood_flag_fires():
-    mean = torch.tensor([[[0.0]], [[4.0]]])  # members disagree a lot (batch=1, k=1)
+    mean = torch.tensor([[[0.0]], [[4.0]]])
     dist = Normal(mean, torch.ones(2, 1, 1))
     xapps, weights, tau, dev, kappa = _stub_xapps()
 
@@ -109,9 +103,6 @@ def _stub_xapps():
     return [xapp], [1.0], 1.0, "cpu", 0.0
 
 
-# --------------------------------------------------------------------------- #
-# (c) + (d) end-to-end with a real env and a 2-member ensemble model.
-# --------------------------------------------------------------------------- #
 class _FixedSampler:
     def __init__(self, structures):
         self.structures = structures
@@ -187,7 +178,7 @@ def test_all_four_planners_run_end_to_end_with_ensemble():
 def test_m1_scoring_is_byte_identical_to_pre_phase3_path():
     """(d) With m=1 the robust path must reproduce the exact score_batch call/RNG."""
     env, state, edge = _env_and_state()
-    model = _ensemble_model(env, predict_members=1)  # single-member -> (batch, k) Normal
+    model = _ensemble_model(env, predict_members=1)
     pi = edge["param_id"]
     xapps = edge["xapps_in_conflict"]
     weights = [1.0] * len(xapps)
@@ -213,9 +204,7 @@ def test_m1_scoring_is_byte_identical_to_pre_phase3_path():
     assert torch.all(disagreement == 0.0), "m=1 disagreement must be exactly zero"
 
 
-# --------------------------------------------------------------------------- #
 # (e) Lever 2 / Option A: the utility_weight term in the PER-MEMBER cost.
-# --------------------------------------------------------------------------- #
 def test_utility_weight_zero_is_byte_identical_to_pre_term_path():
     """lambda=0 parity: the new term is a strict no-op, so an explicit 0.0 reproduces the
     pre-change score_batch call bit-for-bit -- on the vectorised path, on the reference
@@ -245,7 +234,6 @@ def test_utility_weight_zero_is_byte_identical_to_pre_term_path():
     ref = _score_batch_reference(kpis, xapps, weights, 10, "cpu", stds, 0.0, 0.0)
     torch.testing.assert_close(explicit_zero, ref, rtol=0.0, atol=0.0)
 
-    # End-to-end through the shared robust path with an aggregator carrying utility_weight=0.
     torch.manual_seed(123)
     scores, _ = robust_score_batch(
         model, s_batch, action_batch, xapps, weights, 10, "cpu", 0.0,
@@ -253,7 +241,6 @@ def test_utility_weight_zero_is_byte_identical_to_pre_term_path():
     )
     torch.testing.assert_close(scores, pre, rtol=0.0, atol=0.0)
 
-    # ... and the fast/reference paths stay byte-consistent once the term is ON.
     fast_on = score_batch(kpis, xapps, weights, 10, "cpu", stds, 0.0, 0.3)
     ref_on = _score_batch_reference(kpis, xapps, weights, 10, "cpu", stds, 0.0, 0.3)
     torch.testing.assert_close(fast_on, ref_on, rtol=0.0, atol=0.0)
@@ -298,7 +285,7 @@ def test_risk_averse_aggregator_still_diverges_from_mean_with_utility_weight():
     totals -- it must NOT collapse into expected utility."""
     # Candidate 0 is SAFE (utility 1 under both members). Candidate 1 is RISKY: member 0 sees
     # a big satisfied utility (8), member 1 sees an UNSATISFIED -1.
-    mean = torch.tensor([[[1.0], [8.0]], [[1.0], [-1.0]]])  # (m=2, batch=2, k=1)
+    mean = torch.tensor([[[1.0], [8.0]], [[1.0], [-1.0]]])
     dist = Normal(mean, torch.full_like(mean, 1e-6))
     xapps, weights, tau, dev, kappa = _stub_xapps()
 
@@ -335,11 +322,9 @@ def test_risk_averse_aggregator_still_diverges_from_mean_with_utility_weight():
     )
 
 
-# --------------------------------------------------------------------------- #
 # Deterministic m=1 grid harness for the QACM / MCTS *manual* scoring branches.
 # Both bypass score_batch when m=1, so they need their own coverage; a fully
 # deterministic model makes the expected pick exactly predictable.
-# --------------------------------------------------------------------------- #
 _NUM_BINS, _MAX_INDEX = 2, 2
 _GRID = [(b, i) for b in range(_NUM_BINS) for i in range(_MAX_INDEX + 1)]  # QACM scan order
 
@@ -460,7 +445,7 @@ def test_utility_weight_moves_the_qacm_m1_pick_to_the_expected_candidate():
         rewarded_action = [0, *_GRID[int(rewarded.argmin())]]
         assert rewarded_action == [0, 1, 2], f"dir {direction}: (1, 2) is the best-utility pick"
 
-        baseline = _qacm_action(model, env, xapp, EnsembleAggregator())  # pre-change default
+        baseline = _qacm_action(model, env, xapp, EnsembleAggregator())
         assert baseline == flat_action, f"dir {direction}: lambda=0 must sit on the flat tie"
         assert _qacm_action(model, env, xapp, EnsembleAggregator(utility_weight=0.0)) == baseline, (
             f"dir {direction}: utility_weight=0.0 must leave the m=1 QACM decision unchanged"
@@ -535,7 +520,7 @@ def test_utility_weight_moves_the_mcts_m1_pick_off_the_flat_region():
         env = _grid_env(xapp)
         model = _GridModel(direction, _index_only_rising)
 
-        baseline = _mcts_action(model, env, xapp, EnsembleAggregator())  # pre-change default
+        baseline = _mcts_action(model, env, xapp, EnsembleAggregator())
         assert _mcts_action(model, env, xapp, EnsembleAggregator(utility_weight=0.0)) == baseline, (
             f"dir {direction}: utility_weight=0.0 must leave the m=1 MCTS decision unchanged"
         )
@@ -605,7 +590,7 @@ def test_structure_conditioned_m1_uses_one_fixed_structure_per_decision():
     from cdd_oran.planners.ensemble import fixed_structures
 
     env, state, _ = _env_and_state()
-    model = _ensemble_model(env, predict_members=1)  # single-member structure_conditioned
+    model = _ensemble_model(env, predict_members=1)
     model.sampler = _RandomSampler(env.get_state_dim(), seed=3)
 
     with fixed_structures(model):
@@ -633,7 +618,6 @@ def test_every_candidate_in_one_act_call_uses_the_same_members():
     with fixed_structures(model):
         assert model._decision_structures is not None
         first = model._decision_structures.clone()
-        # Simulate several candidate predictions within the same decision.
         for _ in range(5):
             model.predict_next_state(state.unsqueeze(0), torch.zeros(1, env.get_action_dim()))
             assert torch.equal(model._decision_structures, first), "members changed mid-decision"

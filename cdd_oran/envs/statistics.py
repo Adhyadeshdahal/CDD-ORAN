@@ -75,13 +75,13 @@ def get_env_i_mean_std(param_ranges, seed, num_samples=NUM_SAMPLES):
 
 if __name__ == "__main__":
     PARAM_RANGES = [
-        (0, 300),  # P1
-        (0, 300),  # P2
-        (0, 3),  # P3
-        (0, 3),  # P4
-        (0, 3),  # P5
-        (0, 3),  # P6
-        (0, 3),  # P7
+        (0, 300),
+        (0, 300),
+        (0, 3),
+        (0, 3),
+        (0, 3),
+        (0, 3),
+        (0, 3),
     ]
     KPI_NAMES = ["KPI1", "KPI2", "KPI3", "KPI4"]
     SEED = 45

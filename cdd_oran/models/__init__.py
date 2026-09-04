@@ -34,7 +34,7 @@ class PosteriorStructureSampler:
         self.rng = np.random.default_rng(seed)
 
     def sample_structures(self, n_members, *, device):
-        draws = np.asarray(self.posterior.sample(self.rng, size=n_members))  # (m, fd, fd)
+        draws = np.asarray(self.posterior.sample(self.rng, size=n_members))
         m, fd, _ = draws.shape
         out = torch.zeros(m, fd, fd + 1, dtype=torch.bool, device=device)
         out[:, :, :fd] = torch.as_tensor(draws.astype(bool), device=device)
@@ -223,7 +223,7 @@ def freeze_enumeration_graph(run_dir, out_path, device=None):
     env = get_env(cfg)
     model = get_model(cfg, env)
     model.load_model(run_dir / "checkpoint.pt")
-    graph = model.get_binary_graph().cpu().numpy().astype(bool)  # (fd, fd+1)
+    graph = model.get_binary_graph().cpu().numpy().astype(bool)
     _, state_edges = _validate_enum_structure(graph)  # reject a zero-edge source graph
     payload = {
         "graph": graph.tolist(),

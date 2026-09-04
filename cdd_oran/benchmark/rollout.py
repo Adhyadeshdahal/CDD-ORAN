@@ -76,7 +76,7 @@ class OracleResult:
     best_actions: tuple[Action, ...]
     best_return: float
     best_rollout: RolloutResult
-    num_sequences: int                     # number of enumerated (and scored) sequences
+    num_sequences: int
 
 
 @dataclass(frozen=True)

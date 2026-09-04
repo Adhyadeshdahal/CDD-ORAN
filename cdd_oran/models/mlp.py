@@ -71,9 +71,9 @@ class MLPInference(WorldModel):
         s: (bs, state_dim)
         a: (bs, action_dim)
         """
-        x = torch.cat([s, a], dim=-1)  # (bs, state_dim + action_dim)
-        out = self.model(x)  # (bs, 2 * state_dim)
-        mu, log_std = out.chunk(2, dim=-1)  # each (bs, state_dim)
+        x = torch.cat([s, a], dim=-1)
+        out = self.model(x)
+        mu, log_std = out.chunk(2, dim=-1)
         std = F.softplus(log_std) + 1e-6
         return mu, std
 
@@ -82,8 +82,8 @@ class MLPInference(WorldModel):
         s_batch: (bs, 2, state_dim)
         a_batch: (bs, action_dim)
         """
-        s_t = s_batch[:, 0]  # (bs, state_dim)
-        s_tp1 = s_batch[:, 1]  # (bs, state_dim)
+        s_t = s_batch[:, 0]
+        s_tp1 = s_batch[:, 1]
 
         self.model.train()
         self.opt.zero_grad()
@@ -107,9 +107,9 @@ class MLPInference(WorldModel):
         a = a.to(self.device)
         self.model.eval()
         with torch.no_grad():
-            mu, std = self._forward(s, a)  # (bs, state_dim)
-        mu = mu[:, self.kpi_start :]  # (bs, n_kpis)
-        std = std[:, self.kpi_start :]  # (bs, n_kpis)
+            mu, std = self._forward(s, a)
+        mu = mu[:, self.kpi_start :]
+        std = std[:, self.kpi_start :]
         return Normal(mu, std)
 
     def evaluate_predictions(self, s, a, s_1):
@@ -120,8 +120,8 @@ class MLPInference(WorldModel):
         returns: scalar MSE
         """
         dist = self.predict_next_state(s, a)
-        pred = dist.sample()  # (bs, n_kpis)
-        target = s_1[:, self.kpi_start :]  # (bs, n_kpis)
+        pred = dist.sample()
+        target = s_1[:, self.kpi_start :]
         return ((pred - target) ** 2).mean().item()
 
     def save_model(self, filepath):

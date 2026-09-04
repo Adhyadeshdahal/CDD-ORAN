@@ -53,7 +53,7 @@ class DenseResidual(nn.Module):
         super().__init__()
         self.bound = float(bound)
         self.net = MLP(input_dim, out_dim, list(hidden))
-        last = cast(nn.Linear, self.net.net[-1])  # final nn.Linear
+        last = cast(nn.Linear, self.net.net[-1])
         nn.init.zeros_(last.weight)
         nn.init.zeros_(last.bias)
 
@@ -105,16 +105,16 @@ class StatePredictor(nn.Module):
         which exists only for the CMI/update_mask bootstrap, not for prediction.
         """
         if structure is not None:
-            structure_f = structure.to(feats.dtype).unsqueeze(-1)  # (..., ns, 1)
+            structure_f = structure.to(feats.dtype).unsqueeze(-1)
             structure_f = structure_f.expand(*feats.shape[:-1], 1)
             # GATE each source feature by its presence bit BEFORE flattening: an absent
             # parent contributes an exact zero (not just a 0 bit), so it cannot drive the
             # child's mean/variance through its own feature weights. The separate presence
             # bit is still concatenated so an absent parent stays distinguishable from a
             # present parent whose feature happens to be zero. (review blocker #1)
-            gated_feats = feats * structure_f  # zero out absent-source features
-            slot_input = torch.cat([gated_feats, structure_f], dim=-1)  # (..., ns, f + 1)
-            flat_input = slot_input.flatten(start_dim=-2)  # (..., ns * (f + 1))
+            gated_feats = feats * structure_f
+            slot_input = torch.cat([gated_feats, structure_f], dim=-1)
+            flat_input = slot_input.flatten(start_dim=-2)
             out = self.structure_predictor(flat_input)
             mu = out[..., 0:1]
             log_std = out[..., 1:2]
@@ -205,7 +205,6 @@ class CDL(CausalModel):
         self.grad_clip = grad_clip
         self.kpi_start = kpi_start
         self.node_names = node_names
-        # Structure-conditioned dynamics config (the sole world model).
         self.residual_bound = float(residual_bound)
         self.residual_l2 = float(residual_l2)
         self.residual_l1 = float(residual_l1)
@@ -342,9 +341,6 @@ class CDL(CausalModel):
         """
         return self._structure_train_step(s_batch, a_batch, structures)
 
-    # ------------------------------------------------------------------ #
-    # Structure-conditioned dynamics + bounded residual.
-    # ------------------------------------------------------------------ #
     def _sample_structures(self, m, device):
         """Draw ``m`` structures from the injected P1 sampler. Fails loudly if none is
         supplied -- the world model must never silently fall back to a point graph."""
@@ -400,15 +396,15 @@ class CDL(CausalModel):
         mus, stds = [], []
         for i in range(child_rows.shape[0]):
             sp = cast(StatePredictor, self.models[int(child_rows[i])])
-            feats = sp.features(s, a)  # (batch, ns, f)
+            feats = sp.features(s, a)
             feats_m = feats.unsqueeze(0).expand(m, batch, feats.shape[-2], feats.shape[-1])
-            structure_c = structures[:, i]  # (m, ns) or (m, batch, ns)
+            structure_c = structures[:, i]
             if structure_c.dim() == 2:
-                structure_c = structure_c.view(m, 1, -1)  # broadcast over batch
-            mu_c, std_c = sp.head(feats_m, structure_c)  # (m, batch, 1)
+                structure_c = structure_c.view(m, 1, -1)
+            mu_c, std_c = sp.head(feats_m, structure_c)
             mus.append(mu_c.unsqueeze(1))
             stds.append(std_c.unsqueeze(1))
-        return torch.cat(mus, dim=1), torch.cat(stds, dim=1)  # (m, n_children, batch, 1)
+        return torch.cat(mus, dim=1), torch.cat(stds, dim=1)
 
     def sample_decision_structures(self):
         """Draw and CACHE one member set for the current decision (one ``planner.act`` call).
@@ -437,10 +433,10 @@ class CDL(CausalModel):
 
         if structures is None:
             structures = self._sample_structures(self.m_train, self.device)
-        struct = self._normalize_structures(structures, all_rows)  # (m, fd, ns)
+        struct = self._normalize_structures(structures, all_rows)
         m = struct.shape[0]
 
-        mu_graph, std_graph = self._graph_means(s_t, a_batch, all_rows, struct)  # (m, fd, batch, 1)
+        mu_graph, std_graph = self._graph_means(s_t, a_batch, all_rows, struct)
 
         # Bounded residual on KPI children only; broadcast over structure members. When the
         # residual is disabled the total mean IS the graph mean at the representation level
@@ -450,14 +446,14 @@ class CDL(CausalModel):
             delta_rows = None
             mu_total = mu_graph
         else:
-            delta = self.residual(s_t, a_batch)  # (batch, k)
-            delta_rows = delta.transpose(0, 1).unsqueeze(-1)  # (k, batch, 1)
+            delta = self.residual(s_t, a_batch)
+            delta_rows = delta.transpose(0, 1).unsqueeze(-1)
             mu_total = mu_graph.clone()
             mu_total[:, self.kpi_start :, :, :] = (
                 mu_graph[:, self.kpi_start :, :, :] + delta_rows.unsqueeze(0)
             )
 
-        targets = s_tp1.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, fd, batch, 1)
+        targets = s_tp1.transpose(0, 1).unsqueeze(-1).unsqueeze(0)
         graph_nll = self._nll(mu_total, std_graph, targets).mean()
 
         # Single-source dropout augmentation (review MAJOR #5), matching the legacy intent:
@@ -467,11 +463,11 @@ class CDL(CausalModel):
         # cleared (a meaningful drop). The bit is cleared per item across all children.
         ns = fd + 1
         bs = s_t.shape[0]
-        informed = a_batch[:, 0].long().clamp_(0, fd - 1)  # NCP param col = a valid state source
+        informed = a_batch[:, 0].long().clamp_(0, fd - 1)
         use_informed = torch.rand(bs, device=self.device) > 0.5
         random_drop = torch.randint(fd, (bs,), device=self.device)  # exclude action slot fd
-        drop_idx = torch.where(use_informed, informed, random_drop)  # (bs,)
-        struct_aug = struct.unsqueeze(2).expand(m, fd, bs, ns).clone()  # (m, fd, bs, ns)
+        drop_idx = torch.where(use_informed, informed, random_drop)
+        struct_aug = struct.unsqueeze(2).expand(m, fd, bs, ns).clone()
         struct_aug[:, :, torch.arange(bs, device=self.device), drop_idx] = False
         mu_aug, std_aug = self._graph_means(s_t, a_batch, all_rows, struct_aug)
         if self.residual is None:
@@ -522,29 +518,28 @@ class CDL(CausalModel):
                 self.residual.eval()
             if structures is None:
                 structures = self._sample_structures(1, self.device)
-            struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
-            mu_graph, _ = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
+            struct = self._normalize_structures(structures, kpi_rows)
+            mu_graph, _ = self._graph_means(s, a, kpi_rows, struct)
             k = mu_graph.shape[1]
             if self.residual is None:
                 # Representation-level identity: the total mean IS the graph mean (review MAJOR #7).
                 mu_total = mu_graph
                 delta = mu_graph.new_zeros(s.shape[0], k)  # (batch, k), exact zero
             else:
-                delta = self.residual(s, a)  # (batch, k), bounded by +/- residual_bound
-                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
-                mu_total = mu_graph + delta_rows  # (m, k, batch, 1)
+                delta = self.residual(s, a)
+                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)
+                mu_total = mu_graph + delta_rows
 
-            abs_delta = delta.abs().mean(dim=0)  # (k,)
-            # per-member per-KPI ratio: (m, k)
-            abs_mu = mu_graph.abs().mean(dim=(2, 3))  # (m, k)
+            abs_delta = delta.abs().mean(dim=0)
+            abs_mu = mu_graph.abs().mean(dim=(2, 3))
             frac_mk = abs_delta.unsqueeze(0) / (abs_mu + abs_delta.unsqueeze(0) + 1e-8)
-            frac_per_kpi = frac_mk.mean(dim=0)  # (k,)
+            frac_per_kpi = frac_mk.mean(dim=0)
             frac_aggregate = frac_mk.mean()
-            frac_max_member = frac_mk.mean(dim=1).max()  # worst member, aggregated over KPI
+            frac_max_member = frac_mk.mean(dim=1).max()
         return {
             # Components (review MINOR #8): callers can audit the ratios against these.
-            "mu_graph": mu_graph,  # (m, k, batch, 1)
-            "delta": delta,  # (batch, k), bounded by +/- residual_bound
+            "mu_graph": mu_graph,
+            "delta": delta,
             "mu_total": mu_total,  # (m, k, batch, 1); IS mu_graph when the residual is disabled
             # Residual-to-graph magnitude ratio -- COLLAPSE DIAGNOSTIC, not the attribution answer.
             "residual_magnitude_ratio": frac_aggregate,
@@ -587,18 +582,13 @@ class CDL(CausalModel):
                 pooled_in_dim=1,
             )
             masked_nll = self._nll(mu_m, std_m, targets.unsqueeze(1))
-            # diff: (fd_child, fd+1_source, bs, 1) per-sample per-source CMI contribution.
             diff = masked_nll - full_nll.unsqueeze(1)
             if self.interv_weight != 1.0:
-                # A do() on NCP param_id is strong evidence for its param_id -> KPI
-                # edges. Upweight the intervened SOURCE column of each sample before
-                # the batch mean. param_id (a_batch[:, 0]) is always an NCP column, so
-                # only NCP->KPI edges are affected; KPI->KPI recovery is unchanged.
-                changed = a_batch[:, 0].long()  # (bs,) intervened source column
-                n_sources = diff.shape[1]  # fd + 1
-                columns = torch.arange(n_sources, device=self.device).unsqueeze(1)  # (fd+1, 1)
+                changed = a_batch[:, 0].long()
+                n_sources = diff.shape[1]
+                columns = torch.arange(n_sources, device=self.device).unsqueeze(1)
                 weight = torch.where(
-                    columns == changed.unsqueeze(0),  # (fd+1, bs)
+                    columns == changed.unsqueeze(0),
                     torch.tensor(self.interv_weight, device=self.device, dtype=diff.dtype),
                     torch.tensor(1.0, device=self.device, dtype=diff.dtype),
                 )
@@ -671,14 +661,13 @@ class CDL(CausalModel):
                     if self._decision_structures is not None
                     else self._sample_structures(self.predict_members, self.device)
                 )
-            struct = self._normalize_structures(structures, kpi_rows)  # (m, k, ns)
-            mu_graph, std_graph = self._graph_means(s, a, kpi_rows, struct)  # (m, k, batch, 1)
+            struct = self._normalize_structures(structures, kpi_rows)
+            mu_graph, std_graph = self._graph_means(s, a, kpi_rows, struct)
             if self.residual is None:
                 mu_total = mu_graph  # representation-level identity
             else:
-                delta = self.residual(s, a)  # (batch, k)
-                # (m, k, batch, 1): broadcast the structure-independent residual over members.
-                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)  # (1, k, batch, 1)
+                delta = self.residual(s, a)
+                delta_rows = delta.transpose(0, 1).unsqueeze(-1).unsqueeze(0)
                 mu_total = mu_graph + delta_rows
         return mu_graph, mu_total, std_graph
 
@@ -691,7 +680,6 @@ class CDL(CausalModel):
         k)`` when ``m == 1``. The multi-member axis is an API for Phase 3; Phase 2 does not
         average transitions across members."""
         _mu_graph, mu_total, std_graph = self._structure_components(s, a, structures)
-        # -> (m, batch, k)
         mu = mu_total.squeeze(-1).permute(0, 2, 1)
         std = std_graph.squeeze(-1).permute(0, 2, 1)
         if mu.shape[0] == 1:
@@ -708,7 +696,7 @@ class CDL(CausalModel):
         mu_graph, mu_total, std_graph = self._structure_components(s, a, structures)
 
         def to_mbk(x):
-            return x.squeeze(-1).permute(0, 2, 1)  # (m, batch, k)
+            return x.squeeze(-1).permute(0, 2, 1)
 
         mu_graph_mbk = to_mbk(mu_graph)
         return {
@@ -726,9 +714,9 @@ class CDL(CausalModel):
         returns: scalar MSE
         """
         dist = self.predict_next_state(s, a)
-        pred = dist.sample()  # (bs, state_dim - kpi_start)
-        target = s_1[:, self.kpi_start :]  # (bs, state_dim - kpi_start)
-        return ((pred - target) ** 2).mean().item()  # scalar
+        pred = dist.sample()
+        target = s_1[:, self.kpi_start :]
+        return ((pred - target) ** 2).mean().item()
 
     def save_model(self, filepath):
         """
@@ -747,7 +735,6 @@ class CDL(CausalModel):
             "eval_steps": self.eval_steps,
             "grad_clip": self.grad_clip,
             "device": self.device,
-            # Structure-conditioned residual state + config.
             "residual_enabled": self.residual_enabled,
             "residual_state_dict": (
                 self.residual.state_dict() if self.residual is not None else None
@@ -783,7 +770,7 @@ class CDL(CausalModel):
             self.residual.load_state_dict(state["residual_state_dict"])
         saved_enum = state.get("enumeration_graph")
         if saved_enum is not None:
-            restored = self._validate_enumeration_graph(saved_enum)  # shape + nonzero edges
+            restored = self._validate_enumeration_graph(saved_enum)
             if self.enumeration_graph is not None and not torch.equal(
                 self.enumeration_graph, restored
             ):
@@ -805,10 +792,10 @@ def _self_check():
       that column is weighted), proving the reweight raises the intervened edges.
     """
     state_dim, action_dim, kpi_start = 5, 3, 3  # sources 0..2 = NCP, 3..4 = KPI
-    c0 = 1  # constant intervened NCP source column (< kpi_start)
+    c0 = 1
 
     def build(w):
-        torch.manual_seed(0)  # identical predictor init across builds
+        torch.manual_seed(0)
         return CDL(
             state_dim=state_dim,
             action_dim=action_dim,
@@ -829,7 +816,7 @@ def _self_check():
     bs = 16
     s_batch = torch.randn(bs, 2, state_dim)
     a_batch = torch.randint(0, state_dim, (bs, action_dim)).float()
-    a_batch[:, 0] = float(c0)  # every sample intervenes on column c0
+    a_batch[:, 0] = float(c0)
 
     base = build(1.0)
     base.update_mask(s_batch, a_batch)

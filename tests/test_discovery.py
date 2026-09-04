@@ -61,7 +61,6 @@ def test_discovery_no_calibration_writes_raw_uncalibrated_diagnostic(tmp_path):
 
     result = _discover(cfg, tmp_path)
 
-    # No calibrated posterior file is emitted; only the raw diagnostic + enumeration graph.
     raw_path = tmp_path / "EnvironmentI_raw_posterior.json"
     enum_path = tmp_path / "EnvironmentI_enum.json"
     assert not (tmp_path / "EnvironmentI_posterior.json").exists(), (
@@ -102,15 +101,13 @@ def test_no_calibration_run_removes_stale_calibrated_posterior(tmp_path):
     different runs."""
     cfg = _tiny_cfg()
 
-    # Simulate a prior CALIBRATED run into the SAME --out dir.
     stale = tmp_path / "EnvironmentI_posterior.json"
     stale.write_text('{"stale": "prior calibrated posterior"}', encoding="utf-8")
 
-    result = _discover(cfg, tmp_path)  # no calibration_run -> no-cal branch
+    result = _discover(cfg, tmp_path)
 
     assert result["calibrated"] is False
     assert result["calibrated_posterior"] is None
-    # The mismatched calibrated posterior is gone; only this run's fresh raw/enum pair remains.
     assert not stale.exists(), "stale calibrated posterior must be removed by a no-cal run"
     assert (tmp_path / "EnvironmentI_raw_posterior.json").exists()
     assert (tmp_path / "EnvironmentI_enum.json").exists()
@@ -132,10 +129,7 @@ def test_no_calibration_partial_failure_still_removes_stale_posterior(tmp_path, 
     with pytest.raises(RuntimeError, match="bootstrap failed"):
         _discover(cfg, tmp_path)
 
-    # The failure landed AFTER the enum was refreshed (proving removal HAD to precede it)...
     assert (tmp_path / "EnvironmentI_enum.json").exists()
-    # ...yet the stale calibrated posterior is already gone -- no new-enum + old-posterior pair
-    # survives the failure window (removal is hoisted before the enum overwrite).
     assert not stale.exists(), "stale calibrated posterior must be removed before the failure window"
 
 
@@ -147,12 +141,9 @@ def test_raw_diagnostic_is_rejected_by_downstream_sampler_and_staging(tmp_path):
     result = _discover(cfg, tmp_path)
     raw_path = result["raw_posterior"]
 
-    # Loadable for analysis...
     assert GraphPosterior.load(raw_path).is_calibrated is False
-    # ...but robust structure sampling refuses it.
     with pytest.raises(ValueError, match="(?i)not calibrated"):
         PosteriorStructureSampler.from_artifact(raw_path, env=env, environment=cfg.environment)
-    # ...and staging it into a run refuses it too.
     staged_cfg = replace(
         cfg,
         model=replace(
@@ -199,14 +190,14 @@ def test_discovery_does_not_read_target_truth_without_calibration(tmp_path, monk
     monkeypatch.setattr(discover_module, "get_env", guard)
     monkeypatch.setattr(edge_stability_module, "get_env", guard)
 
-    result = _discover(cfg, tmp_path)  # raises if any production path reads env.true_adj_matrix
+    result = _discover(cfg, tmp_path)
 
     assert result["calibrated"] is False
     assert Path(result["raw_posterior"]).exists()
     assert result["state_edges"] > 0
 
     # Ground truth is readable only AFTER the artifact is frozen, by a separate scorer path.
-    real_env = get_env(cfg)  # real (unguarded) env
+    real_env = get_env(cfg)
     assert real_env.true_adj_matrix.shape[0] == real_env.get_state_dim()
 
 
@@ -233,7 +224,7 @@ def test_held_out_calibration_produces_calibrated_posterior(tmp_path):
     cal_result = _discover(cal_cfg, tmp_path / "cal_out", train_steps=400, cmi_batches=16)
     cal_run = cal_result["run_dir"]
 
-    cfg = _tiny_cfg()  # target = EnvironmentI
+    cfg = _tiny_cfg()
     env = get_env(cfg)
     result = _discover(cfg, tmp_path / "out", calibration_run=cal_run)
 
@@ -257,7 +248,6 @@ def test_held_out_calibration_produces_calibrated_posterior(tmp_path):
     assert provenance["checkpoint_sha256"] and len(provenance["checkpoint_sha256"]) == 64
     assert post.meta["calibration_runs"] == [str(cal_run)]
 
-    # The calibrated posterior IS accepted by the downstream structure sampler.
     sampler = PosteriorStructureSampler.from_artifact(
         cal_path, env=env, environment=cfg.environment
     )

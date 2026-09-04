@@ -36,9 +36,6 @@ import numpy as np
 from cdd_oran.analysis.edge_stability import bootstrap_frequency
 
 
-# --------------------------------------------------------------------------- #
-# Calibration primitives (pure numpy; sklearn is not available in this repo).
-# --------------------------------------------------------------------------- #
 def _candidate_mask(shape):
     """Return the estimable edge mask; forced self-loops are never candidates."""
     if len(shape) >= 2 and shape[-1] == shape[-2]:
@@ -254,9 +251,6 @@ def transformed_cmi_probs(cmi_matrix, temperature=1.0):
     return probs
 
 
-# --------------------------------------------------------------------------- #
-# The posterior.
-# --------------------------------------------------------------------------- #
 class GraphPosterior:
     """A calibrated distribution over binary one-step dependency structures.
 
@@ -370,7 +364,6 @@ class GraphPosterior:
         ``apply_calibrator``). P2 requires this before consuming the artifact."""
         return bool(self.meta.get("calibrated", False))
 
-    # ---- artifact persistence (review blocker #2) --------------------------- #
     def save(self, path):
         """Serialize the held-out-CALIBRATED posterior artifact to JSON: marginals + the
         fitted isotonic knots + metadata (incl. the ``calibrated`` flag and node layout).
@@ -416,7 +409,6 @@ class GraphPosterior:
             raise ValueError("labels must be binary")
         return lab
 
-    # ---- constructors -------------------------------------------------------- #
     @classmethod
     def from_frequencies(cls, freq, node_names=None, meta=None):
         """Build directly from a per-edge inclusion-frequency matrix (e.g. the
@@ -455,9 +447,6 @@ class GraphPosterior:
         )
 
 
-# --------------------------------------------------------------------------- #
-# Self-check + CLI.
-# --------------------------------------------------------------------------- #
 def _self_check():
     """CPU-only calibration check with separate, overlapping calibration and test labels."""
     rng = np.random.default_rng(0)
@@ -481,7 +470,6 @@ def _self_check():
     assert np.all(np.diag(single) == 0), "sampled self-loops must be 0"
     batch = post.sample(rng, size=32)
     assert batch.shape == (32, fd, fd), "batched sample shape wrong"
-    # Empirical inclusion of a high-prob edge over many draws tracks its marginal.
     big = post.sample(rng, size=4000)
     emp = big[:, 1, 0].mean()
     assert abs(emp - marg[1, 0]) < 0.05, f"sample frequency {emp:.3f} != marginal {marg[1,0]:.3f}"
@@ -499,7 +487,6 @@ def _self_check():
     assert np.isfinite(summary["after"]["sampled_structure_hpd_coverage"])
     assert np.all((calibrated.marginals() >= 0.0) & (calibrated.marginals() <= 1.0))
 
-    # An uninformative score must remain uninformative after calibration.
     uninformative = GraphPosterior.from_frequencies(np.full((fd, fd), 0.5))
     uncalibrated, negative_summary = uninformative.calibrate(
         calibration_labels, evaluation_labels=heldout_labels
@@ -508,7 +495,6 @@ def _self_check():
     assert np.ptp(uncalibrated.marginals()[candidate]) < 1e-12
     assert np.isfinite(negative_summary["after"]["brier"])
 
-    # Show the uncalibrated transformed-CMI baseline is measurable without diagonals.
     gt = calibration_labels
     cmi = np.zeros((fd, fd + 1))
     cmi[:, :fd] = gt * 80.0 + rng.random((fd, fd)) * 2.0

@@ -151,7 +151,6 @@ class _StubModel:
     device = torch.device("cpu")
 
     def predict_next_state(self, state, action):
-        # The model emits a deterministic normalized KPI from the action's bin.
         mean = action[:, 1:2]
         return Normal(mean, torch.ones_like(mean))
 

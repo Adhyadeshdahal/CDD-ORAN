@@ -26,8 +26,6 @@ from pathlib import Path
 
 import numpy as np
 
-# Sibling scripts/ import (journal runner) + repo root so cdd_oran resolves when
-# this file is run directly (python scripts/recovery_gate.py), not just via -m.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from run_journal_suite import (  # noqa: E402
@@ -104,7 +102,6 @@ def score_run(run_dir, args):
         scored[name] = block
         print(_fmt_block(name, thr, block))
 
-    # Bootstrap edge-stability graph at the pi cut, scored per edge type.
     stab = edge_stability.edge_stability(
         run_dir, B=args.B, n_transitions=args.n_transitions, pi=args.pi,
         seed=args.seed, device=args.device,

@@ -63,14 +63,14 @@ def test_arm_mask_refuses_to_derive_discovered():
     with pytest.raises(ValueError):
         arm_mask("discovered")
     with pytest.raises(ValueError):
-        build_model("discovered", _MODEL)  # no explicit mask supplied
+        build_model("discovered", _MODEL)
 
 
 @pytest.mark.parametrize(
     "bad",
     [
-        np.ones((E1V2Env.num_kpis, _IN_DIM + 1), dtype=np.float32),  # wrong shape
-        np.full((E1V2Env.num_kpis, _IN_DIM), 2.0, dtype=np.float32),  # non-binary
+        np.ones((E1V2Env.num_kpis, _IN_DIM + 1), dtype=np.float32),
+        np.full((E1V2Env.num_kpis, _IN_DIM), 2.0, dtype=np.float32),
     ],
 )
 def test_validate_explicit_mask_rejects_bad_masks(bad):
@@ -87,8 +87,8 @@ def test_oracle_ignores_non_parent_inputs():
     x_perturbed = x.clone()
     x_perturbed[0, 1] = 5.0  # P1 is NOT a parent of K0 or K2
     out = model(x_perturbed)
-    assert torch.allclose(base[:, 0], out[:, 0])  # K0 unchanged
-    assert torch.allclose(base[:, 2], out[:, 2])  # K2 unchanged
+    assert torch.allclose(base[:, 0], out[:, 0])
+    assert torch.allclose(base[:, 2], out[:, 2])
 
 
 def test_training_fits_the_linear_mechanism():

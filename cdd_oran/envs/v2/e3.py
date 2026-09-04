@@ -54,7 +54,6 @@ class E3V2Env(V2Env):
     # The ratified decision decoy drops exactly this pair (K1's fan-out into K2 and K3).
     TRUNCATED_OMITTED_EDGES = [(2, 5), (3, 5)]
 
-    # xApp maps / directions / thresholds (contract "xApps, panel, and objective").
     xapp_kpi_indices = [(0,), (1,), (2,), (3,), (4,)]
     kpi_to_xapp = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
     xapp_param_indices = [(0,), (0,), (1,), (2,), (3,)]

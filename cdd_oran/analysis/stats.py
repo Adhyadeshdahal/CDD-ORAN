@@ -170,7 +170,6 @@ def bh_fdr(pvalues) -> np.ndarray:
     sorted_p = p[order]
     ranks = np.arange(1, m + 1)
     raw = sorted_p * m / ranks
-    # step-up: enforce monotone non-decreasing along the sorted p order
     adj_sorted = np.minimum.accumulate(raw[::-1])[::-1]
     adj_sorted = np.minimum(adj_sorted, 1.0)
     adj = np.empty(m)
@@ -257,7 +256,6 @@ def satisfaction_rate(
     with open(utilities_json_path, encoding="utf-8") as handle:
         data = json.load(handle)
 
-    # 1. v2 fast path: satisfied indicators are already persisted per planner.
     if int(data.get("version", 1)) >= 2:
         hits2: dict[str, int] = {}
         total2: dict[str, int] = {}
@@ -277,7 +275,6 @@ def satisfaction_rate(
             "source": "planner_satisfied (v2)",
         }
 
-    # 3. v1 with no env inputs: report exactly what is missing rather than guess.
     if directions is None or norm_thresholds is None:
         return {
             "ok": False,
@@ -294,7 +291,6 @@ def satisfaction_rate(
             "planners": list(data.get("algorithm_names", [])),
         }
 
-    # 2. v1 fallback: recompute from utilities using env-supplied direction/threshold.
     hits: dict[str, int] = {}
     total: dict[str, int] = {}
     skipped = 0
@@ -346,52 +342,46 @@ def _norm_cdf(z: float) -> float:
 
 def _demo() -> None:
     rng = np.random.default_rng(42)
-    # Clear positive effect: cdl consistently above mlp.
     mlp = rng.normal(1.0, 0.1, size=30)
     cdl = mlp + rng.normal(0.5, 0.05, size=30)
     res = compare(cdl, mlp)
     assert res["mean_diff"] > 0.3, res
-    assert res["ci_low"] > 0, res  # CI excludes 0 -> significant
+    assert res["ci_low"] > 0, res
     assert res["wilcoxon"]["p_value"] < 0.05, res
-    assert res["cohens_d"] > 0.8, res  # large effect
+    assert res["cohens_d"] > 0.8, res
 
-    # No effect: same distribution -> not significant.
     a = rng.normal(0.0, 1.0, size=40)
     b = rng.normal(0.0, 1.0, size=40)
     res0 = compare(a, b)
     assert res0["wilcoxon"]["p_value"] > 0.05, res0
     assert res0["ci_low"] < 0 < res0["ci_high"], res0
 
-    # Average-rank helper sanity on a tie.
     r = _average_ranks(np.array([1.0, 2.0, 2.0, 4.0]))
     assert list(r) == [1.0, 2.5, 2.5, 4.0], r
 
-    # --- M1 robust metrics ---
     hi = np.array([10.0, 11.0, 12.0, 13.0])
     lo = np.array([1.0, 2.0, 3.0, 4.0])
     d_hi, lbl_hi = cliffs_delta(hi, lo)
     assert d_hi == 1.0 and lbl_hi == "large", (d_hi, lbl_hi)
     d_same, lbl_same = cliffs_delta(hi, hi.copy())
     assert d_same == 0.0 and lbl_same == "negligible", (d_same, lbl_same)
-    assert cliffs_delta(lo, hi)[0] == -1.0  # antisymmetric
+    assert cliffs_delta(lo, hi)[0] == -1.0
 
     assert prob_superiority(hi, lo) == 1.0
-    assert prob_superiority(hi, hi.copy()) == 0.5  # all ties -> 0.5
+    assert prob_superiority(hi, hi.copy()) == 0.5
     assert abs(prob_superiority(lo, hi)) == 0.0
 
-    # Holm / BH: adjusted >= raw, monotone in raw-p order, clipped to 1.
-    raw_p = np.array([0.001, 0.013, 0.02, 0.04, 0.5])  # 8 comparisons family, unsorted mix
+    raw_p = np.array([0.001, 0.013, 0.02, 0.04, 0.5])
     for adj in (holm_correction(raw_p), bh_fdr(raw_p)):
-        assert np.all(adj >= raw_p - 1e-12), adj  # never smaller than raw
+        assert np.all(adj >= raw_p - 1e-12), adj
         assert np.all(adj <= 1.0 + 1e-12), adj
         ordered = adj[np.argsort(raw_p, kind="mergesort")]
-        assert np.all(np.diff(ordered) >= -1e-12), ordered  # monotone non-decreasing
-    assert np.all(holm_correction(raw_p) >= bh_fdr(raw_p) - 1e-12)  # Holm >= BH (more conservative)
+        assert np.all(np.diff(ordered) >= -1e-12), ordered
+    assert np.all(holm_correction(raw_p) >= bh_fdr(raw_p) - 1e-12)
 
-    # compare_seeds on synthetic paired seed means: CDL above MLP each seed.
     rng2 = np.random.default_rng(7)
     mlp_seeds = rng2.normal(0.6, 0.02, size=8)
-    cdl_seeds = rng2.normal(0.9, 0.02, size=8)  # cleanly separated -> full dominance
+    cdl_seeds = rng2.normal(0.9, 0.02, size=8)
     cs = compare_seeds(cdl_seeds, mlp_seeds)
     for field in (
         "n_seeds", "mean_diff", "ci_low", "ci_high", "wilcoxon", "cohens_d",
@@ -402,14 +392,12 @@ def _demo() -> None:
     assert cs["mean_diff"] > 0 and cs["ci_low"] > 0
     assert cs["cliffs_delta"] == 1.0 and cs["prob_cdl_gt_mlp"] == 1.0
 
-    # satisfaction_rate: without env fields it reports the missing inputs, not a guess.
     import glob
 
     run_files = glob.glob("runs/**/utilities.json", recursive=True)
     if run_files:
         miss = satisfaction_rate(run_files[0])
         assert miss["ok"] is False and miss["missing"], miss
-        # With directions + norm_thresholds supplied, it computes rates in [0, 1].
         import json as _json
 
         d0 = _json.load(open(run_files[0], encoding="utf-8"))
@@ -420,7 +408,6 @@ def _demo() -> None:
         assert got["ok"] is True, got
         assert all(0.0 <= v <= 1.0 for v in got["satisfaction"].values()), got
 
-    # v2 fast path: persisted planner_satisfied is read directly, no env needed.
     import os
     import tempfile
 
@@ -443,7 +430,6 @@ def _demo() -> None:
         res = satisfaction_rate(tmp_path)
         assert res["ok"] is True and res["source"] == "planner_satisfied (v2)", res
         assert all(0.0 <= v <= 1.0 for v in res["satisfaction"].values()), res
-        # QACM: 2 of 3 satisfied -> 2/3; CEM: 2 of 3 -> 2/3.
         assert abs(res["satisfaction"]["QACM"] - 2 / 3) < 1e-9, res
         assert abs(res["satisfaction"]["CEM"] - 2 / 3) < 1e-9, res
         assert res["n_evaluations"] == {"QACM": 3, "CEM": 3}, res
