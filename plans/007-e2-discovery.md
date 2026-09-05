@@ -5,14 +5,13 @@
 > ordering below is the anti-p-hacking guarantee — do not run the method against E2 truth until
 > the protocol doc is committed and its SHA is recorded in the artifacts.
 >
-> **STATUS: PROTOCOL FROZEN (2026-09-05, `protocol_commit = 828e345`).** The three method decisions
-> are confirmed (orchestrator + user review) and the executable spec
-> `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` is committed and frozen; its SHA `828e345` is the
-> anti-p-hacking anchor to be stamped into every 007 artifact. Two pre-execution honesty caveats
-> (N1 permutation-FDR-is-approximate; N2 noiseless-determinism × conditioning) and the exact
-> `SeedSequence` derivation (N3) were folded in before the freeze (recorded in the protocol's
-> Revision history). Nothing about E2 truth was examined. **Next: implementation** (discovery
-> module + a required truth-free smoke test before the real 4000×999×84 run), on a fresh pane.
+> **STATUS: PROTOCOL FROZEN + IMPL COMPLETE; RUN = TODO (parked, ready).** Protocol frozen at
+> `protocol_commit = 828e345`. Implementation banked on `feat/v2 @ c0101e6` (`cdd_oran/e2slice/` +
+> scripts + tests; 440 tests green; adversarial review verdict GENUINE; firewall verified twice).
+> The frozen run has NOT been executed: at the frozen §14 constants it is memory-bandwidth-bound and
+> takes ~5–18 days on the current 16 GiB/~3 GiB-free machine (the smoke extrapolation missed a CPU
+> cache cliff). **The run is a standing TODO — run it whenever a high-RAM/high-bandwidth machine is
+> free (see "## RUN STATUS" below).** Nothing about E2 truth has been examined; the freeze is intact.
 
 ## Status
 
@@ -239,6 +238,33 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
 - [ ] Result doc explicitly restates the firewall: E2 discovery is method validation, NOT E2
       decision-value evidence; the E2 decision null (`8d70a4f`) stands untouched.
 - [ ] Full verification passes; artifacts fail-closed; adversarial review verdict recorded.
+
+## RUN STATUS — TODO (parked, ready to execute on adequate hardware)
+
+The frozen discovery run is banked and ready. **Orchestrator: run it whenever a machine (or a bigger
+machine) is free; it may run as long as needed.** Runbook:
+
+- **Entry point**: `scripts/e2_slice_recovery_sweep.py` (10-seed envelope driver), or the
+  `scripts/e2_slice.py` `generate`/`discover`/`recover` subcommands for manual phase control.
+- **Frozen constants (do NOT change)**: N=4000, B_perm=999, q=0.05, decoy OFF, noiseless, temporal
+  (6,14) graph, seeds r=0..9, `protocol_commit 828e345`. The code REJECTS non-frozen configs.
+- **Anti-p-hacking ordering (hard)**: run discovery for ALL 10 seeds and persist + content-hash every
+  `discovery.json` mask FIRST; verify all 10 fail-closed-loadable; ONLY THEN run recovery scoring
+  (`evaluate.py` §9 reads `true_adj_matrix()`).
+- **Discipline**: preserve every replicate; on a §11 numerical HALT (≥5/84 guarded, NaN/inf outside
+  guard, degenerate null on a selected candidate) RECORD and STOP — never silently drop/retune. Watch
+  the guard rate + KPI→KPI rejection.
+- **Resource profile**: ~2.3 GiB RAM per concurrent seed; the work is memory-BANDWIDTH-bound so it
+  wants high aggregate bandwidth (many memory channels) and enough free RAM to avoid paging.
+  Wall-clock: hours-to-~1-day on a high-RAM/high-bandwidth box; ~5–18 days on the current machine.
+  Parallelism across seeds only helps if bandwidth (not just cores/RAM) scales.
+- **Output**: recovery records + a committed digest `docs/benchmark/plan007_recovery_digest/`
+  (summary.json + replicates.jsonl + run_provenance.json + README.md), bulk runs gitignored; then the
+  as-run result doc `docs/benchmark/E2_DISCOVERY_RESULT.md` + delta report; then merge to `feat/v2`.
+- **Pre-run polish (nice-to-have, truth-free)**: harden the firewall test
+  `test_discovery_imports_no_env_truth` to also assert NO truth on the transitive path through
+  `dataset.py` (adversarial review obs #3; currently checks only `discovery.py`'s direct imports —
+  the transitive path was verified clean by hand).
 
 ## STOP conditions (scientific)
 
