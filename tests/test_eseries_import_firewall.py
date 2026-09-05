@@ -26,8 +26,12 @@ import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Legacy modules that must NOT be pulled in by a pure analysis import.
-_LEGACY = ("cdd_oran.envs", "cdd_oran.envs.env_i", "cdd_oran.envs.env_ii",
+# The RETIRED legacy env CLASS modules that must NOT be pulled in. Note: the parent package
+# ``cdd_oran.envs`` itself IS expected to load whenever a live ``cdd_oran.envs.v2.*`` submodule is
+# imported (v2 is a subpackage of it); after the Option-B fix that package is env-free (it imports
+# env_i..iv only lazily), so the firewall is precisely "env_i..iv are not loaded", not "the envs
+# package is untouched".
+_LEGACY = ("cdd_oran.envs.env_i", "cdd_oran.envs.env_ii",
            "cdd_oran.envs.env_iii", "cdd_oran.envs.env_iv")
 
 
@@ -94,15 +98,31 @@ def test_prf_output_is_unchanged():
     "cdd_oran.e1slice.evaluate",
     "cdd_oran.e2slice.evaluate",
 ])
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Remaining seam (out of scope for the _prf hygiene fix): the evaluators import "
-        "cdd_oran.envs.v2.{e1,e2} for recovery-truth, which executes the eager "
-        "cdd_oran/envs/__init__.py and loads env_i..iv. Closing this needs a separate decision "
-        "(defer the env-truth imports, or make envs/__init__ lazy). When fixed, this xpasses -> "
-        "remove the xfail marker."
-    ),
-)
-def test_eseries_evaluate_is_env_free_known_remaining_seam(evaluate_module: str):
+def test_eseries_evaluate_is_env_free(evaluate_module: str):
+    # The E-series evaluators import cdd_oran.envs.v2.{e1,e2} for §9 recovery-truth. After the
+    # Option-B root fix (cdd_oran/envs/__init__.py imports env_i..iv LAZILY, not at module top),
+    # importing a cdd_oran.envs.v2.* submodule -- and hence importing the evaluators -- no longer
+    # eager-loads the retired legacy envs.
     assert _loaded_legacy_modules(evaluate_module) == []
+
+
+@pytest.mark.parametrize("v2_module", [
+    "cdd_oran.envs.v2.e1",
+    "cdd_oran.envs.v2.e2",
+])
+def test_v2_env_submodule_import_is_legacy_free(v2_module: str):
+    # Root-cause guard: importing ANY live v2 env submodule must not pull the legacy env_i..iv via
+    # the parent cdd_oran/envs/__init__.py.
+    assert _loaded_legacy_modules(v2_module) == []
+
+
+def test_legacy_get_env_mean_std_reexports_still_work():
+    # Behavior-neutral: the lazy PEP 562 __getattr__ must still serve the re-exported legacy names
+    # to any archival caller, identical to a direct submodule import.
+    import cdd_oran.envs as envs
+    from cdd_oran.envs.env_i import ORANEnvironment1 as DirectEnv1
+    from cdd_oran.envs.statistics import get_env_i_mean_std as direct_mean_std
+
+    assert envs.ORANEnvironment1 is DirectEnv1
+    assert envs.get_env_i_mean_std is direct_mean_std
+    assert envs.get_env_iii_mean_std.__name__ == "get_env_iii_mean_std"
