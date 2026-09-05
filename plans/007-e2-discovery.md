@@ -5,13 +5,14 @@
 > ordering below is the anti-p-hacking guarantee — do not run the method against E2 truth until
 > the protocol doc is committed and its SHA is recorded in the artifacts.
 >
-> **STATUS: DECISION-FROZEN (2026-09-04); protocol doc not yet authored.** The three method
-> decisions are confirmed (orchestrator + user review). The exact estimator, distance geometry,
-> and threshold parameters are frozen at the decision level here and become an executable
-> specification in `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` — **the single remaining blocker to
-> the freeze commit.** Nothing about E2 truth was examined to write this plan; it is derived only
-> from the declared E2 generative mechanism. The freeze is the commit of the protocol doc, whose
-> SHA is then stamped into every artifact.
+> **STATUS: PROTOCOL FROZEN (2026-09-05, `protocol_commit = 828e345`).** The three method decisions
+> are confirmed (orchestrator + user review) and the executable spec
+> `docs/benchmark/E2_DISCOVERY_PROTOCOL.md` is committed and frozen; its SHA `828e345` is the
+> anti-p-hacking anchor to be stamped into every 007 artifact. Two pre-execution honesty caveats
+> (N1 permutation-FDR-is-approximate; N2 noiseless-determinism × conditioning) and the exact
+> `SeedSequence` derivation (N3) were folded in before the freeze (recorded in the protocol's
+> Revision history). Nothing about E2 truth was examined. **Next: implementation** (discovery
+> module + a required truth-free smoke test before the real 4000×999×84 run), on a fresh pane.
 
 ## Status
 
