@@ -1,3 +1,16 @@
+"""LEGACY (v1) O-RAN environments — RETIRED; kept for archival / reproduction only.
+
+These are Environment I–IV (``env_i..iv``), the ORIGINAL v1 benchmark. They are NOT the active
+benchmark and must not be confused with the E-series. The live benchmark is the **E1–E5 redesign**
+in :mod:`cdd_oran.envs.v2` (env classes ``E1V2Env..E4V2Env``), with discovery/decision pipelines in
+:mod:`cdd_oran.e1slice` / :mod:`cdd_oran.e2slice` and the ``scripts/e*_gate.py`` harnesses. See
+``cdd_oran/envs/README.md`` and ``docs/benchmark/`` for the current benchmark and its status.
+
+Do NOT build new work on these modules or on ``get_env`` below. This package is scheduled for
+quarantine (deprecation markers + import-seam decoupling now; full removal deferred until the
+E-series fully supersedes it — see reports/2026-09-05-planner-redesign-and-env-boundary).
+"""
+
 from cdd_oran.config import ExperimentConfig
 from cdd_oran.envs.base import BaseORANEnv
 from cdd_oran.envs.env_i import ORANEnvironment1
