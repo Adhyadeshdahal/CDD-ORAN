@@ -19,7 +19,7 @@ import argparse
 
 import numpy as np
 
-from cdd_oran.analysis.threshold_sweep import _prf
+from cdd_oran.analysis.prf import _prf
 
 
 def recovery_by_edge_type(

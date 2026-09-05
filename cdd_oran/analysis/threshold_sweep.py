@@ -15,30 +15,15 @@ from pathlib import Path
 
 import numpy as np
 
+from cdd_oran.analysis.prf import _prf
 from cdd_oran.config import load_config
 from cdd_oran.envs import get_env
 from cdd_oran.models import get_model
 
-
-def _prf(pred: np.ndarray, gt: np.ndarray) -> dict[str, float]:
-    tp = int(np.sum((pred == 1) & (gt == 1)))
-    fp = int(np.sum((pred == 1) & (gt == 0)))
-    fn = int(np.sum((pred == 0) & (gt == 1)))
-    tn = int(np.sum((pred == 0) & (gt == 0)))
-    precision = tp / (tp + fp) if (tp + fp) else 0.0
-    recall = tp / (tp + fn) if (tp + fn) else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
-    accuracy = (tp + tn) / (tp + tn + fp + fn)
-    return {
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
-        "accuracy": accuracy,
-        "edges": tp + fp,
-        "tp": tp,
-        "fp": fp,
-        "fn": fn,
-    }
+# ``_prf`` now lives in the pure ``cdd_oran.analysis.prf`` module (no env import); it is re-exported
+# here so legacy callers of ``threshold_sweep._prf`` (auto_threshold, edge_stability) keep working
+# unchanged. This module still imports ``get_env`` for ``sweep``; ``prf`` deliberately does not.
+__all__ = ["_prf", "sweep", "main"]
 
 
 def sweep(run_dir: str | Path, grid: np.ndarray) -> dict:

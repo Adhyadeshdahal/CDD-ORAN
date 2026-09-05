@@ -24,8 +24,8 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+from cdd_oran.analysis.prf import _prf
 from cdd_oran.analysis.recovery_metrics import recovery_by_edge_type
-from cdd_oran.analysis.threshold_sweep import _prf
 from cdd_oran.e2slice import SCHEMA_VERSION
 from cdd_oran.e2slice.dataset import _atomic_write_text, _git_sha, canonical_json, load_dataset
 from cdd_oran.e2slice.discovery import PROTOCOL_COMMIT, load_discovery
