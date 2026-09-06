@@ -50,19 +50,13 @@ def _p0_blind_factory(seed: int) -> E2V2Env:
     return _P0BlindEnv(env_seed=seed, decoy_omit_p0_k5=True)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "E2 preregistered NULL: measured mean_positive(gap_norm) ~= 0.016 < tau_E2 = 0.10. "
-        "FROZEN, NOT tuned (SPEC E2 281-285; GATES 2.1/4). The K5-geometry positive-control "
-        "label (Q5) is necessary but not sufficient for a realized decision conflict: on 25/32 "
-        "positive states the K0/K1/K2 fan-out dominates the argmax, so the decoy's K5-blindness "
-        "does not change the chosen P0. strict=True re-reddens this test if the value is ever "
-        "tuned to pass."
-    ),
-)
 def test_positive_control_meets_preregistered_target():
-    """(a): the FROZEN PASS criterion mean_positive(gap_norm) >= tau_E2. Currently a null."""
+    """(a): the FROZEN PASS criterion mean_positive(gap_norm) >= tau_E2.
+
+    Now an expected PASS after the E2 operating-point redesign (protocol_commit 8ed31bf,
+    docs/benchmark/E2_OPERATING_POINT_REDESIGN.md): narrowing P6 to (1.5, 4.0) makes the
+    shared-knob trap live, so mean_positive(gap_norm) ~= 0.19 >= tau_E2 = 0.10. tau_E2 is
+    UNCHANGED — the env was repaired, not the threshold."""
     result = run_e2_decision_gate(_true_factory, _decoy_factory)
     assert result.feasible
     assert result.mean_pos >= TAU_E2, f"mean_positive {result.mean_pos} < {TAU_E2}"

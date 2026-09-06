@@ -44,7 +44,10 @@ KPI_MEAN_STD: list[tuple[float, float]] = [
     (40.931657, 44.767996),
     (14.975340, 32.369335),
     (18.755966, 40.460422),
-    (-10.140367, 12.583744),
+    # E2 operating-point redesign; protocol_commit 8ed31bf (docs/benchmark/E2_OPERATING_POINT_REDESIGN.md):
+    # P6 width narrowed so the shared-knob trap is live. K5 (mean, std) re-derived at canonical n=1e6 via
+    # get_env_ii_mean_std(param_ranges=ID with id_ranges[6]=(1.5,4.0), seed=0, num_samples=1_000_000).
+    (-0.956730, 4.771898),
 ]
 
 
@@ -60,7 +63,7 @@ class E2V2Env(V2Env):
         (-60.0, 60.0),
         (-20.0, 20.0),
         (-50.0, 150.0),
-        (-60.0, 65.0),
+        (1.5, 4.0),  # P6 (K5 Gaussian width) — narrowed from (-60.0, 65.0); protocol_commit 8ed31bf
         (-100.0, 150.0),
     ]
 
