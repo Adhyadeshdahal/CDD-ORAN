@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -42,15 +43,25 @@ from cdd_oran.e2slice.evaluate import (
 from cdd_oran.envs.v2.e2 import E2V2Env
 
 
-def score_recovery_rcot(dataset_dir: str | Path) -> dict[str, Any]:
+def score_recovery_rcot(
+    dataset_dir: str | Path,
+    *,
+    discovery_loader: Callable[..., dict[str, Any]] = load_discovery_rcot,
+    out_filename: str = "recovery_rcot.json",
+) -> dict[str, Any]:
     """POST-FREEZE RCoT recovery scoring: score the persisted RCoT graph against E2 truth (§9).
 
     Loads the hash-bound ``discovery_rcot.json`` FIRST, then reads ``E2V2Env().true_adj_matrix()`` and
     writes a separate ``recovery_rcot.json`` so recovery numbers can never alter discovery.
+
+    The keyword-only ``discovery_loader`` / ``out_filename`` default to v1; the RCoT-v2 sibling passes
+    ``load_discovery_rcot_v2`` + ``recovery_rcot_v2.json`` so the v2 record sits beside the v1 one. The
+    recovery record's ``protocol_commit`` flows through from the loaded discovery record, so it is
+    automatically ``PROTOCOL_COMMIT_V2`` for a v2 mask.
     """
     out = Path(dataset_dir)
     _rows, manifest = load_dataset(out)
-    disc = load_discovery_rcot(out)
+    disc = discovery_loader(out)
     if disc["dataset_hash"] != manifest["dataset_hash"]:
         raise ValueError(
             f"{out}: discovery_rcot dataset_hash {disc['dataset_hash']} != dataset "
@@ -90,7 +101,7 @@ def score_recovery_rcot(dataset_dir: str | Path) -> dict[str, Any]:
         "git_dirty": dirty,
     }
     record["content_hash"] = hashlib.sha256(canonical_json(record).encode()).hexdigest()
-    _atomic_write_text(out / "recovery_rcot.json", json.dumps(record, indent=2, sort_keys=True))
+    _atomic_write_text(out / out_filename, json.dumps(record, indent=2, sort_keys=True))
     return record
 
 
@@ -99,9 +110,15 @@ def load_recovery_rcot(
     *,
     expected_dataset_hash: str | None = None,
     expected_discovery_hash: str | None = None,
+    filename: str = "recovery_rcot.json",
+    expected_protocol_commit: str = PROTOCOL_COMMIT,
 ) -> dict[str, Any]:
-    """Load ``recovery_rcot.json`` and fail closed on any parent-hash / shape / numeric / commit mismatch."""
-    rec_file = Path(dataset_dir) / "recovery_rcot.json"
+    """Load ``recovery_rcot.json`` and fail closed on any parent-hash / shape / numeric / commit mismatch.
+
+    The keyword-only ``filename`` / ``expected_protocol_commit`` default to v1; the RCoT-v2 sibling
+    passes ``recovery_rcot_v2.json`` + ``PROTOCOL_COMMIT_V2``.
+    """
+    rec_file = Path(dataset_dir) / filename
     record = json.loads(rec_file.read_text())
 
     if record.get("schema_version") != SCHEMA_VERSION:
@@ -119,9 +136,10 @@ def load_recovery_rcot(
     if recomputed != stored:
         raise ValueError(f"{rec_file}: content_hash {stored} != recomputed {recomputed}")
 
-    if record["protocol_commit"] != PROTOCOL_COMMIT:
+    if record["protocol_commit"] != expected_protocol_commit:
         raise ValueError(
-            f"{rec_file}: protocol_commit {record['protocol_commit']!r} != frozen {PROTOCOL_COMMIT!r}"
+            f"{rec_file}: protocol_commit {record['protocol_commit']!r} != frozen "
+            f"{expected_protocol_commit!r}"
         )
     fp = int(record["kpi_kpi_fp"])
     expected_rate = 1.0 - fp / _N_KPI_KPI_CANDIDATES

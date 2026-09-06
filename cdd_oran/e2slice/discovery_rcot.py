@@ -73,6 +73,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -547,14 +548,20 @@ def _grid_array(grid: list[list[float | None]]) -> npt.NDArray[np.float64]:
 
 
 def build_rcot_discovery_record(
-    result: RCoTDiscoveryResult, dataset_hash: str, cfg: RCoTDiscoveryConfig
+    result: RCoTDiscoveryResult, dataset_hash: str, cfg: RCoTDiscoveryConfig,
+    *, protocol_commit: str = PROTOCOL_COMMIT
 ) -> dict[str, Any]:
-    """Assemble the persisted, hash-bound RCoT discovery record (content_hash added last)."""
+    """Assemble the persisted, hash-bound RCoT discovery record (content_hash added last).
+
+    ``protocol_commit`` defaults to this module's frozen v1 ``PROTOCOL_COMMIT``; the RCoT-v2 sibling
+    (``discovery_rcot_v2.py``) passes its own ``PROTOCOL_COMMIT_V2`` so v1 and v2 records are distinct.
+    Every other field is identical, so v2 reuses this builder unchanged.
+    """
     sha, dirty = _git_sha()
     record: dict[str, Any] = {
         "schema_version": RCOT_SCHEMA_VERSION,
         "frozen": True,
-        "protocol_commit": PROTOCOL_COMMIT,
+        "protocol_commit": protocol_commit,
         "dataset_hash": dataset_hash,
         "n_rows": int(result.n_rows),
         "seed": None,  # filled by write_discovery_rcot from the manifest
@@ -591,36 +598,57 @@ def _finalize_record(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_discovery_rcot(
-    dataset_dir: str | Path, cfg: RCoTDiscoveryConfig | None = None, force: bool = False
+    dataset_dir: str | Path, cfg: RCoTDiscoveryConfig | None = None, force: bool = False,
+    *,
+    config_factory: Callable[[], RCoTDiscoveryConfig] = frozen_config,
+    filename: str = "discovery_rcot.json",
+    descendants: tuple[str, ...] = _DISCOVER_RCOT_DESCENDANTS,
+    protocol_commit: str = PROTOCOL_COMMIT,
 ) -> dict[str, Any]:
     """Discover the E2 graph via RCoT from the whole dataset and write ``discovery_rcot.json``.
 
-    The canonical FROZEN persist path: when ``cfg`` is None it uses ``frozen_config()`` (block_perm,
-    the §11 constants). Binds to the current dataset and reads/compares NO truth. Writes atomically. A
-    non-frozen ``cfg`` may be passed for a throwaway smoke run, but its mask will NOT re-load via
-    ``load_discovery_rcot`` (which re-derives every frozen constant + the protocol_commit).
+    The canonical FROZEN persist path: when ``cfg`` is None it uses ``config_factory()`` (default
+    ``frozen_config()`` = block_perm, the §11 constants). Binds to the current dataset and reads/compares
+    NO truth. Writes atomically. A non-frozen ``cfg`` may be passed for a throwaway smoke run, but its
+    mask will NOT re-load via ``load_discovery_rcot`` (which re-derives every frozen constant + the
+    protocol_commit).
+
+    The keyword-only ``config_factory`` / ``filename`` / ``descendants`` / ``protocol_commit`` all
+    default to v1 behaviour; the RCoT-v2 sibling passes its own values so v1 artifacts are never touched.
     """
-    cfg = cfg if cfg is not None else frozen_config()
+    cfg = cfg if cfg is not None else config_factory()
     out = Path(dataset_dir)
     rows, manifest = load_dataset(out)
     result = discover_graph_rcot(rows, cfg)
-    record = build_rcot_discovery_record(result, manifest["dataset_hash"], cfg)
+    record = build_rcot_discovery_record(
+        result, manifest["dataset_hash"], cfg, protocol_commit=protocol_commit
+    )
     record["seed"] = int(manifest["config"]["seed"])
     record = _finalize_record(record)
-    guard_descendants(out, _DISCOVER_RCOT_DESCENDANTS, force, "discover_rcot")
-    _atomic_write_text(out / "discovery_rcot.json", json.dumps(record, indent=2, sort_keys=True))
+    guard_descendants(out, descendants, force, "discover_rcot")
+    _atomic_write_text(out / filename, json.dumps(record, indent=2, sort_keys=True))
     return record
 
 
-def load_discovery_rcot(dataset_dir: str | Path) -> dict[str, Any]:
+def load_discovery_rcot(
+    dataset_dir: str | Path,
+    *,
+    filename: str = "discovery_rcot.json",
+    expected_protocol_commit: str = PROTOCOL_COMMIT,
+    config_factory: Callable[[], RCoTDiscoveryConfig] = frozen_config,
+) -> dict[str, Any]:
     """Load ``discovery_rcot.json`` and verify the content hash, frozen constants, and shape contract.
 
     FROZEN, fail-closed (mirrors ``discovery.py``'s ``load_discovery``): verifies the content hash,
     re-derives every frozen §11 constant and the ``protocol_commit`` against this module's values
     (refusing to load on any mismatch -- so a retuned mask cannot masquerade under this protocol),
     checks the persisted grids are the (6, 14) shape, and that guarded cells are never selected.
+
+    The keyword-only ``filename`` / ``expected_protocol_commit`` / ``config_factory`` default to v1
+    behaviour; the RCoT-v2 sibling passes its own so the v2 record (block_perm_reps=299, PROTOCOL_COMMIT_V2)
+    re-derives fail-closed against the v2 frozen config.
     """
-    disc_file = Path(dataset_dir) / "discovery_rcot.json"
+    disc_file = Path(dataset_dir) / filename
     record = json.loads(disc_file.read_text())
 
     if record.get("schema_version") != RCOT_SCHEMA_VERSION:
@@ -642,10 +670,11 @@ def load_discovery_rcot(dataset_dir: str | Path) -> dict[str, Any]:
 
     # Re-derive the frozen contract: refuse any mask whose protocol_commit or §11 constants differ
     # from this module's frozen values (mirrors discovery.py's frozen-constant re-derivation).
-    fc = frozen_config()
-    if record["protocol_commit"] != PROTOCOL_COMMIT:
+    fc = config_factory()
+    if record["protocol_commit"] != expected_protocol_commit:
         raise ValueError(
-            f"{disc_file}: protocol_commit {record['protocol_commit']!r} != frozen {PROTOCOL_COMMIT!r}")
+            f"{disc_file}: protocol_commit {record['protocol_commit']!r} != frozen "
+            f"{expected_protocol_commit!r}")
     if record["frozen"] is not True:
         raise ValueError(f"{disc_file}: frozen flag is {record['frozen']!r}, expected True")
     if record["score_method"] != FROZEN_SCORE_METHOD:
