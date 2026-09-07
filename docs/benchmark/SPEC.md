@@ -244,6 +244,17 @@ choice, no post-hoc edge selection. The decoy therefore **mispredicts** the effe
 `P0` on `K5` (it predicts no effect) and picks the locally attractive `P0` move; the
 complete-fan-out oracle predicts the `K5` harm and avoids it.
 
+**Design note — a single harmed xApp is intentional, not a shortfall.** E2's fan-out harms
+exactly one xApp (`K5`) *by design*: E2's single stress axis is fan-out **breadth** (see
+cross-cutting "one stress axis per env"), and one clean harmed edge keeps E2 a composable
+**atom** whose failures localize cleanly when it is composed into E5. The benchmark's graded
+"several interacting traps" are realized at **E5** as several trap *types* composed (fan-out +
+delayed-harm + confounding), **not** as several harmed xApps inside E2's own fan-out. Any
+design-table phrasing of "several harmed xApps" refers to that E5-level, cross-axis
+multiplicity; within E2 the preregistered decoy omits exactly one edge (above). E2 is
+deliberately **not** made independently multi-harm, because that would add a second axis and
+destroy the per-env failure-localization the composition capstone depends on.
+
 - **Matched decision population (identical across arms).** The full xApp objective and the
   full conflict panel — every xApp sharing `P0`, **including xApp4/K5** — are IDENTICAL for
   the oracle and decoy arms. The decoy only *mispredicts* `K5`; it does **NOT** remove `K5`
