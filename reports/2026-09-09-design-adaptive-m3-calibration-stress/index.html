@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design-adaptive M3: the validate-first calibration stress test (2026-09-09)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-size:17px; line-height:1.62;}
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);}
+  .rel b{color:var(--ink)}
+  .gate{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);}
+  .gate b{color:var(--good)}
+  .gate.cut{border-left-color:var(--orac)} .gate.cut b{color:var(--orac)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .gate.acc{border-left-color:var(--accent)} .gate.acc b{color:var(--accent)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums; vertical-align:top}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Design-adaptive M3: the validate-first calibration stress test</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-09</span> &nbsp;·&nbsp;
+    <span><b>Author:</b> internal@brihatech.com</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Status:</b> TRUTH-FREE DEV analysis &mdash; nothing frozen, committed, or pre-registered.</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> whether design-adaptive M3 + fail-closed abstention earns the single-method discovery engine.</span>
+  </div>
+
+  <p class="abstract">The prior delta proposed <b>design-adaptive M3 with fail-closed abstention</b> as the
+  primary hypothesis for a single discovery engine, but a critical review established that the supporting
+  evidence existed only at two extremes (rank-deficient E1, full-rank E2/E3), leaving the deployment
+  <em>middle</em> unverified. This report runs the pre-declared <b>validate-first calibration stress
+  test</b> that gates the whole direction: a synthetic SCM with a buried co-parent-gated edge and a
+  KPI&rarr;KPI edge, swept along a design-diversity continuum (single-parameter &rarr; full-rank i.i.d.
+  actuation) and an identifiability edge (cause&harr;proxy co-actuation). The result is decisive and
+  negative. <b>The cheap adaptive components (degenerate-stratum drop + studentized max) do not restore
+  false-positive control</b> in the middle &mdash; adaptive FDR tracks naive FDR at every design point
+  (0.57 and 0.44 at the intermediate points). <b>The fail-closed abstention does not fire where control
+  is lost</b> (abstention 0&ndash;3% at FDR 0.44&ndash;0.57). And on the identifiability edge, <b>the
+  method confidently declares the wrong parent</b> (up to 10/10) while abstaining 0% of the time. M3's
+  <em>recovery</em> is strong throughout (the gated and KPI&rarr;KPI edges recover ~10/10 wherever the
+  design is non-degenerate), so the failure is not recovery but validity. The honest conclusion, per the
+  pre-committed decision rule: the single design-adaptive-M3 engine is <b>not earned</b>; the binding
+  lever is <b>experimental design (randomized / interventional actuation)</b>, not the statistic &mdash;
+  a permutation null <em>alone</em> cannot manufacture causal identification without a valid assignment
+  mechanism or added causal assumptions.</p>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> Successor to
+    <code>reports/2026-09-08-discovery-method-unification-and-m3-superset/</code>, which established that no
+    single statistic at fixed hyperparameters is a strict superset (M3 recovers the gated edge but
+    over-declares on E1) and proposed design-adaptive M3 as the primary hypothesis <em>to be validated
+    first</em>. This report is that validation. Method landscape unchanged: RCoT-v2 frozen (E2 skeleton),
+    partial-correlation frozen (E1 + E3 exact-linear), M3 a DEV prototype. All numbers here are truth-free
+    DEV; nothing frozen is touched.
+  </div>
+
+  <div class="gate cut">
+    <b>Verdict: the single design-adaptive-M3 + fail-closed-abstention engine is NOT earned.</b> Both
+    failure modes the test was built to detect occurred. (1) The adaptive null does not restore FDR
+    control in the intermediate design regime (adaptive FDR = naive FDR = 0.57 at m=3, 0.44 at m=4).
+    (2) Abstention does not fire there (0&ndash;3%). (3) Under near-exact cause/proxy co-actuation the
+    pipeline declares the wrong parent up to 10/10 and never abstains. The pre-committed alternative
+    outcome holds: the lever is intervention-aware data collection, not a single statistic. This makes
+    the deferred M3 FDR fix effectively moot for the <em>observational</em> path &mdash; what breaks is
+    the design, not the calibration.
+  </div>
+
+  <h2>1. The test</h2>
+  <p>
+    The pre-declaration (<code>scratchpad/design_adaptive_m3/PREDECLARE.md</code>, fixed before any
+    scoring and revised once after an adversarial review, itself before scoring) specifies a synthetic
+    one-step SCM in the E-series row layout with six parameters and four KPIs. Its mechanisms are modelled
+    byte-faithfully on the E-series: a linear edge set, a <b>co-parent-gated edge</b>
+    <span class="mono">K1 = -35&middot;exp(-((P4+P2-25)&sup2;)/(2&middot;safe_exp(P3)&sup2;))</span>
+    &mdash; the P0&rarr;K5 analog, with a buried cause <span class="mono">P2</span> (~1% marginal
+    variance) gated by a narrow width <span class="mono">P3</span> &mdash; and a lagged
+    <b>KPI&rarr;KPI edge</b> <span class="mono">K3 = 1.2&middot;K0(lagged) + 0.8&middot;P1</span>.
+  </p>
+  <p>
+    <b>Axis A (design diversity).</b> Each step redraws <span class="mono">m_active</span> randomly-chosen
+    parameters and carries the rest &mdash; E1's one-knob-at-a-time actuation at
+    <span class="mono">m_active=1</span>, full-rank i.i.d. (E2/E3) at <span class="mono">m_active=6</span>,
+    a continuum between. <b>Axis B (identifiability edge).</b> At the full-rank end, the buried cause
+    <span class="mono">P2</span> is correlated (Gaussian copula, strength <span class="mono">rho</span>)
+    with a K1 <em>non-parent</em> <span class="mono">P0</span>, so a declared <span class="mono">P0&rarr;K1</span>
+    is a scorable <em>wrong-parent</em> false positive as <span class="mono">rho&rarr;1</span>.
+  </p>
+  <p>
+    <b>Methods.</b> N0 = naive M3 (bit-exact with the frozen <code>m3_general</code> &mdash; a correctness
+    gate confirmed <span class="mono">max|&Delta;S*|=max|&Delta;p|=0</span>). N1 = adaptive: degenerate-stratum
+    drop (<span class="mono">Var(X|S)&approx;0</span>) + pooled-moments studentized max-over-stratifier
+    (the exchangeable form), with fail-closed abstention when the observable
+    <span class="mono">floor_frac_adaptive &gt; 0.5</span>. Hyperparameters fixed at M3's values
+    (<span class="mono">NC=6, NB=8, min=40, B=299, BH q=0.05</span>). Metrics were computed in the
+    pre-declared order &mdash; validity (type-I, FDR, abstention) <em>before</em> power (recovery) &mdash;
+    and every number below was re-scored from the raw records independently of the run summary.
+  </p>
+
+  <h2>2. Validity: the adaptive null does not restore control, and abstention misses the middle</h2>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 1 &mdash; Axis A, the design-diversity continuum (10 seeds &times; 4 targets per point, n=4000).</caption>
+    <thead><tr><th>m_active (design)</th><th>naive type-I</th><th>naive FDR</th><th>adaptive FDR</th><th>abstention</th><th>gated K1&larr;P2</th></tr></thead>
+    <tbody>
+      <tr><td>1 (single-param, E1-like)</td><td class="orac">1.000</td><td class="orac">0.800</td><td class="mut">&mdash; (all abstain)</td><td>100%</td><td class="mono">n/a</td></tr>
+      <tr><td>2</td><td class="orac">0.878</td><td class="orac">0.778</td><td class="orac">0.567</td><td>75%</td><td class="mono">10/10</td></tr>
+      <tr><td>3</td><td class="warn">0.425</td><td class="orac">0.590</td><td class="orac">0.574</td><td class="warn">3%</td><td class="mono">10/10</td></tr>
+      <tr><td>4</td><td class="warn">0.244</td><td class="orac">0.438</td><td class="orac">0.443</td><td class="warn">0%</td><td class="mono">10/10</td></tr>
+      <tr><td>6 (full-rank i.i.d., E2/E3-like)</td><td class="disc">0.044</td><td class="disc">0.041</td><td class="disc">0.040</td><td>0%</td><td class="mono">10/10</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    Two facts settle the hypothesis. First, <b>adaptive FDR equals naive FDR at every point</b> (0.574 vs
+    0.590 at m=3; 0.443 vs 0.438 at m=4; 0.040 vs 0.041 at m=6): degenerate-stratum drop plus studentized
+    max is essentially a no-op on false-positive control. Second, <b>abstention fires only at the extreme</b>
+    (100% at m=1, 75% at m=2) and collapses to 0&ndash;3% exactly across the m=3&ndash;4 band where realized
+    FDR is still 0.44&ndash;0.57. The observable diagnostic keyed to abstention does not detect the
+    intermediate-design failure it was meant to fail closed on.
+  </p>
+
+  <figure>
+    <img src="fig1_axisA_calibration.png" alt="FDR vs m_active: naive and adaptive nearly identical; abstention bars high only at m=1,2 while the m=3,4 danger band has FDR 0.44-0.59 and near-zero abstention">
+    <figcaption><b>Figure 1.</b> Realized post-BH FDR against actuation refresh <span class="mono">m_active</span>.
+    Adaptive (dashed) sits on top of naive (solid) at every design point &mdash; the adaptive components do
+    not lower FDR. Abstention (grey bars) is high at the rank-deficient extreme but drops to near-zero across
+    the shaded band (m=3,4), where FDR is still 0.44&ndash;0.59. Control is neither restored by the null nor
+    caught by abstention in the middle. Only the full-rank end (m=6) is controlled (FDR 0.04).</figcaption>
+  </figure>
+
+  <p>
+    <b>Recovery, by contrast, is strong.</b> The gated edge <span class="mono">K1&larr;P2</span> and the
+    KPI&rarr;KPI edge <span class="mono">K3&larr;K0lag</span> both recover 10/10 wherever the design is
+    non-degenerate (m&ge;2 and m&ge;3 respectively). The only weak true edge is the width-gate parent
+    <span class="mono">K1&larr;P3</span> (1&ndash;6/10) &mdash; the documented M3 limitation on
+    variance-modulating parents, not a new finding. So M3 remains a strong <em>recovery</em> component;
+    the failure is validity, not power.
+  </p>
+
+  <figure>
+    <img src="fig2_axisA_recovery.png" alt="Recovery vs m_active: gated and KPI->KPI edges near 10/10 for non-degenerate designs; width-gate parent lags">
+    <figcaption><b>Figure 2.</b> Recovery of the planted true edges over non-abstaining seeds. The buried
+    gated cause and the lagged KPI&rarr;KPI edge recover ~10/10 across the non-degenerate designs; only the
+    variance-modulating width parent <span class="mono">K1&larr;P3</span> lags (a known M3 weak spot). M3's
+    recovery strength is not in question &mdash; its false-positive control off the randomized design is.</figcaption>
+  </figure>
+
+  <h2>3. Why the diagnostic cannot save it</h2>
+  <p>
+    The abstention rule assumed a threshold on <span class="mono">floor_frac_adaptive</span> could separate
+    controlled from uncontrolled regimes. It cannot. Binning every declared edge by the unit's
+    <span class="mono">floor_frac_adaptive</span> (Figure 4, right) shows the realized false-positive rate
+    rising smoothly &mdash; the <span class="mono">[0.3,0.5)</span> bin, which sits <em>below</em> the
+    <span class="mono">tau=0.5</span> cut and is therefore kept, is already <b>55% false</b>. There is no
+    threshold that abstains the uncontrolled units without also abstaining controlled ones, because the
+    diagnostic varies continuously with the same design property that drives the confounding.
+  </p>
+  <p>
+    The trajectory-thinning probe (Figure 4, left) locates the cause. Subsampling to one row per trajectory
+    (removing within-trajectory serial dependence) collapses the m=1 naive type-I from <b>1.00 to 0.23</b>,
+    while the full-rank m=6 stays nominal (0.04) either way. Most of the rank-deficient collapse is
+    serial-dependence in the carried design, not static rank &mdash; and the residual 0.23 (still far above
+    0.05) is what survives near-independent sampling (design-induced cross-sectional dependence, and/or
+    incomplete conditioning or null misspecification &mdash; the probe locates the dominant driver, it does
+    not fully partition the residual). Neither part is a calibration error a null can shuffle away; both are
+    real associations that are simply not causal.
+  </p>
+
+  <figure>
+    <img src="fig4_diagnostics.png" alt="Left: thinning collapses m=1 type-I 1.00 to 0.23; m=6 stays 0.04. Right: FP-rate rises across floor_frac bins, [0.3,0.5) already 0.55, tau=0.5 line does not separate">
+    <figcaption><b>Figure 4.</b> <b>Left:</b> the serial-dependence probe &mdash; thinning to one row per
+    trajectory collapses the m=1 inflation (1.00&rarr;0.23), so the collapse is driven mostly by
+    within-trajectory serial dependence, not static rank; the residual 0.23 is what remains (design-induced
+    cross-sectional dependence and/or incomplete conditioning). <b>Right:</b> realized false-positive rate of declared edges by
+    <span class="mono">floor_frac_adaptive</span> bin &mdash; the kept <span class="mono">[0.3,0.5)</span>
+    bin is already 55% false, so the <span class="mono">tau=0.5</span> abstention threshold does not separate
+    controlled from uncontrolled.</figcaption>
+  </figure>
+
+  <h2>4. The identifiability edge: confidently wrong, never abstaining</h2>
+  <p>
+    Axis B isolates the sharpest failure. At the full-rank end (where calibration is otherwise nominal), as
+    the buried cause <span class="mono">P2</span> and the non-parent proxy <span class="mono">P0</span>
+    approach deterministic co-actuation, the method increasingly declares the false edge
+    <span class="mono">P0&rarr;K1</span>: <b>0/10 at rho=0, 6/10 at rho=0.5, 10/10 at rho&ge;0.9</b> &mdash;
+    while it still recovers the true cause and while <b>abstention stays at 0% throughout</b>. This is an
+    <em>identifiability</em> failure, not a calibration one: when a cause and a proxy move together, no
+    permutation null can attribute the effect, and the fail-closed diagnostic cannot catch it because the
+    test is not uninformative &mdash; it is confident, and wrong.
+  </p>
+
+  <figure>
+    <img src="fig3_axisB_identifiability.png" alt="Wrong-parent FP rises 0 to 100% as rho grows; true cause still recovered; abstention flat at 0%">
+    <figcaption><b>Figure 3.</b> Identifiability edge (full-rank, cause&harr;non-parent-proxy co-actuation).
+    The wrong-parent false positive <span class="mono">P0&rarr;K1</span> climbs to 10/10 as
+    <span class="mono">rho&rarr;1</span> while the true cause is still recovered and abstention never fires.
+    Exact co-actuation cannot be resolved by any null; the only correct behaviour &mdash; abstain &mdash; is
+    the one the diagnostic does not trigger.</figcaption>
+  </figure>
+
+  <h2>5. Interpretation: the lever is design, not the statistic</h2>
+  <p>
+    The unifying reading of all three failures is that under a non-randomized (carried / partial) actuation
+    design, non-causal candidates are <em>genuinely</em> conditionally associated with the target in the
+    observational distribution &mdash; through carried common history and serial dependence. A permutation
+    conditional-independence test then correctly detects real associations that simply are not causal:
+    rejecting the CI null on a genuinely-associated non-parent is <em>not</em> a statistical type-I error but
+    a <b>causal false discovery</b> across an invalid identification bridge. So <b>a permutation null alone
+    cannot manufacture causal identification without a valid assignment mechanism or added causal
+    assumptions</b> (randomization is the most direct such mechanism; measured-confounder adjustment,
+    instruments, or environment-invariance are others this test does not explore). That is why the adaptive
+    components (which only re-shape the null) do not help, why the abstention diagnostic (which detects an
+    <em>uninformative</em> null, not a <em>confounded</em> one) does not fire, and why <em>exact</em>
+    co-actuation is structurally unidentifiable (near-exact co-actuation, <span class="mono">rho&lt;1</span>,
+    is weak identification &mdash; the 10/10 wrong-parent rate at <span class="mono">rho&ge;0.9</span> is M3's
+    weak-identification failure, not impossibility for every method). The one design point where this
+    observational M3 recovered the causal structure cleanly is the fully-randomized one
+    (<span class="mono">m_active=6, rho=0</span>: FDR 0.04, edges 10/10, no wrong-parent) &mdash; evidence,
+    not proof, from a single noiseless SCM.
+  </p>
+  <p>
+    This is consistent with the project's standing direction &mdash; discovery is an offline periodic
+    structure-learning step (a non-RT rApp), and E5 is interventional by construction. The stress test now
+    grounds that direction: the way to make M3 trustworthy is not to tune its null but to feed it
+    <b>randomized / factorial / interventional actuation</b>, which the offline path can arrange. One split
+    matters (per adversarial review): randomization identifies <b>parameter&rarr;KPI</b> effects directly,
+    but <b>lagged KPI&rarr;KPI</b> edges stay endogenous unless parameter interventions supply valid
+    instruments or the temporal-SCM assumptions identify them &mdash; the two edge classes need separate
+    estimands and separate eligibility, not one causal certificate.
+  </p>
+
+  <h2>6. Decision</h2>
+  <div class="gate acc">
+    <b>Per the pre-committed outcome rule.</b> The single design-adaptive-M3 + fail-closed-abstention engine
+    is <b>not earned</b>: control fails in the intermediate design regime without abstention catching it
+    (criterion E-b fails), and the identifiability edge produces confident wrong-parent declarations. The
+    honest resolution is <b>intervention-aware data collection</b> &mdash; run the discovery step on
+    randomized/full-rank actuation, where M3 (a strong recovery component) is also valid &mdash; rather than
+    a single statistic applied to whatever observational design happens to arrive. A bounded diagnostic
+    router is also insufficient <em>as specified here</em>, because the observable diagnostic does not
+    separate the regimes and is blind to the identifiability edge; a router would need a genuinely
+    design-based validity certificate (e.g. an actuation-rank / overlap guarantee), not an outcome-derived
+    floor fraction.
+  </div>
+  <p>
+    On the <em>observational</em> path the deferred M3 FDR / multiplicity fix is beside the point: the
+    intermediate-design FDR is not a calibration defect a fix could remove &mdash; it is confounding by
+    design, which no null tuning addresses. But the fix is <b>not moot on the randomized path</b> (an earlier
+    draft over-stated this): the m=6 FDR 0.04 here is one noiseless SCM &mdash; evidence, not a validity
+    proof. A randomized E5 pipeline still needs an explicit, pre-declared multiplicity / FDR procedure and
+    assignment-aware inference (dependence across candidate tests, BH scope, noise, and overlap all remain to
+    be validated). What the observational failure removes is the hope of fixing FDR by <em>tuning the
+    statistic</em>; it does not remove the need for a real multiplicity procedure once the design is right.
+  </p>
+  <div class="gate acc">
+    <b>Recommended architecture (adversarial review, pending user decision).</b> Drop the universal
+    single-method thesis, not M3. Adopt a <b>two-route</b> design: a <em>design-based admission
+    certificate</em> computed from design / assignment logs <em>before</em> outcomes are examined (minimum
+    randomized samples per lever and operating-state stratum; minimum conditional actuation variance;
+    effective rank of the randomized assignment matrix; maximum conditional co-actuation; overlap /
+    positivity bounds; separate eligibility for parameter&rarr;KPI vs KPI&rarr;KPI) gates the data. Certified
+    design &rarr; analyze with M3 as the <em>test statistic</em> inside a block / trajectory-aware
+    randomization test (or CRT) that preserves the assignment mechanism, plus a pre-declared FDR family.
+    Uncertified design &rarr; <b>abstain and request intervention</b> &mdash; never route to a different
+    observational detector. This retires degenerate-drop / studentization as a validity repair and
+    floor_frac as a safety gate, and keeps M3 only as the recovery component behind the gate. Building this
+    is an E5 data-collection decision &mdash; user-gated.
+  </div>
+
+  <h2>7. Testing the recommendation: the admission certificate (Phase 1)</h2>
+  <p>
+    The recommended architecture puts a <b>design-based admission certificate</b> at the front &mdash; a
+    gate computed from the actuation / assignment design <em>before</em> outcomes are seen. The sharpest
+    question is whether such a design-only gate can separate the controlled from uncontrolled regimes
+    <em>where the outcome-derived <span class="mono">floor_frac</span> could not</em>. That is directly
+    testable on the same grid, because the calibration above already labels every point controlled or not.
+    The certificate criteria and thresholds were fixed <b>from principle before scoring</b>
+    (<code>PREDECLARE_certificate.md</code>): <b>C1</b> independent per-unit randomization (max carry-fraction
+    and lag-1 within-trajectory autocorrelation &lt; 0.10 &mdash; the assignment-mechanism signal the
+    contemporaneous condition number missed); <b>C2</b> bounded conditional co-actuation (max
+    |partial-correlation| among parameters &lt; 0.80); <b>C3</b> overlap (degenerate-stratum fraction &lt;
+    0.10); <b>C4</b> sample adequacy; and lagged <b>KPI&rarr;KPI</b> candidates marked ineligible for direct
+    identification (prior-step outcomes &mdash; an instrument is required, Phase 2). Ground-truth label
+    (pre-declared): a point is controlled iff its parameter&rarr;KPI M3 FDR &le; 0.10.
+  </p>
+
+  <figure>
+    <img src="fig5_certificate_concordance.png" alt="Bars of param->KPI FDR per grid point colored by certificate verdict: two green admits below the 0.10 line, grey abstains above it across both axes, one red false-admit at rho=0.5">
+    <figcaption><b>Figure 5.</b> The design-only certificate against realized parameter&rarr;KPI FDR. It
+    <b>abstains the entire design-diversity axis</b> (m=1&ndash;4, all uncontrolled &mdash; C1 catches the
+    carried, non-independently-randomized design that <span class="mono">floor_frac</span> could not),
+    <b>admits the randomized point</b> (m=6 / rho=0, FDR 0.02), and abstains strong co-actuation
+    (rho&ge;0.9 via C2). The single <span class="orac">red</span> bar is a dangerous false-admit at rho=0.5:
+    partial-correlation 0.48 clears the 0.80 collinearity bound, but the buried edge is weakly identified
+    there and FDR is 0.22.</figcaption>
+  </figure>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 2 &mdash; certificate concordance (design-only verdict vs known parameter&rarr;KPI FDR; thresholds pre-declared).</caption>
+    <thead><tr><th>regime</th><th>certificate</th><th>param FDR</th><th>criterion firing</th><th>cell</th></tr></thead>
+    <tbody>
+      <tr><td>design diversity m=1..4</td><td class="disc">ABSTAIN</td><td class="orac">0.71&ndash;0.18</td><td class="mono">C1 (carry/autocorr)</td><td class="disc">correct-abstain</td></tr>
+      <tr><td>randomized m=6, rho=0</td><td class="disc">ADMIT</td><td class="disc">0.016</td><td class="mono">all pass</td><td class="disc">correct-admit</td></tr>
+      <tr><td>co-actuation rho&ge;0.9</td><td class="disc">ABSTAIN</td><td class="orac">~0.25</td><td class="mono">C2 (partial-corr)</td><td class="disc">correct-abstain</td></tr>
+      <tr><td>co-actuation rho=0.5</td><td class="orac">ADMIT</td><td class="orac">0.217</td><td class="mono">all pass (pcorr 0.48)</td><td class="orac">dangerous false-admit</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="gate warn">
+    <b>Phase 1 verdict: promising, but not sufficient as specified.</b> The certificate is correct on 9 of
+    10 grid points and &mdash; crucially &mdash; <b>gates the entire design-diversity axis that
+    <span class="mono">floor_frac</span> could not</b>: a design-only observable (per-unit randomization /
+    serial independence) cleanly separates the carried designs from the randomized one. Its one dangerous
+    false-admit is at moderate co-actuation (rho=0.5), the weak-identification zone: a purely design-based
+    gate cannot see the edge's signal strength, so a near-collinearity bound cannot self-calibrate to a
+    buried edge. The principled resolution is sol's own <em>abstain &rarr; request intervention</em> route
+    with a <b>conservative</b> co-actuation policy (accept conservative abstains rather than dangerous
+    admits, since design alone cannot know the SNR) &mdash; or interventional dithering that drives
+    co-actuation down. The threshold was <b>not</b> retuned to erase the false-admit (that would be grading
+    to pass). Phase 2: the block / trajectory-aware CRT for the admitted route, the instrument route for
+    KPI&rarr;KPI, and the conservative-vs-interventional co-actuation policy.
+  </div>
+
+  <h2>8. Closing the gap: the assignment-aware CRT (Phase 2)</h2>
+  <p>
+    Phase 1's one failure was moderate co-actuation (rho=0.5), which a pairwise-correlation bound cannot
+    catch. sol's reframe: that false-admit is a property of the <em>naive permutation null</em>, not a
+    fundamental limit &mdash; because we <em>control</em> actuation, we can test each parameter with a
+    <b>conditional randomization test</b> that resamples it from its <em>known</em> assignment distribution
+    <span class="mono">P(P_j | P_-j)</span>, holding the outcome and the other columns fixed (M3's score is
+    the statistic; the CRT supplies the null). Under H0 this is exact-nominal regardless of co-actuation, and
+    when testing the wrong parent, resampling it from its conditional keeps its association-through-the-cause,
+    so no spurious extra effect is found. Phase 2 built this (<code>crt.py</code>, assignment-logged design
+    <code>dgp_assignment.py</code>) plus a residual-information certificate superseding the pairwise C2
+    (<code>residual_info_certificate.py</code>), and validated it with validity scored <em>separately</em>
+    from power (<code>PREDECLARE_phase2.md</code>, fixed before scoring).
+  </p>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 3 &mdash; assignment-aware CRT vs naive M3 across cause&harr;proxy co-actuation (10 seeds, per-step randomized design).</caption>
+    <thead><tr><th>rho</th><th>residual R&sup2;</th><th>naive FDR</th><th>naive wrong-parent</th><th>CRT FDR</th><th>CRT wrong-parent</th><th>CRT cause recovery</th></tr></thead>
+    <tbody>
+      <tr><td>0.0</td><td class="mono">0.00</td><td>0.075</td><td class="mono">2/10</td><td class="disc">0.045</td><td class="disc">0/10</td><td class="disc">10/10</td></tr>
+      <tr><td>0.5</td><td class="mono">0.20</td><td class="orac">0.203</td><td class="orac">5/10</td><td class="disc">0.031</td><td class="disc">1/10</td><td class="disc">10/10</td></tr>
+      <tr><td>0.9</td><td class="mono">0.78</td><td class="orac">0.259</td><td class="orac">10/10</td><td class="disc">0.031</td><td class="disc">0/10</td><td class="disc">10/10</td></tr>
+      <tr><td>0.99</td><td class="mono">0.98</td><td class="orac">0.247</td><td class="orac">10/10</td><td class="disc">0.018</td><td class="disc">0/10</td><td class="disc">10/10</td></tr>
+      <tr><td>1.0 (exact)</td><td class="mono">1.00</td><td class="orac">0.247</td><td class="orac">10/10</td><td class="disc">0.023</td><td class="disc">0/10</td><td class="warn">0/10 (ineligible)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <figure>
+    <img src="fig6_crt_validity_power.png" alt="Left: CRT FDR and wrong-parent rate near zero across all rho while naive FDR and wrong-parent climb from rho=0.5. Right: CRT cause recovery flat at 1.0 through rho=0.99 then drops to 0 at rho=1.0, residual R2 rising.">
+    <figcaption><b>Figure 6.</b> The assignment-aware CRT closes the Phase-1 gap. <b>Left (validity):</b> CRT
+    holds FDR at ~0.02&ndash;0.045 and the wrong-parent false-positive at ~0 for <em>every</em> co-actuation
+    level, while the naive null's FDR climbs to 0.20&ndash;0.26 and its wrong-parent rate to 10/10 from
+    rho=0.5. <b>Right (power):</b> CRT recovery of the buried cause stays 10/10 through rho=0.99 and cliffs to
+    0/10 only at exact co-actuation (rho=1.0), where the two parents are genuinely indistinguishable and the
+    CRT correctly declares <em>neither</em> &mdash; validity preserved, power degrading only at true
+    non-identification.</figcaption>
+  </figure>
+
+  <div class="gate acc">
+    <b>Phase 2 result: sol's two-route design works.</b> Behind the admission gate, the assignment-aware CRT
+    restores valid FDR (~q) and eliminates the wrong-parent false positive across the <em>entire</em>
+    co-actuation range, including the rho=0.5 point where Phase 1's pairwise certificate failed &mdash; and it
+    does so while retaining full power on the buried cause until exact non-identification, where it correctly
+    abstains on both parents. The residual-information certificate flags rho=1.0 as info-ineligible
+    (R&sup2;=1.0, singular design) but is conservative as a <em>power</em> predictor (its low-power advisory at
+    R&sup2;&ge;0.75 fires at rho=0.9/0.99 where the CRT is in fact still fully powered) &mdash; an
+    identifiability/information gate, not a power guarantee, exactly as specified. Net: the combined
+    architecture &mdash; admission certificate (randomization + residual-information) &rarr; assignment-aware
+    CRT on admitted data &rarr; otherwise abstain and recollect &mdash; holds validity where every single
+    observational method failed. Thresholds and the CRT were fixed before scoring; nothing was retuned.
+  </div>
+
+  <h2>9. Observation noise (Phase 3a)</h2>
+  <p>
+    Everything so far was noiseless. Real KPIs are measured with noise, and noise-robust discovery has been
+    the project's standing binding constraint. Observation noise was added to the KPI columns only (each
+    <span class="mono">observed = latent + N(0, (frac&middot;sigma_KPI)&sup2;)</span>; parameters are exact
+    control settings, kept clean), swept <span class="mono">frac in {0, 0.05, 0.10, 0.20, 0.35, 0.50}</span>
+    at no co-actuation and at the hard <span class="mono">rho=0.5</span> case (pre-declared in
+    <code>PREDECLARE_phase3_noise.md</code> before scoring; the noiseless cells reproduce the Phase-2 result
+    exactly, an internal anchor). Because the CRT resamples the <em>clean</em> parameters from their known
+    assignment, its null is untouched by outcome noise, so validity was expected to hold; the open question
+    was power on the buried cause (~1% of the target's variance).
+  </p>
+
+  <figure>
+    <img src="fig7_noise_robustness.png" alt="Across noise 0 to 0.50 sigma: CRT error rate stays near q=0.05 and buried-cause recovery stays flat at 1.0 for both no-co-actuation and rho=0.5; naive error rate at rho=0.5 sits at 0.20-0.24.">
+    <figcaption><b>Figure 7.</b> Noise robustness. The CRT's error rate stays near <span class="mono">q</span>
+    (solid lines, 0.02&ndash;0.09) and its recovery of the buried cause stays at <b>10/10</b> (dashed lines,
+    flat) across the whole noise range, both with and without the co-actuation trap. Even at heavy 0.50-sigma
+    noise plus <span class="mono">rho=0.5</span>, CRT FDR is 0.087 with wrong-parent 2/10. The naive method
+    stays broken under co-actuation regardless of noise (red, FDR 0.20&ndash;0.24).</figcaption>
+  </figure>
+
+  <div class="gate acc">
+    <b>Phase 3a result: the CRT is noise-robust to 0.50 sigma &mdash; validity <em>and</em> power.</b> Its
+    error rate stays near <span class="mono">q</span> (0.02&ndash;0.09) and wrong-parent at ~0&ndash;2/10 at
+    every noise level, with or without co-actuation, while the naive method's co-actuation failure persists
+    under noise (FDR 0.20&ndash;0.24 at <span class="mono">rho=0.5</span>). The buried cause is recovered
+    10/10 up to 0.50 sigma &mdash; more robust than expected (an earlier prediction that power would fall in
+    the 0.1&ndash;0.35 range did not materialize; the stratification localizes the faint signal and n=4000 is
+    ample, consistent with the project's prior noise-robustness finding). Caveat: noise beyond 0.50 sigma is
+    unprobed &mdash; the power cliff is above the tested range, not shown to be absent.
+  </div>
+
+  <h2>10. Compliance &amp; overlap (Phase 3b)</h2>
+  <p>
+    An adversarial review flagged two threats sharper than larger Gaussian noise: <b>compliance</b> (the
+    parameter actually realized differs from the one commanded &mdash; the CRT resamples the <em>commanded</em>
+    assignment, so a mismatch could mis-specify its null) and <b>overlap</b> (thin actuation leaving too
+    little variation to test). Pre-declared in <code>PREDECLARE_phase3b_overlap_compliance.md</code>;
+    the clean cell reproduces the Phase-2 naive-fails / CRT-fixes pattern as an anchor.
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 4 &mdash; CRT under imperfect actuation (compliance) and thin actuation (overlap), 10 seeds. Both benign under the tested models.</caption>
+    <thead><tr><th>stress</th><th>setting</th><th>CRT error rate</th><th>CRT wrong-parent</th><th>CRT cause recovery</th></tr></thead>
+    <tbody>
+      <tr><td>compliance</td><td>full response (anchor)</td><td>0.03&ndash;0.07</td><td class="disc">0&ndash;1/10</td><td class="disc">10/10</td></tr>
+      <tr><td>compliance</td><td>80% response + actuation noise</td><td>0.02&ndash;0.04</td><td class="disc">0&ndash;1/10</td><td class="disc">10/10</td></tr>
+      <tr><td>compliance</td><td>50% response + actuation noise (+ rho=0.5)</td><td>0.01&ndash;0.02</td><td class="disc">0/10</td><td class="disc">10/10</td></tr>
+      <tr><td>overlap</td><td>actuation 100% &rarr; 10% of range</td><td>0.05&ndash;0.08</td><td class="disc">0&ndash;1/10</td><td class="disc">10/10</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="gate acc">
+    <b>Phase 3b result: both threats are benign under the tested models &mdash; with caveats.</b> Partial
+    compliance (down to 50% response) plus actuation noise does not break the CRT: it resamples the
+    <em>commanded</em> assignment, and the realized parameter is a noisy function of the command, so validity
+    and full cause power both hold. Thin actuation (down to 10% of the range) likewise leaves validity and
+    power intact, and the certificate correctly does not abstain because the design stays full-rank
+    (amplitude shrinks, coverage does not gap). <b>Honest caveats (untested, sharper variants):</b> the
+    benign compliance result relies on non-compliance being <em>exogenous</em> (independent of the outcome)
+    and independent across parameters &mdash; <em>endogenous</em> or correlated non-compliance is the real
+    danger and is not tested; and amplitude-thinning is not a true positivity violation (discrete actuation
+    levels, clipping, or coverage gaps would be), which remains untested. Nothing was retuned.
+  </div>
+
+  <h2>11. The deliberate breaker &mdash; and the contract it defines (Phase 4)</h2>
+  <p>
+    Every stress to this point only reduced power; none violated the CRT's assignment model, so it stayed
+    valid. The adversarial review identified the minimal credible breaker: <b>adaptive assignment driven by
+    an omitted latent operational state.</b> A block-structured hidden state <span class="mono">S</span>
+    drives the outcome, and a <em>null</em> knob is commanded as a function of <span class="mono">S</span>
+    (<span class="mono">A = gamma&middot;S + noise</span>) &mdash; so the innocent knob is confounded with the
+    outcome through <span class="mono">S</span>. A CRT that resamples marginally (ignoring
+    <span class="mono">S</span>) should false-alarm. Two fixes were pre-declared: a <b>block-CRT</b> that
+    permutes commands within blocks sharing <span class="mono">S</span> (needs only block IDs), and a
+    <b>state-CRT</b> that resamples from <span class="mono">P(command | S)</span> (needs the logged state).
+    Pre-declared in <code>PREDECLARE_phase4_breaker.md</code>; 40 seeds.
+  </p>
+
+  <figure>
+    <img src="fig8_break_fix.png" alt="i.i.d. CRT false-alarm rate on the confounded knob jumps to 1.0 for any confounding gamma>=0.5; block-CRT and state-CRT stay at 0; true cause recovery flat at 1.0.">
+    <figcaption><b>Figure 8.</b> The breaker and its fix. With any real hidden-state confounding
+    (<span class="mono">gamma&ge;0.5</span>) the marginal i.i.d. CRT false-alarms on the innocent knob
+    <b>100% of the time</b> (40/40 seeds). Logging the batch (block-CRT) or the hidden state (state-CRT)
+    drives that to <b>0%</b>, while the true cause is still recovered 100% and the plain unconfounded knobs
+    stay clean (~2%). The method <em>can</em> be broken &mdash; and the fix lives in the data collection, not
+    the statistic.</figcaption>
+  </figure>
+
+  <div class="gate acc">
+    <b>Phase 4 result: the method is breakable, the fix is a logging requirement.</b> Unlogged adaptive
+    assignment with an omitted confounder guarantees false discoveries under any marginal test; conditioning
+    the randomization test on the logged block/session or operational state restores exact control. This
+    directly yields the <b>data-collection contract</b> (draft): log the assignment policy + probabilities,
+    the pre-command operational state, block/session IDs, commanded <em>and</em> realized values,
+    clipping/failure indicators, and ensure independent within-block variation of each knob &mdash; then the
+    two-route engine (admission certificate &rarr; assignment-aware block/state-conditioned CRT &rarr; else
+    abstain and re-collect) has controlled false-discovery. Draft written to
+    <code>DRAFT_E5_data_collection_contract.md</code>. Not yet tested: within-block state <em>drift</em> and
+    endogenous (feedback) non-compliance &mdash; required before final sign-off.
+  </div>
+
+  <h2>12. Status</h2>
+  <div class="gate">
+    <b>Established this delta.</b> (1) Correctness anchors passed truth-free: naive path bit-exact vs
+    <code>m3_general</code> (<span class="mono">max|&Delta;|=0</span>); synthetic endpoints bracket the known
+    E1/E2/E3 regimes on observable signatures; DGP content-hash-frozen before scoring. (2) The adaptive null
+    does not restore FDR control in the middle (adaptive = naive at every point). (3) Fail-closed abstention
+    does not fire where FDR is uncontrolled (0&ndash;3% at FDR 0.44&ndash;0.57), and the diagnostic does not
+    separate regimes (the kept <span class="mono">[0.3,0.5)</span> floor-fraction bin is 55% false).
+    (4) The identifiability edge produces confident wrong-parent declarations (to 10/10) with 0% abstention.
+    (5) The rank-deficient collapse is mostly serial-dependence (thinning 1.00&rarr;0.23). All re-scored
+    independently of the run summary. (6) Phase 1 of the recommended architecture &mdash; a design-based
+    admission certificate &mdash; is correct on 9/10 grid points (thresholds pre-declared from principle,
+    not retuned): it gates the whole design-diversity axis where <span class="mono">floor_frac</span>
+    failed, with one dangerous false-admit at moderate co-actuation (weak identification). (7) Phase 2 &mdash;
+    the assignment-aware CRT behind the gate &mdash; closes that gap: valid FDR (~q) and ~0 wrong-parent
+    across all co-actuation (naive fails from rho=0.5), full cause power to rho=0.99, correct joint
+    ineligibility only at exact non-identification. The two-route architecture holds validity where every
+    observational method failed. (8) Under observation noise to 0.50 sigma the CRT stays valid (error rate
+    ~q, wrong-parent ~0) and keeps recovering the buried cause 10/10, with and without co-actuation; the
+    naive method stays broken under co-actuation regardless of noise. (9) Under imperfect actuation
+    (compliance to 50% response + actuation noise) and thin actuation (to 10% of range), the CRT stays valid
+    and keeps full cause power &mdash; benign under these (exogenous, continuous) models, with sharper
+    variants (endogenous non-compliance, discrete/clipped positivity) still untested. A leak audit passed:
+    decoupling the true cause drops its recovery to 0/10, and its detection sits at the permutation floor at
+    every noise level (explaining the robustness). (10) A deliberate breaker (adaptive assignment with an
+    omitted hidden state) false-alarms 100% under the marginal CRT for any confounding; logging the
+    batch/session (block-CRT) or the state (state-CRT) restores 0% while keeping the true cause &mdash;
+    defining the data-collection contract (draft written).
+  </div>
+  <div class="gate warn">
+    <b>Open / not done.</b> Everything is on one SCM at 10 seeds. Phase 2/3a validated the assignment-aware
+    CRT + residual-information certificate at <em>per-step-independent</em> randomization (block size 1),
+    including observation noise to 0.50 sigma; still deferred: noise beyond 0.50 sigma (the power cliff is
+    above the tested range, not shown absent) and non-ideal noise (correlated / common-mode /
+    heteroscedastic / parameter mismeasurement); a <em>block-randomized</em> (per-trajectory) design +
+    block-CRT to exercise coarser assignment granularity; the sharper compliance/overlap variants
+    (endogenous or correlated non-compliance; discrete / clipped positivity violations); multiple SCMs; the
+    instrument route for KPI&rarr;KPI edges; and a power (minimum detectable effect) gate (needs an
+    engineering-specified minimum relevant effect). Any promotion of the
+    intervention-aware-collection direction into an E5 data-collection contract, any method freeze, and the
+    E3/E4 gated items remain user-gated. Nothing here is frozen or committed.
+  </div>
+  <div class="gate acc">
+    <b>Aside &mdash; GPU accelerator (separate practical artifact).</b> A stream-matched float64 GPU port of
+    the M3 kernel (permutation uniforms drawn on CPU with the exact numpy RNG, shipped to the GPU for
+    argsort + reduce) <b>passes an equivalence gate against the CPU oracle</b>: BH masks bit-identical on all
+    seeds/targets, <span class="mono">max|&Delta;p|=0</span>, <span class="mono">max|&Delta;S*|=6.7e-16</span>.
+    It is therefore the same method, and runs <b>~2.4&times;</b> faster on the RTX 2050 under the
+    mask-preserving constraint (the raw 21&times; batched kernel draws permutations on the GPU, changing the
+    stream &mdash; a distinct method that would need fresh pre-registration). A drop-in speedup, decision on
+    adoption is the user's; not used to score anything in this report.
+  </div>
+
+  <div class="foot">
+    <b>Provenance.</b> Truth-free DEV artifacts under <code>scratchpad/design_adaptive_m3/</code>:
+    <code>PREDECLARE.md</code> (v2.1, fixed before scoring), <code>dgp.py</code>, <code>m3_adaptive.py</code>,
+    <code>anchor1_bitexact.py</code>, <code>anchor2_endpoints.py</code>, <code>run_stress.py</code>,
+    <code>score.py</code>, <code>verify_rescore.py</code> (independent re-score); the GPU port
+    <code>m3_gpu.py</code> / <code>gate_gpu_equiv.py</code> / <code>gate_gpu_equiv_all.py</code>; the
+    admission certificate <code>PREDECLARE_certificate.md</code> / <code>certificate.py</code> /
+    <code>validate_certificate.py</code>; and Phase 2 <code>PREDECLARE_phase2.md</code> /
+    <code>dgp_assignment.py</code> / <code>crt.py</code> / <code>residual_info_certificate.py</code> /
+    <code>validate_crt.py</code>; Phase 3a noise <code>PREDECLARE_phase3_noise.md</code> /
+    <code>validate_noise.py</code> / <code>leak_audit.py</code>; and Phase 3b
+    <code>PREDECLARE_phase3b_overlap_compliance.md</code> / <code>dgp_compliance.py</code> /
+    <code>validate_phase3b.py</code>; and Phase 4 <code>PREDECLARE_phase4_breaker.md</code> /
+    <code>dgp_adaptive.py</code> / <code>demo_break_fix.py</code> /
+    <code>DRAFT_E5_data_collection_contract.md</code>. Results:
+    <code>results_axisA.json</code>, <code>results_axisB.json</code>, <code>results_thinprobe.json</code>,
+    <code>certificate_validation.json</code>, <code>crt_validation.json</code>, <code>noise_validation.json</code>,
+    <code>phase3b_validation.json</code>, <code>break_fix_validation.json</code>.
+    Figures regenerable via <code>make_figs.py</code> (reads those JSONs live and applies BH inline). Every
+    headline number was re-scored from the raw records independently of the run summary, and the correctness
+    and GPU-equivalence gates were re-run independently by the coordinator. The pre-declaration was reviewed
+    by a separate adversarial agent before any scoring; its critiques (asymmetric studentization, serial
+    dependence, vacuous abstention, diagnostic circularity, missing false proxy) were incorporated into the
+    v2 design that was then tested. The <em>finished</em> result was then reviewed by the same agent, and its
+    over-claim corrections (a null alone cannot manufacture identification vs. the broader "no null can
+    separate"; the multiplicity fix is not moot on the randomized path; parameter&rarr;KPI vs KPI&rarr;KPI
+    need separate estimands; rho&lt;1 is weak- not non-identification; statistical vs causal validity) are
+    reflected above. Nothing here changes a frozen constant, mechanism, gate, or package
+    module. &nbsp;·&nbsp; <code>reports/2026-09-09-design-adaptive-m3-calibration-stress/</code>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision-gate de-confounding (2026-08-25)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.62rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Decision-level de-confounding of the causal-graph utility gate, and a decomposition of planner utility (Env I / III / IV)</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-08-25</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> planner-level re-evaluation, no retraining</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior report.</b> This is a delta on
+    <em>2026-08-24 — Causal attribution &amp; generalization</em>. The prediction-level results of that
+    report (structure-only prediction, out-of-distribution generalization of the discovered vs. true
+    graph, residual attribution) are unchanged and not repeated here. This note addresses the two items
+    that report left unresolved at the <em>decision</em> level: (i) the oracle-vs-discovered utility
+    comparison was scored on mismatched conflict sets, and (ii) the absolute QACM utility was negative.
+    All results below reuse the existing trained checkpoints; only the planner/evaluation stage was re-run.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    The 2026-08-24 gate compared the discovered and oracle (true-adjacency) world-model structures on
+    QACM planning utility, but the two arms were scored on different conflict sets, because the
+    enumeration graph that defines the conflict set is the structure itself (the true graph enumerates
+    more conflicts: 300 vs. 270, 690 vs. 600, 570 vs. 420 for Env I/III/IV). We introduce a
+    matched-decision-set evaluation — both structures scored on the true (oracle) conflict set — and
+    repeat each cell over four mitigation seeds. Under this control the single environment that had
+    favoured the oracle (Env III, <b>+0.070</b>) reverses to <b>&minus;0.090 &plusmn; 0.186</b>, and across
+    all three environments the oracle&minus;discovered utility gap is not materially positive
+    (Env I &minus;0.100 &plusmn; 0.133; Env III &minus;0.090 &plusmn; 0.186; Env IV +0.042 &plusmn; 0.056).
+    Separately, we decompose the negative absolute utility into (a) out-of-distribution model
+    exploitation, partially removable by an existing, self-measurable disagreement penalty on Env I
+    (&minus;0.083 &rarr; +0.297) but not on Env IV, and (b) a structure-independent limitation of the QACM
+    objective, which becomes indifferent to utility once a conflict is nominally satisfied. We identify
+    (b) as the dominant remaining cause and specify a minimal objective modification to address it.
+  </p>
+
+  <h2>1. Background and open items</h2>
+  <p>
+    The planner under study, QACM, performs a one-step grid search over candidate settings of a
+    conflicted parameter, scoring each candidate by a cost computed from an 8-member model ensemble and
+    keeping the minimum-cost candidate. The 2026-08-24 report established at the <em>prediction</em> level
+    that the discovered graph generalizes out-of-distribution at least as well as the true graph. It then
+    attempted a <em>decision</em>-level test — a 2&times;2 gate over {discovered, oracle} &times;
+    {quantile, mean} aggregators — to determine whether investing in a structure learner (a differentiable
+    DAG posterior with expected-utility planning) is warranted.
+  </p>
+  <p>Two problems made that gate inconclusive:</p>
+  <ul>
+    <li><b>Mismatched decision sets.</b> The conflict set is produced by enumerating edges of the model's
+      graph (<code>conflicts.py</code>: one conflict per graph edge from a KPI node to a parameter node).
+      The true graph contains more such edges than the learned graph recovers, so the oracle arm was
+      scored over a larger and different set of conflicts than the discovered arm. Utility means over
+      different decision populations are not comparable.</li>
+    <li><b>Single seed.</b> Each cell used one <code>mitigation_seed</code>, giving no estimate of
+      seed-induced variance, so the one environment favouring the oracle (Env III, +0.070) could not be
+      distinguished from noise.</li>
+  </ul>
+  <p>
+    Additionally, the absolute QACM utility was negative in Env I and Env IV. Utility here is a KPI
+    z-score with 0 = no-op and an achievable ceiling near +0.94; a negative value indicates the planner
+    performs worse than taking no action.
+  </p>
+
+  <h2>2. Methods</h2>
+  <h3>2.1 Matched-decision-set evaluation</h3>
+  <p>
+    We added an evaluation-time option, <code>--enum-source oracle</code>, that installs the true-adjacency
+    enumeration graph as the conflict set for <em>both</em> structures, while leaving each structure's
+    prediction path unchanged (the planner's predictions are drawn from the posterior sampler, which does
+    not consult the enumeration graph). Concretely, the discovered arm is then asked to plan mitigation on
+    the true conflict set — including conflicts its own graph does not flag — using its own learned
+    dynamics. This isolates the quantity of interest, "how well does each world model plan on the same,
+    ground-truth decisions," from the confound of set size. The change reuses the existing graph-override
+    hook and does not alter prediction, aggregation, or seeding
+    (<code>--enum-source</code>, commit <code>e52acbc</code>; independently reviewed). A smoke test
+    confirmed the discovered arm's decision count moves from 270 to 300 on Env I when the option is set.
+  </p>
+  <h3>2.2 Paired-seed protocol</h3>
+  <p>
+    Each gate cell was repeated over four mitigation seeds (0&ndash;3). Because both arms use the same
+    conflict set and the same seed, the per-seed oracle&minus;discovered difference is a paired
+    difference; we report its mean and sample standard deviation across seeds. MCTS simulation count was
+    reduced to 2 for evaluation cost; QACM is unaffected by this (each planner is seeded by common random
+    numbers, so its output is independent of the MCTS budget).
+  </p>
+  <h3>2.3 Utility decomposition</h3>
+  <p>
+    To separate model-error effects from objective effects, the discovered checkpoint was additionally
+    evaluated (i) on the in-distribution parameter range (<code>evaluation_param_ranges: train</code>),
+    where model error is small, and (ii) under a sweep of the planner's disagreement penalty
+    (<code>planner.disagreement_penalty</code> &isin; {0, 1, 5, 10, 20}), a self-measurable term that
+    penalizes actions on which the ensemble disagrees.
+  </p>
+
+  <h2>3. Results</h2>
+
+  <h3>3.1 Decomposition of the negative planner utility</h3>
+  <p>
+    On the in-distribution range, QACM utility on Env I is &minus;0.073 (penalty 0), close to its
+    out-of-distribution value of &minus;0.083. That the objective remains negative where the model is
+    accurate indicates the negativity is not solely a model-error artifact. Enabling the disagreement
+    penalty removes most of the out-of-distribution deficit on Env I: utility rises to +0.297 and is
+    constant for all tested penalties &ge;1 (Fig. 1). The same penalty does not help Env IV
+    (&minus;0.140 &rarr; &minus;0.161).
+  </p>
+  <p>
+    The flat response for penalties &ge;1 reflects saturation of a discrete argmin (the penalty term
+    dominates the ranking above a small magnitude), not a degenerate policy: on the penalty&ge;1 Env I run,
+    QACM selects 191 distinct actions across 210 decisions (modal action share 1.9%), with per-decision
+    utility standard deviation 0.81 over the range [&minus;1.47, +1.35] and 57% of decisions satisfied.
+    The disagreement penalty's magnitude was not tuned on the reported test utility; adopting it would
+    require a leakage-free selection protocol (Section 5), and the current result is reported as a
+    sensitivity analysis rather than an adopted setting.
+  </p>
+  <figure>
+    <img src="fig1_penalty_sweep.png" alt="QACM utility versus disagreement penalty for Env I and Env IV">
+    <figcaption><b>Fig. 1.</b> QACM mean utility (out-of-distribution) versus
+      <code>disagreement_penalty</code>. Env I recovers from &minus;0.083 to +0.297 at penalty &ge;1 and
+      plateaus; Env IV (penalties 0 and 1 evaluated) remains negative. Reference lines: no-op (0),
+      random (+0.24), achievable ceiling (+0.94). The Env I in-distribution value at penalty 0 (diamond)
+      is close to its out-of-distribution value, indicating the deficit is only partly model-error.</figcaption>
+  </figure>
+
+  <h3>3.2 The oracle&minus;discovered comparison under a matched decision set</h3>
+  <p>
+    Scored on the true conflict set with paired seeds, the Env III gap reverses sign relative to the
+    mismatched gate: from +0.070 (single seed, 600 vs. 690 decisions) to &minus;0.090 &plusmn; 0.186
+    (four seeds, 690 vs. 690). The apparent oracle advantage in the 2026-08-24 gate is therefore
+    attributable to the larger conflict set the oracle was scored on, not to a planning advantage of the
+    true graph. Across all three environments the oracle&minus;discovered gap is negative or, for Env IV,
+    positive but smaller than its across-seed standard deviation (Fig. 2, Table 1).
+  </p>
+  <figure>
+    <img src="fig2_gate_deconfound.png" alt="De-confounding of the decision-level gate, two panels">
+    <figcaption><b>Fig. 2.</b> <b>(a)</b> Env III oracle&minus;discovered utility under the mismatched
+      set (+0.070, one seed) and the matched set (&minus;0.090 &plusmn; 0.186, four seeds).
+      <b>(b)</b> Matched, paired oracle&minus;discovered gap for all three environments (error bars are
+      &plusmn;1 standard deviation across four seeds). No environment shows a materially positive gap.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Matched-decision-set gate, quantile aggregator. Cell values are the across-seed
+        mean of the per-run QACM mean utility; &plusmn; is the sample s.d. over four seeds
+        (standard error &asymp; s.d./2).</caption>
+      <thead>
+        <tr><th>Env</th><th>n<sub>dec</sub></th><th>discovered</th><th>oracle</th><th>oracle &minus; discovered</th><th>prior (mismatched)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Env I</td><td>300</td><td class="disc">&minus;0.218 &plusmn; 0.180</td><td class="orac">&minus;0.318 &plusmn; 0.193</td><td>&minus;0.100 &plusmn; 0.133</td><td>&minus;0.246</td></tr>
+        <tr><td>Env III</td><td>690</td><td class="disc">+0.250 &plusmn; 0.342</td><td class="orac">+0.160 &plusmn; 0.329</td><td>&minus;0.090 &plusmn; 0.186</td><td>+0.070</td></tr>
+        <tr><td>Env IV</td><td>570</td><td class="disc">+0.063 &plusmn; 0.320</td><td class="orac">+0.104 &plusmn; 0.279</td><td>+0.042 &plusmn; 0.056</td><td>&minus;0.145</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Env IV is the one case in which the matched-set gap is positive; at +0.042 &plusmn; 0.056 (n=4,
+    standard error &asymp; 0.028) it is not distinguishable from zero and is small relative to the utility
+    range. It does not meet the pre-registered condition for a positive result (a material,
+    spread-exceeding advantage). Under the pre-registered decision rule — build a structure learner only
+    if the oracle materially exceeds the discovered graph in matched, paired utility — the outcome across
+    all three environments is not to pursue that direction. The mean aggregator was also evaluated
+    (Env III) and did not change the ordering (mean gap &minus;0.090; discovered mean&minus;quantile
+    difference &minus;0.003 with a worse lower tail), so the risk-averse quantile aggregator is retained.
+  </p>
+
+  <h3>3.3 Mechanism of the utility shortfall</h3>
+  <p>
+    The residual negativity and the sub-ceiling utility on Env I share a structure-independent cause in
+    the QACM cost. Per model member the candidate cost is
+  </p>
+  <div class="eq">cost = &Sigma;<sub>i</sub> w<sub>i</sub> &middot; distance<sub>i</sub> &middot; &tau; &nbsp; &minus; &nbsp; ( &Sigma;<sub>i</sub> satisfied<sub>i</sub> )&sup2;</div>
+  <p>
+    where, for each xApp, <code>distance_i = max(0, &tau;_thr &minus; u_i)</code> is a hinge on the
+    per-KPI utility <code>u_i</code> against its satisfaction threshold. Below threshold the hinge
+    decreases with increasing utility, so minimizing cost does raise utility — but only up to the
+    threshold. At and above threshold the hinge is clamped to zero and the only remaining term is the
+    constant satisfaction bonus, so the objective is indifferent to how far above threshold the utility
+    sits. Because the candidate scan keeps the first minimum under a strict comparison, among
+    equally-satisfied candidates it retains the earliest-scanned rather than the highest-utility one. The
+    Env I satisfaction thresholds are low in z-space (e.g. KPI1 at &minus;0.37) while the reachable
+    utility is near +1.3, so candidates are declared satisfied at mediocre utility and the objective
+    stops improving (Fig. 3). This effect is independent of the world model: it is present even with a
+    perfect model, which is consistent with the utility remaining negative in-distribution (Section 3.1)
+    and with the absence of any oracle advantage (Section 3.2).
+  </p>
+  <figure>
+    <img src="fig3_objective_flatness.png" alt="Satisfaction hinge clamped to zero above threshold">
+    <figcaption><b>Fig. 3.</b> The per-KPI cost contribution (hinge) as a function of utility. Above the
+      satisfaction threshold the contribution is clamped to zero (shaded region: utility that is
+      attainable but exerts no pressure on the objective). The planned modification (Section 5) adds a
+      small standardized utility term that restores a gradient above threshold without removing the
+      satisfaction structure.</figcaption>
+  </figure>
+
+  <h2>4. Interpretation</h2>
+  <ul>
+    <li>At the decision level, a perfect (true-adjacency) graph does not confer a material utility
+      advantage over the discovered graph on a matched conflict set in any of the three environments. This
+      is consistent with, and complementary to, the prediction-level finding of the prior report.</li>
+    <li>The earlier Env III result favouring the oracle was a consequence of comparing on unequal decision
+      sets; it does not survive the matched-set control.</li>
+    <li>The negative absolute utility has two separable causes: out-of-distribution model exploitation
+      (self-measurable, partially removable on Env I but not Env IV) and a structure-independent objective
+      that stops optimizing utility once a conflict is nominally satisfied. The latter is the dominant
+      remaining cause and is not addressable by structure learning.</li>
+  </ul>
+
+  <h2>5. Planned objective modification</h2>
+  <p>
+    We plan to add a standardized utility term to the per-member cost,
+    <code>&minus; &lambda; &middot; &Sigma;<sub>i</sub> sign<sub>i</sub> &middot; u<sub>i</sub></code>,
+    which restores a utility gradient above the satisfaction threshold (Fig. 3) while preserving the
+    satisfaction structure and the risk-averse quantile aggregation (the term sits inside each member's
+    cost, so the pessimistic quantile is retained and the objective does not become risk-neutral
+    expected-utility). Because utilities are standardized z-scores, <code>&lambda;</code> is dimensionless
+    and comparable across environments. To avoid tuning on the reported quantities, <code>&lambda;</code>
+    will be selected on a validation basis — the positive control environment (Env III) and the
+    in-distribution range — and then applied unchanged to the out-of-distribution evaluations of Env I and
+    Env IV; a zero-hyperparameter variant (a lexicographic tie-break that, among satisfied candidates,
+    prefers the highest-utility one) is available as a fallback that requires no tuning at all. The term
+    defaults to zero, reproducing current behaviour exactly. Validation will reuse the matched-decision-set
+    gate in-distribution and out-of-distribution, with Env III as a no-regression check; success is a
+    material movement of Env I/IV utility toward the +0.94 ceiling without degradation of the lower tail
+    or the satisfaction rate.
+  </p>
+
+  <h2>6. Limitations</h2>
+  <ul>
+    <li>Four seeds give only a coarse variance estimate; the Env IV +0.042 gap in particular would benefit
+      from additional seeds, though its magnitude is already small relative to the utility scale.</li>
+    <li>The quantile aggregator on the oracle arm is a one-structure (degenerate) ensemble; the matched
+      comparison uses its utility, not its likelihood, for this reason.</li>
+    <li>Env II was not evaluated in this cycle; its discovery is complete but graph recovery is poor, and
+      it is expected to be qualitatively similar to Env I.</li>
+    <li>The disagreement-penalty result is a sensitivity analysis, not an adopted configuration; its
+      coefficient has not been fixed under a leakage-free protocol.</li>
+  </ul>
+
+  <h2>7. Objective fix (utility_weight): planner-level validation</h2>
+  <p>
+    The objective modification of Section 5 was implemented and evaluated at the planner level on the
+    existing checkpoints (no retraining). Option A adds an additive standardized-utility term
+    <code>&minus; &lambda; &middot; &Sigma;<sub>i</sub> sign<sub>i</sub> &middot; u<sub>i</sub></code> inside the
+    per-member QACM cost, with <code>&lambda;</code> = <code>utility_weight</code> defaulting to 0 so the
+    change is regression-safe and reproduces current behaviour exactly (committed as <code>e7534e1</code>).
+    The term restores a utility gradient past the satisfaction threshold, where the cost was previously flat
+    (Fig. 3). Because it stays inside each member's cost, the risk-averse quantile aggregator is preserved;
+    the objective does not become risk-neutral expected utility.
+  </p>
+  <p>
+    <b>Leakage-free &lambda; selection.</b> On Env I in-distribution the effect is realized by
+    <code>&lambda;=0.1</code> and is then flat across <code>&lambda; &isin; [0.1, 0.5]</code> (QACM mean
+    +0.2240, +0.2243, +0.2272 at &lambda; = 0.1, 0.25, 0.5; identical satisfaction and tail), so the term is
+    knob-insensitive on the swept range. Env III in-distribution is invariant to &lambda; (&minus;0.1028 to
+    four decimals at every tested &lambda;) and therefore does not regress at any &lambda;. The value
+    <code>&lambda;*=0.25</code> was chosen on Env III and the in-distribution range only; the Env I and
+    Env IV out-of-distribution utilities were not consulted in the selection.
+  </p>
+  <figure>
+    <img src="fig4_objfix_utility.png" alt="Env I utility versus lambda, and lambda=0 vs 0.25 across environments">
+    <figcaption><b>Fig. 4.</b> <b>(a)</b> Env I QACM mean utility versus <code>&lambda;</code>: the
+      in-distribution curve moves from &minus;0.073 to +0.224 and saturates across
+      <code>&lambda; &isin; [0.1, 0.5]</code>; the out-of-distribution points (evaluated at &lambda; = 0 and
+      0.25 only) move from &minus;0.083 to +0.303. <b>(b)</b> Out-of-distribution QACM mean at
+      <code>&lambda;=0</code> vs <code>&lambda;=0.25</code>: Env I moves upward while Env III and Env IV are
+      unchanged. Reference lines: no-op (0), random (+0.24).</figcaption>
+  </figure>
+  <h3>7.1 Env I</h3>
+  <p>
+    At <code>&lambda;=0.25</code> the Env I QACM mean utility moves from &minus;0.083 to +0.303
+    out-of-distribution and from &minus;0.073 to +0.224 in-distribution. The lower tail improves rather than
+    collapses (tail p10 &minus;1.475 &rarr; &minus;0.890 out-of-distribution, &minus;1.526 &rarr; &minus;0.896
+    in-distribution) and the satisfaction rate rises (0.42 &rarr; 0.58 out-of-distribution, 0.52 &rarr; 0.62
+    in-distribution). All three pre-registered success criteria &mdash; utility moves materially toward the
+    ceiling, the lower tail does not collapse, the satisfaction rate does not fall &mdash; are met.
+  </p>
+  <h3>7.2 Env III and Env IV</h3>
+  <p>
+    Env III and Env IV are bit-identical at <code>&lambda;=0</code> and <code>&lambda;=0.25</code> (Env III
+    in-distribution &minus;0.1028, out-of-distribution +0.1213; Env IV out-of-distribution &minus;0.1402,
+    in-distribution &minus;0.4116, unchanged at both &lambda;). The term only engages the satisfied-flat
+    region, which these low-satisfaction environments (satisfaction rate 0.13&ndash;0.22) rarely reach, so
+    Option A neither helps nor harms them. Env IV's residual negative utility is a distinct, unresolved cause:
+    its in-distribution utility (&minus;0.412) is worse than its out-of-distribution utility (&minus;0.140),
+    so it is not the flat-region objective flaw and is not primarily out-of-distribution model exploitation.
+    Option A is not claimed to address Env IV; this remains an open item.
+  </p>
+  <h3>7.3 Matched-decision-set gate (no-regression)</h3>
+  <p>
+    On the matched decision set (<code>--enum-source oracle</code> on both arms), the STOP verdict
+    (oracle not exceeding discovered) is preserved at <code>&lambda;=0.25</code> for all three environments.
+    Env III and Env IV are bit-identical to <code>&lambda;=0</code> in the matched gate, so their four-seed
+    gates equal the &lambda;=0 baselines (Env III &minus;0.090 &plusmn; 0.186, STOP; Env IV
+    +0.042 &plusmn; 0.056, STOP). Env I is the only &lambda;-responsive environment: the fix lifts both arms,
+    and the four-seed paired oracle&minus;discovered gap is +0.028 &plusmn; 0.086 &mdash; not material under
+    its across-seed spread, so the STOP verdict is preserved at higher absolute utility. Env III's positive
+    utility does not regress.
+  </p>
+  <h3>7.4 Disagreement-penalty sensitivity</h3>
+  <p>
+    Separately, the disagreement penalty (Task 3) also improves Env I in-distribution utility, from
+    &minus;0.073 to +0.190 (satisfaction rate +0.10, tail improves), complementing its earlier
+    out-of-distribution effect. This is reported as a sensitivity result only and is not adopted as a
+    per-environment constant.
+  </p>
+
+  <div class="foot">
+    <b>Artifacts (project-local, untracked):</b> phase1_negutil_findings.md · phase2_deconfound_findings.md ·
+    qacm_collapse_check.md · gate_2x2_{i,iii,iv}_matched.md · lever2_objective_design.md ·
+    matched_decision_set_design.md<br>
+    <b>Code:</b> <code>e52acbc</code> — <code>--enum-source</code> for matched decision-set gate (feat/v2, reviewed).<br>
+    <b>Reproduction:</b> all cells are planner-level re-evaluations of existing checkpoints
+    (<code>runs/Environment{I,III,IV}/cdl/…</code>); no retraining.
+  </div>
+
+</div>
+</body>
+</html>

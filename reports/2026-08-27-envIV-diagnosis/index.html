@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Env IV reachable-utility diagnosis (2026-08-27)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.62rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .up{color:var(--disc); font-weight:600}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Reachable-utility diagnosis of the Env&nbsp;IV planner shortfall: reachability, regret decomposition, and an offline soft-satisfaction prediction</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-08-27</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> e7534e1</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> post-hoc arithmetic on saved utilities, no retraining, no re-evaluation</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior report.</b> This is a delta on <em>2026-08-26 &mdash; Implementation and planner-level
+    validation of the standardized-utility objective term</em>. That report added the standardized-utility
+    term (Option&nbsp;A) and reported that it raises the mean QACM utility on Env&nbsp;I but leaves Env&nbsp;III
+    and Env&nbsp;IV bit-identical, because their decisions rarely enter the satisfied region on which the term
+    acts. Env&nbsp;IV therefore remained negative and unaddressed
+    (<span class="mono">&minus;0.140</span> out-of-distribution, <span class="mono">&minus;0.412</span>
+    in-distribution). This report examines that residual. It reuses the same trained checkpoints and adds no
+    new evaluation runs; all quantities are computed from the saved <code>utilities.json</code> files.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    We examine whether the negative Env&nbsp;IV QACM utility is a planner/objective problem or a
+    benchmark/threshold artifact. Working from saved utilities on the two self-enumeration cells
+    (out-of-distribution and in-distribution), we compute the reachable single-action ceiling and decompose
+    the QACM regret. The joint single-action ceiling is positive (<b>+1.242</b> out-of-distribution,
+    <b>+1.328</b> in-distribution), with 80% of panels carrying a positive joint ceiling, so on average the
+    conflict is not negative-sum and benchmark/threshold infeasibility is unlikely to be the dominant
+    aggregate cause, though not eliminated (20% of panels have a non-positive joint ceiling, and the ceiling
+    is measured over a single-parameter sweep). The regret relative to the joint ceiling splits into an
+    objective-misspecification term (<b>+0.633 / +0.818</b>) and a model/planner-realisation term
+    (<b>+0.749 / +0.921</b>); the two are comparable and the model/planner-realisation term is the larger in
+    both cells. An offline soft-satisfaction oracle (Option&nbsp;C) under a perfect model lifts the utility
+    above the hard-objective oracle by <b>+0.343 / +0.542</b>, reaching <span class="mono">+0.952 / +1.052</span>
+    and remaining <span class="mono">&minus;0.29 / &minus;0.28</span> below the joint ceiling. Under an
+    additive/separable decomposition, the deployed estimate is realised QACM plus that lift,
+    <b>+0.203 / +0.131</b> &mdash; a small positive, i.e. Option&nbsp;C is predicted to move Env&nbsp;IV just
+    above no-op; this rests on a separability assumption and can only be confirmed by building and evaluating
+    Option&nbsp;C. The selected action is identical for the four tested
+    <span class="mono">&beta;&isin;{0.25,0.5,1,2}</span> on the true-utility oracle. These figures are an
+    offline prediction under a perfect model, not a built result; the build decision is left to the user.
+  </p>
+
+  <h2>1. Context</h2>
+  <p>
+    The 2026-08-26 objective fix corrected the structure-independent component of the negative planner
+    utility on Env&nbsp;I and was inert on Env&nbsp;III and Env&nbsp;IV, whose decisions seldom reach the
+    satisfied region the term modifies. Env&nbsp;IV therefore stayed negative, and its in-distribution utility
+    (<span class="mono">&minus;0.412</span>) is lower than its out-of-distribution utility
+    (<span class="mono">&minus;0.140</span>). The question addressed here is whether this residual is a
+    planner/objective problem &mdash; a reachable target the planner and objective fail to claim &mdash; or a
+    benchmark/threshold artifact in which the target utility is not reachable at any single action. We treat
+    these as the two competing hypotheses (b) planner/objective and (c) benchmark/threshold, following the
+    2026-08-25 recipe, and resolve between them by measuring the reachable ceiling and decomposing the regret.
+  </p>
+
+  <h2>2. Method</h2>
+  <p>
+    All numbers are post-hoc arithmetic on the saved <code>utilities.json</code> for the two Env&nbsp;IV
+    self-enumeration cells (<code>enum_source=self</code>, QACM planner, quantile aggregator); no model is
+    retrained and no evaluation is re-run. The out-of-distribution cell normalises each per-KPI utility on the
+    out-of-distribution parameter range and the in-distribution cell on the training range, so the two
+    references differ. Utilities are per-KPI z-scores <span class="mono">(value&minus;mean)/std</span> with
+    <span class="mono">mean/std</span> cached per param-range.
+  </p>
+  <p>
+    Four quantities are computed. (i) The <b>three-number decomposition</b> (ceiling, no-op reference, QACM
+    achieved) over the 420 (decision, conflict-xApp) pairs per cell, mirroring the 2026-08-25 recipe. (ii) The
+    <b>joint single-action ceiling</b>: each panel is one action on one shared conflict param, so the per-xApp
+    maxima are not jointly reachable; the joint ceiling is <span class="mono">mean&nbsp;max_k&nbsp;Ubar(k)</span>
+    with panel-mean utility <span class="mono">Ubar(k)&nbsp;=&nbsp;mean_i&nbsp;curves[i].values[k]</span> over 300
+    panels per cell (0 excluded). (iii) A <b>perfect-model hard-objective oracle</b> that picks
+    <span class="mono">k*&nbsp;=&nbsp;argmin_k&nbsp;J_hard(k)</span> with the shipped objective
+  </p>
+  <div class="eq">J_hard(k) = &Sigma;_i w_i&middot;dist_i&middot;&tau; &minus; (&Sigma;_i sat_i)&sup2;</div>
+  <p>
+    reusing <code>cdd_oran.planners.cost.weighted_distance</code> for
+    <span class="mono">(dist_i, sat_i)</span>. This oracle assumes <b>uniform weights
+    <span class="mono">w_i&nbsp;=&nbsp;1.0</span> and <span class="mono">&tau;&nbsp;=&nbsp;10</span></b> (the scaling
+    term), matching the <code>evaluate.py</code> normalisation; this is an assumption, and no
+    weight-sensitivity was run, so the exact split is assumption-dependent and the qualitative &ldquo;both
+    terms comparable&rdquo; reading is the safe one. (iv) An <b>offline soft-satisfaction oracle</b> (Option&nbsp;C)
+    that picks <span class="mono">k_soft&nbsp;=&nbsp;argmax_k&nbsp;&Sigma;_i&nbsp;&sigma;(s_i(k)/&beta;)</span>, with
+    <span class="mono">s_i&nbsp;=&nbsp;(u_i&minus;thr_i)</span> for direction&nbsp;0 and
+    <span class="mono">(thr_i&minus;u_i)</span> for direction&nbsp;1 in z-space. Both oracles use the true
+    utilities (a perfect model), which isolates the objective from model error.
+  </p>
+
+  <h2>3. Reachability</h2>
+  <p>
+    The joint single-action ceiling is positive and above <span class="mono">+1.2</span> in both cells
+    (Table&nbsp;1), and 80% of panels carry a positive joint ceiling. On average the conflict is therefore not
+    negative-sum: the best single shared action reaches a positive panel-mean utility, well above the
+    QACM-achieved <span class="mono">&minus;0.140 / &minus;0.412</span>. This is an average-potential result,
+    not universal feasibility: 20% of panels still carry a non-positive joint ceiling, the joint ceiling
+    maximises panel-mean utility rather than testing simultaneous threshold satisfaction, and it is computed
+    over a 101-pt single shared-parameter sweep that is not shown equal to the planner&rsquo;s full action
+    grid. The first-pass per-pair number (<span class="mono">+1.0676 / +1.2627</span>) is lower than the
+    per-panel independent ceiling because of a per-pair versus per-panel denominator difference, not because
+    of infeasibility. On matched per-panel terms, the joint ceiling equals the per-panel independent ceiling
+    out-of-distribution (<span class="mono">+1.2421</span>) and sits <span class="mono">+0.074</span> below it
+    in-distribution (<span class="mono">+1.3276</span> versus <span class="mono">+1.4016</span>), the Jensen
+    gap expected from sharing one action across xApps.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;1. Reachable single-action ceilings, self-enumeration cells (n&nbsp;=&nbsp;300 panels
+      per cell). Utility is a panel-mean z-score with 0&nbsp;=&nbsp;no-op.</caption>
+      <thead><tr><th>Quantity</th><th>OOD</th><th>train (in-dist)</th></tr></thead>
+      <tbody>
+        <tr><td>per-xApp independent ceiling (per-pair)</td><td>+1.0676</td><td>+1.2627</td></tr>
+        <tr><td>per-panel independent ceiling</td><td>+1.2421</td><td>+1.4016</td></tr>
+        <tr><td>joint single-action ceiling</td><td class="disc">+1.2421</td><td class="disc">+1.3276</td></tr>
+        <tr><td>fraction of panels with joint ceiling &gt; 0</td><td>0.800</td><td>0.807</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="rel">
+    <b>Verdict on hypothesis (c).</b> The mean joint single-action target is reachable and positive
+    (<span class="mono">+1.242 / +1.328</span>, 80% of panels positive), so benchmark/threshold infeasibility
+    (hypothesis c) is unlikely to be the dominant aggregate cause of the Env&nbsp;IV shortfall &mdash; though
+    not eliminated (20% of panels non-positive; single-parameter sweep) &mdash; and hypothesis (b)
+    planner/objective is the more consistent reading.
+  </div>
+
+  <h2>4. Regret decomposition</h2>
+  <p>
+    Relative to the joint ceiling, the QACM regret is <span class="mono">+1.382</span> out-of-distribution and
+    <span class="mono">+1.739</span> in-distribution. It splits into two terms (Table&nbsp;2, Figure&nbsp;1).
+    The objective-misspecification term &mdash; the gap the shipped hinge / <span class="mono">&minus;(&Sigma;sat)&sup2;</span>
+    objective leaves even under a perfect model &mdash; is <span class="mono">+0.633 / +0.818</span>: the
+    hard-objective oracle reaches only <span class="mono">+0.609 / +0.509</span> against the
+    <span class="mono">+1.242 / +1.328</span> joint ceiling. The model/planner-realisation term &mdash; the
+    further drop from the hard-objective oracle to realised QACM &mdash; is <span class="mono">+0.749 / +0.921</span>.
+    This second term is not pure model prediction error: it also absorbs conflict-enumeration / action-grid
+    and planner-optimisation effects, hence the label. The two terms are comparable, and the
+    model/planner-realisation term is the larger in each cell; neither alone accounts for the shortfall. The
+    exact split is assumption-dependent (uniform weights, <span class="mono">&tau;=10</span>, no
+    weight-sensitivity run), so the qualitative &ldquo;both terms comparable&rdquo; is the safe reading.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;2. Regret decomposition, perfect-model oracle versus realised QACM. Utilities are
+      panel-mean z-scores.</caption>
+      <thead><tr><th>Quantity</th><th>OOD</th><th>train (in-dist)</th></tr></thead>
+      <tbody>
+        <tr><td>no-op panel-mean</td><td>&minus;0.0583</td><td>&minus;0.2226</td></tr>
+        <tr><td>QACM achieved</td><td class="orac">&minus;0.1402</td><td class="orac">&minus;0.4116</td></tr>
+        <tr><td>hard-objective oracle</td><td>+0.6086</td><td>+0.5093</td></tr>
+        <tr><td>joint single-action ceiling</td><td class="disc">+1.2421</td><td class="disc">+1.3276</td></tr>
+        <tr><td>regret (joint ceiling &minus; QACM)</td><td>+1.382</td><td>+1.739</td></tr>
+        <tr><td>objective misspecification (joint &minus; hard-oracle)</td><td>+0.633</td><td>+0.818</td></tr>
+        <tr><td>model/planner-realisation gap (hard-oracle &minus; QACM)</td><td>+0.749</td><td>+0.921</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="fig1_regret_decomposition.png" alt="Grouped bars of no-op, QACM, hard-objective oracle, and joint ceiling for the OOD and train cells, with the objective-misspecification and model/planner-realisation regret segments annotated">
+    <figcaption><b>Figure&nbsp;1.</b> Panel-mean utility for the no-op reference, realised QACM, the
+    perfect-model hard-objective oracle, and the joint single-action ceiling, for the out-of-distribution and
+    in-distribution cells. The vertical segments mark the two components of the QACM regret: the
+    model/planner-realisation gap (hard-oracle&nbsp;&minus;&nbsp;QACM) and the objective-misspecification gap
+    (joint ceiling&nbsp;&minus;&nbsp;hard-oracle).</figcaption>
+  </figure>
+  <p>
+    The in-distribution cell is worse than the out-of-distribution cell, but the account is qualitative
+    because the two cells use different range-specific z-references (out-of-distribution range versus training
+    range), so ceiling, baseline, and QACM are not on one common scale and the deficit cannot be split into
+    quantified causes. The reachable ceiling does not drop in-distribution &mdash; it rises, from
+    <span class="mono">+1.2421</span> to <span class="mono">+1.3276</span> (joint) &mdash; so the more negative
+    in-distribution QACM presents as a larger unclaimed regret at an equal-or-higher ceiling rather than an
+    unreachable target. The no-op reference also shifts down in-distribution (panel-mean
+    <span class="mono">&minus;0.0583</span> to <span class="mono">&minus;0.2226</span>); part of the more
+    negative absolute QACM is plausibly this reference movement, but QACM relative to no-op is also worse
+    in-distribution (<span class="mono">&minus;0.0051</span> versus <span class="mono">&minus;0.0760</span> per
+    pair). Satisfaction is also unlikely to be the binding constraint: the satisfaction rate is higher
+    in-distribution (<span class="mono">0.221</span> versus <span class="mono">0.162</span>) while the utility
+    is worse, consistent with the hinge/flat-region satisfaction clamp being infrequently reached at
+    QACM&rsquo;s selected actions; this does not by itself establish that the satisfaction term is non-binding
+    during action selection, which a panel-level joint-threshold test would be needed to settle.
+  </p>
+
+  <h2>5. Per-KPI z-space thresholds</h2>
+  <p>
+    Grouping the ceiling by KPI (xApp <span class="mono">i</span>&nbsp;&rarr;&nbsp;KPI <span class="mono">i</span>)
+    shows which KPIs are satisfiable at the best conflict-param action (Tables&nbsp;3&ndash;4, Figure&nbsp;2).
+    The z-threshold is <span class="mono">(kpi_threshold&minus;mean)/std</span>; directions are
+    <span class="mono">[0,0,0,0,0,1,0,0]</span> (direction&nbsp;0: KPI&nbsp;&ge;&nbsp;threshold desired;
+    direction&nbsp;1: KPI&nbsp;&le;&nbsp;threshold desired). Because <span class="mono">mean/std</span> are
+    range-specific, both cells are shown. In the out-of-distribution cell, KPIs&nbsp;0,&nbsp;1,&nbsp;4 carry
+    z-thresholds above <span class="mono">+2.6</span> with best-action ceilings below them, so no evaluated
+    action reaches their threshold; the other five each have some action whose ceiling exceeds threshold. In
+    the in-distribution cell every KPI has a max ceiling above its z-threshold &mdash; for each KPI some action
+    reaches that KPI&rsquo;s threshold, which is a per-KPI statement and does not show that one shared action
+    jointly satisfies all eight &mdash; yet the observed satisfaction rate is only <span class="mono">0.221</span>.
+    Each threshold is individually reachable while the realised satisfaction rate stays low, consistent with
+    the satisfied region being infrequently reached at QACM&rsquo;s selected actions; a panel-level
+    joint-threshold test is not run here.
+  </p>
+  <figure>
+    <img src="fig2_kpi_thresholds.png" alt="Per-KPI max ceiling bars against z-threshold marks for the OOD and train cells, with unsatisfiable KPIs coloured differently">
+    <figcaption><b>Figure&nbsp;2.</b> Per-KPI maximum ceiling (bar) against the z-threshold (horizontal mark)
+    for the eight KPIs, out-of-distribution (left) and in-distribution (right). A KPI is unsatisfiable at the
+    best action when its max ceiling lies at or below its z-threshold; those KPIs (0,&nbsp;1,&nbsp;4 in the
+    out-of-distribution cell, none in the in-distribution cell) are shown in the second colour.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;3. Per-KPI z-space threshold versus ceiling, out-of-distribution cell.</caption>
+      <thead><tr><th>KPI</th><th>dir</th><th>raw thr</th><th>z-threshold</th><th>mean ceiling</th><th>max ceiling</th><th>max ceiling &le; z-thr</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>0</td><td>55</td><td>+3.0137</td><td>+0.8947</td><td>+2.4479</td><td>yes</td></tr>
+        <tr><td>1</td><td>0</td><td>70</td><td>+2.6026</td><td>+0.3678</td><td>+1.6782</td><td>yes</td></tr>
+        <tr><td>2</td><td>0</td><td>85</td><td>+1.0465</td><td>+1.8505</td><td>+1.8505</td><td>no</td></tr>
+        <tr><td>3</td><td>0</td><td>60</td><td>+1.0265</td><td>+1.9776</td><td>+1.9776</td><td>no</td></tr>
+        <tr><td>4</td><td>0</td><td>75</td><td>+3.0537</td><td>+1.4959</td><td>+2.5076</td><td>yes</td></tr>
+        <tr><td>5</td><td>1</td><td>&minus;20</td><td>&minus;0.2433</td><td>+1.3866</td><td>+1.3879</td><td>no</td></tr>
+        <tr><td>6</td><td>0</td><td>45</td><td>&minus;1.4944</td><td>+1.5315</td><td>+1.5315</td><td>no</td></tr>
+        <tr><td>7</td><td>0</td><td>40</td><td>+0.0642</td><td>+1.6536</td><td>+1.6536</td><td>no</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;4. Per-KPI z-space threshold versus ceiling, in-distribution cell.</caption>
+      <thead><tr><th>KPI</th><th>dir</th><th>raw thr</th><th>z-threshold</th><th>mean ceiling</th><th>max ceiling</th><th>max ceiling &le; z-thr</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>0</td><td>55</td><td>+1.2102</td><td>+0.8928</td><td>+2.1129</td><td>no</td></tr>
+        <tr><td>1</td><td>0</td><td>70</td><td>+1.2474</td><td>+0.9380</td><td>+2.0972</td><td>no</td></tr>
+        <tr><td>2</td><td>0</td><td>85</td><td>+1.6249</td><td>+2.5216</td><td>+2.5216</td><td>no</td></tr>
+        <tr><td>3</td><td>0</td><td>60</td><td>+2.0093</td><td>+3.2458</td><td>+3.2458</td><td>no</td></tr>
+        <tr><td>4</td><td>0</td><td>75</td><td>&minus;0.1794</td><td>+1.0859</td><td>+1.0859</td><td>no</td></tr>
+        <tr><td>5</td><td>1</td><td>&minus;20</td><td>&minus;0.0679</td><td>+1.4773</td><td>+1.4773</td><td>no</td></tr>
+        <tr><td>6</td><td>0</td><td>45</td><td>&minus;2.0580</td><td>+0.9510</td><td>+0.9510</td><td>no</td></tr>
+        <tr><td>7</td><td>0</td><td>40</td><td>&minus;1.6144</td><td>+1.0733</td><td>+1.0733</td><td>no</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>6. Offline Option-C prediction</h2>
+  <p>
+    Under a perfect model, the soft-satisfaction oracle (Option&nbsp;C) lifts the panel-mean utility above the
+    hard-objective oracle in both cells, by <span class="mono">+0.343</span> out-of-distribution and
+    <span class="mono">+0.542</span> in-distribution, reaching <span class="mono">+0.9521 / +1.0517</span>
+    (Table&nbsp;5, Figure&nbsp;3). This recovers part of the objective-misspecification term but stays
+    <span class="mono">&minus;0.290 / &minus;0.276</span> below the joint ceiling. Under an additive/separable
+    decomposition, the deployed estimate is realised QACM plus this objective lift,
+    <b>+0.203</b> out-of-distribution and <b>+0.131</b> in-distribution &mdash; a small positive, so the
+    prediction is that Option&nbsp;C moves Env&nbsp;IV just above no-op. This rests on a separability
+    assumption: changing the objective changes which action is selected under the learned model and which
+    prediction errors matter, so the model/planner-realisation term cannot be assumed unchanged and does not
+    bound the deployed gain; the objective change does not directly address that term and their interaction is
+    not exercised here. The deployed value could land either side of the additive estimate and can only be
+    confirmed by building and evaluating Option&nbsp;C; the predicted margin above zero is small. The selected
+    action <span class="mono">k_soft</span> is identical across the four tested
+    <span class="mono">&beta;&isin;{0.25,0.5,1,2}</span> in every panel (0/300 differ) on the true-utility
+    oracle; this is not established outside those values or under learned predictions.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;5. Offline soft-satisfaction (Option&nbsp;C) prediction under a perfect model,
+      relative to the hard-objective oracle and the joint ceiling. Panel-mean z-scores.</caption>
+      <thead><tr><th>Quantity</th><th>OOD</th><th>train (in-dist)</th></tr></thead>
+      <tbody>
+        <tr><td>hard-objective oracle</td><td>+0.6086</td><td>+0.5093</td></tr>
+        <tr><td>Option-C, &beta;&nbsp;=&nbsp;0.25</td><td>+0.9521</td><td>+1.0517</td></tr>
+        <tr><td>Option-C, &beta;&nbsp;=&nbsp;0.5</td><td>+0.9521</td><td>+1.0517</td></tr>
+        <tr><td>Option-C, &beta;&nbsp;=&nbsp;1.0</td><td>+0.9521</td><td>+1.0517</td></tr>
+        <tr><td>Option-C, &beta;&nbsp;=&nbsp;2.0</td><td>+0.9521</td><td>+1.0517</td></tr>
+        <tr><td>joint single-action ceiling</td><td class="disc">+1.2421</td><td class="disc">+1.3276</td></tr>
+        <tr><td>Option-C lift over hard-oracle</td><td>+0.343</td><td>+0.542</td></tr>
+        <tr><td>Option-C gap below joint ceiling</td><td>&minus;0.290</td><td>&minus;0.276</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="fig3_optionc_prediction.png" alt="Bars of hard-objective oracle, Option-C best beta, and joint ceiling for the OOD and train cells, with a note that all beta select the same action">
+    <figcaption><b>Figure&nbsp;3.</b> Perfect-model hard-objective oracle, Option-C soft-satisfaction oracle,
+    and joint single-action ceiling, out-of-distribution and in-distribution. Option-C lies above the
+    hard-objective oracle and below the joint ceiling in both cells; the values
+    <span class="mono">&beta;&isin;{0.25,0.5,1,2}</span> select an identical action in every panel, so the
+    Option-C bar does not vary with <span class="mono">&beta;</span>.</figcaption>
+  </figure>
+  <p>
+    These figures are an <b>offline prediction under a perfect model, not a built result and not a
+    recommendation to build</b>. The analysis predicts that a soft-satisfaction objective would raise the
+    objective-limited utility for Env&nbsp;IV and, under the separability assumption above, move it marginally
+    positive; the realised deployed gain depends on the untouched interaction with the
+    model/planner-realisation term, which this offline analysis does not exercise.
+  </p>
+
+  <h2>7. Limitations</h2>
+  <p>
+    Several qualifications bound the reading above. The reachability and ceiling numbers are computed over a
+    101-pt single shared-parameter sweep and are not shown equal to the planner&rsquo;s full action grid, and
+    the joint ceiling maximises panel-mean utility rather than testing simultaneous threshold satisfaction, so
+    benchmark/threshold infeasibility is made unlikely as the dominant cause rather than eliminated. The
+    deployed Option-C estimate (<span class="mono">+0.203 / +0.131</span>) rests on an additive/separability
+    assumption; changing the objective changes which action is selected under the learned model and which
+    prediction errors matter, so the estimate could shift either way and is confirmable only by building and
+    evaluating Option&nbsp;C. The model/planner-realisation term is a composite &mdash; prediction error plus
+    conflict-enumeration / action-grid and planner-optimisation effects &mdash; not pure model error, and the
+    objective change does not directly address it. The two cells use different range-specific z-references, so
+    the in-distribution versus out-of-distribution account is qualitative and not a quantified causal split.
+    The <span class="mono">&beta;</span> behaviour is established only for the four tested values on the
+    true-utility oracle, and the objective/regret split assumes uniform weights and
+    <span class="mono">&tau;=10</span> with no weight-sensitivity run.
+  </p>
+
+  <h2>8. Summary and open item</h2>
+  <p>
+    The analysis indicates that the Env&nbsp;IV shortfall is most consistent with a distinct
+    planner/objective-and-model case rather than a benchmark/threshold artifact. The mean joint single-action
+    ceiling is positive (<span class="mono">+1.242 / +1.328</span>, 80% of panels positive), so on average the
+    target is reachable and benchmark/threshold infeasibility (hypothesis c) is unlikely to be the dominant
+    aggregate cause, though not eliminated (20% of panels non-positive; single-parameter sweep). The regret
+    relative to that ceiling divides into comparable objective-misspecification
+    (<span class="mono">+0.633 / +0.818</span>) and model/planner-realisation
+    (<span class="mono">+0.749 / +0.921</span>) terms, with the model/planner-realisation term the larger in
+    both cells. This mechanism differs from the Env&nbsp;I satisfied-region flatness the 2026-08-26 objective
+    term addressed: Env&nbsp;IV satisfaction rates are low (<span class="mono">0.16&ndash;0.22</span>), the term
+    is inert there, and in the in-distribution cell each KPI ceiling exceeds its threshold individually while
+    the realised satisfaction rate stays low.
+  </p>
+  <p>
+    The analysis predicts that Option&nbsp;C (soft satisfaction) would raise the objective-limited utility by
+    <span class="mono">+0.34 / +0.54</span> under a perfect model, reaching <span class="mono">+0.952 / +1.052</span>;
+    under an additive/separable decomposition the deployed estimate is <span class="mono">+0.203 / +0.131</span>,
+    a small positive that would move Env&nbsp;IV marginally above no-op. The margin is small and rests on a
+    separability assumption that only building and evaluating Option&nbsp;C can confirm, since the objective
+    change does not directly address the larger model/planner-realisation term and their interaction is not
+    exercised here. Within the four tested <span class="mono">&beta;&isin;{0.25,0.5,1,2}</span> the true-utility
+    oracle selects the same action, and Option&nbsp;C is the most invasive objective change of those
+    considered. The build decision &mdash; build Option&nbsp;C (confirming the separability assumption by
+    deploying it), investigate the larger model/planner-realisation term, or accept Env&nbsp;IV as a
+    documented open planner/objective-and-model case &mdash; is deferred to the user; nothing is built in this
+    report.
+  </p>
+
+  <div class="foot">
+    CDD-ORAN &middot; 2026-08-27 &middot; delta on the 2026-08-26 objective-fix validation report &middot;
+    post-hoc arithmetic on saved utilities, no retraining or re-evaluation &middot; sources:
+    <code>envIV_diagnosis.md</code>, <code>envIV_diagnosis_addendum.md</code>,
+    <code>task2_recommendation.md</code>, <code>envIV_diagnosis_summary.json</code>,
+    <code>envIV_addendum_summary.json</code> &middot; commit <code>e7534e1</code> (feat/v2, not pushed).
+  </div>
+
+</div>
+</body>
+</html>

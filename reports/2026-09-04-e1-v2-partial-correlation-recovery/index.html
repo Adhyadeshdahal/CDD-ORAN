@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Per-target partial-correlation discovery clears the E1 recovery gate (2026-09-04)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Per-target partial-correlation discovery clears the E1 recovery gate</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-04</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> agent/006-e1-kpi-kpi-discovery</span> &nbsp;·&nbsp;
+    <span><b>Base:</b> 8a88829 (recovery merged to feat/v2)</span> &nbsp;·&nbsp;
+    <span><b>protocol_commit:</b> c66b81d</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> a label-free v2 discovery rule that recovers the full E1 graph, its 10-seed envelope, and the mask-identity prediction argument. No trained E2&ndash;E5 experiments; no legacy-path changes.</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> This is a delta on <em>2026-09-03 &mdash; Learned E1 discovery, its
+    multi-seed envelope, and a provenance-integrity hardening pass</em>, whose v1 rule (edge score =
+    <span class="mono">|standardized OLS coefficient|</span>, one global <code>largest_gap</code> cut)
+    recovered the four NCP&rarr;KPI edges but <b>missed both KPI&rarr;KPI edges</b> (overall recall
+    <span class="mono">0.667</span>), leaving the E1 recovery gate unmet. This report replaces the
+    <em>score</em> and <em>threshold</em> with a per-target partial-correlation rule and reports the
+    as-run result. The v1 report&rsquo;s numbers stand unchanged; it is superseded only for the gate.
+    E1 remains the linear, noiseless recovery control.
+  </div>
+
+  <div class="gate">
+    <b>Gate status: PASSED.</b> v2 recovers all six E1 edges &mdash; both KPI&rarr;KPI edges included
+    &mdash; with overall / NCP&rarr;KPI / KPI&rarr;KPI precision = recall = F1 = <span class="mono">1.000</span>
+    on the frozen 003 rows and on all ten envelope seeds (zero false positives, no seed dropped). The
+    E1 recovery gate no longer blocks interpretation of E2&ndash;E5.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    On the E1 one-step prediction pipeline we replace the label-free discovery <em>score</em> and
+    <em>threshold</em>. The v2 edge score is the magnitude of the <b>partial correlation</b> of each
+    candidate input with each target KPI, controlling for all other candidate inputs; the threshold is a
+    <b>per-target</b> <code>largest_gap</code> applied within each target&rsquo;s own score row (floor
+    <span class="mono">0.0</span>), never pooled. Partial correlation normalizes by <em>residual</em>
+    variance rather than total output variance, removing the multi-parent <span class="mono">sd(y)</span>
+    deflation that pushed v1&rsquo;s two KPI&rarr;KPI scores (<span class="mono">&asymp;0.44</span>) below its
+    single global cut (<span class="mono">0.674</span>). The protocol was frozen before execution
+    (<span class="mono">protocol_commit&nbsp;c66b81d</span>); two defects were caught and re-frozen
+    <em>before</em> any run (a residual-STOP that would have fired on every non-parent, and a positive-floor
+    that would have dropped a co-parent by one ULP). As run, v2 lifts every true parent to
+    <span class="mono">|&rho;|&nbsp;&asymp;&nbsp;1</span> and drives every non-parent to exactly
+    <span class="mono">0</span>, so each per-target cut lands near <span class="mono">0.5</span> and
+    recovery is complete on 003 and on all ten seeds (standard deviation <span class="mono">0</span> on
+    every recovery block). Because v2 recovers the exact true graph, the discovered mask equals the
+    <b>oracle</b> (true-adjacency) mask bit-for-bit; under the protocol&rsquo;s registered-parameter design
+    the discovered and oracle arms are then the same model, so their held-out MSE is equal <b>by
+    construction</b> &mdash; closing, without retraining, the ~4-orders-of-magnitude prediction penalty the
+    v1 discovered arm paid for its missing KPI&rarr;KPI edges. The near-perfect separation is a property of
+    the noiseless linear control, not a hard-won result; discovery under noise and nonlinearity is the E2+
+    question.
+  </p>
+
+  <h2>1. Context and the method change</h2>
+  <p>
+    E1 is the locked, linear, <b>noiseless</b> recovery control: the next-step KPIs are an exact linear
+    function of the current state, <span class="mono">K0&prime;=P0</span>,
+    <span class="mono">K1&prime;=P1</span>, <span class="mono">K2&prime;=P2+0.5&middot;K0</span>,
+    <span class="mono">K3&prime;=P3+0.5&middot;K1</span>. Its role in the benchmark is to confirm that the
+    label-free pipeline recovers structure <em>when it is recoverable</em>; until it does, the locked
+    contract holds downstream decision results uninterpretable.
+  </p>
+  <p>
+    The v1 rule scored each candidate edge by the absolute standardized OLS coefficient
+    <span class="mono">|&beta;|</span> and cut the <em>pooled</em> score vector once. Standardization scales
+    each edge by <span class="mono">sd(x<sub>i</sub>)/sd(y<sub>j</sub>)</span>; a multi-parent target&rsquo;s
+    <span class="mono">sd(y<sub>j</sub>)</span> is inflated by every parent, so all of its incoming edge
+    scores are deflated together. A single pooled cut then straddles targets that live on different score
+    scales, and the two weak-but-real KPI&rarr;KPI edges fall in the band gap below it. v2 changes only the
+    score and the threshold:
+  </p>
+  <div class="eq">score(j, i) = | partial-corr( x<sub>i</sub> , y<sub>j</sub> &nbsp;|&nbsp; all other inputs ) |<br>
+    threshold(j) = largest_gap( score(j, &middot;) , floor = 0.0 )   &nbsp;&mdash; per target, never pooled</div>
+  <p>
+    Residualizing both the input and the target on the other inputs normalizes by <em>residual</em>
+    variance, which removes the <span class="mono">sd(y)</span> inflation. In a noiseless linear SCM a true
+    direct parent then reaches <span class="mono">|&rho;|&nbsp;&asymp;&nbsp;1</span> and every non-parent
+    exactly <span class="mono">0</span> (the other inputs already explain the target, so the input adds no
+    unique signal &mdash; the standard <span class="mono">0/0</span> resolution, defined as an absent edge).
+    Pinning the per-target floor to <span class="mono">0.0</span> keeps the <span class="mono">0&rarr;signal</span>
+    separating gap eligible, so each row&rsquo;s cut lands near <span class="mono">0.5</span> rather than inside
+    the <span class="mono">&asymp;1</span> cluster.
+  </p>
+
+  <h2>2. Recovery: v1 vs v2</h2>
+  <figure>
+    <img src="fig1_recovery_grid.png" alt="Discovered vs true E1 structure, v1 and v2 side by side">
+    <figcaption>
+      <b>Figure 1. v1 misses both KPI&rarr;KPI edges; v2 recovers all six.</b> Each cell is a candidate
+      edge (predicted KPI row &times; input column, inputs ordered <span class="mono">[NCP params | KPIs]</span>).
+      Filled cells are recovered edges; hatched cells are true edges the method missed. <b>Left (v1):</b> the four
+      NCP&rarr;KPI edges recover but <span class="orac">K2&larr;K0</span> and <span class="orac">K3&larr;K1</span>
+      are missed &mdash; overall recall <span class="mono">0.667</span>. <b>Right (v2):</b> all six true edges recover,
+      no false positives &mdash; recall <span class="mono">1.000</span>.
+    </figcaption>
+  </figure>
+
+  <h3>Why the score change resolves it</h3>
+  <figure>
+    <img src="fig2_score_gap.png" alt="Edge-score distributions for v1 and v2 by edge type">
+    <figcaption>
+      <b>Figure 2. The score-scale fix.</b> Edge scores by type (003 run). <b>Left (v1,
+      <span class="mono">|&beta;|</span>):</b> the two KPI&rarr;KPI edges sit at
+      <span class="mono">&asymp;0.44</span>, below the single global cut <span class="mono">0.674</span>, which
+      lands in the gap between the KPI&rarr;KPI band and the NCP&rarr;KPI band (<span class="mono">&asymp;0.9</span>) &mdash;
+      so both are dropped. <b>Right (v2, <span class="mono">|partial&nbsp;corr|</span>):</b> residualizing out the
+      other inputs collapses non-edges to exactly <span class="mono">0</span> and lifts every true parent
+      &mdash; NCP&rarr;KPI and KPI&rarr;KPI alike &mdash; to <span class="mono">&asymp;1</span>, a clean two-cluster
+      separation the per-target cuts (<span class="mono">&asymp;0.500</span>) split cleanly.
+    </figcaption>
+  </figure>
+
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Recovery vs <code>E1V2Env.true_adj_matrix()</code>, 003 run (post-freeze).</caption>
+      <thead><tr><th>block</th><th>precision</th><th>recall</th><th>F1</th><th>tp</th><th>fp</th><th>fn</th><th>v1 recall</th></tr></thead>
+      <tbody>
+        <tr><td>overall</td><td>1.000</td><td>1.000</td><td>1.000</td><td>6</td><td>0</td><td>0</td><td class="mut">0.667</td></tr>
+        <tr><td>NCP&rarr;KPI</td><td>1.000</td><td>1.000</td><td>1.000</td><td>4</td><td>0</td><td>0</td><td class="mut">1.000</td></tr>
+        <tr><td>KPI&rarr;KPI</td><td>1.000</td><td>1.000</td><td>1.000</td><td>2</td><td>0</td><td>0</td><td class="mut">0.000</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>3. Stability across the 10-seed envelope</h2>
+  <p>
+    The envelope (env_seed = weight_seed = <span class="mono">r</span>, split_seed = <span class="mono">0</span>,
+    <span class="mono">r = 0..9</span>; 48 episodes &times; 16 steps, noise <span class="mono">0</span>) was
+    regenerated through a committed, tested driver
+    (<code>scripts/e1_slice_recovery_v2_sweep.py</code>) &mdash; not an ad-hoc harness &mdash; and digested at
+    <code>docs/benchmark/plan006_recovery_digest/</code>. Every replicate&rsquo;s
+    <span class="mono">dataset_hash</span> matches the earlier run; aggregation is byte-identical on re-run.
+  </p>
+  <figure>
+    <img src="fig3_recovery_stability.png" alt="Per-seed recall for each recovery block across ten seeds">
+    <figcaption>
+      <b>Figure 3. Recovery is <span class="mono">1.000</span> on every block, every seed.</b> Edge recall per
+      replicate for overall, NCP&rarr;KPI, and KPI&rarr;KPI; the three series are drawn with a small vertical
+      offset for legibility. Standard deviation is <span class="mono">0</span> on every block. The
+      stability-selection diagnostic (reported, never the selector) picks exactly the six true edges at
+      frequency <span class="mono">1.0</span>, with no false positives anywhere in the envelope.
+    </figcaption>
+  </figure>
+
+  <h2>4. Prediction: MSE parity by construction (mask-identity)</h2>
+  <p>
+    Because v2 recovers the exact true graph on every seed, the discovered <span class="mono">(K, P+K)</span>
+    mask is <b>bit-for-bit identical</b> to the oracle (true-adjacency) mask &mdash; verified explicitly on
+    003 and all ten seeds, and guarded by a test
+    (<code>test_discovered_mask_equals_oracle_true_mask_on_real_e1</code>). Under the protocol&rsquo;s
+    registered-parameter design the discovered arm shares the oracle arm&rsquo;s exact per-output MLP, rows,
+    train IDs, config, and weight seed; the only thing that ever differed was the mask, and now it does not.
+    Training is deterministic (the 2026-09-03 envelope recorded zero variance). Two arms with identical
+    architecture, data, configuration, weight seed, and mask are the same model, so their held-out one-step
+    MSE is <b>equal by construction</b>. We therefore do <em>not</em> retrain the three-arm envelope, and we
+    report no v2 MSE numbers &mdash; the parity below is a construction result, not a measurement.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table 2. v1&rsquo;s measured three-arm held-out MSE (<span class="mono">n = 192</span>), for contrast only. v2 discovered = oracle by construction.</caption>
+      <thead><tr><th>arm</th><th>v1 test MSE</th><th>v2 (by construction)</th></tr></thead>
+      <tbody>
+        <tr><td>oracle</td><td class="mono">4.253e-07</td><td class="mut">&mdash;</td></tr>
+        <tr><td>dense</td><td class="mono">1.433e-06</td><td class="mut">&mdash;</td></tr>
+        <tr><td>discovered</td><td class="mono orac">1.036e-02</td><td class="disc">= oracle</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    In v1 the discovered arm was roughly four orders of magnitude worse than oracle <em>because</em> it missed
+    the two KPI&rarr;KPI parents: its K2/K3 heads could not see K0/K1, so they could not represent
+    <span class="mono">K2 = P2 + 0.5&middot;K0</span> or <span class="mono">K3 = P3 + 0.5&middot;K1</span>. In v2
+    that cause is gone, so the penalty is gone: <span class="mono">MSE(discovered) = MSE(oracle)</span>.
+  </p>
+
+  <h2>5. Interpretation, limitations, and next step</h2>
+  <p>
+    Stated plainly: the near-perfect separation is a <b>property of the noiseless linear control</b> read with
+    the right conditioning, not a hard-won empirical result. Green E1 means the label-free pipeline recovers
+    structure when it is recoverable &mdash; exactly E1&rsquo;s intended role, and what unblocks interpreting
+    E2+. No noise was added to E1 to manufacture difficulty.
+  </p>
+  <ul>
+    <li>The result is specific to the linear, noiseless E1 control; it says nothing about discovery under
+      process noise, nonlinearity, or unobserved confounding, where partial correlation is not expected to give
+      a clean <span class="mono">0/1</span> separation.</li>
+    <li>The prediction parity is a construction result from mask-identity, not a fresh measurement; a
+      directly-measured v2 three-arm envelope would, by the same argument, reproduce
+      <span class="mono">MSE(discovered) = MSE(oracle)</span>.</li>
+    <li>The natural next step is <b>E2+</b> (noisy / nonlinear), where the label-free rule must be
+      re-evaluated and discovery is genuinely non-trivial.</li>
+  </ul>
+
+  <div class="foot">
+    <p><b>Reproducibility.</b> Frozen protocol <code>docs/benchmark/E1_DISCOVERY_PROTOCOL_V2.md</code>
+    (<code>protocol_commit c66b81d</code>); as-run result <code>docs/benchmark/E1_DISCOVERY_RESULT_V2.md</code>;
+    committed envelope digest <code>docs/benchmark/plan006_recovery_digest/</code>. 003 run hashes:
+    <code>dataset cfce4c10&hellip;</code>, <code>split ec6658d0&hellip;</code>,
+    <code>discovery_v2 6c2e0adf&hellip;</code>, <code>recovery_v2 508bc795&hellip;</code>.</p>
+    <p><b>Figures.</b> <code>uv run python reports/2026-09-04-e1-v2-partial-correlation-recovery/make_figs.py</code>,
+    reading the committed v1 discovery artifact, the committed v2 envelope digest, and the local (gitignored,
+    regenerable) 003 <code>discovery_v2.json</code>. This report lives under the gitignored <code>reports/</code>
+    tree. numpy 2.4.2 · torch 2.10.0 · python 3.12.13.</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gated decision-MDE result (E2-ID)</title>
+<style>
+  :root{--bg:#faf9f6;--card:#fff;--ink:#20242a;--soft:#5c6470;--line:#e6e3db;--good:#1f8a5b;--bad:#c0492f;
+    --acc:#3a5a8c;--amb:#b7791f;--accbg:#eaf0f8;--goodbg:#e8f5ee;--badbg:#faeae4;--ambbg:#faf1df;--mono:#f4f2ec}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px}
+  .wrap{max-width:860px;margin:0 auto;padding:44px 24px 100px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
+  .kick{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  h1{font-size:1.9rem;line-height:1.2;margin:8px 0 6px;letter-spacing:-0.01em}
+  .meta{color:var(--soft);font-size:.9rem}
+  h2{font-size:1.28rem;margin:44px 0 12px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-0.01em}
+  h3{font-size:1.05rem;margin:26px 0 8px}
+  p{margin:0 0 14px} strong{font-weight:650}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;
+    background:var(--mono);padding:1px 5px;border-radius:4px}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--good);
+    border-radius:10px;padding:18px 22px;margin:20px 0}
+  .verdict .tag{display:inline-block;background:var(--goodbg);color:var(--good);font-weight:700;font-size:.75rem;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+  .verdict p{margin:0;font-size:1.02rem}
+  figure{margin:22px 0;padding:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+  figcaption{color:var(--soft);font-size:.88rem;margin-top:8px;padding-left:2px}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;margin:16px 0}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--mono);font-weight:650}
+  td.no{color:var(--bad);font-weight:600} td.yes{color:var(--good);font-weight:600}
+  .call{border-left:4px solid var(--acc);background:var(--accbg);padding:13px 18px;border-radius:0 8px 8px 0;margin:18px 0}
+  .call.amb{border-color:var(--amb);background:var(--ambbg)}
+  .call .k{font-weight:700;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc);
+    display:block;margin-bottom:4px} .call.amb .k{color:var(--amb)}
+  ul,ol{margin:0 0 14px;padding-left:24px} li{margin:6px 0}
+  .list-n li{margin:10px 0}
+  .foot{color:var(--soft);font-size:.86rem;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.two{grid-template-columns:1fr}}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 15px}
+  .kv b{display:block;font-size:1.5rem;letter-spacing:-0.01em} .kv span{color:var(--soft);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kick">CDD-ORAN · Phase 4b · E2-ID characterization</div>
+  <h1>Gated decision-MDE: does complete causal fan-out prevent the harmful shared-knob action?</h1>
+  <div class="meta">2026-09-15 · DEV / truth-free (nothing frozen) · 40 seeds × 8 δ × 5 occupancies = 1,600 cells ·
+    reviewed by sol (GPT-5.6) = <em>SOUND-WITH-CAVEATS</em></div>
+</header>
+
+<div class="verdict">
+  <span class="tag">Result</span>
+  <p><strong>The thesis holds only in the degenerate 100%-occupancy case.</strong> Complete causal fan-out
+  reliably rejects the locally-harmful action <strong>only when the harmful regime is active everywhere</strong>
+  (Decision-MDE = barG_omit <strong>0.163</strong>, prevention power 37/40 at δ=0.4). At every realistic
+  occupancy (2–20%) the Decision-MDE is <strong>null</strong> — prevention never reaches 80% power. Discovery is
+  <em>not</em> the bottleneck (it finds the edge at every occupancy); the <strong>learned world-model's
+  off-gate generalization</strong> is, and this is confirmed by the true-structure (oracle) arm failing the same
+  way.</p>
+</div>
+
+<div class="two" style="margin:18px 0">
+  <div class="kv"><b>null</b><span>Decision-MDE at 2/5/10/20% occupancy — prevention never fires</span></div>
+  <div class="kv"><b>0.163</b><span>Decision-MDE at 100% occupancy (power 0.925 at δ=0.4)</span></div>
+  <div class="kv"><b>≈0.129</b><span>baseline off-gate regret at δ=0, present even in the omit arm (limit 0.05)</span></div>
+  <div class="kv"><b>≤0.029</b><span>intrinsic planted-trap severity at finite q — barG_omit (~0.13) is mostly learner noise</span></div>
+</div>
+
+<h2>1 · What was tested</h2>
+<p>E2's stress axis is <strong>shared-control fan-out</strong>: one command <code>P0</code> drives several KPIs,
+and a co-parent-gated edge <code>P0→K5</code> makes the locally-attractive move globally harmful — but only
+inside a gate on the pre-command state <code>(P6,P7)</code>. The question (the E5 headline, exercised here on the
+frozen E2 spine, <strong>scope = E2-ID, not E5 deployment</strong>): <em>given a fully discovered causal fan-out,
+does the end-to-end pipeline reject the harmful action across a realistic deployment?</em></p>
+<p>Pre-registration (cleared by sol over three rounds): <code>PREDECLARE_phase4b_gated_mde_v3.md</code> +
+<code>_v3_addendum.md</code> (12-item checklist) + <code>_v3_addendum2_gpu.md</code> +
+<code>_v3_addendum3_eval.md</code>. Unified synthetic SCM
+<code>K5 = base_p0free(P6,P7) + δ·sgn·(cmd−C0)·1[(P6,P7)∈B]</code>, sgn=−1, C0=0 (derived outcome-free).</p>
+
+<h2>2 · Method</h2>
+<p>True <strong>end-to-end learned</strong> mechanism (a deliberate step onto the learned-world-model track):
+M3 discovery → k-NN world-model (k=64, standardized parents, float64, GPU, exact neighbors) → recursive fitted
+H=1 rollout → planner, all on the frozen E2 machinery. Four <strong>capacity-matched arms</strong> scored by
+all-deployment normalized regret over the D_E2_ID bank (16,384 committed states; OPT-4 stratified S_eval + IPW):</p>
+<ul>
+  <li><strong>learned_omit</strong> — the incomplete pipeline: identical k-NN, only <code>P0</code> forced out of K5's inputs.</li>
+  <li><strong>learned_discovered</strong> — the complete fan-out: M3-declared parents (the headline arm).</li>
+  <li><strong>learned_oracle</strong> — k-NN on the <em>true</em> structure <code>{P0,P6,P7}</code>: the learnability ceiling.</li>
+  <li><strong>exact_decoy</strong> — synthetic <code>base_p0free</code>, no learner: the <em>intrinsic</em> planted-trap severity.</li>
+</ul>
+<p>Grid: occupancy <code>q ∈ {2,5,10,20%}</code> + <code>100%</code>; harm strength
+<code>δ ∈ {0,.05,.1,.2,.4,.8,1.6,3.2}</code>; 40 discovery seeds. Per seed, <strong>prevention success</strong> =
+<code>G_omit^deploy &gt; 0.02</code> AND <code>(G_omit − G_disc)^deploy ≥ 0.80·G_omit^deploy</code>; decision
+power = #success/40. <strong>Decision-MDE</strong> = first eligible, control-passing cell with power ≥ 0.80.
+<strong>Edge-MDE</strong> = first cell with P0→K5 declared in ≥ 80% of seeds.</p>
+
+<h2>3 · Result: prevention is occupancy-gated</h2>
+<figure>
+  <img src="fig1_decision_power.png" alt="Decision power heatmap: green only at 100% occupancy, high delta">
+  <figcaption><strong>Fig 1.</strong> Fraction of 40 seeds where complete fan-out reliably prevents the harm.
+  The blue box marks the only region ≥80% power — 100% occupancy, δ≥0.4. Every finite occupancy is 0.00 at
+  every δ (not a marginal threshold call).</figcaption>
+</figure>
+
+<figure>
+  <img src="fig2_edge_power.png" alt="Edge power heatmap: rises to 1 at every occupancy">
+  <figcaption><strong>Fig 2.</strong> Discovery detection power (P0→K5 declared). Rises to near-certainty at
+  <em>every</em> occupancy as δ grows — finding the danger is not the bottleneck. Contrast with Fig 1.</figcaption>
+</figure>
+
+<table>
+  <thead><tr><th>Occupancy</th><th>Edge-MDE (signal RMS)</th><th>Decision-MDE (barG_omit)</th><th>Prevention</th></tr></thead>
+  <tbody>
+    <tr><td>2%</td><td>3.40</td><td>—</td><td class="no">never</td></tr>
+    <tr><td>5%</td><td>2.60</td><td>—</td><td class="no">never</td></tr>
+    <tr><td>10%</td><td>1.84</td><td>—</td><td class="no">never</td></tr>
+    <tr><td>20%</td><td>1.30</td><td>—</td><td class="no">never</td></tr>
+    <tr><td>100%</td><td>2.89</td><td>0.163</td><td class="yes">δ≥0.4 (power 0.925→1.0)</td></tr>
+  </tbody>
+</table>
+<p>The in-gate trap is genuinely live: the incomplete pipeline makes the wrong in-gate call in up to
+<strong>94.8%</strong> of gated states as δ grows (<code>decoy_worse_frac</code>). So the failure is not that the
+trap is dormant — it is that the <em>net all-deployment</em> benefit does not materialize.</p>
+
+<h2>4 · Mechanism: the learned world-model, not discovery</h2>
+<figure>
+  <img src="fig3_mechanism_q20.png" alt="In-gate vs off-gate regret at 20% occupancy">
+  <figcaption><strong>Fig 3.</strong> At 20% occupancy: complete fan-out (red) sharply cuts <em>in-gate</em>
+  regret (e.g. δ=0.8: 0.189→0.030, −84%), but its <em>off-gate</em> regret rises with δ (0.129→0.196). The
+  averaged all-deployment metric is dominated by the off-gate majority, so the benefit cancels.</figcaption>
+</figure>
+
+<div class="call amb">
+  <span class="k">The correction that matters (sol)</span>
+  A naive reading — "adding P0 causes the off-gate collateral" — is too simple. The off-gate control fails
+  <strong>even at δ=0, and even in the omit arm</strong> (off-gate regret ≈ 0.129, far above the 0.05 limit,
+  where P0 is not involved at all). So there are two stacked effects: (1) a <strong>large baseline off-gate error</strong>
+  of the learned k-NN planner, present independent of P0; plus (2) <strong>δ-dependent P0 collateral</strong> from
+  localized high-amplitude fitting, layered on top. The defensible claim is the conjunction, not P0 alone.
+</div>
+
+<figure>
+  <img src="fig4_severity_oracle.png" alt="Severity decomposition and oracle arm also failing">
+  <figcaption><strong>Fig 4.</strong> Left: the plotted "severity" barG_omit (~0.13 at finite q) is mostly
+  baseline learner regret; the intrinsic planted trap (exact-decoy, no learner) is ≤0.029 at finite q. Right:
+  the oracle arm handed the <em>true</em> structure tracks the others at 20% occupancy — prevention fails
+  <em>without any discovery error</em>.</figcaption>
+</figure>
+
+<div class="call">
+  <span class="k">Why this pins the bottleneck on the world-model</span>
+  The <strong>oracle-structure arm fails the same way</strong> at finite occupancy. Since it is given the true
+  causal map, M3 selection error cannot explain the failure. The binding constraint for the E5 goal is therefore
+  the <strong>learned world-model's sample efficiency / off-gate generalization</strong>, not causal discovery.
+  ("Discovery is not the bottleneck" is fair only in the narrow sense of <em>detecting</em> P0→K5 at the Edge-MDE
+  crossings; M3 still admits nuisance false positives, and edge power ≠ complete structural recovery.)
+</div>
+
+<h2>5 · Verification</h2>
+<ul>
+  <li><strong>Completeness:</strong> all 1,600 <code>(q,δ,seed)</code> records present, well-formed, 0 NaN, no
+  duplicate keys. 68 cells exercise the lagged-K5 nuisance path (28 in K5's parents; 40 = seed 32's <code>bad_disc</code> in K2).</li>
+  <li><strong>Independent re-score</strong> from raw records reproduces every edge power, decision power,
+  barG_omit, control, and MDE crossing (<code>rescore_gated_mde.py</code> → <code>gated_mde_rescore.json</code>).</li>
+  <li><strong>Spot re-run</strong> of 3 cells from scratch (a normal cell, a K5 col-13 cell, seed 32's bad_disc
+  cell) reproduced the stored structure and all four deployment regrets <strong>bit-exactly</strong> (maxGdiff=0).</li>
+  <li><strong>Harness fix (col-13 / addendum item 10):</strong> M3 sometimes falsely declares the lagged-K5
+  candidate (a KPI→KPI false positive). Per item 10 this is kept, and the recursive rollout feeds the fitted
+  warm-up <code>k1_hat[5]</code> into the terminal model. The batched implementation was verified to reproduce
+  the frozen reference rollout to ~1e-7 (L6 device tolerance); it is a byte-identical no-op on unaffected cells.</li>
+  <li><strong>Low-memory mode</strong> (live M3 vs the OPT-2 cache) is bit-identical in structure
+  (<code>max|Δpval|=0</code>); GPU float64 throughout (L6-equivalence-gated).</li>
+  <li><strong>sol independently</strong> re-ran the spot-verify and low-mem checks, re-aggregated all 1,600
+  records, and confirmed the IPW identity <code>G_deploy = occ·G_cond + (1−occ)·G_off</code> holds per cell. No
+  bug or leakage found.</li>
+</ul>
+
+<h2>6 · Reviewer verdict and required cleanup</h2>
+<p>sol's verdict is <strong>SOUND-WITH-CAVEATS</strong> — "sound enough to inform, but not itself authorize, the
+user-gated E5 decision." The following are reporting/cleanup items (none change the headline) to make the result
+fully citable:</p>
+<ol class="list-n">
+  <li><strong>Restore the item-10 nuisance diagnostics</strong> per cell: selected lagged parents + query-support
+  distances (records currently expose <code>par_K5_disc</code> + a <code>bad_disc</code> boolean, no support distances).</li>
+  <li><strong>Persist the factor-removal anchor explicitly</strong> (the rescorer neither computes nor reports it;
+  exact equality holds by construction but the registered control should be a persisted result).</li>
+  <li><strong>Correct two rescorer labels:</strong> the off-gate control is implemented as
+  <code>mean(|G_disc^off−G_omit^off|)≤EQ</code> but the pre-reg reads <code>|mean(G_disc^off)−mean(G_omit^off)|≤EQ</code>
+  (the implementation is stricter; it changes no verdict here). Serialize q=1 off-gate status as
+  <code>NOT_APPLICABLE</code>, not boolean <code>true</code>.</li>
+  <li><strong>Report both severities</strong> (barG_omit and the intrinsic exact-decoy) — do not present barG_omit as pure trap severity.</li>
+  <li><strong>Carry S_eval uncertainty honestly:</strong> the Wilson intervals condition on the single frozen
+  off-gate sample shared across seeds/cells; E5 should use a full-bank or independently replicated evaluation.</li>
+</ol>
+
+<h2>7 · Implications for E5</h2>
+<p>This experiment did its job: it says the binding constraint for the E5 headline is <strong>world-model
+quality / sample efficiency</strong>, not causal discovery. Concretely, a learned world-model that generalizes
+poorly away from the well-sampled region (here a memory-based k-NN) pays an off-gate penalty that swamps the
+in-gate prevention benefit at realistic occupancy. Levers worth weighing for E5: a world-model with better
+off-support behavior (parametric/structural do-propagation rather than global k-NN), occupancy-aware evaluation,
+or restricting the extra-parent influence to the gate region. The E5-finalize decision remains
+<strong>USER-GATED</strong>; this result informs it but does not force it.</p>
+
+<div class="call">
+  <span class="k">Scope — do not overgeneralize</span>
+  This is an offline <em>characterization</em> on the abstract <code>exp(−x²)</code> E2 benchmark, which has no
+  real O-RAN grounding (a known, documented gap). It measures where the method breaks and why. A deployed system
+  would run discovery and world-model fitting <em>offline</em> and make cheap per-decision planner lookups
+  online — it would never compute a sweep like this. Result is E2-ID and rides on a fixed k-NN learner.
+</div>
+
+<h2>8 · Reproduce</h2>
+<p>Figures regenerate live from the raw records: <code>python reports/2026-09-15-gated-decision-mde-result/make_figs.py</code>
+(reads <code>scratchpad/design_adaptive_m3/gated_mde_records/*.json</code>; numeric appendix in
+<code>figures_data.json</code>). Harness: <code>validate_gated_mde.py</code>, <code>gated_mde.py</code>,
+<code>learner_knn.py</code>; scorer <code>rescore_gated_mde.py</code>; config <code>frozen_config.json</code> /
+<code>frozen_eval.json</code>; reviewer note <code>sol_result_review.md</code>. Run notes: the sweep was executed
+detached (Start-Process, watchdog-immune) in GPU float64; parallel workers give no speedup (single-GPU serialize);
+float32 is disallowed (breaks the frozen float64/L6 gate).</p>
+
+<p class="foot">reports/ is gitignored by repo convention — this record lives on disk + memory, not in git.
+DEV/truth-free; promoting anything here to a live/frozen method is a separate, user-gated pre-registration.</p>
+
+</div>
+</body>
+</html>

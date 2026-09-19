@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision-level tests of the learned causal structure (2026-08-28)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.62rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Decision-level tests of the learned causal structure: block-coordination and deconfounding on the mitigation planner</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-08-28</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> e7534e1</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> post-hoc analysis on saved utilities and matched re-evaluation of existing checkpoints; no retraining</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> This is a delta on <em>2026-08-27 &mdash; Reachable-utility diagnosis of
+    the Env&nbsp;IV planner shortfall</em>, which attributed the negative Env&nbsp;IV utility to an objective and
+    model/planner-realisation gap under a fixed enumeration. It also extends the decision-level line of
+    <em>2026-08-25 &mdash; Decision-gate and deconfounding</em>, whose matched-set gate returned a STOP verdict
+    (the true/oracle enumeration graph gave no material decision advantage over the discovered graph). Those
+    reports concern <em>prediction</em> quality and the <em>objective</em>. This report asks the separate
+    question of whether the learned causal <em>structure</em> improves the mitigation <em>decision</em> itself,
+    through two candidate mechanisms &mdash; grouping causally-coupled knobs and resolving them jointly
+    (block-coordination), and avoiding the spurious associations a non-causal model can absorb (deconfounding).
+    All quantities use existing checkpoints; the multi-seed and dense-model comparisons re-run
+    <code>evaluate.py</code> on those checkpoints without retraining.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    We test two decision-level mechanisms by which the learned causal structure could improve mitigation. For
+    block-coordination, we compute a model-free coordination gap on the true simulator &mdash; the utility of a
+    global joint solve over a coupled knob block minus the utility of coordinate ascent over the same block. On
+    the <b>discovered</b> enumeration blocks the gap is at or below <span class="mono">+0.001</span> (mean-z)
+    in every environment and cell. The discovered graph, however, under-recovers coupling: it drops
+    shared-parameter edges present in the ground-truth adjacency. On the <b>true</b> blocks, the gap is
+    <span class="mono">+2.224</span> in one cell &mdash; Env&nbsp;I&nbsp;/&nbsp;train, block
+    <span class="mono">{0,1,2}</span> &mdash; and at or below <span class="mono">+0.017</span> in all other
+    environments and cells. That single positive gap is a verified non-separable interaction (one KPI requires
+    two knobs moved together), and the responsible knob is exactly the edge the discovered graph dropped. It is
+    localised to that one cell and block, and it is reachable by coordinate ascent with random restarts, so a
+    global joint solver is sufficient but not uniquely required. For deconfounding, a decomposition of realised
+    utility by KPI on Env&nbsp;IV shows a larger single-seed advantage of the structured model over a dense
+    model at the confounded KPIs; across <b>five</b> matched mitigation-seed re-evaluations this advantage is
+    not statistically distinguishable from zero for any planner (all 95% confidence intervals include zero),
+    and the single-seed value was not stable to an unrelated change in the planner set. Only the sign of the
+    confounded-minus-clean differential is consistent. A dense/structured/oracle comparison across planners on
+    Env&nbsp;IV (out-of-distribution) shows the dense model decides as well as or better than the structured
+    model on the planner average. Separately, the <code>ModelBasedMCTS</code> planner does not terminate on
+    some mitigation seeds. Neither mechanism yields a robust decision-level advantage on the current
+    environments; both point to graph-recovery quality and benchmark structure as the limiting factors.
+  </p>
+
+  <h2>1. Context and question</h2>
+  <p>
+    The 2026-08-25 gate established that, at the decision level, the true enumeration graph is not materially
+    better than the discovered graph (STOP), and the prediction-level reports established that the causal
+    structure helps <em>prediction</em>. Neither shows that having the structure improves the <em>decision</em>
+    relative to not having it. We examine two mechanisms by which it could. <b>Block-coordination:</b> the
+    causal graph identifies which knobs feed a shared KPI; a planner that resolves such a block jointly could
+    reach an action that resolving each knob independently cannot. <b>Deconfounding:</b> under a hidden
+    confounder, two KPIs are observationally correlated with no causal edge between them; a structured model
+    constrained to the true parents cannot absorb that spurious association, whereas a dense model can, so the
+    structured model could make a better intervention at the confounded KPIs. Env&nbsp;IV carries an explicit
+    latent confounder <span class="mono">Z</span> injected into the observation of KPIs&nbsp;6 and&nbsp;7 with
+    no edge between them, which makes it the test case for deconfounding.
+  </p>
+
+  <h2>2. Method</h2>
+  <p>
+    <b>Block factorization.</b> Two knobs are placed in the same block when they share a downstream KPI child
+    in a given adjacency, using the shipped orientation
+    (<code>graph[kpi_node, param_id]</code>, conflict-detection convention; knobs are the low state indices,
+    KPIs the high indices). Blocks are the connected components of that relation. We compute blocks from the
+    discovered enumeration graph and from the ground-truth adjacency
+    (<code>build_oracle_enumeration_graph</code>).
+  </p>
+  <p>
+    <b>Coordination gap (model-free, true simulator).</b> For each coupled block we reproduce the evaluation
+    trajectory and, at each panel, evaluate the block&rsquo;s affected xApps&rsquo; panel-mean true utility over
+    (i) a one-pass independent per-knob resolution (<span class="mono">greedy_single</span>), (ii) coordinate
+    ascent over the block to convergence (<span class="mono">greedy_iter</span>), and (iii) a global joint
+    search over the block (full grid for <span class="mono">|B|&le;3</span>, otherwise randomised). We report
+    two gaps: <span class="mono">gap_naive = joint &minus; greedy_single</span> and
+    <span class="mono">gap_coord = joint &minus; greedy_iter</span>. The second is the quantity of interest: a
+    global joint solve exceeds coordinate ascent only if the block&rsquo;s utility surface is non-separable. We
+    report under the true-utility (mean-z) objective; the shipped saturating objective is reported in the
+    source tables but its argmin is a flat-region tie-break and is not used for the verdict.
+  </p>
+  <p>
+    <b>Correlation-block control.</b> To separate &ldquo;causal&rdquo; from &ldquo;any grouping&rdquo;, we
+    build a correlation graph (absolute Pearson association of each candidate parent with each next-KPI,
+    rank-matched to the causal edge count) and compare the blocks it induces to the causal blocks, matching on
+    the parameter&rarr;KPI edge count so the comparison is not inflated by the causal graph&rsquo;s KPI&rarr;KPI
+    budget.
+  </p>
+  <p>
+    <b>Decision-level model comparison and per-KPI decomposition.</b> Using existing checkpoints, we evaluate
+    the dense (MLP), discovered (CDL), and oracle (CDL) models under all planners on Env&nbsp;IV
+    (out-of-distribution), matched on training seed, mitigation seed, and planner configuration, with the dense
+    model enumerating from the discovered graph so its decision set matches the structured model. Realised
+    utility is the true-environment utility at each planner&rsquo;s selected action. We attribute each panel to
+    its primary xApp/KPI and take that xApp&rsquo;s realised utility. For the deconfounding test we re-run the
+    dense and discovered evaluations under <b>five mitigation seeds</b> (independent env realisations) and treat
+    the seed, not the panel, as the unit of replication, reporting per-planner mean and a 95%
+    <span class="mono">t</span> confidence interval of the (discovered&nbsp;&minus;&nbsp;dense) differential at
+    the confounded KPIs and at the clean KPIs. <code>ModelBasedMCTS</code> is excluded from the multi-seed set
+    because it does not terminate on some seeds (&sect;7); dropping it perturbs the shared random stream, so the
+    remaining planners&rsquo; absolute values shift slightly, but both arms are evaluated identically at each
+    seed and the differential is within-regime.
+  </p>
+
+  <h2>3. Block recovery: discovered versus ground truth</h2>
+  <p>
+    The discovered enumeration graph recovers fewer couplings than the ground-truth adjacency in every
+    environment (Table&nbsp;1). The dropped edges are shared-parameter dependencies &mdash; for example, in
+    Env&nbsp;IV the ground truth couples <span class="mono">{0,1,2}</span> and <span class="mono">{3,4,5}</span>,
+    while the discovered graph couples only <span class="mono">{0,1}</span> and treats knobs 2&ndash;5 as
+    independent. This under-recovery is the reason a coordination gap on the discovered blocks is not, on its
+    own, evidence that no coordination structure exists (&sect;4).
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;1. Coupled knob blocks (size&nbsp;&ge;&nbsp;2) from the discovered enumeration graph
+      versus the ground-truth adjacency. Singletons omitted.</caption>
+      <thead><tr><th>Env</th><th>discovered coupled blocks</th><th>ground-truth coupled blocks</th></tr></thead>
+      <tbody>
+        <tr><td>I</td><td class="mono">{0,1} {3,4} {5,6}</td><td class="mono">{0,1,2} {3,4} {5,6}</td></tr>
+        <tr><td>II</td><td class="mono">{0,1,3,4,5}</td><td class="mono">{0,1,2,3,4,5,6,7}</td></tr>
+        <tr><td>III</td><td class="mono">{0,1,8} {3,4}</td><td class="mono">{0,1,2,8} {3,4,5}</td></tr>
+        <tr><td>IV</td><td class="mono">{0,1}</td><td class="mono">{0,1,2} {3,4,5}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>4. Coordination gap</h2>
+  <p>
+    On the discovered blocks, <span class="mono">gap_coord</span> (mean-z) is at or below
+    <span class="mono">+0.001</span> in every environment and cell: coordinate ascent reaches the joint optimum,
+    so a global joint solve adds nothing. On the ground-truth blocks the picture is the same everywhere except
+    one cell: <span class="mono">gap_coord</span> is at or below <span class="mono">+0.017</span> for all
+    Env&nbsp;II, Env&nbsp;III, and Env&nbsp;IV true blocks and for Env&nbsp;I out-of-distribution, and it is
+    <span class="disc">+2.224</span> for Env&nbsp;I&nbsp;/&nbsp;train, block <span class="mono">{0,1,2}</span>
+    (Figure&nbsp;1, Table&nbsp;2). The one-pass gap <span class="mono">gap_naive</span> is positive in several
+    cells (up to <span class="mono">+0.52</span> on Env&nbsp;II&nbsp;/&nbsp;train), i.e. the current one-pass
+    per-edge resolution does leave utility unclaimed on coupled blocks; but coordinate ascent recovers it, so
+    that portion does not require a joint solver.
+  </p>
+  <figure>
+    <img src="fig1_coordination_gap.png" alt="Grouped bars of the coordination gap for discovered versus true blocks across the eight environment-cell combinations; all near zero except Env I train true blocks at 2.22">
+    <figcaption><b>Figure&nbsp;1.</b> Coordination gap <span class="mono">gap_coord</span> (joint solve minus
+    coordinate ascent, mean-z utility, maximum over coupled blocks) for the discovered blocks and the
+    ground-truth blocks, per environment and cell. All values are below the <span class="mono">0.05</span>
+    materiality line except Env&nbsp;I&nbsp;/&nbsp;train on the ground-truth block, at
+    <span class="mono">+2.224</span>. The discovered-block bars are at or below <span class="mono">+0.001</span>
+    throughout.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;2. Coordination gap on the ground-truth coupled blocks, mean-z objective. Values are
+      the panel-averaged utilities; the gap is joint minus the corresponding baseline.</caption>
+      <thead><tr><th>Env / cell / block</th><th>coord. ascent</th><th>joint</th><th>gap_coord</th><th>gap_naive</th></tr></thead>
+      <tbody>
+        <tr><td>I / train / {0,1,2}</td><td>+0.568</td><td class="disc">+2.792</td><td class="disc">+2.224</td><td>+2.224</td></tr>
+        <tr><td>I / ood / {0,1,2}</td><td>+3.950</td><td>+3.950</td><td>+0.000</td><td>+3.411</td></tr>
+        <tr><td>II / train / {0..7}</td><td>+1.825</td><td>+1.825</td><td>+0.000</td><td>+0.517</td></tr>
+        <tr><td>III / train / {0,1,2,8}</td><td>+1.800</td><td>+1.802</td><td>+0.017</td><td>+0.728</td></tr>
+        <tr><td>IV / train / {0,1,2}</td><td>+2.116</td><td>+2.116</td><td>+0.000</td><td>+0.260</td></tr>
+        <tr><td>IV / train / {3,4,5}</td><td>+2.864</td><td>+2.864</td><td>+0.000</td><td>+0.000</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The Env&nbsp;I&nbsp;/&nbsp;train gap is a verified non-separable interaction, not a numerical artifact
+    (Figure&nbsp;2). At the coordinate-ascent stall point <span class="mono">(P1=0, P3=0)</span> the block
+    utility is <span class="mono">+0.568</span>, and moving any single knob over its full grid changes the
+    utility by <span class="mono">0.0</span>. The joint optimum <span class="mono">(P1=45, P3=3)</span> reaches
+    <span class="mono">+2.792</span>. The mechanism is a KPI whose utility has the form
+  </p>
+  <div class="eq">u &prop; exp( &minus;(P1 &minus; 50)&sup2; / (2&middot;P3)&sup2; )</div>
+  <p>
+    which is near zero unless <span class="mono">P1&asymp;50</span> and <span class="mono">P3</span> is large at
+    the same time: from the stall a change in <span class="mono">P1</span> alone leaves the width near zero, and
+    a change in <span class="mono">P3</span> alone leaves the offset at <span class="mono">2500</span>, so
+    neither single-knob move produces a gradient. The third knob in this block, <span class="mono">P3</span>
+    (knob&nbsp;2), is exactly the parameter the discovered graph dropped (Table&nbsp;1); without it the block is
+    <span class="mono">{0,1}</span> and the two interacting knobs are never co-optimised, which is why the
+    coordination gap on the discovered blocks reads zero here. The grid straddles the
+    <span class="mono">P1=50</span> peak, so the reported gap understates a finer-grid value.
+  </p>
+  <figure>
+    <img src="fig4_needle_surface.png" alt="Heatmap of block utility over P1 and P3 showing a narrow high-utility ridge reachable only by moving both knobs; the coordinate-ascent stall at the origin sits in a flat low region and both axis-aligned paths from it stay flat">
+    <figcaption><b>Figure&nbsp;2.</b> Block <span class="mono">{0,1,2}</span> panel-mean utility over
+    <span class="mono">P1</span> (knob&nbsp;0) and <span class="mono">P3</span> (knob&nbsp;2), with
+    <span class="mono">P2</span> held at its joint optimum, Env&nbsp;I&nbsp;/&nbsp;train. The high-utility region
+    is a narrow ridge requiring both knobs. From the coordinate-ascent stall at the origin, the two
+    axis-aligned paths (dashed) remain in the low-utility region, so coordinate ascent halts there; the joint
+    optimum (star) is reachable only by moving both knobs together.</figcaption>
+  </figure>
+  <p>
+    Two bounds apply to this result. It is <b>localised</b>: it appears in one environment, one cell, and one
+    block, and is at or below <span class="mono">+0.017</span> in every other true block. And a global joint
+    solve is <b>sufficient but not uniquely required</b>: coordinate ascent with random restarts also escapes
+    the stall, so the finding does not by itself establish that a joint planner is necessary. What it does
+    establish is that a non-separable coordination structure exists on the true coupling and is hidden when the
+    discovered graph omits the relevant edge; the earlier &ldquo;zero coordination gap&rdquo; reading on the
+    discovered blocks was a graph-recovery artifact, not a property of the environment.
+  </p>
+
+  <h2>5. Correlation-block control</h2>
+  <p>
+    Whether the causal graph contributes anything to the grouping beyond what a correlation graph would
+    contribute is environment-dependent. Under the parameter&rarr;KPI edge-matched control, the correlation
+    graph recovers the causal blocks exactly and stably on Env&nbsp;I (the sparse, edge-clean case), and
+    diverges from them, with seed-to-seed instability, on Env&nbsp;II, Env&nbsp;III, and Env&nbsp;IV (the denser
+    cases with KPI&rarr;KPI chains, shared parameters, or the confounder). So neither &ldquo;correlation equals
+    causal blocking&rdquo; nor &ldquo;correlation differs everywhere&rdquo; holds in general: on simple
+    structure the two coincide, and on denser structure the causal graph gives a more stable partition. Because
+    the coordination gap is near zero on all but one block (&sect;4), this distinction does not translate into a
+    decision-utility difference on the current environments.
+  </p>
+
+  <h2>6. Decision-level model comparison (Env IV, out-of-distribution)</h2>
+  <p>
+    Across planners, the dense (non-causal) model decides as well as or better than the structured model on the
+    planner average (Table&nbsp;3, Figure&nbsp;3): the mean realised utility is <span class="mono">&minus;0.158</span>
+    for the dense model, <span class="mono">&minus;0.307</span> for the discovered model, and
+    <span class="mono">&minus;0.291</span> for the oracle model. The only planner&ndash;model combination that
+    exceeds the no-op reference is MPPI on the discovered model (<span class="disc">+0.170</span>); the
+    discovered model&rsquo;s spread across planners is wide (from <span class="mono">+0.170</span> to
+    <span class="mono">&minus;0.722</span>), while the dense model is more uniform. These are single-seed point
+    estimates and are not a substitute for the multi-seed comparison in &sect;7. They are consistent with the
+    2026-08-25 STOP reading: the structure does not confer an aggregate decision advantage here.
+  </p>
+  <figure>
+    <img src="fig3_decision_level.png" alt="Grouped bars of realised utility for dense, discovered, and oracle models under four planners plus the planner mean on Env IV out-of-distribution; most bars are below the no-op line, only MPPI on the discovered model is positive">
+    <figcaption><b>Figure&nbsp;3.</b> Mean realised utility (0&nbsp;=&nbsp;no-op) for the dense, discovered, and
+    oracle models under each planner on Env&nbsp;IV, out-of-distribution, matched seed and planner
+    configuration. Only MPPI on the discovered model exceeds the no-op reference; on the planner average the
+    dense model is the least negative of the three.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;3. Env&nbsp;IV out-of-distribution mean realised utility by model and planner, single
+      seed. 0&nbsp;=&nbsp;no-op.</caption>
+      <thead><tr><th>Planner</th><th>dense</th><th>discovered</th><th>oracle</th></tr></thead>
+      <tbody>
+        <tr><td>QACM</td><td>&minus;0.111</td><td>&minus;0.412</td><td>&minus;0.285</td></tr>
+        <tr><td>CEM</td><td>&minus;0.161</td><td>&minus;0.263</td><td>&minus;0.176</td></tr>
+        <tr><td>MPPI</td><td>&minus;0.166</td><td class="disc">+0.170</td><td>&minus;0.326</td></tr>
+        <tr><td>MCTS</td><td>&minus;0.194</td><td>&minus;0.722</td><td>&minus;0.378</td></tr>
+        <tr><td>planner mean</td><td>&minus;0.158</td><td>&minus;0.307</td><td>&minus;0.291</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>7. Deconfounding test (multi-seed)</h2>
+  <p>
+    A per-KPI decomposition on a single seed shows the structured model ahead of the dense model at the
+    confounded KPIs&nbsp;6 and&nbsp;7 for three of four planners, with a large value for MPPI
+    (<span class="mono">+0.62</span>). This does not survive replication. Across five matched mitigation seeds,
+    with the seed as the unit of replication, the confounded-KPI differential (discovered&nbsp;&minus;&nbsp;dense)
+    has a 95% confidence interval that includes zero for every planner (Table&nbsp;4, Figure&nbsp;4): QACM
+    <span class="mono">+0.177 [&minus;0.10, +0.46]</span>, CEM <span class="mono">+0.000 [&minus;0.27, +0.27]</span>,
+    MPPI <span class="mono">+0.019 [&minus;0.04, +0.07]</span>. The single-seed MPPI value collapses to
+    <span class="mono">+0.02</span> across seeds and was itself not stable: re-evaluating the same seed with a
+    different planner set (MCTS removed) moves it to <span class="mono">+0.00</span>, so it was a property of the
+    sampled actions rather than of the structure. The QACM mean is carried by one seed
+    (<span class="mono">+0.56</span>); the remaining four average near <span class="mono">+0.08</span>.
+  </p>
+  <p>
+    What is consistent is the <em>sign</em> of the confounded-minus-clean differential: the structured model
+    does relatively better at the confounded KPIs than at the clean KPIs for all three planners
+    (<span class="mono">+0.264 / +0.133 / +0.043</span>). A clean-environment control agrees with this reading
+    in the negative: on Env&nbsp;I, which has no confounder, the structured model shows no per-KPI advantage
+    over the dense model under any planner (the differential is negative throughout). So the direction predicted
+    by the confounder hypothesis is present but the magnitude is small and not separable from zero on this
+    benchmark, whose confounded conflicts are single-xApp panels with roughly 30 samples each.
+  </p>
+  <figure>
+    <img src="fig2_confounder_ci.png" alt="Forest plot of the discovered-minus-dense realised-utility differential at the confounded KPIs with 95% confidence intervals for three planners, all intervals crossing zero, with the clean-KPI point to the left of zero">
+    <figcaption><b>Figure&nbsp;4.</b> Mean (discovered&nbsp;&minus;&nbsp;dense) realised utility at the confounded
+    KPIs&nbsp;{6,7} across five mitigation seeds, with 95% confidence intervals, per planner. Every interval
+    includes zero. The clean-KPI mean (square) sits below zero, so the confounded-minus-clean differential is
+    positive in sign, but the confounded advantage itself is not distinguishable from zero.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;4. Confounded-KPI differential (discovered&nbsp;&minus;&nbsp;dense) across five
+      mitigation seeds, MCTS excluded. Sign column counts seeds with a positive differential.</caption>
+      <thead><tr><th>Planner</th><th>confounded mean</th><th>95% CI</th><th>sign</th><th>clean mean</th><th>conf&minus;clean</th></tr></thead>
+      <tbody>
+        <tr><td>QACM</td><td>+0.177</td><td class="mono">[&minus;0.103, +0.457]</td><td>4/5</td><td>&minus;0.087</td><td>+0.264</td></tr>
+        <tr><td>CEM</td><td>+0.000</td><td class="mono">[&minus;0.273, +0.274]</td><td>3/5</td><td>&minus;0.133</td><td>+0.133</td></tr>
+        <tr><td>MPPI</td><td>+0.019</td><td class="mono">[&minus;0.035, +0.072]</td><td>4/5</td><td>&minus;0.025</td><td>+0.043</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <b>Planner robustness.</b> <code>ModelBasedMCTS</code> does not terminate on some mitigation seeds
+    (observed on mitigation seed&nbsp;1, first evaluation step): the three sampling planners complete the
+    conflict, then the MCTS call does not return. It is therefore excluded from the multi-seed set, and it was
+    also the planner whose single-seed confounded differential ran opposite to the other three. This is a
+    planner-implementation issue, independent of the causal question, and worth addressing on its own.
+  </p>
+
+  <h2>8. Limitations</h2>
+  <p>
+    The coordination gap and the needle surface are computed on the true simulator over grids that straddle the
+    interacting peak, so the one positive gap is understated rather than overstated, but it remains one
+    environment, one cell, and one block; no claim of generality follows, and coordinate ascent with restarts
+    reaches the same optimum. The block-recovery table treats the discovered graph as a fixed artifact; the
+    stability of the discovered partition across discovery seeds is not measured here. The decision-level
+    comparison in &sect;6 is a single seed. The multi-seed deconfounding test has five seeds with the seed as the
+    replication unit; five is a small sample, the intervals are correspondingly wide, and the confounded panels
+    are degenerate single-xApp conflicts, so the test bounds the effect as small rather than measuring it
+    precisely. Removing MCTS to run the multi-seed set shifts the shared random stream and therefore the
+    absolute utilities of the remaining planners; the differential is within-regime and unaffected in
+    direction, but the absolute values in &sect;7 are not comparable to the with-MCTS values in &sect;6. A fully
+    isolated deconfounding test would train a correlation-structured model whose predictor carries the spurious
+    edge; the current dense-versus-structured comparison differs in predictor family, not only in whether the
+    spurious association is representable.
+  </p>
+
+  <h2>9. Summary and open items</h2>
+  <p>
+    Neither candidate mechanism produces a robust decision-level advantage on the current environments, and the
+    two negative results share a cause. Block-coordination: a non-separable coordination structure exists on the
+    true coupling (Env&nbsp;I&nbsp;/&nbsp;train, <span class="mono">+2.224</span>), but it is localised, is
+    reachable without a dedicated joint solver, and is invisible to a planner using the discovered graph because
+    that graph omits the interacting edge. Deconfounding: the confounded-KPI advantage of the structured model
+    is not distinguishable from zero across five seeds, and only the sign of the confounded-minus-clean
+    differential is consistent. The decision-level model comparison and the 2026-08-25 gate both indicate no
+    aggregate structural advantage on these benchmarks.
+  </p>
+  <p>
+    The open items that follow from this are graph-recovery quality and benchmark structure. The coordination
+    result is bounded by discovery under-recovering couplings (Table&nbsp;1), so measuring and improving the
+    recovery of shared-parameter edges is the first lever; where the true coupling is non-separable, the
+    structure then carries a decision consequence the discovered graph currently misses. The deconfounding
+    result is bounded by the confounder being a single low-sample KPI pair; a benchmark with denser and
+    higher-sample confounded conflicts would give the mechanism a measurable test. The Env&nbsp;IV utility
+    shortfall remains an objective and planner matter (2026-08-27), separate from the structural question, and
+    the MCTS non-termination is a planner-implementation item. No change is built in this report; the direction
+    among these items is left to the reader.
+  </p>
+
+  <div class="foot">
+    CDD-ORAN &middot; 2026-08-28 &middot; delta on the 2026-08-27 Env&nbsp;IV reachability diagnosis and the
+    2026-08-25 decision gate &middot; post-hoc analysis on saved utilities plus matched re-evaluation of
+    existing checkpoints, no retraining &middot; sources: <code>blocks.py</code>,
+    <code>true_vs_disc_blocks.py</code>, <code>coord_gap.py</code>, <code>coord_gap_TRUE.py</code>,
+    <code>correlation_blocks_v2.py</code>, <code>kpi_decomp.py</code>, <code>multiseed_eval_nomcts.py</code>,
+    <code>multiseed_decomp.py</code> &middot; commit <code>e7534e1</code> (feat/v2, not pushed).
+  </div>
+
+</div>
+</body>
+</html>

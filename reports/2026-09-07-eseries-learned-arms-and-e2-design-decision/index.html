@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-series learned-arm de-risks and the E2 single-harm design decision (2026-09-07)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+  /* house gate variants (from the 2026-09-05 planner-redesign sister report) */
+  .gate.cut{border-left-color:var(--orac)} .gate.cut b{color:var(--orac)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .gate.acc{border-left-color:var(--accent)} .gate.acc b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>E-series learned-arm de-risks &amp; the E2 single-harm design decision</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-07</span> &nbsp;·&nbsp;
+    <span><b>Author:</b> internal@brihatech.com</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Status:</b> TRUTH-FREE DEV prototypes / analysis unless marked FROZEN &mdash; nothing here changes a frozen constant, mechanism, or gate.</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> FM-1/FM-2 objective re-validation (null), E4 deconfounding feasibility, and the E2 single-harm design decision + status ledger.</span>
+  </div>
+
+  <p class="abstract">This report records the 2026-09-07 layer on top of the E2 empirical record: two
+  learned-arm de-risks for the E-series decision pipeline (the objective-function fixes and E4
+  deconfounding), and the design decision that keeps E2 a single-harm atom. The through-line across all
+  three is that <b>discovery-completeness, not the objective or the planner, is the E-series lever</b>
+  &mdash; the objective fixes buy nothing here, while the deconfounding route that matters is an
+  interventional-identification one, not an objective knob. Everything below is a DEV prototype or
+  truth-free analysis; nothing frozen is changed.</p>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> Builds on the 2026-09-06 empirical record
+    (<code>2026-09-06-e2-discovery-method-and-livetrap.md</code>) and research direction
+    (<code>2026-09-06-e5-direction-and-causal-upgrade-synthesis.md</code>); those cover the discovery-method
+    arc, the operating-point redesign (<code>9d87a60</code>), the 3-arm thesis fire, and the stratified
+    P0&rarr;K5 recovery prototype (10/10) &mdash; not repeated here. <b>Supersedes / absorbs</b>
+    <code>2026-09-07-fm-objective-eseries-revalidation.md</code>,
+    <code>2026-09-07-e4-deconfound-feasibility.md</code>, and <code>2026-09-07-MORNING-BRIEFING.md</code>
+    (moved to <code>reports/archive/2026-09-07/</code>).
+  </div>
+
+  <div class="gate warn">
+    <b>Two null / feasibility results and one design decision.</b> (1) The legacy objective fixes
+    <b>FM-1/FM-2 do NOT transfer</b> to the E-series &mdash; a pre-declared &lambda;-sweep never improves
+    realized R. (2) E4 deconfounding is a <b>VIABLE but finite-sample-fragile</b> identification route: the
+    do-subset recovers <span class="mono">&alpha;=&minus;1</span> against a sign-flipped
+    <span class="mono">+3.30</span> pooled slope. (3) <b>E2 stays the clean single-harm atom</b>; the
+    method-breaking &ge;2-knob joint gate goes to E5 as the E2&times;E4 interaction. The through-line:
+    <b>discovery-completeness, not the objective/planner, is the E-series lever.</b>
+  </div>
+
+  <h2>1. FM-1 / FM-2 objective re-validation on the E-series &mdash; NULL</h2>
+  <p class="mut">Completes <code>plans/011</code> &sect;2 and <code>plans/012</code> step-1.</p>
+  <p>
+    Re-validation of the legacy objective-function fixes on the LIVE E-series objective
+    (<code>v2_regret.py</code> / <code>counterfactual_metrics.py</code>), truth-free, pre-declared &lambda;
+    grid. The legacy magnitudes were Env&nbsp;I&ndash;IV; this tested whether they transfer.
+  </p>
+  <figure>
+    <img src="fig1_fm1_lambda_sweep.png" alt="FM-1 utility_weight lambda-sweep realized R, showing no improvement">
+    <figcaption>
+      <b>Figure 1. FM-1 is a null on the E-series.</b> Realized R (<span class="mono">realized_pos</span>)
+      as the <code>utility_weight</code> &lambda; is swept over the pre-declared grid
+      <span class="mono">{0, 0.1, 0.25, 0.5}</span>. <b>Perfect world-model (teal):</b>
+      <span class="mono">&lambda;=0</span> already realizes the oracle (<span class="mono">norm_regret 0.0</span>);
+      &lambda;&gt;0 is flat then mildly harmful (<span class="mono">&minus;42.333 &rarr; &minus;42.379</span>).
+      <b>Decoy world-model (rust):</b> <span class="mono">&lambda;=0</span> regret 0.19; &lambda;&gt;0
+      strictly worse (<span class="mono">&minus;57.48 &rarr; &minus;58.01</span>). Only the
+      <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.5</span> endpoints are given in
+      the source and drawn as measured markers; the dashed segment is interpolation across the grid, not a
+      fabricated intermediate point. Neither line ever rises.
+    </figcaption>
+  </figure>
+  <ul>
+    <li><b>FM-1 (flat-objective / <code>utility_weight</code>) does NOT transfer.</b> The flat-hinge
+      structure the fix targets IS present on the E-series (13/64 committed states have a flat R-optimal
+      plateau with z-utility spread), but adding the <code>utility_weight</code> z-utility term never
+      improves realized R across <span class="mono">&lambda; &isin; {0, 0.1, 0.25, 0.5}</span>:
+      <ul>
+        <li>perfect world-model: <span class="mono">&lambda;=0</span> already realizes the oracle
+          (<span class="mono">norm_regret 0.0</span>); &lambda;&gt;0 flat then mildly harmful
+          (<span class="mono">realized_pos &minus;42.333 &rarr; &minus;42.379</span>).</li>
+        <li>decoy world-model: <span class="mono">&lambda;=0</span> regret 0.19; &lambda;&gt;0 strictly
+          worse (<span class="mono">&minus;57.48 &rarr; &minus;58.01</span>).</li>
+      </ul>
+      The legacy Env&nbsp;I gain (<span class="mono">&minus;0.083 &rarr; +0.303</span> at
+      <span class="mono">&lambda;=0.25</span>) does <b>not</b> reproduce. Mechanism: E-series realized R IS
+      the same clamped hinge (over-satisfaction is worth zero realized value by construction), and the
+      decision arm uses an analytic true/decoy world-model, not a learned/noisy ensemble whose error a
+      satisfaction margin could buffer.</li>
+    <li><b>FM-2 (OOD-trust penalty) is NOT measurable</b> on the current E-series decision arm: the
+      ensemble-disagreement signal requires an ensemble world-model, which the single analytic true/decoy
+      arm does not provide. Not built (user-gated module). Same &ldquo;world-model capability, not an
+      objective knob&rdquo; conclusion as FM-3.</li>
+  </ul>
+  <div class="gate cut">
+    <b>Consequence.</b> <code>plans/011</code> FM-1/FM-2 magnitudes are <b>legacy-only</b> &mdash; must not
+    be credited to the E-series. The <code>option-a-utility-weight-validated</code> memory is caveated
+    accordingly. This <em>completes</em> the <code>plans/012</code> step-1 gate as a null, and reinforces
+    the night&rsquo;s through-line: <b>discovery-completeness, not the objective/planner, is the E-series
+    lever.</b> (Prototype: scratchpad <code>fm_eseries/</code>.)
+  </div>
+
+  <h2>2. E4 deconfounding feasibility &mdash; VIABLE route</h2>
+  <p class="mut">Feasibility only; the scored gate arm remains user-gated.</p>
+  <p>
+    Truth-free feasibility check on the E4 DGP (<code>e4.py</code>): mechanism
+    <span class="mono">K_out = &alpha;&middot;A + &theta;&middot;Z + c</span> with
+    <span class="mono">&alpha;=&minus;1</span>, <span class="mono">&theta;=+2.5</span>, latent
+    <span class="mono">Z~N(0,1)</span> driving BOTH the clipped behavior policy
+    <span class="mono">A = clip(0.5 + &lambda;&middot;Z + &eta;)</span> (<span class="mono">&lambda;=1</span>)
+    AND the outcome &rarr; observational correlation is sign-flipped; <span class="mono">do()</span> draws
+    <span class="mono">A &perp; Z</span>, breaking the backdoor. 10 seeds:
+  </p>
+  <figure>
+    <img src="fig2_e4_deconfound.png" alt="E4 estimator slopes with confidence intervals, showing the sign-flip">
+    <figcaption>
+      <b>Figure 2. The confounding sign-flip, and the do-subset fix.</b> Estimated slope on
+      <span class="mono">A &rarr; K_out</span> for each estimator (95% CI where shown; 10 seeds). The
+      <span class="orac">correlational pooler</span> lands at <span class="mono">+3.30</span> &mdash; the
+      wrong sign, reproducing the frozen <span class="mono">+3.2916</span>. The
+      <span class="disc">deconfounded</span> estimator on the <span class="mono">D=1</span> interventional
+      subset lands at <span class="mono">&minus;1.04</span> with a CI that excludes 0, recovering true
+      <span class="mono">&alpha;=&minus;1</span> (dotted reference); the oracle backdoor
+      (<span class="mono">K~A+Z</span>) confirms <span class="mono">{Z}</span> is a valid backdoor.
+    </figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 1. E4 estimator comparison (10 seeds). Correlation flips the sign; the do-subset recovers it.</caption>
+      <thead><tr><th>estimator</th><th>slope on A&rarr;K_out</th><th>95% CI</th><th>verdict</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>correlational pooler (naive K~A on 90:10 pool)</td>
+          <td class="orac mono">+3.3046</td>
+          <td class="mono">[+3.29, +3.32]</td>
+          <td>reproduces frozen +3.2916 sign reversal (wrong sign)</td>
+        </tr>
+        <tr>
+          <td>deconfounded (K~A on D=1 interventional subset)</td>
+          <td class="disc mono">&minus;1.0423</td>
+          <td class="disc mono">[&minus;1.201, &minus;0.883]</td>
+          <td>CI excludes 0, recovers true &alpha;=&minus;1</td>
+        </tr>
+        <tr>
+          <td>oracle backdoor (K~A+Z; Z latent, reference)</td>
+          <td class="mono">&minus;1.0000</td>
+          <td class="mut">&mdash;</td>
+          <td>confirms {Z} is a valid backdoor</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gate warn">
+    <b>Honest caveat.</b> Per-seed deconfounded slope is noisy (<span class="mono">&minus;0.69&hellip;&minus;1.45</span>,
+    sd 0.26) because the <span class="mono">D=1</span> residual is <span class="mono">&theta;&middot;Z</span>
+    (var 6.25) over only ~2000 do-rows/seed; robustness comes from the multi-seed mean. <b>This under-power
+    explains the prior 5-seed &ldquo;not significant&rdquo; null</b> (<code>causal-planner-direction-explored</code>
+    memory) &mdash; the identification route is SOUND, just finite-sample fragile at low seed/n. The scored
+    E4 gate arm + matched corpus module remain user-gated (<code>GATE_CONTRACT_E4</code> defers them).
+    (Prototype: scratchpad <code>e4_feas/</code>.)
+  </div>
+
+  <h2>3. E2 design decision &mdash; keep the single-harm atom; place the method-breaker at E5</h2>
+  <p class="mut">User-approved.</p>
+  <p>
+    <b>Trigger:</b> verification that E2&rsquo;s mechanism equations (<code>e2.py</code>) are a
+    byte-for-byte copy of the retired legacy <code>env_ii.py</code> (adjacency identical); only the decoy
+    (omit <span class="mono">P0&rarr;K5</span>), the operating-point tuning (P6 width), and the latency/tape
+    infra are E2&rsquo;s own. E2 harms exactly ONE service (K5), while the design table says &ldquo;several
+    harmed xApps&rdquo;; <code>SPEC.md:241</code> had been trimmed to &ldquo;omits EXACTLY ONE edge
+    P0&rarr;K5&rdquo; (spec matched the code, not the table).
+  </p>
+  <p>
+    <b>Decision (after an 8-lens debate</b> &mdash; purist / conservative / construct-validity /
+    adversarial-realism / minimalism / discovery-difficulty / falsificationist / composition-first):
+    <b>keep E2 as the clean single-harm atom.</b> Do not rebuild, do not add several harms to E2.
+  </p>
+  <ul>
+    <li><b>Rationale:</b> E5 is built by <em>composing</em> E2+E3+E4; the &ldquo;several interacting
+      traps&rdquo; are meant to emerge from composition, and a single-axis E2 preserves failure-localization
+      (if composed E5 breaks, you can attribute the failure). Matches <code>SPEC.md</code> &ldquo;one stress
+      axis per env&rdquo; + &ldquo;E5 = composition only, no new mechanism.&rdquo; Avoids churning a
+      frozen/validated artifact and the cascade risk (gold-plating every stepstone &rarr; E5 never ships).</li>
+    <li><b>On provenance:</b> 7 of 8 lenses judged &ldquo;independence from Env&nbsp;II&rdquo; the
+      <b>wrong variable</b> &mdash; no result can see where the equations were authored. The user&rsquo;s
+      deeper instinct (E2 should honestly be its own thing) is served by fixing FRAMING, not rewriting
+      working equations.</li>
+    <li><b>Honesty fix &mdash; DONE, committed <span class="disc mono">ce426f5</span>:</b> added a
+      &ldquo;single harmed xApp is intentional, not a shortfall&rdquo; design note to the SPEC.md E2 section
+      (doc-only; no behavior/constant/gate change).</li>
+    <li><b>Integrity requirement, and where it goes (DECIDED):</b> the falsificationist +
+      discovery-difficulty lenses require the benchmark to contain a trap our new stratified-recovery method
+      CANNOT crack &mdash; a <b>&ge;2-knob joint gate</b> &mdash; else we grade ourselves to pass.
+      <b>Placement: at E5, as the E2&times;E4 interaction</b>, not in E2. E5 already composes E2&rsquo;s
+      shared knob with E4&rsquo;s action/confounder, so a jointly-gated harm is an <em>interaction of
+      validated parts</em> (spec-legal) rather than a new mechanism (which the spec would reject); it is
+      also exactly what E5 exists to test. Caveat for E5-build: the composition must be <em>deliberately
+      wired</em> to produce the joint gate (it won&rsquo;t by accident) and pre-committed that the current
+      method is expected to struggle there (no re-tune). Only if composition genuinely can&rsquo;t produce
+      it without a new equation do we face the fork (new env vs charter change). Not built yet.</li>
+    <li><b>Deferred, non-blocking (own conversation):</b> the adversarial-realism lens flagged that the
+      whole benchmark is abstract <span class="mono">exp(&minus;x&sup2;)</span> math with zero O-RAN
+      grounding (no transmit power / PRB / scheduling). Real external validity would need grounding in an
+      actual O-RAN trade-off; applies to E1&ndash;E5 equally.</li>
+  </ul>
+
+  <h2>4. Status ledger (as of 2026-09-07)</h2>
+  <div class="tbl">
+    <table>
+      <caption>Table 2. E-series status ledger.</caption>
+      <thead><tr><th>Item</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>E1 recovery</td><td class="disc">FROZEN, passing</td></tr>
+        <tr><td>E2 operating-point redesign (trap live, gap 0.190)</td><td class="disc">FROZEN <span class="mono">9d87a60</span></td></tr>
+        <tr><td>E2 single-harm design + spec honesty note</td><td class="disc">DECIDED + committed <span class="mono">ce426f5</span></td></tr>
+        <tr><td>E2 discovery (frozen RCoT-v2) recovers harmful P0&rarr;K5</td><td class="warn">0/10 (baseline can&rsquo;t) &mdash; FROZEN method</td></tr>
+        <tr><td>E2 stratified P0&rarr;K5 recovery</td><td>10/10, DEV PROTOTYPE (not frozen; promoting = user pre-reg)</td></tr>
+        <tr><td>E2 3-arm thesis end-to-end (live trap)</td><td class="disc">FIRED &mdash; DEV prototype on frozen scoring machinery</td></tr>
+        <tr><td>E3 multi-hop chain recovery</td><td>100% recall, DE-RISKED (noiseless; recheck at E5 noise); discovery freeze user-gated</td></tr>
+        <tr><td>E4 deconfounding identification</td><td>feasibility VIABLE; scored arm user-gated</td></tr>
+        <tr><td>FM-1/FM-2 objective on E-series</td><td class="warn">NULL &mdash; objective is not the lever</td></tr>
+        <tr><td>E5 (env + contract + gate)</td><td class="mut">NOT built; composition-only; user-gated</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>5. Open items (user-gated &mdash; not to be actioned autonomously)</h2>
+  <ul>
+    <li>Promote the stratified P0&rarr;K5 recovery to the live E2 discovery method (fresh pre-registration +
+      FP calibration study). Its known limits: single-co-parent gate only (untested on &ge;2-co-parent
+      AND-gates); null valid only because E2 is unconfounded (revisit for E4).</li>
+    <li>E3 discovery protocol freeze + <code>e3slice</code> module.</li>
+    <li>E4 scored trained-arm + matched-corpus module (may honestly be null at low budget &mdash; do not
+      tune Z/&lambda;).</li>
+    <li>E5 registration, wiring the E2&times;E4 method-breaker interaction per &sect;3.</li>
+    <li>(Bigger, separate) O-RAN grounding / external validity of the whole benchmark.</li>
+  </ul>
+
+  <div class="foot">
+    <p><b>Provenance.</b> All results are TRUTH-FREE DEV prototypes / analysis unless marked FROZEN; nothing
+    here changes a frozen constant, mechanism, or gate. Committed this cycle: SPEC.md E2 honesty note
+    <code>ce426f5</code> (doc-only). Prototypes live in scratchpad <code>fm_eseries/</code> (FM-1/FM-2) and
+    <code>e4_feas/</code> (E4 feasibility). Builds on <code>2026-09-06-e2-discovery-method-and-livetrap.md</code>
+    and <code>2026-09-06-e5-direction-and-causal-upgrade-synthesis.md</code>. Supersedes the three absorbed
+    2026-09-07 files moved to <code>reports/archive/2026-09-07/</code>. This report lives under the
+    gitignored <code>reports/</code> tree.</p>
+    <p><b>Figures.</b> <code>reports/2026-09-07-eseries-learned-arms-and-e2-design-decision/make_figs.py</code>
+    (matplotlib Agg, ~150 dpi). Numbers transcribed from this record; only measured values are drawn.</p>
+  </div>
+
+</div>
+</body>
+</html>

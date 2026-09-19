@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thread B — world-model off-gate generalization (E2-ID)</title>
+<style>
+  :root{--bg:#faf9f6;--card:#fff;--ink:#20242a;--soft:#5c6470;--line:#e6e3db;--good:#1f8a5b;--bad:#c0492f;
+    --acc:#3a5a8c;--amb:#b7791f;--accbg:#eaf0f8;--goodbg:#e8f5ee;--badbg:#faeae4;--ambbg:#faf1df;--mono:#f4f2ec}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px}
+  .wrap{max-width:860px;margin:0 auto;padding:44px 24px 100px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
+  .kick{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  h1{font-size:1.9rem;line-height:1.22;margin:8px 0 6px;letter-spacing:-0.01em}
+  .meta{color:var(--soft);font-size:.9rem}
+  h2{font-size:1.28rem;margin:44px 0 12px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-0.01em}
+  h3{font-size:1.05rem;margin:26px 0 8px}
+  p{margin:0 0 14px} strong{font-weight:650}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em;
+    background:var(--mono);padding:1px 5px;border-radius:4px}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--amb);
+    border-radius:10px;padding:18px 22px;margin:20px 0}
+  .verdict .tag{display:inline-block;background:var(--ambbg);color:var(--amb);font-weight:700;font-size:.75rem;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin:0 6px 8px 0}
+  .verdict .tag.bad{background:var(--badbg);color:var(--bad)}
+  .verdict p{margin:0;font-size:1.02rem}
+  figure{margin:22px 0;padding:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+  figcaption{color:var(--soft);font-size:.88rem;margin-top:8px;padding-left:2px}
+  table{border-collapse:collapse;width:100%;font-size:.86rem;margin:16px 0}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--mono);font-weight:650}
+  td.no{color:var(--bad);font-weight:600} td.yes{color:var(--good);font-weight:600}
+  .call{border-left:4px solid var(--acc);background:var(--accbg);padding:13px 18px;border-radius:0 8px 8px 0;margin:18px 0}
+  .call.amb{border-color:var(--amb);background:var(--ambbg)} .call.bad{border-color:var(--bad);background:var(--badbg)}
+  .call .k{font-weight:700;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc);
+    display:block;margin-bottom:4px} .call.amb .k{color:var(--amb)} .call.bad .k{color:var(--bad)}
+  ul,ol{margin:0 0 14px;padding-left:24px} li{margin:6px 0}
+  .foot{color:var(--soft);font-size:.84rem;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:620px){.two,.three{grid-template-columns:1fr}}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 15px}
+  .kv b{display:block;font-size:1.42rem;letter-spacing:-0.01em} .kv span{color:var(--soft);font-size:.83rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kick">CDD-ORAN · Thread B · E2-ID confirmatory characterization</div>
+  <h1>Thread B: does a context-conditioned action world-model make complete fan-out safe at finite occupancy?</h1>
+  <div class="meta">2026-09-19 · DEV / truth-free (nothing frozen or committed) · fresh disjoint B banks ·
+    40 seeds × 5 δ × 5 occupancies = 1,000 cells · pre-registered (PREDECLARE_B v3 + addendum A1–A10, sol
+    v4 = PROCEED) · reviewed by sol = <em>primary negative SOUND</em></div>
+</header>
+
+<div class="verdict">
+  <span class="tag">Partial win</span><span class="tag bad">Fails the registered bar</span>
+  <p><strong>The context-local action estimator (CL64) is a genuine partial improvement, but it does not
+  meet the pre-registered uniform strong-δ safety bar at any finite occupancy.</strong> CL64 captures the
+  in-gate action effect (large, growing decision benefit) and cuts off-gate collateral far below the
+  flat-kNN reference — passing the mechanism at moderate δ — but its incremental off-gate collateral rises
+  and <em>saturates above</em> the 0.02 bar by δ=1.6, so the mechanism headline is <strong>False at every
+  occupancy</strong>. End-to-end, the discovered complete arm is net-superior only at high occupancy. On this
+  fixed E2-ID bank, under the registered K0–K2 pipeline and planner, <strong>residual world-model off-gate
+  generalization remains the binding constraint</strong> — discovery is not.</p>
+</div>
+
+<div class="three" style="margin:18px 0">
+  <div class="kv"><b>0 / 4</b><span>finite-occupancy mechanism headlines pass (all require δ∈{0.8,1.6,3.2})</span></div>
+  <div class="kv"><b>800 / 1000</b><span>cells where M3 discovers the harmful edge P0→K5 (100% where δ material)</span></div>
+  <div class="kv"><b>0.0</b><span>max|Δ| on 3-cell bit-exact re-run (spot-verify); manifest fail-closed OK</span></div>
+</div>
+
+<h2>1. What Thread B tests (and why)</h2>
+<p>Thread A (the gated decision-MDE study, 2026-09-15) established that complete causal fan-out prevents the
+harmful shared-knob action <em>where it is active</em>, but the net all-deployment benefit is
+occupancy-dependent and washes out at low occupancy because the learned world-model inflicts off-gate
+collateral. A pilot diagnostic isolated the mechanism: a flat k-NN K5 model mixes the <em>action</em> axis
+(P0) with <em>context</em> (P6,P7), so sweeping P0 shifts which neighbours are selected and injects fake
+off-gate P0-dependence. Thread B is the <strong>confirmatory</strong> test of a candidate fix.</p>
+<ul>
+  <li><strong>(i) Mechanism (forced-parent track {0,6,7}):</strong> does a context-conditioned action-effect
+  estimator (<strong>CL64</strong> = pick 64 neighbours by context P6,P7 only, then a local OLS of K5 on P0)
+  reduce the <em>incremental</em> off-gate collateral versus its own slope-0 twin, while retaining in-gate
+  benefit?</li>
+  <li><strong>(ii) End-to-end (M3-discovered track):</strong> is the discovered CL64 arm net non-inferior to
+  the incomplete (omit) arm <em>and</em> positively attributable to safely carrying P0, at finite occupancy?</li>
+</ul>
+<p>Both are <strong>fixed-B-bank confirmatory</strong> claims (uncertainty over the discovery draw conditional
+on the frozen S_eval-B), not population or E5 claims.</p>
+
+<div class="call">
+  <span class="k">Method discipline</span>
+  Fresh disjoint banks (B_DISC 500000–500039; B_DEPLOY 600000–616383; off-sample RNG 700002). Pre-registered
+  success (frozen before scoring): <code>EQ=TOL=IN_ABS=0.02</code>, <code>IN_REL=0.50</code>,
+  <code>NI=0.01</code>, <code>FRAC=0.80</code>; headline = AND over strong δ {0.8,1.6,3.2}; paired seed
+  bootstrap n=10000. Anchors B-A0…B-A4 verified pre-score (primary CL anchors exact; B-A0 col-13 and
+  secondary-ANISO B-A4 carry documented waivers — see §5). Frozen A-machinery (SCM, M3, regret) reused
+  byte-identical; deploy metric uses the fresh realized occupancy occ_B[q].
+</div>
+
+<h2>2. Mechanism result — the safety bar</h2>
+<figure>
+  <img src="fig1_mech_heatmap.png" alt="Off-gate collateral heatmap">
+  <figcaption>Fig 1 — Incremental off-gate collateral (dOff) per occupancy × trap strength. Green = under the
+  0.02 bar. A blue box marks a cell that passes MECH_cell (mean and bootstrap-U95 ≤ 0.02 and ≥80% of seeds).
+  Only one <em>strong</em>-δ cell passes (q=5%, δ=0.8); no occupancy passes all three strong δ.</figcaption>
+</figure>
+<p>CL64’s incremental off-gate collateral stays under the 0.02 bar only at moderate trap strength. At δ≥1.6 it
+exceeds the bar at every occupancy (q=5%: 0.027→0.028; q=10%: 0.032→0.034; q=20%: 0.047→0.049), and the seed
+fraction <code>frac_M</code> collapses to ~0 in all six q≥5%, δ≥1.6 cells. The shape is <strong>nonlinear,
+increasing, and saturating by δ≈1.6</strong> (not super-linear). Because the headline requires passing at all
+of {0.8,1.6,3.2}, the mechanism verdict is <strong>fail at every occupancy</strong>.</p>
+
+<figure>
+  <img src="fig2_partial_win.png" alt="Partial win: in-gate benefit vs off-gate collateral">
+  <figcaption>Fig 2 — The two halves of the partial win. Right: CL64 delivers large, growing in-gate decision
+  benefit (benA reaches 0.10–0.16) — it captures the action effect. Left: but off-gate collateral crosses the
+  0.02 bar and saturates. A useful estimator in-gate that is not yet safe off-gate.</figcaption>
+</figure>
+
+<div class="call amb">
+  <span class="k">Is the negative an EQ artifact?</span>
+  No. Off-gate truth is injection-free, so for a fixed q the off-gate reward surface and its normalization do
+  not change with δ — the growth of collateral reflects <em>changed learned decisions</em>, not a scaling of
+  the metric. The strong-δ failures are substantial (not boundary rounding), and the EQ / strong-δ AND was the
+  stated bar; changing it now would define a new claim. Two boundary-sensitive cells are disclosed
+  (q=2%/δ=1.6 mean 0.0216; q=10%/δ=0.8 U95 0.0204 with frac_M 0.55).
+</div>
+
+<h2>3. End-to-end result — occupancy dependence</h2>
+<figure>
+  <img src="fig3_endtoend_occupancy.png" alt="End-to-end occupancy dependence">
+  <figcaption>Fig 3 — Net benefit of the discovered complete arm versus the incomplete (omit) baseline. Left:
+  at finite occupancy it falls below the −0.01 non-inferiority line as the trap strengthens. Right: averaged
+  over strong δ, the arm is strongly positive at 100% occupancy (+0.17) and monotonically worse as the danger
+  zone gets rarer — the same occupancy-conditional crossover the E5 decision was scoped around.</figcaption>
+</figure>
+<p>The end-to-end headline is <strong>False at all finite occupancy</strong> (net vs omit turns negative as
+off-gate collateral dominates deploy at low occupancy). <strong>q=100% is a REFERENCE row</strong> (off-gate is
+NOT_APPLICABLE; never a B-success cell per PREDECLARE_B §4) — its strong positive values (+0.13…+0.18) are
+reference evidence of in-gate efficacy, not a success. Discovery is reliable: M3 declares P0→K5 in 800/1000
+cells (100% wherever δ is material; the 200 non-declarations are δ=0 / tiny-δ cells, correctly dispatched to
+the omit arm).</p>
+
+<h2>4. Secondary model classes (descriptive)</h2>
+<figure>
+  <img src="fig4_secondary_classes.png" alt="Secondary class comparison">
+  <figcaption>Fig 4 — Off-gate collateral by model class. ANISO (down-weight P0 ×0.1 in the similarity metric)
+  has the lowest collateral of all classes, though it still breaches 0.02 at the strongest δ. CL256 (more
+  neighbours) over-fits; GOLS (global OLS) is unstable and runs off-scale (0.18–0.58).</figcaption>
+</figure>
+<p>Descriptive only (no pass/fail, no multiplicity). <strong>ANISO is the interesting lead</strong> for a
+future estimator — e.g. q=20%/δ=0.8: ANISO 0.003 vs CL64 0.031; q=10%/δ=1.6: ANISO 0.014 vs CL64 0.032 — but
+it is not itself a confirmatory winner at δ=3.2 and must not be promoted on B. It is a hypothesis generator for
+a fresh-bank test.</p>
+
+<h2>5. Verification and adversarial review</h2>
+<p><strong>Reproducibility:</strong> 3 cells re-run from scratch equal the stored records bit-exact
+(<code>max|Δ|=0.0</code>). Manifest <code>b8c1aa4dfe96</code> fail-closed verify OK; all 1000 records carry it.
+The figures above are recomputed <em>live</em> from the raw records by <code>make_figs.py</code>; the headline
+booleans match the scorer.</p>
+<p><strong>sol adversarial review</strong> (<code>sol_B_result_review.md</code>): the primary forced-track
+mechanism negative is <strong>sound</strong> — no gate/evaluation leakage, correct signs and occupancy
+weighting, forced track insulated from discovery and from the A3 defect. sol flagged conformance / reporting
+defects that do <em>not</em> touch the primary negative but bound the end-to-end certification:</p>
+<ul>
+  <li><strong>A3 rollout not literal for <code>bad_disc</code> seeds:</strong> the discovered CL path uses the
+  cached K0–K2 grids instead of recomputing them with the arm-specific / common warm-up. Measured incidence:
+  <strong>2/40 seeds (500029, 500030)</strong>. It perturbs only discovered <code>netOmit</code> for those two
+  seeds (netNull / benA cancel K0–K2; the forced track uses oracle K0–K2 and is unaffected), and 2/40 cannot
+  flip an all-strong-δ headline failing by wide margins. Conclusion robust; literal EE certification needs a
+  bounded rescore.</li>
+  <li><strong>T2 diagnostics incomplete:</strong> CL256/GOLS/ANISO fields are in the records (curves emitted
+  here), but the A9 H-* 2×2 factorial and the §5 spurious-P0-sensitivity / held-out-error diagnostics were
+  never built into the harness and are absent.</li>
+  <li><strong>Anchor waivers:</strong> B-A0 relaxed <code>&lt;1e-9 → 1e-4</code> on col-13 cells (benign —
+  independently traced to a stale stored record; the current pipeline reproduces bit-exact); B-A4 ANISO argmax
+  0.49 accepted as co-maximal ties, and no per-scored-cell CPU-reference check ran. Primary CL anchors passed
+  strictly.</li>
+  <li><strong>Provenance:</strong> manifest omits <code>b_run_sweep.py</code> and <code>b_score.py</code>
+  (scratchpad untracked, so the dirty-diff hash does not cover them).</li>
+</ul>
+
+<h2>6. Interpretation (scoped)</h2>
+<p>The sharp, defensible claim: <strong>CL64’s learned P0 dependence does not generalize safely off-gate at the
+registered decision operating points.</strong> The residual off-gate collateral is <em>real operational
+collateral</em> of this learned K5 action model under this planner, not a scoring illusion. The broader
+"the world-model is the binding constraint" reading is licensed only with qualifiers: <strong>CL64 K5 action
+model, fixed K0–K2 pipeline, fixed planner, fixed E2-ID B bank</strong> — not all world-model classes (ANISO
+shows estimator class matters), and this is E2-ID evidence <em>consistent with</em>, not independent proof of,
+the occupancy-conditional E5 rationale.</p>
+
+<h2>7. Numeric appendix</h2>
+<p><strong>Mechanism (forced CL64):</strong> incremental off-gate collateral, bootstrap upper bound, seed
+fraction. Bold δ are the strong set; MECH requires mean ≤ 0.02 <em>and</em> U95 ≤ 0.02 <em>and</em> frac ≥ 0.80.</p>
+<table>
+<thead><tr><th>occ</th><th>δ=0.4</th><th>δ=0.8</th><th>δ=1.6</th><th>δ=3.2</th></tr></thead>
+<tbody>
+<tr><td>2%</td><td>.0027 / .12 / .00</td><td>.0110 / .00</td><td>.0216 / .33</td><td>.0244 / .12</td></tr>
+<tr><td>5%</td><td>.0055 / .82</td><td class="yes">.0167 / .95 ✓</td><td>.0270 / .00</td><td>.0281 / .00</td></tr>
+<tr><td>10%</td><td>.0055 / 1.0</td><td>.0197 / .55</td><td>.0317 / .00</td><td>.0337 / .00</td></tr>
+<tr><td>20%</td><td>.0084 / 1.0</td><td>.0306 / .00</td><td>.0471 / .00</td><td>.0485 / .00</td></tr>
+</tbody>
+</table>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Cells show mean dOff / frac_M (δ=0.4 also lists
+U95 where near-bound). The single strong-δ pass is q=5%/δ=0.8.</p>
+
+<p><strong>End-to-end (discovered CL64):</strong> net vs omit / net vs own null / seed fraction N. EE requires
+both nets ≥ −0.01 (with bootstrap bound) and frac_N ≥ 0.80.</p>
+<table>
+<thead><tr><th>occ</th><th>δ=0.8</th><th>δ=1.6</th><th>δ=3.2</th></tr></thead>
+<tbody>
+<tr><td>2%</td><td>−.0059 / .53</td><td>−.0173 / .20</td><td>−.0212 / .17</td></tr>
+<tr><td>5%</td><td>−.0116 / .35</td><td>−.0215 / .00</td><td>−.0239 / .00</td></tr>
+<tr><td>10%</td><td>−.0064 / .85</td><td>−.0172 / .05</td><td>−.0205 / .03</td></tr>
+<tr><td>20%</td><td class="yes">+.0024 / .85</td><td>−.0100 / .82</td><td>−.0150 / .65</td></tr>
+<tr><td>100% (ref)</td><td>+.1731 / 1.0</td><td>+.1807 / 1.0</td><td>+.1626 / 1.0</td></tr>
+</tbody>
+</table>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Cells show mean netOmit / frac_N. No finite-q cell
+clears all three strong δ. q=100% is a reference row, not a success. Full per-cell values in
+<code>figures_data.json</code>.</p>
+
+<h2>8. What next (open — user decision)</h2>
+<ol>
+  <li><strong>Bounded conformance erratum</strong> (optional, does not change the verdict): implement the A3
+  rollout literally, record <code>bad_disc</code>/<code>needs_ref</code>, rescore the 2 affected seeds on the
+  same frozen bank with an independent scorer, and emit the H-* / sensitivity diagnostics. Conformance to the
+  registered method, not tuning.</li>
+  <li><strong>Then either close Thread B</strong> — "confirmatory negative for CL64 uniform strong-δ safety;
+  partial decision benefit; residual off-gate generalization prevents low-occupancy deployment safety on this
+  E2-ID bank" — and fold it into the occupancy-conditional world-model-bottleneck record; <strong>or
+  pre-register one fresh C-bank</strong> test of a regularized / ANISO-motivated action-effect estimator, with
+  every constant unchanged and frozen before scoring (the discriminating prediction: keep CL64-scale in-gate
+  benefit while holding dOff and its U95 ≤ 0.02 at all strong δ).</li>
+</ol>
+<p>Do not retune EQ/NI/FRAC/the strong-δ set/k on B; do not add δ points to hunt a boundary. If no
+independently-motivated estimator can make that prediction, the sharper decision is to stop iterating in E2-ID
+and fold the corrected negative into the record.</p>
+
+<div class="foot">
+  Raw run: <code>scratchpad/design_adaptive_m3/gated_mde_B_records/</code> (1000 cells) ·
+  <code>b_result.json</code>, <code>b_result_secondary.json</code>, <code>b_bad_disc_incidence.json</code>,
+  <code>b_spot_verify.json</code>, <code>sol_B_result_review.md</code>, <code>b_run_manifest.json</code>
+  (content b8c1aa4dfe96). Figures regenerated live from the raw records by <code>make_figs.py</code> →
+  <code>figures_data.json</code>. DEV / truth-free; nothing frozen, committed, or promoted. reports/ is
+  gitignored by repo convention.
+</div>
+
+</div>
+</body>
+</html>

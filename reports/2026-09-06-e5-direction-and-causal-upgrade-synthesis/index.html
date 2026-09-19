@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E5 direction and the "going-causal" question — research synthesis (2026-09-06)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+  /* house gate variants (from the 2026-09-05 planner-redesign sister report) */
+  .gate.cut{border-left-color:var(--orac)} .gate.cut b{color:var(--orac)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .gate.acc{border-left-color:var(--accent)} .gate.acc b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>E5 direction &amp; the &ldquo;going-causal&rdquo; question &mdash; research synthesis</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-06</span> &nbsp;·&nbsp;
+    <span><b>Author:</b> internal@brihatech.com</span> &nbsp;·&nbsp;
+    <span><b>Status:</b> consolidated decision brief (gitignored)</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> read-only research synthesis &mdash; changes no frozen code and reads no env truth. Informs FUTURE fresh pre-registrations, which are the user&rsquo;s call.</span>
+  </div>
+
+  <div class="rel">
+    <b>Supersedes (absorbed, moved to <code>reports/archive/2026-09-06/</code>).</b>
+    <code>2026-09-06-causal-upgrade-synthesis.md</code> + lanes <code>-methods.md</code>,
+    <code>-systems.md</code>, <code>-theory.md</code>; and
+    <code>2026-09-06-e5-direction-synthesis.md</code> + lanes <code>-causal-representation.md</code>,
+    <code>-structure-roadmap.md</code>, <code>-effect-quantification.md</code>. Two waves of parallel
+    research lanes are folded here: an E2-scoped &ldquo;should we go causal?&rdquo; 3-lane pass (methods /
+    systems / theory) and an E5-first re-framing 3-lane pass (representation / structure-roadmap /
+    effect-quantification). Where the two waves disagree, the disagreement is surfaced in &sect;1 &mdash;
+    the second wave is an explicit self-correction of the first. Empirical results referenced here
+    (RCoT-v2, live-trap redesign, end-to-end thesis, E3 chain de-risk, P0&rarr;K5 recovery) live in the
+    companion record <code>reports/2026-09-06-e2-discovery-method-and-livetrap.md</code>.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    RCoT-v2 is a solid E2 building block, and <b>for E2 recovery the fashionable causal-orientation
+    upgrade is mostly redundant</b> &mdash; temporal order and causal sufficiency give it for free. But
+    measured against the real goal <b>E5</b> &mdash; <em>does complete causal fan-out let a planner reject
+    a locally-attractive-but-globally-harmful shared-knob action?</em> &mdash; the next move is not a
+    fancier discovery algorithm. It is (1) the never-run thesis end-to-end on E2, now shown to fire in
+    prototype, hardened into a real pipeline, and (2) the <b>multi-intervention world model</b>
+    (do-propagation on discovered structure, signed, later deconfounded) that the shared-knob decision
+    actually needs. The genuinely useful discovery upgrades (tiered low-order skeleton; determinism-native
+    functional support) and a GPU-accelerated frozen RCoT are safe and reusable, but not the critical
+    path.
+  </p>
+
+  <h2>1. The headline, and the yardstick correction it depends on</h2>
+  <p>
+    The first (E2-scoped) synthesis judged &ldquo;go causal&rdquo; against E2 edge-recovery and answered
+    <b>&ldquo;mostly redundant.&rdquo;</b> The second synthesis judged it against the <b>END GOAL E5</b>
+    and reached a different emphasis. Both are kept; the correction is the point.
+  </p>
+  <ul>
+    <li><b>E2-scoped verdict.</b> For E2, the &ldquo;genuine causality&rdquo; machinery &mdash; PC/FCI
+      orientation, colliders, v-structures, Markov-equivalence classes, and every FCM orientation method
+      (ANM/PNL/LiNGAM/IGCI) &mdash; is <span class="warn">largely REDUNDANT</span>, because two properties
+      E2 has for free remove the need: <b>direction is known</b> (temporal order <span class="mono">t&rarr;t+1</span>
+      orients every edge &mdash; the one thing every FCM method exists to provide) and <b>causal
+      sufficiency holds</b> (params are independent exogenous roots; no latent confounders &rarr; FCI&rsquo;s
+      latent machinery is overkill). This verdict is <em>correct for E2 recovery</em> and is re-affirmed
+      in &sect;2.</li>
+    <li><b>E5-first correction.</b> Judging against E2 recovery was the <b>wrong yardstick</b> for the
+      project&rsquo;s actual thesis. E5 is <em>&ldquo;does complete causal fan-out let a planner reject a
+      locally-attractive-but-globally-harmful shared-knob action?&rdquo;</em> Against that, the real levers
+      are <span class="disc">completeness, signed interventional effects, deconfounding, and a
+      multi-intervention world model</span> &mdash; not orientation. This reframes, rather than
+      contradicts, the E2 verdict.</li>
+  </ul>
+  <p>
+    A second explicit self-correction, on effect estimation: the first wave dismissed the user&rsquo;s
+    Tencent/RAPIDS links as &ldquo;effect estimation, NOT structure discovery &mdash; wrong family.&rdquo;
+    The effect-quantification lane judged that <b>E2-discovery-myopic</b>: effect estimation is a
+    <b>first-class part of E5</b> (see &sect;4). The sharper true reason those specific tools stay
+    unadopted is <b>regime</b> (big-data confounded-ATE scalers vs a &le;14-node known-mechanism SCM),
+    not family.
+  </p>
+
+  <h2>2. What &ldquo;going causal&rdquo; does and does NOT buy &mdash; per component</h2>
+  <p>
+    E2 structure (from specs + <code>discovery_rcot.py</code>): 8 exogenous mutually-independent params
+    (DAG roots), 6 KPIs each a deterministic noiseless nonlinear (Gaussian-bump) function of a param
+    subset; candidates per KPI target = 14 (8 params + 6 lagged KPIs); 16 true param&rarr;KPI edges;
+    <b>all 36 lagged KPI&rarr;KPI candidates are true-negatives</b> (KPIs are pure functions of
+    <em>current</em> params, no autoregression). Three graph facts dominate: every edge is oriented by
+    time; no latent confounders; deterministic KPIs are terminal sinks.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Per-component verdict for E2, grounded in E2/E5 structure.</caption>
+      <thead><tr><th>Component</th><th>Verdict for E2</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Skeleton phase &mdash; tiered low-order (PC-stable) conditioning</td>
+          <td class="disc">The one real prize</td>
+          <td>Removes all 68 true-negative cells at order 0 / low order (marginal RCoT is trivially
+            calibrated + well-powered there), keeps the 16 true edges (a genuine parent has no separating
+            set), and sidesteps the exact <span class="mono">block_perm&times;BH</span> resolution artifact
+            that forced RCoT-v1&rarr;v2 &mdash; all with far less high-dim kernel regression than one full
+            13-D test per edge.</td>
+        </tr>
+        <tr>
+          <td>v-structure / collider / Meek / CPDAG orientation</td>
+          <td class="warn">Buys nothing</td>
+          <td>E2 is full of colliders (<span class="mono">P_i&rarr;K&larr;P_j</span>) but all are already
+            oriented by time; no undirected edge is left for Meek. CPDAG collapses to the true DAG once the
+            skeleton is known.</td>
+        </tr>
+        <tr>
+          <td>FCI (latent confounders, PAG)</td>
+          <td class="warn">Buys nothing for E2</td>
+          <td>Causal sufficiency holds. Relevant only as latent <em>detection</em> at E4/E5 &mdash; and
+            even there gives a bidirected edge with <b>no sign</b>.</td>
+        </tr>
+        <tr>
+          <td>Error control</td>
+          <td>Our per-target BH-FDR is the <em>stronger</em> story</td>
+          <td>Plain PC is an &alpha;-cascade with no graph-level guarantee and is order-dependent (use
+            PC-stable). Adopting a PC skeleton <b>costs</b> the clean BH-FDR guarantee unless FDR is
+            re-added on the skeleton tests &mdash; a genuine trade-off, not a strict win.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Determinism &mdash; the honest caveat</h3>
+  <p>
+    PC/FCI assume faithfulness, which determinism violates (<span class="mono">Y=f(S)</span> &rArr; extra
+    CIs not from d-separation). But the canonical failure (a determined node with a child gets its true
+    out-edge wrongly deleted) <b>does not arise on E2</b> &mdash; determined KPIs are terminal sinks.
+    Empirically (companion record &sect;2.3) determinism did <b>not</b> cost power on true edges (raw power
+    ~80%; the tested parent is not in Z so its contribution survives residualization); it bit as
+    <b>co-parent KPI&rarr;KPI false positives</b> (sibling KPIs share params), which a genuine conditional
+    test controls. Score-based (GES) is <b>not</b> a drop-in for noiseless E2 (zero residual variance
+    &rArr; degenerate BIC). The NeurIPS-2024 determinism-aware DGES and DPC are roadmap ideas for
+    <em>denser later</em> envs, not E2.
+  </p>
+  <h3>The two upgrades that emerged (both new science &rarr; fresh pre-reg, truth-free prototype first)</h3>
+  <p class="mut">
+    Bar for both = beat RCoT-v2&rsquo;s ~0.7 recall / ~0.01 FP on the byte-faithful test-bed with strictly
+    lower-dim conditioning.
+  </p>
+  <ul>
+    <li><b>(A) Tiered PC-stable skeleton search</b> over the frozen RCoT oracle (conditioning order
+      &le;2&ndash;3), keeping per-target BH-FDR on top. Reference pattern: <b>causal-learn</b> (MIT,
+      pluggable <code>CIT</code>, tiered background knowledge, Windows/NumPy-clean); the skeleton loop is
+      ~40 lines &mdash; adopt the pattern, not the library. <code>tigramite</code>/PCMCI is the native
+      time-series twin (GPLv3).</li>
+    <li><b>(B) Determinism-native functional-support / Markov-boundary discovery</b> &mdash; exploit
+      noiselessness: <span class="mono">H(Y|S)=0</span> exactly when <span class="mono">S &supe;</span>
+      true parents. Subsumes RCoT; where it should win is the ~30% of true edges RCoT misses (low-amplitude
+      / width-param edges) and robustness as later envs add real KPI&rarr;KPI edges. Non-starters ruled out
+      with the violated assumption: ANM/PNL (need noise; degenerate at zero noise; produce orientation we
+      have), LiNGAM (needs linearity), IGCI (bivariate orientation + invertible <span class="mono">f</span>;
+      our KPIs are many-to-one), plain PC (harmed by determinism-faithfulness).</li>
+  </ul>
+  <p>
+    <b>Supplied arXiv links, identified and judged off-target:</b> <span class="mono">1705.09031</span>
+    (MNAR test-wise-deletion FCI &mdash; we have no missingness; only genuine thread is that its author,
+    Strobl, also authored RCoT); <span class="mono">1502.02454</span> (parallel-PC scalability &mdash; we
+    have 14 nodes). Neither touches determinism.
+  </p>
+
+  <h2>3. Systems / GPU &mdash; the batched-RCoT plan and the staging rule</h2>
+  <ul>
+    <li><b>Both user links are effect-estimation, wrong for structure discovery.</b> Tencent
+      fast-causal-inference (DML/ATE over ClickHouse/StarRocks SQL) and the NVIDIA RAPIDS blog (cuML
+      RandomForest inside DoubleML) learn <em>effects given a graph</em>, not the graph. Do not adopt for
+      discovery.</li>
+    <li><b>GPU structure-discovery prior art = learn-from, not adopt.</b> cuPC and gpucsl are GPU PC
+      skeletons but hard-code a <b>Gaussian partial-correlation CI test in CUDA</b> (Fisher-Z &mdash;
+      exactly RCoT&rsquo;s blind spot), Linux/CuPy-only. cuPC GPL-3 stale; gpucsl MIT but Linux-only. Learn
+      the parallelization scheme (pairs &times; conditioning-sets as batch axes).</li>
+    <li><b>Closest match = Bloomberg <code>causal-ts</code></b> (PyTorch, ships GPU-accelerated RCOT
+      driving PC/PCMCI+), cross-platform &rarr; Windows-viable &mdash; but <b>GPL-3.0-or-later</b> (a
+      genuine gate: reading for design is free, vendoring makes our tree GPL).</li>
+    <li><b>Adopt <code>causal-learn</code></b> (py-why, MIT, pluggable RCOT/KCI CI, p-value caching) as the
+      CPU skeleton host / correctness oracle for a PC-with-RCoT prototype.</li>
+    <li><b>Build call:</b> the object to batch on GPU <em>is our RCoT</em> (RFF residualization + block-perm
+      null), not a stock Gaussian test, so <b>build the batched GPU-RCoT in torch ourselves</b> (fits 4&nbsp;GB
+      comfortably &mdash; RFF tensors ~4000&times;25; the embarrassingly-parallel 299-perm null is the ideal
+      GPU workload and the current CPU bottleneck), keep the PC skeleton on CPU. Cloud GPU only for the full
+      multi-seed sweep / E4&ndash;E5 blowup.</li>
+  </ul>
+  <div class="gate acc">
+    <b>Staging rule (matches freeze discipline).</b> (a) GPU-accelerate the <b>existing frozen RCoT-v2</b>
+    behind a <code>device=</code> flag with an <b>equivalence gate</b> (GPU masks == CPU masks,
+    bit-for-decision) &rarr; behavior-identical &rArr; <b>no re-freeze</b>, pure systems; (b) the method
+    upgrades (&sect;2 A/B, PC skeleton) are <b>new science</b> &rArr; fresh pre-reg + adversarial review.
+    <b>Do (a) first &mdash; it de-risks (b).</b> Determinism of the GPU oracle (pinned RNG, fixed reduction
+    order / fp64 accumulation, documented device) is a freeze requirement, and validating GPU==CPU on E2
+    seed-0 is the single biggest correctness risk. Nondeterminism sources: GPU atomics/reductions + the RFF
+    RNG.
+  </div>
+  <div class="gate warn">
+    <b>GPU-port tension (flagged, unresolved by measurement).</b> Plan <code>010</code> recommends
+    <em>against</em> GPU-porting RCoT (tiny RFF dims, overhead-bound, already ~3&ndash;10&nbsp;min/seed)
+    &mdash; but that verdict is scoped to E2&rsquo;s single-full-Z, 84-test design. A tiered skeleton search
+    issues far more, lower-order CI tests, and E3/E5 want larger n / more reps under noise, which plausibly
+    <b>flips</b> the economics toward batched GPU-RCoT as the oracle. Resolve by measuring test-count
+    &times; per-test cost under the skeleton design, not under E2&rsquo;s &mdash; do not inherit E2&rsquo;s
+    scoping by accident.
+  </div>
+
+  <h2>4. E5 = an effect-quantification-for-decision problem; the load-bearing blocker is the world model</h2>
+
+  <h3>4.1 What E5 is (grounded in <code>SPEC.md:556-599</code>)</h3>
+  <p>
+    E5 is the <b>composition capstone &mdash; no new equations</b>: an E2 shared-control fan-out block + an
+    E3 temporal KPI&rarr;KPI chain + an E4 latent-<span class="mono">Z</span> confounding block +
+    <b>moderate observation noise ON</b>, scored by <b>aggregate AND worst-case regret, ID and OOD</b>
+    (common support-shift rule, SEMANTICS &sect;7). Gating discipline: each sub-mechanism must pass its own
+    SCM + decision-gap + control gate <b>before</b> E5; a collapse-under-composition is itself a legitimate
+    integration-negative result.
+  </p>
+  <p>
+    The shared-knob decision is <b>definitionally an effect-magnitude/sign question</b>. E2&rsquo;s decoy
+    omits <b>exactly one fan-out edge P0&rarr;K5</b> and therefore mispredicts <span class="mono">do(P0=v)</span>&rsquo;s
+    effect on K5 as zero &mdash; the trap <em>is</em> an effect-estimation error, not (only) a discovery
+    failure (decoy and oracle score the identical panel; only the predicted K5 effect differs).
+    &ldquo;Globally harmful&rdquo; = the <span class="mono">v</span> maximizing the incomplete-fan-out
+    objective differs from the <span class="mono">v</span> maximizing the complete-fan-out one, because the
+    omitted term flips the aggregate:
+  </p>
+  <div class="eq">R = &minus;[ &Sigma; w_i &middot; dist_i &middot; s  &minus;  (&Sigma; ok_i)&sup2; ]</div>
+  <p>E3 sharpens the same shape across time; E5 adds worst-case + confounding.</p>
+
+  <h3>4.2 The four things E5 needs &mdash; and the one blocker they all point at</h3>
+  <ol>
+    <li><b>CI edge oracle</b> &mdash; RCoT-v2. <span class="disc">Have it</span> (E2 solid).</li>
+    <li><b>Completeness</b> &mdash; recover the full oriented fan-out incl. <b>real multi-hop lagged
+      KPI&rarr;KPI chains</b> first appearing at E3 (<span class="mono">P0&rarr;K0&rarr;K1&rarr;{K2,K3}</span>).
+      RCoT was validated only to <em>reject</em> KPI&rarr;KPI, <b>never to recover</b> it &mdash; flagged as
+      the sharpest unbuilt risk. <span class="disc">Now DE-RISKED</span> by the E3 chain-recovery study
+      (recall 1.00 / precision 1.00 / 0 FP, both FULL and low-order conditioning; over-conditioning hazard
+      refuted) &mdash; but only at E3&rsquo;s noiseless operating point; re-validate under E5 noise
+      (companion record &sect;9).</li>
+    <li><b>Signed interventional effects</b> &mdash; RCoT is a <em>test</em>, not an estimator. <b>E4 proves
+      correlation gets the SIGN catastrophically wrong</b> (pooled observational slope
+      <span class="orac">+3.29</span> vs true <span class="mono">&alpha;=&minus;1</span>; a robust reversal,
+      not knife-edge). Time does not orient this (both A and K_out same-transition-lagged); identification
+      comes only from the <b>randomized-interventional (do) subset</b>. Needs structural do-propagation
+      &rarr; a world model.</li>
+    <li><b>Deconfounding</b> &mdash; E4&rsquo;s latent <span class="mono">Z</span> (never a param/KPI;
+      observed adjacency only <span class="mono">(K0,P0)</span>), identified only from the do-subset. Least-
+      built, highest-risk; <b>a null is a legitimate boundary result</b> (prior 5-seed deconfounding tests
+      had all CIs including 0). Do not tune <span class="mono">Z</span>/&lambda; upward to manufacture a
+      gap.</li>
+  </ol>
+  <div class="gate acc">
+    <b>The load-bearing blocker = a multi-intervention WORLD MODEL</b> (do-propagation on discovered,
+    possibly-confounded, multi-hop structure &rarr; signed KPI effects). Three lanes <b>and</b> three memory
+    threads converge: <code>cma-es-gate-falsified</code> (block-covariance buys nothing; the +4.82
+    coordination win is oracle-only and model-OOD because the shipped model was fit on single-param
+    interventions), <code>planner-set-redesign-direction</code> (&ldquo;the planner is NOT the bottleneck
+    &hellip; the real fix = world-model multi-intervention capability&rdquo;),
+    <code>causal-planner-direction-explored</code>. <code>rollout.py</code> already does complete-fan-out
+    do-propagation <b>on the TRUE simulator</b> (the oracle answer); the missing piece is doing it on
+    <b>discovered/learned</b> structure &mdash; extend the one-step learned predictor
+    (<code>cdl.py:640</code>) to multi-step interventional rollout that chains predicted KPIs through
+    discovered KPI&rarr;KPI edges. <b>The fan-out quantification IS the world model the planner queries.</b>
+    QACM (and CID, which is deterministically &equiv; QACM today) is a <b>fixed market baseline
+    (third-party), not &ldquo;our&rdquo; planner.</b>
+  </div>
+
+  <h3>4.3 What &ldquo;going causal&rdquo; does NOT mean here (so we don&rsquo;t chase fashion)</h3>
+  <ul>
+    <li><b>Orientation machinery is redundant THROUGH E5</b> &mdash; architecture-level fact:
+      <span class="mono">k_t=f(p_{t-1},k_{t-1})</span> (<code>base.py:83,108</code>) forbids within-step
+      KPI&rarr;KPI edges, so <b>all</b> fan-out is lagged and time-orients for free, even at E3+. Colliders
+      exist but are pre-oriented; no Meek step ever runs. The gap is <b>completeness, not orientation.</b></li>
+    <li><b>FCI</b> matters only as latent <em>detection</em> (bidirected edge, no sign); the <b>sign comes
+      from the interventional subset E4 provides</b>, not from FCI. It is a flag, never the solver.</li>
+    <li><b>Determinism-native / ANM / LiNGAM / IGCI are redundant toward E5</b> &mdash; E5 turns noise ON
+      (killing the determinism regime AND, with Gaussian <span class="mono">Z</span>/noise, the
+      non-Gaussianity lever), and time already gives direction.</li>
+    <li><b>Big-data effect scalers (RAPIDS/DoubleML, Tencent) &mdash; right family, WRONG regime.</b> They
+      scale confounded ATE to millions of rows; we have a &le;14-node, known-mechanism, mostly-unconfounded
+      SCM. The relevant reference is <b>DoWhy-GCM</b> (fit SCM + propagate <span class="mono">do</span>
+      through the graph = exactly the fan-out quantification; <span class="mono">arXiv:2206.06821</span>) as
+      a <em>pattern</em> (our simulator already hands us mechanisms and <code>rollout.py</code> already
+      propagates &mdash; use it as the learned-arm estimator + a refutation-vocabulary harness, not a
+      wholesale dependency). <b>EconML/DML scoped to E4&rsquo;s confounded block only</b> (recover
+      <span class="mono">&alpha;=&minus;1</span> against the <span class="mono">+3.29</span> pooled slope),
+      and even there identification leans on the randomized subset.</li>
+  </ul>
+
+  <h2>5. Build order (convergent across both waves)</h2>
+  <ul>
+    <li><b>Stage 0 (systems, now):</b> GPU-accelerate the frozen RCoT-v2 (equivalence gate, no re-freeze).
+      Resolve the plan-010 GPU-port tension by measurement against the skeleton design (&sect;3).</li>
+    <li><b>Stage 1 &mdash; the missing spine:</b> wire <b>discovered-structure &rarr; world-model &rarr;
+      planner &rarr; decision END-TO-END on E2</b> so the thesis is finally exercised. <span class="disc">This
+      has now been done</span> as a DEV prototype and the thesis FIRED (companion record &sect;5); the
+      enduring build task is to replace the structure-ablation world model with the <b>multi-step learned
+      interventional world model</b> on discovered structure (<code>cdl.py:640</code> one-step &rarr;
+      multi-step chaining).</li>
+    <li><b>Stage 2 (E3):</b> build <code>e3slice</code>; recover the multi-hop KPI&rarr;KPI chain (the
+      true-negative&rarr;true-positive flip &mdash; de-risked, recall 1.00 noiseless); tiered PC-stable
+      low-order conditioning carried forward.</li>
+    <li><b>Stage 3 (E4):</b> deconfounding via the interventional subset (EconML/DML there); signed
+      effects.</li>
+    <li><b>Stage 4 (E5):</b> noise-robust re-calibration of the CI null + BH resolution, composition,
+      aggregate + worst-case ID/OOD scoring. No new mechanism may enter.</li>
+    <li><b>Critical path = completeness + signed-effects/world-model + confounding</b> &mdash; NOT
+      orientation, NOT determinism-exploitation. Joint/multi-param intervention prediction is what closes
+      the OOD gap that keeps the +4.82 coordination win oracle-only today.</li>
+  </ul>
+  <div class="gate warn">
+    <b>Do NOT add benchmark noise to E2 to &ldquo;simulate&rdquo; E5</b> &mdash; counter-productive, risks a
+    gameable benchmark (Reisach et al., &ldquo;Beware of the Simulated DAG!&rdquo;,
+    <span class="mono">arXiv:2102.13647</span>), and disables the sharp determinism-native signal. Make the
+    <em>method</em> noise-ready; let E5 turn noise on via its config sweep as specified.
+  </div>
+
+  <h2>6. Bottom line</h2>
+  <p>
+    RCoT-v2 is a solid E2 building block, and for E2 recovery the fashionable causal-orientation upgrade is
+    mostly redundant (time + sufficiency give it free). But measured against the real goal E5, the next
+    move is <b>not a fancier discovery algorithm</b>. It is (1) the never-run thesis end-to-end on E2
+    &mdash; now shown to fire in prototype &mdash; hardened into a real pipeline, and (2) the
+    <b>multi-intervention world model</b> (do-propagation on discovered structure, signed, later
+    deconfounded) that the shared-knob decision actually needs. Discovery feeds it; it is the lever three
+    prior threads already named. The genuinely useful discovery upgrades (tiered low-order skeleton;
+    determinism-native functional support) and the GPU-accelerated frozen RCoT are safe, reusable, but not
+    the critical path.
+  </p>
+
+  <div class="foot">
+    <p><b>Provenance.</b> Read-only research synthesis; changes no frozen code and reads no env truth.
+    Informs future fresh pre-registrations (the user&rsquo;s call). Empirical results referenced
+    (RCoT-v2, live-trap redesign <code>9d87a60</code>, end-to-end thesis, E3 chain de-risk, P0&rarr;K5
+    recovery) live in the companion record
+    <code>reports/2026-09-06-e2-discovery-method-and-livetrap.md</code>. Supersedes the six absorbed
+    lane/synthesis files moved to <code>reports/archive/2026-09-06/</code>. This report lives under the
+    gitignored <code>reports/</code> tree.</p>
+  </div>
+
+</div>
+</body>
+</html>

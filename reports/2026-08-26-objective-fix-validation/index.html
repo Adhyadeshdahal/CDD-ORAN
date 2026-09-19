@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Objective-fix validation (2026-08-26)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.62rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .up{color:var(--disc); font-weight:600}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Implementation and planner-level validation of the standardized-utility objective term (Env&nbsp;I&nbsp;/&nbsp;III&nbsp;/&nbsp;IV)</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-08-26</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> e7534e1</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> planner-level re-evaluation, no retraining</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior report.</b> This is a delta on <em>2026-08-25 — Decision-level de-confounding of
+    the causal-graph utility gate</em>. That report established two results that are unchanged and not
+    repeated here: (i) under a matched decision set with paired seeds, the oracle (true-adjacency)
+    world-model structure gives no material decision-level advantage over the discovered structure, so a
+    structure learner is not indicated (the &ldquo;STOP&rdquo; verdict); and (ii) the absolute QACM utility
+    is negative on Env&nbsp;I and Env&nbsp;IV, which that report decomposed into a model-exploitation
+    component and a structure-independent objective component. The objective modification proposed in
+    §5 of that report is implemented and validated here. All results below reuse the existing trained
+    checkpoints; only the planner/evaluation stage was re-run.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    We implement the objective modification proposed in the 2026-08-25 report and validate it at the
+    planner level. The modification adds a standardized-utility term, scaled by a scalar
+    <span class="mono">&lambda;</span> (<code>utility_weight</code>), to the per-member cost of the QACM
+    planner; at <span class="mono">&lambda;=0</span> the planner is bit-identical to the prior version.
+    On Env&nbsp;I the term increases the mean QACM utility from <b>&minus;0.083 to +0.303</b>
+    out-of-distribution and from <b>&minus;0.073 to +0.224</b> in-distribution, and it increases both the
+    satisfaction rate and the 10th-percentile utility. The effect saturates over
+    <span class="mono">&lambda;&isin;[0.1,0.5]</span>; <span class="mono">&lambda;=0.25</span> was selected
+    using only Env&nbsp;III and the in-distribution range, with no reference to the Env&nbsp;I/IV
+    out-of-distribution utility. On Env&nbsp;III and Env&nbsp;IV every reported quantity is bit-identical
+    at <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.25</span>, because their
+    decisions rarely enter the satisfied region on which the term acts; the residual negative utility of
+    Env&nbsp;IV is therefore not addressed by this modification. Under the matched-decision-set gate, the
+    oracle&minus;discovered utility gap remains non-material on all three environments at
+    <span class="mono">&lambda;=0.25</span>, so the 2026-08-25 STOP verdict is unchanged.
+  </p>
+
+  <h2>1. Background</h2>
+  <p>
+    The 2026-08-25 report identified a structure-independent cause of the negative planner utility. The
+    QACM per-member cost sums a hinge distance to each xApp&rsquo;s satisfaction threshold and a discrete
+    satisfaction bonus. Once an xApp is satisfied, its hinge distance is clamped to zero, so the cost
+    becomes indifferent to how far above threshold the utility sits. Because the argmin scan keeps the
+    first candidate encountered among equal-cost candidates, the planner does not climb toward the
+    reachable utility ceiling once a conflict is nominally satisfied. That report proposed (its §5,
+    &ldquo;Option&nbsp;A&rdquo;) to restore a utility gradient in the satisfied region by adding a small
+    signed-utility term to the per-member cost, and left the implementation and validation to a
+    subsequent step. This report is that step.
+  </p>
+
+  <h2>2. Methods</h2>
+
+  <h3>2.1 The standardized-utility term</h3>
+  <p>
+    For a candidate scored by ensemble member <span class="mono">m</span>, let
+    <span class="mono">u_i</span> be the standardized (z-scored) utility of xApp <span class="mono">i</span>
+    already computed for the distance and satisfaction logic, <span class="mono">d_i</span> the hinge
+    distance, <span class="mono">s_i&isin;{0,1}</span> the satisfaction indicator,
+    <span class="mono">w_i</span> the weight, and <span class="mono">&tau;</span> the scaling term. The
+    per-member cost becomes
+  </p>
+  <div class="eq">cost_m = &Sigma;_i w_i&middot;d_i&middot;&tau; &minus; (&Sigma;_i s_i)&sup2; &minus; &lambda; &middot; &Sigma;_i sign_i&middot;u_i ,&nbsp;&nbsp; sign_i = +1 (direction 0), &minus;1 (direction 1)</div>
+  <p>
+    The utility <span class="mono">u_i</span> is not direction-normalized, so the explicit
+    <span class="mono">sign_i</span> reproduces the direction convention of the existing satisfaction
+    rule: subtracting <span class="mono">&lambda;&middot;sign_i&middot;u_i</span> lowers the cost for
+    higher utility when direction&nbsp;0 (maximiser) and for lower utility when direction&nbsp;1
+    (minimiser). The term is added <em>inside</em> each member&rsquo;s cost, before the risk-averse
+    quantile aggregator, so the aggregator still reduces over utility-inclusive per-member totals; the
+    objective does not become an expected-utility objective. The term is present on every scoring path
+    (the vectorized path, the reference path, and the single-member paths of QACM and MCTS). The weight
+    <span class="mono">utility_weight</span> defaults to <span class="mono">0.0</span>; a byte-level check
+    over the full candidate grid confirms that <span class="mono">&lambda;=0</span> reproduces the prior
+    cost exactly. The change is committed as <code>e7534e1</code> on <code>feat/v2</code>. A defect on the
+    MCTS single-member path (the term was initially omitted there) was found in review and corrected
+    before commit; a regression test covers it.
+  </p>
+
+  <h3>2.2 Leakage-free selection of &lambda;</h3>
+  <p>
+    Because the utilities are standardized, <span class="mono">&lambda;</span> is dimensionless and
+    comparable across environments. We swept <span class="mono">&lambda;&isin;{0,0.1,0.25,0.5}</span> and
+    selected the value using only (i) Env&nbsp;III, the environment with positive utility that must not
+    regress, and (ii) the in-distribution parameter range, where model error is small. The Env&nbsp;I and
+    Env&nbsp;IV out-of-distribution utilities were not consulted during selection. The selected value was
+    then applied unchanged to the out-of-distribution evaluations.
+  </p>
+
+  <h3>2.3 No-regression protocol</h3>
+  <p>
+    We re-ran the matched-decision-set gate of the 2026-08-25 report at the selected
+    <span class="mono">&lambda;</span>. The gate installs the true-adjacency enumeration graph as the
+    conflict set for both the discovered and oracle arms (identical decision counts: 300&nbsp;/&nbsp;690&nbsp;/&nbsp;570
+    for Env&nbsp;I&nbsp;/&nbsp;III&nbsp;/&nbsp;IV), uses the quantile aggregator, and pairs seeds. The
+    decision rule is unchanged: the oracle structure is judged to have a material advantage only if the
+    paired oracle&minus;discovered utility gap is positive and exceeds the across-seed spread; otherwise
+    the STOP verdict holds. The <span class="mono">&lambda;=0</span> arm is bit-identical to the prior
+    code, so the 2026-08-25 gate values serve as the <span class="mono">&lambda;=0</span> baseline.
+  </p>
+
+  <h2>3. Results</h2>
+
+  <h3>3.1 Selection: in-distribution saturation and Env&nbsp;III invariance</h3>
+  <p>
+    On Env&nbsp;I in-distribution, the utility reaches its full value at
+    <span class="mono">&lambda;=0.1</span> and is flat thereafter
+    (<span class="mono">+0.224 / +0.224 / +0.227</span> at <span class="mono">&lambda;=0.1&nbsp;/&nbsp;0.25&nbsp;/&nbsp;0.5</span>);
+    the satisfaction rate and lower tail are identical across these values. On Env&nbsp;III in-distribution
+    the utility is invariant to <span class="mono">&lambda;</span> (<span class="mono">&minus;0.1028</span>
+    at all four values). Selection is thus insensitive within
+    <span class="mono">[0.1,0.5]</span>; we set <span class="mono">&lambda;=0.25</span> as the mid-range
+    value. The insensitivity itself limits any dependence of the conclusions on the chosen value.
+  </p>
+
+  <h3>3.2 Env&nbsp;I</h3>
+  <p>
+    On Env&nbsp;I the term increases the mean QACM utility in both regimes and does not reduce the lower
+    tail or the satisfaction rate (Table&nbsp;1). The <span class="mono">&lambda;=0</span> values reproduce
+    the 2026-08-25 baselines (out-of-distribution <span class="mono">&minus;0.083</span>, in-distribution
+    <span class="mono">&minus;0.073</span>) to the reported precision.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;1. Env&nbsp;I, discovered graph, quantile aggregator, seed&nbsp;0, self-enumeration (n&nbsp;=&nbsp;270 decisions). Utility is a z-score with 0&nbsp;=&nbsp;no-op.</caption>
+      <thead><tr><th>Regime</th><th>QACM mean, &lambda;=0</th><th>QACM mean, &lambda;=0.25</th><th>sat. rate</th><th>tail p10</th></tr></thead>
+      <tbody>
+        <tr><td>Out-of-distribution</td><td>&minus;0.083</td><td class="up">+0.303</td><td>0.42 &rarr; 0.58</td><td>&minus;1.475 &rarr; &minus;0.890</td></tr>
+        <tr><td>In-distribution</td><td>&minus;0.073</td><td class="up">+0.224</td><td>0.52 &rarr; 0.62</td><td>&minus;1.526 &rarr; &minus;0.896</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="fig1_objfix_utility.png" alt="Env I QACM mean utility versus lambda, and per-environment utility at lambda=0 and 0.25">
+    <figcaption><b>Figure&nbsp;1.</b> Left: Env&nbsp;I QACM mean utility as a function of
+    <span class="mono">&lambda;</span> for the in-distribution and out-of-distribution ranges; the utility
+    rises at small <span class="mono">&lambda;</span> and then saturates. Right: QACM mean utility at
+    <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.25</span> for
+    Env&nbsp;I&nbsp;/&nbsp;III&nbsp;/&nbsp;IV out-of-distribution; only Env&nbsp;I changes.</figcaption>
+  </figure>
+
+  <h3>3.3 Environment-selectivity and mechanism</h3>
+  <p>
+    On Env&nbsp;III and Env&nbsp;IV every reported quantity is bit-identical at
+    <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.25</span> (Table&nbsp;2). The
+    term changes a decision only when candidates lie in the satisfied region, where the hinge distance is
+    clamped and the cost is otherwise flat. For unsatisfied candidates the existing distance term already
+    increases with utility in the same direction, so the added term reinforces the existing ordering
+    rather than changing the argmin. The magnitude of the effect therefore tracks the satisfaction rate:
+    it is large where satisfied candidates are common (Env&nbsp;I, rate 0.42&ndash;0.52) and zero where they
+    are rare (Env&nbsp;III and Env&nbsp;IV, rate 0.13&ndash;0.24), as shown in Figure&nbsp;2.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;2. Env&nbsp;III and Env&nbsp;IV, discovered graph, quantile aggregator, seed&nbsp;0. All cells are identical at &lambda;=0 and &lambda;=0.25.</caption>
+      <thead><tr><th>Cell</th><th>QACM mean, &lambda;=0</th><th>QACM mean, &lambda;=0.25</th><th>sat. rate</th></tr></thead>
+      <tbody>
+        <tr><td>Env III, in-distribution</td><td>&minus;0.103</td><td>&minus;0.103</td><td>0.24</td></tr>
+        <tr><td>Env III, out-of-distribution</td><td>+0.121</td><td>+0.121</td><td>0.13</td></tr>
+        <tr><td>Env IV, out-of-distribution</td><td>&minus;0.140</td><td>&minus;0.140</td><td>0.16</td></tr>
+        <tr><td>Env IV, in-distribution</td><td>&minus;0.412</td><td>&minus;0.412</td><td>0.22</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="fig2_mechanism.png" alt="Change in QACM utility from lambda=0 to 0.25 versus satisfaction rate, across environments and regimes">
+    <figcaption><b>Figure&nbsp;2.</b> Change in mean QACM utility from
+    <span class="mono">&lambda;=0</span> to <span class="mono">&lambda;=0.25</span>, against the
+    satisfaction rate at <span class="mono">&lambda;=0</span>, for each environment and regime. The change
+    is non-zero only for the two Env&nbsp;I cells, whose satisfaction rates are the highest; the four cells
+    with satisfaction rate below&nbsp;0.25 are unchanged. This is consistent with a term that acts only in
+    the satisfied region of the objective.</figcaption>
+  </figure>
+
+  <h3>3.4 No-regression under the matched-decision-set gate</h3>
+  <p>
+    At <span class="mono">&lambda;=0.25</span> the oracle&minus;discovered gap is non-material on all three
+    environments, so the STOP verdict is unchanged (Table&nbsp;3, Figure&nbsp;3). On Env&nbsp;III and
+    Env&nbsp;IV the gate is bit-identical to the <span class="mono">&lambda;=0</span> baseline, as expected
+    from §3.3. On Env&nbsp;I both arms increase relative to the baseline (discovered
+    <span class="mono">&minus;0.218&rarr;+0.013</span>, oracle <span class="mono">&minus;0.318&rarr;+0.041</span>,
+    four paired seeds); the gap moves from <span class="mono">&minus;0.100&plusmn;0.133</span> to
+    <span class="mono">+0.028&plusmn;0.086</span>. The sign of the Env&nbsp;I gap changes, but its magnitude
+    remains below the across-seed spread, so it is not material and the verdict does not change.
+    Env&nbsp;III&rsquo;s positive utility does not regress.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table&nbsp;3. Matched-decision-set gate, quantile aggregator, oracle enumeration on both arms. Gap = oracle&nbsp;&minus;&nbsp;discovered mean QACM utility; spread is the across-seed standard deviation. Env&nbsp;I uses four paired seeds; Env&nbsp;III/IV are bit-identical to the &lambda;=0 baseline.</caption>
+      <thead><tr><th>Env</th><th>gap, &lambda;=0</th><th>gap, &lambda;=0.25</th><th>decisions</th><th>verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Env I</td><td>&minus;0.100 &plusmn; 0.133</td><td>+0.028 &plusmn; 0.086</td><td>300</td><td>STOP</td></tr>
+        <tr><td>Env III</td><td>&minus;0.090 &plusmn; 0.186</td><td>&minus;0.090 &plusmn; 0.186</td><td>690</td><td>STOP</td></tr>
+        <tr><td>Env IV</td><td>+0.042 &plusmn; 0.056</td><td>+0.042 &plusmn; 0.056</td><td>570</td><td>STOP</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="fig3_matched_gate.png" alt="Oracle minus discovered utility gap with paired-seed spread, at lambda=0 and lambda=0.25, per environment">
+    <figcaption><b>Figure&nbsp;3.</b> Matched-decision-set oracle&minus;discovered utility gap, with the
+    across-seed spread, at <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.25</span>.
+    Every interval includes zero, so no gap is material and the STOP verdict holds at both weights. Only
+    Env&nbsp;I shifts with <span class="mono">&lambda;</span>; Env&nbsp;III and Env&nbsp;IV are unchanged.</figcaption>
+  </figure>
+
+  <h3>3.5 Disagreement-penalty sensitivity</h3>
+  <p>
+    Separately from the objective term, we re-checked the ensemble-disagreement penalty in-distribution on
+    Env&nbsp;I (existing checkpoint, no retraining). With the penalty active the mean utility moves from
+    <span class="mono">&minus;0.073</span> to <span class="mono">+0.190</span> and the satisfaction rate
+    increases by 0.10. The penalty therefore also helps in-distribution, not only out-of-distribution as
+    reported earlier. This is a sensitivity observation; the penalty coefficient was not fixed per
+    environment. An environment-agnostic coefficient, calibrated on the train-range disagreement scale,
+    remains future work.
+  </p>
+
+  <h2>4. Interpretation</h2>
+  <p>
+    The objective term corrects the structure-independent component of the negative utility on Env&nbsp;I
+    and is inert elsewhere. Because the term acts only in the satisfied region, its effect is scoped to
+    environments in which conflicts are frequently satisfied; it is regression-safe on the others by
+    construction. A lexicographic tie-break (Option&nbsp;B in the prior design) would act on the same
+    satisfied region and would therefore also leave Env&nbsp;III and Env&nbsp;IV unchanged; it is not
+    indicated by these results. The decision-level conclusion of the 2026-08-25 report is preserved: a
+    perfect graph confers no material advantage under a matched decision set, at both
+    <span class="mono">&lambda;=0</span> and <span class="mono">&lambda;=0.25</span>.
+  </p>
+
+  <h2>5. Limitations and open items</h2>
+  <ul>
+    <li>
+      <b>Env&nbsp;IV is not corrected.</b> Its negative utility is unchanged by the objective term, and its
+      in-distribution utility (<span class="mono">&minus;0.412</span>) is lower than its
+      out-of-distribution utility (<span class="mono">&minus;0.140</span>). A more accurate model does not
+      account for the shortfall, so the cause is neither the satisfied-region flatness addressed here nor
+      out-of-distribution model exploitation alone. The prior out-of-distribution penalty sweep also did
+      not improve Env&nbsp;IV (<span class="mono">&minus;0.140</span> to <span class="mono">&minus;0.161</span>).
+      The candidate next lever is the soft-satisfaction objective (Option&nbsp;C), which removes the
+      threshold clamp entirely; it introduces one scale hyperparameter and is a larger change, so it is
+      left as an explicit decision rather than adopted here.
+    </li>
+    <li>
+      <b>Seed coverage.</b> The single-cell utilities in Tables&nbsp;1&ndash;2 are seed&nbsp;0. The matched
+      gate uses four paired seeds for Env&nbsp;I; Env&nbsp;III and Env&nbsp;IV are reported as bit-identical
+      to the four-seed <span class="mono">&lambda;=0</span> baseline rather than re-run, because the term
+      does not alter their decisions.
+    </li>
+    <li>
+      <b>Fast evaluation.</b> All evaluations reduce the MCTS simulation count for speed; this does not
+      affect QACM, whose per-planner common-random-number seeding makes it independent of the MCTS budget.
+    </li>
+  </ul>
+
+  <h2>6. Reproducibility</h2>
+  <p>
+    Code change: commit <code>e7534e1</code> (<code>feat/v2</code>), adding <code>utility_weight</code> to
+    the planner configuration and the term to <code>cost.py</code>, <code>qacm.py</code>,
+    <code>mcts.py</code>, and the aggregator plumbing; 82 CPU tests pass. Evaluations are planner-level
+    re-runs of the checkpoints listed in the 2026-08-25 report, via <code>cdd_oran.cli evaluate</code> with
+    per-cell copied configurations and, for the gate, <code>--enum-source oracle</code>. Numeric source:
+    <code>.temp/new_arch/reports/task2_objfix_results.md</code>. This report and its figures are stored
+    under <code>reports/</code> and are untracked, consistent with the project convention.
+  </p>
+
+  <div class="foot">
+    CDD-ORAN &middot; 2026-08-26 &middot; delta on the 2026-08-25 decision-gate report &middot;
+    planner-level re-evaluation, no retraining &middot; commit <code>e7534e1</code> (feat/v2, not pushed).
+  </div>
+
+</div>
+</body>
+</html>

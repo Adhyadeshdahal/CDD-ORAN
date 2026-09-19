@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discovery-method scout — E2 / E3 / E4 (2026-09-05)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Discovery-method scout &mdash; E2 / E3 / E4</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;&middot;&nbsp;
+    <span><b>Date:</b> 2026-09-05</span> &nbsp;&middot;&nbsp;
+    <span><b>Author:</b> autonomous research subagent (during the E2 overnight run)</span> &nbsp;&middot;&nbsp;
+    <span><b>Status:</b> research note (gitignored, archival) &mdash; <b>nothing here has been applied</b></span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to the frozen E2 run.</b> The frozen E2 discovery run
+    (<code>protocol_commit 828e345</code>, U-centered partial distance correlation) is <b>untouched</b> &mdash;
+    swapping its method would break the anti-p-hacking freeze. This note exists to inform a <b>future</b>
+    protocol decision, which is the user's call. <span class="mut">(Historical marker: the fork below was
+    later taken &mdash; RCoT was pre-registered and frozen as RCoT-v1/v2; see the 2026-09-06 E2
+    discovery-method record. This note is preserved as the scouting input that preceded that decision.)</span>
+  </div>
+
+  <p class="abstract">
+    A survey of scalable label-free conditional-independence tests for the E2/E3/E4 discovery slices,
+    produced during the E2 overnight run. The pivotal finding: the frozen E2 method
+    (<span class="mono">|pdCor|</span> + per-candidate 999-permutation null + BH-FDR) is
+    <b>memory-bandwidth-bound</b> &mdash; <span class="mono">O(N&sup2;)</span> distance matrices &times; 999
+    permutations &times; 84 candidates &times; 10 seeds &rarr; <b>~5&ndash;18 days</b> on this box &mdash;
+    whereas a <b>randomized-Fourier kernel CI test (RCoT/RCIT)</b> answers the <em>same</em> scientific
+    question (nonlinear conditional dependence, non-monotonic + scale channels) at <b>linear-N with an
+    analytic null &mdash; no O(N&sup2;), no permutations</b>. Because no E2 truth had yet been examined,
+    registering a faster method <em>before</em> any truth would remain anti-p-hacking clean. The note lays
+    out that fork and the per-slice method options; nothing was applied.
+  </p>
+
+  <h2>The one decision this raises</h2>
+  <p>
+    The frozen E2 method (<span class="mono">|pdCor|</span> + per-candidate 999-permutation null + BH-FDR)
+    is <b>memory-bandwidth-bound:</b> <span class="mono">O(N&sup2;)</span> distance matrices &times; 999
+    permutations &times; 84 candidates &times; 10 seeds &rarr; <b>~5&ndash;18 days on this box</b>. The
+    scout found that a <b>randomized-Fourier kernel CI test (RCoT/RCIT)</b> would answer the <em>same</em>
+    scientific question (nonlinear conditional dependence, non-monotonic + scale channels) at <b>linear-N
+    with an analytic null &mdash; no O(N&sup2;), no permutations</b>.
+  </p>
+  <p>
+    Because <b>no E2 truth has been examined yet</b>, registering a faster method <em>now</em> would still
+    be anti-p-hacking clean (the freeze discipline forbids changing the method <em>after</em> seeing
+    results, not before). So there is a legitimate fork:
+  </p>
+  <ul>
+    <li><b>(A) Complete the frozen pdCor run as-is</b> &mdash; preregistered, honest, but slow (days).</li>
+    <li><b>(B) Register a new scalable protocol (RCoT primary, WGCM cross-check) BEFORE any truth</b>,
+      freeze it, then run &mdash; hours not days, same scientific claim.</li>
+  </ul>
+  <div class="gate" style="border-left-color:var(--warn)">
+    <b style="color:var(--warn)">Scientific-integrity-sensitive call &mdash; belongs to the user.</b>
+    Default tonight = keep the frozen run going (what was asked). Recommendation for the morning: seriously
+    consider (B), because the current method's cost is a <b>hardware artifact, not a scientific
+    requirement</b> &mdash; but only if a fresh freeze + adversarial review is done properly first.
+  </div>
+
+  <h2>E2 &mdash; nonlinear conditioning (non-monotonic P0&sup2;, width-in-denominator)</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>method</th><th>fit</th><th>catch / cost</th><th>practicality @ scale</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="disc">RCoT / RCIT<br><span class="mut">(RFF approx of KCIT; arXiv:1702.03877)</span></td>
+          <td>Kernel test sees non-monotonic &amp; scale dependence; conditions jointly on the 13 candidates as a real CI test</td>
+          <td>RFF variance; asymptotic null needs calibration</td>
+          <td><b>Best fit. Linear-N, no O(N&sup2;), no 999 permutations (analytic null).</b> Removes the bottleneck</td>
+        </tr>
+        <tr>
+          <td>Weighted-GCM / GFCM<br><span class="mut">(arXiv:2111.04361; arXiv:2608.15332)</span></td>
+          <td>Regress X~Z, Y~Z (grad-boost), test <em>weighted/feature</em> residual covariance; analytic N(0,1) null</td>
+          <td>Extra tuning; GFCM newer</td>
+          <td>O(N) after regression; interpretable cross-check. <b>Use only the weighted form</b></td>
+        </tr>
+        <tr>
+          <td>plain GCM<br><span class="mut">(arXiv:1804.07203)</span></td>
+          <td class="mut">&mdash;</td>
+          <td class="warn">Trap: tests residual covariance &rarr; blind to symmetric P0&sup2; exactly like Pearson</td>
+          <td>Do not use unweighted</td>
+        </tr>
+        <tr>
+          <td>CDC<br><span class="mut">(conditional distance corr, Wang 2015)</span></td>
+          <td>Conceptually nearest to pdCor</td>
+          <td>Same O(N&sup2;)+permutation cost</td>
+          <td>Marginal gain &mdash; skip</td>
+        </tr>
+        <tr>
+          <td>CMIknn / CCIT<br><span class="mut">(Runge 2018)</span></td>
+          <td>Genuine CI measure</td>
+          <td>k-NN in 14-D fragile at N=4000</td>
+          <td>Risky at this conditioning width</td>
+        </tr>
+        <tr>
+          <td>Normalizing-flow / measure-transport CI</td>
+          <td>Strong in theory</td>
+          <td>Training-fragile, heavy, unproven at scale</td>
+          <td class="warn">Hype-risk &mdash; skip</td>
+        </tr>
+        <tr>
+          <td>full KCIT</td>
+          <td>Gold-standard kernel CI</td>
+          <td>Cubic in N</td>
+          <td>Skip</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>E4 &mdash; latent confounder / wrong sign (label-free)</h2>
+  <p><b>Honest floor: sign is not identified from association alone &mdash; an extra lever is required.</b></p>
+  <ul>
+    <li><b>Non-Gaussianity &rarr; RCD / ParceLiNGAM</b> (arXiv:2001.04197): higher-order moments identify
+      direction and flag confounded pairs &rarr; recovers correct sign. <em>The minimal honest move if SCM
+      noise is non-Gaussian.</em></li>
+    <li><b>Proxy / negative-control (proximal)</b> (arXiv:1609.08816): recovers sign if the benchmark
+      exposes a proxy of the latent; needs bridge/relevance assumptions.</li>
+    <li><b>FCI / RFCI</b>: PAG with a bidirected edge <em>detects</em> confounding but gives no sign; only
+      as good as the CI test it uses. Diagnostic, not solution.</li>
+    <li>If a <span class="mono">do()</span> intervention is permitted, one interventional sample settles the
+      sign &mdash; cheapest.</li>
+  </ul>
+
+  <h2>E3 &mdash; temporal / delayed harm</h2>
+  <p>
+    Stay in-frame: <b>PCMCI+ is iterative CI testing with MCI conditioning</b> &mdash; same score-matrix +
+    threshold pattern already in use. Minimal compatible move: <b>restrict candidate parents to t-lagged
+    variables, run the existing score on lagged pairs, orient t&rarr;t+1 by temporal ordering</b> (free
+    direction, no new framework). Nonlinear Granger / dynotears are heavier reframings &mdash; skip unless
+    E3 stalls.
+  </p>
+
+  <h2>Recommendation (from the scout, opinionated)</h2>
+  <ol>
+    <li><b>Prototype RCoT as a scalable drop-in CI test</b> &mdash; single highest-leverage move; keep the
+      BH-FDR layer unchanged.</li>
+    <li><b>Weighted-GCM (grad-boosted regressions + squared-residual feature)</b> as a cheap, interpretable,
+      analytic-null cross-check; orthogonal residual view &rarr; agreement is a strong label-free
+      confidence signal.</li>
+    <li><b>Do NOT bother with:</b> normalizing-flow CI (unproven/heavy), full KCIT (cubic), CDC (keeps
+      O(N&sup2;)), and plain unweighted GCM (reproduces Pearson's blind spot to E2's P0&sup2; channel).</li>
+    <li><b>E4:</b> check whether SCM noise is non-Gaussian first; if so RCD is the minimal sign-recovering
+      addition; otherwise a proxy or intervention is required &mdash; say so honestly, don't claim
+      label-free sign identification.</li>
+  </ol>
+
+  <div class="foot">
+    <p><b>Sources.</b> arXiv:1804.07203 (GCM) &middot; arXiv:2111.04361 (WGCM) &middot; arXiv:2608.15332
+    (GFCM) &middot; arXiv:1702.03877 (RCIT/RCoT) &middot; tigramite/PCMCI+ &middot; arXiv:2001.04197
+    (RCD-LiNGAM) &middot; arXiv:1609.08816 (proximal).</p>
+    <p><b>Provenance.</b> Research note produced by an autonomous research subagent during the E2 overnight
+    run; nothing applied. The frozen E2 pdCor run (<code>protocol_commit 828e345</code>) was untouched at
+    the time of writing. This report lives under the gitignored <code>reports/</code> tree. No figures &mdash;
+    the note is qualitative (method-comparison tables and a single hardware-cost estimate).</p>
+  </div>
+
+</div>
+</body>
+</html>

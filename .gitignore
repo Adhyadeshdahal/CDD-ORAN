@@ -34,7 +34,9 @@ runs/*
 
 # generated discovery outputs (posterior/enum)
 artifacts/
-reports/
+
+# reports are tracked, including their figures (override the global *.png ignore above)
+!reports/**/*.png
 
 # herdr orchestration trail (local only)
 .herdr/

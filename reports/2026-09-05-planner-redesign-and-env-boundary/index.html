@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planner redesign, CMA-ES falsification, and the legacy/E-series boundary (2026-09-05)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73; --cut:#A8412F;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8; --cut:#e08a72;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-size:17px; line-height:1.62;}
+  .sheet{max-width:780px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);}
+  .rel b{color:var(--ink)}
+  .gate{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);}
+  .gate b{color:var(--good)}
+  .gate.cut{border-left-color:var(--cut)} .gate.cut b{color:var(--cut)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.4rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+  .tag{display:inline-block; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.68rem; font-weight:650; letter-spacing:.03em; text-transform:uppercase; padding:.12rem .5rem; border-radius:20px; vertical-align:middle}
+  .keep{background:rgba(14,122,115,.14); color:var(--good)}
+  .cutt{background:rgba(168,65,47,.14); color:var(--cut)}
+  .expl{background:rgba(200,121,43,.16); color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Planner redesign, CMA-ES falsification, and the legacy/E-series boundary</h1>
+  <div class="doc-meta">
+    <span><b>Date</b> 2026-09-05</span> &nbsp;·&nbsp;
+    <span><b>Cycle</b> planner exploration (post-E1)</span> &nbsp;·&nbsp;
+    <span><b>Prior</b> 2026-09-04 E1 v2 partial-correlation recovery</span> &nbsp;·&nbsp;
+    <span><b>Branches</b> agent/planner-redesign @ 16870a8; exp/objective-ood-measure @ 067fd2f (both unmerged)</span>
+  </div>
+
+  <div class="rel">
+    <b>This is an archival delta report.</b> It records what happened between 2026-09-04 (E1 recovery
+    cleared) and 2026-09-05, on the <b>planner / decision-value</b> side of the project, plus a
+    correction to an environment-numbering confusion that this cycle exposed. No frozen scientific
+    contract was changed. All decision-utility numbers below are on the <b>legacy v1 environments</b>
+    (Environment&nbsp;I–IV), which §6 shows are being superseded by the E1–E5 redesign.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    Directed to look for better planners, we ran a falsifiable CMA-ES gate and a three-survey
+    method study (failure diagnosis, black-box-optimizer sweep, causal-native planner sweep). The
+    convergent result: <b>the planner optimizer is not the bottleneck.</b> On the scored benchmark all
+    default planners collapse to one decision rule over a <b>flat, saturating, model-predicted</b> cost;
+    two of three legacy envs sit below the do-nothing floor; planner differences are noise. The real
+    levers are (1) objective design, (2) out-of-distribution model trust, and (3) the world model's
+    ability to predict <b>joint multi-parameter interventions</b> — a modeling capability, not a search
+    algorithm. We built one cheap, on-thesis planner (an exact causal influence-diagram planner, CID),
+    falsified CMA-ES covariance as buying nothing, rationalized the planner set, and — critically —
+    established that the objective/OOD measurement work was being run against <b>retired legacy
+    environments</b>, not the current E-series frontier. A ~12&nbsp;h re-measurement sweep was cancelled
+    as low-impact. Net committed artifacts are code branches held unmerged pending review; this cycle's
+    value is the diagnosis and the boundary correction.
+  </p>
+
+  <h2>1. What this cycle set out to do</h2>
+  <p>
+    Following the 2026-09-04 E1 recovery result, the project owner redirected effort to the
+    <b>planner side</b>: (a) reclassify QACM from an ensemble member to a third-party <em>baseline</em>;
+    (b) explore CMA-ES / MPC and keep only planners that fit the causal learned graph and earn their
+    cost in a resource-constrained RIC. The animating concern: the existing planners performed poorly
+    across the legacy environments, and weeks of effort had yielded mostly infrastructure and negative
+    results. This report is the archival record of that exploration and its (clarifying) outcome.
+  </p>
+
+  <h2>2. The CMA-ES gate — a falsifiable test</h2>
+  <p>
+    We isolated the optimizer under a planning <em>oracle</em> (true next-KPI model, so world-model
+    error is removed as a confound), matched budget (256&nbsp;candidates × 10 iters), and scored each
+    joint action by realised true utility on the EnvI/train coordination needle
+    (<code>kpi2 = exp(−(P1−50)²/(2·P3)²)</code>, non-separable — needs P1 and P3 moved together),
+    6 seeds × 8 steps = 48 decisions.
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 1 — CMA-ES gate. Utility z-score (do-nothing floor = −0.1257; coarse-grid 41³ = +4.3237).</caption>
+    <thead><tr><th>Arm</th><th>What it adds</th><th>Utility</th><th>ms / decision</th></tr></thead>
+    <tbody>
+      <tr><td>JointMultiNCP (shipped)</td><td>sequential per-NCP, K calls</td><td class="warn">+0.1144</td><td>85.9</td></tr>
+      <tr><td>DiagCMAES (= joint-CEM)</td><td>joint-param eval, diagonal</td><td class="disc">+4.9380</td><td>52.5</td></tr>
+      <tr><td>CausalBlockCMAES</td><td>joint-param eval + block covariance</td><td class="disc">+4.9095</td><td>37.0</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Attributing each design choice separately:</p>
+  <div class="eq">covariance:   BlockCMAES − DiagCMAES     = −0.0285  (±0.0427)   → zero within spread
+eval scheme:  DiagCMAES  − JointMultiNCP = +4.8236            → all the gain lives here</div>
+  <div class="gate cut">
+    <b>Verdict: CMA-ES covariance earns its place = NO.</b> The block covariance — the thing that makes
+    it CMA-ES rather than plain CEM — buys nothing (−0.03). The entire win is <b>joint-parameter
+    evaluation</b> (evaluating the block's knobs together, one model call per candidate), which a plain
+    diagonal joint-CEM already has. The ~40–57% latency cut vs the shipped Joint is real, but it is a
+    <em>joint-eval</em> effect (batched calls), not a covariance effect.
+  </div>
+  <p>
+    The catch that reframes the finding: the +4.82 is under an <b>oracle</b>. The shipped
+    <code>JointMultiNCP</code> parks near the floor (+0.11) because it applies the block's NCPs
+    <em>sequentially</em>, feeding only predicted KPIs forward and never forming the combined parameter
+    vector (<code>joint.py:131-158</code>) — a deliberate out-of-distribution avoidance, because the
+    world model (CDL) was trained on <b>single-parameter</b> interventions. So joint multi-param
+    evaluation is OOD on the trained model. <b>The coordination lever is a world-model capability, not
+    the optimizer.</b>
+  </p>
+
+  <h2>3. Three-survey synthesis — the planner is not the bottleneck</h2>
+  <p>
+    Three parallel surveys — a failure diagnosis grounded in <code>reports/</code>, a black-box-optimizer
+    sweep, and a causal-native planner sweep — converged. On the scored harness every default planner
+    (QACM · CEM · MPPI · MCTS) collapses to <b>one decision rule</b>: single-parameter, single-step,
+    grid-argmin over a <b>flat, saturating, model-predicted</b> cost. Conflicts are scored independently
+    and proposals are never chained. The consequences and their causes:
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 2 — Failure modes (legacy envs) and the property a fix must have.</caption>
+    <thead><tr><th>Mode</th><th>Evidence</th><th>What actually fixes it</th></tr></thead>
+    <tbody>
+      <tr><td>FM-1 Flat objective</td><td>cost clamps distance to 0 at the satisfaction threshold; reachable ceiling ≈ +1.3 but the planner stops climbing at threshold</td><td>a utility gradient across the whole reachable range (the validated <code>utility_weight</code>)</td></tr>
+      <tr><td>FM-2 OOD model trust</td><td>planner optimizes model-predicted KPIs; off-distribution the model errs → confidently wrong actions; disagreement penalty exists but is off by default</td><td>epistemic risk: the ensemble-disagreement penalty</td></tr>
+      <tr><td>FM-3/4/5 Coordination</td><td>the one real coupling (+2.22) sits on an edge discovery drops; joint multi-param eval is OOD for the single-param model (the +4.82 is oracle-only)</td><td>a world model that predicts joint multi-parameter interventions</td></tr>
+      <tr><td>FM-6 STOP holds</td><td>under matched decision-sets, oracle-graph ≯ discovered-graph on the decision (all gaps within spread)</td><td>the lever is objective + model + graph recovery, not search</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="gate warn">
+    <b>Bottom line.</b> Swapping the search cannot move the number — on a flat landscape every optimizer
+    ties. The levers are objective design, OOD trust, and world-model multi-intervention capability.
+    This is the third independent finding pointing at model/discovery quality rather than the planner.
+  </div>
+
+  <h3>Keep / Explore / Cut (merged across both method surveys)</h3>
+  <ul>
+    <li><span class="tag keep">Build</span> <b>Causal influence-diagram planner (CID)</b> — exact enumeration of the conflict param's lattice, single-param in-distribution scoring, argmax expected-utility (§4).</li>
+    <li><span class="tag keep">Keep</span> <b>Integer-margin</b> on the diagonal CEM/CMA (stops variance collapse on the integer lattice); <b>QACM</b> → market baseline; <b>scored do-nothing</b> floor.</li>
+    <li><span class="tag expl">Explore</span> <b>Causal-block-gated joint sampling</b> and <b>single-node causal-BO</b> (fallback; GP budget risk) — both gated on the world-model multi-intervention question.</li>
+    <li><span class="tag cutt">Cut</span> full/dense CMA-ES covariance; MCTS·RHCEM → ablation flags; LM-MA-ES · IPOP/BIPOP · GP-BO · TuRBO · SMAC · diffusion/gradient-MPC (wrong regime / heavy deps / OOD-gated).</li>
+  </ul>
+
+  <h2>4. CID — the one planner worth building</h2>
+  <p>
+    <code>CausalInfluenceDiagramPlanner</code> (<code>cdd_oran/planners/cid.py</code>, branch
+    <code>agent/planner-redesign @ 16870a8</code>, unmerged). For the given conflict parameter it
+    <b>exactly enumerates</b> that parameter's bin×index lattice (50–210 leaves), scores every leaf with
+    one batched <b>single-parameter, in-distribution</b> structure-conditioned world-model call, and takes
+    argmax expected utility with a <b>deterministic</b> tie-break. It is the exact form CEM/MPPI
+    approximate, but sampler-free, GP-free, and it never issues a joint multi-param query — so it dodges
+    the OOD trap.
+  </p>
+  <ul>
+    <li><b>Exactness</b> verified against an independent brute-force grid argmin (PASS); single-param-only and CRN-reproducible tie-break (PASS).</li>
+    <li><b>Integer-margin</b> added to the diagonal CMA/CEM fallback (<code>cma_es.py</code>): floors each dim's effective std to ≥ one lattice step (PASS).</li>
+    <li><b>Latency</b> single-digit to low-tens of ms/decision at the real lattice — within the RIC budget. Full suite <b>392 passed, 1 xfailed</b>.</li>
+  </ul>
+  <div class="gate warn">
+    <b>Honest limit.</b> On the current single-parameter scored path CID's argmin agrees closely with the
+    QACM baseline — it is the exact version of what QACM approximates. CID only <em>differentiates</em>
+    once (a) the objective fix makes argmax-EU actually climb (FM-1) and (b) a graph-pruning layer lets
+    it choose <em>which / how few</em> parameters to move. Necessary, not sufficient. An adversarial
+    review of this branch was in progress at report time.
+  </div>
+
+  <h2>5. Objective / OOD measurement — and why the sweep was cancelled</h2>
+  <p>
+    We validated the measurement pipeline by reproducing the pinned legacy Env&nbsp;I baseline exactly
+    (<code>QACM = −0.08319</code> vs pinned −0.083). The two fixes with the largest <em>proven</em> ROI
+    are already implemented but off by default: the <code>utility_weight</code> gradient (validated
+    λ=0.25) and the ensemble-disagreement penalty (validated value 1 — note the brief's
+    <code>ood_threshold</code> is a flag only and decision-inert). Prior-source values:
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 3 — Legacy decision utility vs do-nothing floor (0.0). Prior-source values; Env I baseline reproduced this cycle.</caption>
+    <thead><tr><th>Legacy env</th><th>baseline</th><th>+ objective fix</th><th>+ OOD penalty</th><th>verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Environment I</td><td class="warn">−0.083</td><td class="disc">+0.303</td><td class="disc">+0.297</td><td>lifted above floor</td></tr>
+      <tr><td>Environment III</td><td class="disc">≈ +0.12</td><td>≈ unchanged</td><td class="mut">—</td><td>safe, above floor</td></tr>
+      <tr><td>Environment IV</td><td class="warn">−0.140</td><td>≈ unchanged</td><td class="warn">−0.161</td><td>needs a new objective (Option C)</td></tr>
+      <tr><td>Environment II</td><td colspan="3" class="mut">blocked — no pinned checkpoint for this measurement</td><td>out of scope</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>
+    The measurement agent correctly <b>stopped rather than guessing</b> on two discrepancies (Env II has
+    no pinned checkpoint; the OOD knob was mislabeled) — the anti-p-hacking discipline working. The full
+    multi-seed 3-env sweep costs <b>~12&nbsp;h</b> on the current RAM-limited box and would only
+    re-confirm the pinned priors.
+  </p>
+  <div class="gate cut">
+    <b>Sweep cancelled.</b> The measurement is on the <b>legacy environments</b>, which §6 shows are being
+    replaced by the E1–E5 redesign. Spending 12&nbsp;h to bank a digest on retired envs is low-impact. The
+    qualitative result (objective fix lifts the below-floor env; Env IV needs a redesigned objective) is
+    already established from pinned priors and stands as recorded.
+  </div>
+
+  <h2>6. The correction: legacy Environment I–IV vs the E1–E5 redesign</h2>
+  <p>
+    This cycle exposed a numbering confusion worth recording permanently. There are <b>two</b> environment
+    systems, and the diagnosis (which read the older <code>reports/</code>) followed the legacy one:
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 4 — Two environment systems.</caption>
+    <thead><tr><th>System</th><th>Members</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Legacy (v1)</b></td><td>Environment I / II / III / IV (<code>cdd_oran/envs/env_i..iv.py</code>)</td><td>retired; being superseded. All the objective/OOD/planner history lives here.</td></tr>
+      <tr><td><b>E-series redesign</b></td><td>E1 · E2 · E3 · E4 · E5 (<code>cdd_oran/envs/v2/</code>, <code>e1slice/</code>, <code>e2slice/</code>)</td><td>E1 done; <b>E2 = current frontier</b> (discovery banked, run parked). E3/E4 <em>scaffolded</em> — env classes (<code>v2/e3.py</code>, <code>v2/e4.py</code>) + gate scripts exist, but no discovery/decision slice. E5 research-only.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>E2's state, precisely:</b> the environment is built and committed; the nonlinear label-free
+    discovery method is written, tested, and banked (<code>e2slice/</code>) — but <b>never run</b>. At the
+    frozen constants the run is memory-bandwidth-bound (~5–18 days on the current ~16&nbsp;GiB box), so it
+    is a standing TODO for a larger machine. Until it runs we cannot answer E2's discovery question. The
+    E2 <em>decision</em> gate is a preregistered recorded <b>null</b> (frozen), and decision-value results
+    stay uninterpretable until discovery clears its gate. <b>"Completing E2" = running that one parked
+    discovery job on adequate hardware — a compute constraint, not missing code.</b></p>
+
+  <h2>7. Legacy / E-series code boundary (dependency map)</h2>
+  <p>The legacy envs are <b>logically isolable</b> — no E-series code path calls the legacy
+    <code>get_env</code> or the <code>ORANEnvironment*</code> classes; the v2 envs, e1/e2slice, and the
+    V2-native objective (<code>analysis/v2_regret.py</code>) and sequence planner
+    (<code>planners/sequence.py</code>) form a self-contained path. But there are <b>three import-time
+    seams</b> that a naive deletion would break:</p>
+  <ol>
+    <li><code>planners/cost.py:6</code> module-imports <code>envs.base.XApp</code> (used by all legacy planners; not by the E-series). Note <code>envs/base.py</code> primitives are distinct from <code>env_i..iv</code>.</li>
+    <li><code>analysis/threshold_sweep.py:19</code> imports <code>get_env</code>; <code>recovery_metrics.py:22</code> imports <code>threshold_sweep</code>; the E-series evaluators import <code>recovery_metrics</code> — so importing <b>E1/E2 evaluate transitively loads <code>envs/__init__.py</code></b>, which eagerly imports <code>env_i..iv</code>. This is the confusion-breeding seam.</li>
+    <li><code>config.py:217</code> loads <code>configs/env_i_mlp.yaml</code> at import; <code>config.py:106</code> types <code>environment</code> to the legacy <code>Literal</code> only.</li>
+  </ol>
+
+  <h2>8. Decisions and recommendations</h2>
+  <ul>
+    <li><b>CMA-ES covariance:</b> cut. Kept only as a documented, reproducible negative result + the gate harness.</li>
+    <li><b>Planner set:</b> rationalized (QACM → baseline, scored do-nothing, MCTS/RHCEM → ablation flags, keep MPPI+CEM+Joint+CID). Held unmerged pending review.</li>
+    <li><b>CID:</b> keep as a live thread; its real upgrade is the graph-pruning (which/how-few params) layer + the world-model multi-intervention question — not further optimizer tuning.</li>
+    <li><b>The real planner lever is the objective</b> (FM-1) and the <b>world model's multi-intervention capability</b> (FM-3). These should shape the E-series decision layer; they are not a reason to re-measure legacy envs.</li>
+    <li><b>Legacy quarantine (recommended, not yet done):</b> do <em>not</em> hard-delete now. Instead: (i) add deprecation markers clarifying legacy vs E-series; (ii) break seam&nbsp;#2 so the E-series stops transitively loading <code>env_i..iv</code> (move the pure <code>_prf</code> metric off <code>threshold_sweep</code>, or make <code>envs/__init__</code> lazy) — keeping all 440 tests green; (iii) put the <b>status</b> markers where they belong — E3/E4 as <em>scaffolded (no slice yet)</em> and E5 as <em>research-only</em> — not "not implemented" on the legacy envs (which are implemented but retired). Defer the full delete (it touches <code>cost.py</code>, <code>config.py</code>, and ~8 tests) until the E-series fully supersedes.</li>
+  </ul>
+
+  <div class="gate">
+    <b>Next.</b> Complete E2 (run the parked discovery job when hardware allows); carry the objective +
+    world-model-multi-intervention levers into the E-series decision layer; land the legacy quarantine
+    hygiene; revisit CID's graph-pruning layer once E2 recovery is known.
+  </div>
+
+  <div class="foot">
+    <b>Provenance.</b> Planner branch <code>agent/planner-redesign @ 16870a8</code> (CID + integer margin
+    + rationalization + CMA-ES gate harness), off <code>feat/v2</code>; measurement branch
+    <code>exp/objective-ood-measure @ 067fd2f</code> (config-only, stopped on discrepancy, nothing
+    committed). No frozen contract, frozen number, or cost-function math changed this cycle. Legacy
+    decision-utility values are prior-sourced (<code>.temp/new_arch/reports/</code>, memory
+    <code>option-a-utility-weight-validated</code>, <code>phase1_negutil_findings.md</code>); Env&nbsp;I
+    baseline reproduced this cycle. Gate at report time: ruff + ty clean; pytest 392 passed / 1 xfailed on
+    the planner branch, 440 / 1 on <code>feat/v2</code>. This report lives in the gitignored
+    <code>reports/</code> archive; verifiable digests belong under <code>docs/benchmark/</code>.
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discovery recall and its decision-relevance (2026-09-01)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.62rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; overflow-x:auto}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .expl{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; font-weight:650;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--orac); border:1px solid var(--orac);
+    border-radius:4px; padding:.05em .45em; margin-left:.4em; vertical-align:.08em}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Discovery recall, its decision-relevance, and a planner-search correctness fix</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-01</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> e7534e1</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> post-hoc analysis on saved checkpoints and outputs; one planner code fix with restored test baseline; no retraining</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> This is a delta on <em>2026-08-28 &mdash; Decision-level tests of the
+    learned causal structure</em>, which found the block-coordination gap to be ~0 on the discovered
+    enumeration blocks and localised (<span class="mono">+2.224</span>, one cell) on the true blocks, and the
+    Env&nbsp;IV deconfounding advantage not distinguishable from zero across five seeds. That report identified
+    <em>graph-recovery quality</em> and <em>benchmark structure</em> as the limiting factors and flagged a
+    non-terminating <code>ModelBasedMCTS</code>. This report (i) quantifies graph recovery directly against the
+    oracle adjacency; (ii) tests whether closing that recovery gap changes the decision; (iii) diagnoses and
+    repairs the planner non-termination; and (iv) records a degeneracy in the bootstrap graph-posterior
+    pipeline found along the way. Results in §4 (enumeration ablation) and the Env&nbsp;IV deconfounding line
+    are labelled <span class="expl">exploratory</span>: they are computed on the current environments, whose
+    difficulty dimensions are entangled, and a benchmark redesign is the agreed next step (§7).
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    We measure one-step causal-discovery recovery against the oracle enumeration graph, restricted to the
+    planning-relevant knob→KPI edges, using the trained CDL steady-state conditional mutual information
+    (<span class="mono">mask_CMI</span>) at the operating threshold. Precision is <span class="mono">1.00</span>
+    in all four environments (discovery adds no false coupling among these candidates); recall is
+    <span class="mono">0.62&ndash;0.88</span>, so discovery drops 12&ndash;38% of true couplings. Dropped edges
+    separate into near-misses (CMI 50&ndash;84% of the threshold) and a residual set at approximately zero or
+    negative CMI. Lowering the per-environment threshold recovers edges in-sample at unchanged precision
+    (Env&nbsp;II <span class="mono">0.62&rarr;0.81</span>, Env&nbsp;IV <span class="mono">0.77&rarr;0.85</span>),
+    but this threshold is selected against ground-truth labels and is therefore an in-sample envelope, not a
+    deployable calibration. To test whether higher recall changes decisions, we compare the oracle and
+    discovered enumeration graphs at the decision level on Env&nbsp;IV, paired by mitigation seed
+    (<span class="expl">exploratory</span>): the oracle&minus;discovered realised-utility difference is positive
+    but not distinguishable from zero for any of the four planners (all 95% intervals include zero, n=3),
+    consistent with the earlier matched-set STOP verdict and now robust to including a corrected MCTS planner.
+    Separately, the <code>ModelBasedMCTS</code> non-termination is diagnosed as a per-decision cost of ~59&nbsp;s
+    &mdash; 3000 sequential batch-1 forwards over an 8-member ensemble &mdash; not an infinite loop; we replace
+    the search with a batched leaf evaluation that returns an equal-or-lower-cost action 38&ndash;99&times;
+    faster and restores a green test and lint baseline. Finally, the bootstrap graph-posterior artifact is
+    degenerate on these runs (resample-CMI under-selects; the calibrator collapses to a constant), so structure
+    sampling from it carries no per-edge information. No result changes the standing position that the learned
+    structure earns its keep in prediction but not, on these environments, in the decision.
+  </p>
+
+  <h2>1. Context and question</h2>
+  <p>
+    The 2026-08-28 report left two threads pointing at the same causes: the discovered graph under-recovers
+    coupling, and the benchmarks are mostly &ldquo;clean&rdquo; (no load-bearing confounding). Two questions
+    follow directly. First, <em>how much</em> coupling does discovery drop, and is the shortfall a conservative
+    decision threshold (cheaply corrigible) or a limit of what the estimator can see (not corrigible without
+    better data)? Second, and prior to any investment in closing the gap: <em>does</em> closing it change the
+    mitigation decision? We answer both on saved checkpoints, with no retraining. We also resolve the
+    <code>ModelBasedMCTS</code> non-termination that forced its exclusion from the 2026-08-28 multi-seed sweep,
+    so that the decision-level comparison can include all four planners.
+  </p>
+
+  <h2>2. Discovery recall against the oracle graph</h2>
+  <p>
+    We take the ground-truth adjacency from <code>build_oracle_enumeration_graph(env)</code> and restrict to
+    knob→KPI edges (the edges that induce coupling and are read by conflict enumeration; convention
+    <span class="mono">graph[kpi][knob]</span>, knobs occupying the low indices). The discovered structure is
+    the trained CDL <span class="mono">mask_CMI</span> thresholded at the configured
+    <span class="mono">cmi_threshold</span> &mdash; the same crisp graph the planner consumes. Precision is
+    <span class="mono">1.00</span> in every environment: among knob→KPI candidates, discovery never selects a
+    non-edge. The entire error is recall (Table&nbsp;1, Fig&nbsp;1).
+  </p>
+
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Knob→KPI edge recovery at the operating threshold, per environment.</caption>
+      <thead><tr><th>Environment</th><th>true edges</th><th>recovered</th><th>dropped</th><th>precision</th><th>recall</th></tr></thead>
+      <tbody>
+        <tr><td>Env I</td><td>8</td><td>7</td><td>1</td><td>1.00</td><td>0.88</td></tr>
+        <tr><td>Env II</td><td>16</td><td>10</td><td>6</td><td>1.00</td><td>0.62</td></tr>
+        <tr><td>Env III</td><td>13</td><td>11</td><td>2</td><td>1.00</td><td>0.85</td></tr>
+        <tr><td>Env IV</td><td>13</td><td>10</td><td>3</td><td>1.00</td><td>0.77</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure>
+    <img src="fig1_recall_frontier.png" alt="Discovery recall per environment at the operating threshold and the precision-1.0 ceiling">
+    <figcaption><b>Figure 1.</b> Knob→KPI recall at the operating threshold (bars) and the maximum recall
+      attainable while precision remains <span class="mono">1.00</span> as the CMI threshold is lowered
+      (markers, with the in-sample gain annotated). Env&nbsp;II and Env&nbsp;IV have headroom
+      (<span class="mono">+0.19</span>, <span class="mono">+0.08</span>); Env&nbsp;I and Env&nbsp;III are already
+      at their precision-preserving ceiling. The ceiling is computed against ground-truth labels and is an
+      in-sample bound, not a deployable operating point (§2, §7).</figcaption>
+  </figure>
+
+  <h3>2.1 Why edges are dropped: near-miss versus estimator-invisible</h3>
+  <p>
+    The continuous <span class="mono">mask_CMI</span> separates the two regimes (Fig&nbsp;2). Recovered edges
+    carry CMI far above the threshold (median 1.0&ndash;2.4). Dropped edges are either <em>near-misses</em>
+    &mdash; CMI 50&ndash;84% of the threshold (Env&nbsp;II&nbsp;&times;3, Env&nbsp;IV&nbsp;&times;2), which a
+    lower cut recovers &mdash; or at approximately zero or <em>negative</em> CMI (Env&nbsp;II
+    <span class="mono">K11&larr;P4</span> = <span class="mono">&minus;0.09</span>, Env&nbsp;IV
+    <span class="mono">K11&larr;P2</span> = <span class="mono">0.01</span>, Env&nbsp;III both drops at
+    13&ndash;23%). A negative CMI is not evidence that the edge is absent from the data; it indicates estimator
+    bias or noise, so we describe these as low/negative-CMI rather than &ldquo;invisible&rdquo;. The single edge
+    with a demonstrated decision effect &mdash; Env&nbsp;I <span class="mono">K8&larr;P2</span>, the
+    <span class="mono">+2.224</span> coordination interaction of the 2026-08-28 report &mdash; sits at 40% of
+    the threshold, below any precision-preserving cut, so it is <em>not</em> among the cheaply recoverable
+    edges.
+  </p>
+
+  <figure>
+    <img src="fig2_cmi_margins.png" alt="Dropped-edge CMI as a fraction of the operating threshold, coloured by regime">
+    <figcaption><b>Figure 2.</b> Each dropped knob→KPI edge, as a fraction of its environment&rsquo;s operating
+      threshold. Near-misses (&ge;&frac12; threshold) are recoverable by lowering the cut; the weak and
+      zero/negative-CMI edges are not, and one edge (<span class="mono">Env&nbsp;II K11&larr;P4</span>) has
+      negative estimated CMI. The half-threshold and threshold lines mark the recovery boundary used in
+      Fig&nbsp;1.</figcaption>
+  </figure>
+
+  <h2>3. Does higher recall change the decision? <span class="expl">exploratory</span></h2>
+  <p>
+    Recall is a property of the graph, not of the decision. To test decision-relevance we compare the two
+    enumeration graphs end-to-end: the same environment and mitigation seed evaluated once with the
+    <em>discovered</em> graph (<code>--enum-source self</code>) and once with the <em>oracle</em> graph
+    (<code>--enum-source oracle</code>, perfect recall), paired across seeds, with the corrected MCTS included
+    (Fig&nbsp;3). The oracle&minus;discovered difference in realised utility is positive for all four planners
+    but its 95% interval includes zero in every case (QACM <span class="mono">+0.054</span>
+    [<span class="mono">&minus;0.31,&nbsp;+0.42</span>], CEM <span class="mono">+0.077</span>
+    [<span class="mono">&minus;0.35,&nbsp;+0.51</span>], MPPI <span class="mono">+0.055</span>
+    [<span class="mono">&minus;0.23,&nbsp;+0.34</span>], MCTS <span class="mono">+0.137</span>
+    [<span class="mono">&minus;0.30,&nbsp;+0.58</span>]; n=3 seeds). The uniformly positive point estimates are a
+    weak hint that the true graph helps; the intervals do not support a claim. This is consistent with the
+    matched-decision-set STOP verdict of 2026-08-25 and now holds with the previously-excluded MCTS planner in
+    the set.
+  </p>
+  <figure>
+    <img src="fig4_enum_ablation_ci.png" alt="Oracle minus discovered enumeration, realized utility, per planner, 95% CI">
+    <figcaption><b>Figure 3.</b> Oracle&minus;discovered enumeration, realised utility on Env&nbsp;IV, paired by
+      mitigation seed (n=3), per planner with 95% confidence intervals; the vertical line is no difference.
+      <b>Exploratory:</b> the two enumeration sources detect non-identical conflict populations, so the paired
+      means are taken over different decision sets; additional seeds do not repair this design confound. Env&nbsp;IV
+      also varies several difficulty factors at once, so a null here does not isolate a single benchmark
+      dimension (§7).</figcaption>
+  </figure>
+
+  <h2>4. Planner-search correctness: <code>ModelBasedMCTS</code></h2>
+  <p>
+    The reported &ldquo;hang&rdquo; is not a non-terminating loop. The search is a bounded
+    <span class="mono">for _ in range(n_simulations)</span> over a depth-2, fully enumerable tree
+    (root&nbsp;&rarr;&nbsp;bin&nbsp;&rarr;&nbsp;(bin,&nbsp;index)); with <span class="mono">n_simulations=3000</span>
+    and each simulation issuing one batch-1 forward over an 8-member ensemble, a single decision measured
+    <span class="mono">58.9&nbsp;s</span> in the evaluate pipeline (Env&nbsp;IV, seed&nbsp;1). At ten conflict
+    panels per step and thirty steps this is on the order of five hours per seed &mdash; the observed stall. The
+    tree has 50&ndash;210 leaves, so the 3000 simulations revisit each leaf roughly 14&ndash;60 times.
+  </p>
+  <p>
+    Two properties make bit-identical reproduction the wrong target. First, the per-leaf cost is not
+    deterministic even under a fixed structure set (~0.5% per-call noise). Second, the leaf-cost surface is flat
+    relative to that noise: at Env&nbsp;IV / <span class="mono">pi=2</span> the six best leaves span
+    <span class="mono">0.002</span> while the per-call standard deviation is ~<span class="mono">0.011</span>, so
+    the best-versus-second gap (<span class="mono">0.0004</span>) is roughly 25&times; below the noise. As a
+    consequence the original search is not reproducible &mdash; four calls on one state returned three different
+    actions. We therefore replace the tree with a batched evaluation: spend the same
+    <span class="mono">n_simulations</span> budget as <span class="mono">k = n_simulations / n_leaves</span>
+    samples per leaf, scored in <span class="mono">k</span> batched forwards over all leaves, and return the
+    argmin of the per-leaf mean cost. The ensemble and single-member scoring paths, the risk adjustment, and the
+    utility-weight term are preserved; MCTS remains the last planner constructed, so the shared RNG stream and
+    the other three planners&rsquo; reproducible results are unchanged.
+  </p>
+  <figure>
+    <img src="fig3_mcts_speedup.png" alt="MCTS per-decision wall-clock before and after the batched fix, log scale">
+    <figcaption><b>Figure 4.</b> Per-decision wall-clock (log scale), original sequential search versus batched
+      leaf evaluation, for three conflict parameters and the in-pipeline step average on Env&nbsp;IV. The batched
+      action realises equal-or-lower model cost (e.g. <span class="mono">4.0711</span> vs
+      <span class="mono">4.0726</span> at <span class="mono">pi=2</span>) at 38&ndash;99&times; less compute, and
+      is stable across calls where the original was not.</figcaption>
+  </figure>
+  <p>
+    The change is in <code>cdd_oran/planners/mcts.py</code> (batched <span class="mono">_act</span> and
+    <span class="mono">_score_actions</span>; the single-candidate <span class="mono">_evaluate</span> is
+    retained for direct scoring and unit tests, and the now-unused tree scaffolding removed). The end-to-end
+    m=1 tie-behavior test, which had depended on the old search&rsquo;s arbitrary tie-break, was rewritten to
+    verify the utility-weight term moves the pick to the highest-signed-utility index under the batched
+    planner&rsquo;s deterministic first-tie-break, retaining its sign-flip sensitivity. The full suite (82
+    tests) and lint pass.
+  </p>
+
+  <h2>5. A degeneracy in the bootstrap graph-posterior pipeline</h2>
+  <p>
+    The recall analysis in §2 uses the trained mask directly because the bootstrap posterior artifact is
+    uninformative on these runs. <code>edge_stability</code> recomputes CMI on resampled transitions through the
+    frozen predictor; on these checkpoints the resample CMI under-selects severely (the Env&nbsp;IV per-edge
+    frequency matrix is entirely zero; Env&nbsp;I&rsquo;s maximum is <span class="mono">0.28</span> at two
+    edges), so the per-edge selection frequency carries almost no signal. The stored
+    <code>*_posterior.json</code> is built from these frequencies and then calibrated with an isotonic map;
+    because the input frequencies are near-constant, the calibrator collapses to a single knot
+    (<span class="mono">{x:[0.0], y:[floor]}</span>) that maps every edge to one floor value. Any planner mode
+    that samples structure from this posterior therefore draws from noise. This is a scaling/refit issue in the
+    resample path, distinct from discovery quality, and is recorded here rather than repaired: its correct
+    validation target depends on the redesigned benchmark (§7).
+  </p>
+
+  <h2>6. Limitations and adversarial review</h2>
+  <p>
+    The §2 analysis was adversarially reviewed (GPT-5.6 Sol, 18 numbered objections); the material points are
+    incorporated. Recall/precision are computed over the knob→KPI candidate set only (7&ndash;11 selected edges
+    per environment), so precision <span class="mono">1.00</span> is a point estimate with wide uncertainty, not
+    a demonstrated invariant. The precision-preserving threshold in Fig&nbsp;1 is chosen using the evaluation
+    oracle&rsquo;s labels and is therefore an in-sample envelope; a deployable version requires a calibration
+    that does not inspect the evaluation graph (a held-out environment or seed), and a frozen-threshold,
+    multi-seed replication over the full eligible adjacency. The near-miss / low-CMI split at half the threshold
+    is a descriptive cut, not an uncertainty-derived boundary. The §3 ablation is exploratory for the reasons in
+    its caption. Unweighted edge recall treats a negligible edge and the <span class="mono">+2.224</span> edge
+    identically; an effect-weighted recall would be a more decision-aligned measure.
+  </p>
+
+  <h2>7. Direction: benchmark redesign before further model work</h2>
+  <p>
+    The recall gap is real, but on the current environments closing it toward the oracle does not produce a
+    distinguishable decision-level gain (§3), and the two candidate causal mechanisms examined previously
+    (block-coordination, deconfounding) were each either localised or not distinguishable from zero. The current
+    environments increase difficulty by varying several factors at once, so a difference between environments,
+    or a null within one, does not isolate an interpretable benchmark dimension. The agreed next step is a
+    redesign of the environment suite so that individual axes &mdash; coupling structure, confounding, residual
+    non-linearity, observation noise &mdash; can be varied independently and tested one at a time. Environment
+    design also determines what the graph posterior (§5) must be validated against, so the posterior repair is
+    deferred until after the redesign rather than performed first. The prediction-level result of the earlier
+    reports &mdash; that the learned structure improves prediction and generalises out-of-distribution &mdash;
+    is unaffected and remains the project&rsquo;s established contribution.
+  </p>
+
+  <div class="foot">
+    <b>Artifacts.</b> Analysis and figures under <code>.temp/new_arch/NIGHT_0827/</code>
+    (<code>tools/edge_recall.py</code>, <code>cmi_margin.py</code>, <code>enum_source_ablation.py</code>,
+    <code>generate_figs_0901.py</code>; <code>reports/DECISION1_discovery_recall.md</code>,
+    <code>DECISION3_mcts_fix.md</code>, <code>sol_review_decision1.md</code>). Enumeration ablation and Env&nbsp;IV
+    deconfounding outputs are marked <code>_EXPLORATORY.md</code> in their directories.<br>
+    <b>Code.</b> <code>cdd_oran/planners/mcts.py</code> (batched search); test update in
+    <code>tests/test_robust_planner.py</code>. Full test suite and ruff pass; no retraining; nothing committed.<br>
+    <b>Data.</b> Recall from trained CDL <span class="mono">mask_CMI</span> vs
+    <code>build_oracle_enumeration_graph</code>; ablation from paired <code>evaluate.py</code> re-runs on
+    <code>runs/EnvironmentIV/cdl/20260824-031706-0f8ce1dc</code>, seeds 0&ndash;2.
+  </div>
+
+</div>
+</body>
+</html>

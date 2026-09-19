@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E2 discovery-method arc, live-trap redesign, and the end-to-end thesis (2026-09-06)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>E2 &mdash; discovery-method arc, live-trap redesign, and the end-to-end thesis</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;&middot;&nbsp;
+    <span><b>Date:</b> 2026-09-06</span> &nbsp;&middot;&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;&middot;&nbsp;
+    <span><b>Status:</b> consolidated technical record (gitignored)</span> &nbsp;&middot;&nbsp;
+    <span><b>Frozen:</b> RCoT-v2 <code>8052e10</code> (module <code>733e838</code>) &middot; live-trap env <code>9d87a60</code></span> &nbsp;&middot;&nbsp;
+    <span><b>Scope:</b> the E2 empirical work of 2026-09-06 &mdash; the discovery-method arc, the operating-point redesign that made the trap live, the redesigned-env recovery run, and two DEV prototypes (end-to-end thesis spine; stratified P0&rarr;K5 recovery) that ran overnight into 2026-09-07, dated by their run.</span>
+  </div>
+
+  <div class="gate">
+    <b>Operating-point redesign: gate ACCEPT.</b> The pre-registered redesign (env-change commit
+    <span class="mono">9d87a60</span>) makes the shared-knob trap live: mean-positive
+    <code>gap_norm</code> = <span class="mono">0.190022</span> &ge; <span class="mono">tau_E2 = 0.10</span>,
+    mean-negative <span class="mono">0.000000</span>, factor-removal <span class="mono">0.000000</span>,
+    feasibility 32 + 32. <span class="mono">tau_E2</span> was not tuned (truth-free prediction
+    &asymp;<span class="mono">0.204</span>; observed <span class="mono">0.190</span>).
+  </div>
+
+  <p class="abstract">
+    This record consolidates the E2 discovery-method arc &mdash; <b>pdCor &rarr; RCoT-v1 (B=99) &rarr;
+    RCoT-v2 (B=299)</b> &mdash; the operating-point redesign that made the E2 decision trap live, the
+    RCoT-v2 recovery run on the redesigned environment, and two DEV prototypes. The frozen selector is
+    <b>RCoT-v2</b> (block-conditional-permutation null, <code>block_perm_reps=299</code>, <code>dz=25</code>),
+    which on the old environment matches the retired pdCor baseline on true edges (F1
+    <span class="mono">0.855</span> vs <span class="mono">0.867</span>) at higher precision, without pdCor's
+    17/36 KPI&rarr;KPI over-selection, and &asymp;300&times; faster. The redesign that made the decision
+    trap live (gap <span class="mono">0.190</span>) simultaneously made the harmful <b>P0&rarr;K5</b> edge
+    strictly <em>harder</em> to discover: NCP recall fell <span class="mono">0.769&rarr;0.650</span> and
+    P0&rarr;K5 recovery fell <span class="mono">3/10&rarr;0/10</span> &mdash; both recorded as-run, neither
+    tuned. On the live trap the end-to-end spine <b>fired</b>: oracle/complete fan-out rejects the
+    locally-attractive, globally-harmful P0 move (regret <span class="mono">0</span>) while the discovered
+    decoy structure (missing P0&rarr;K5 in 10/10 seeds) falls into it (regret <span class="mono">+15.15</span>),
+    and the two arms are byte-identical where the trap is inactive. A separate DEV prototype shows the
+    harmful edge <b>is observationally recoverable</b> by a stratified (co-parent-conditioning) test
+    (10/10), which the frozen marginal method never admits. The binding constraint to the E5 thesis on E2
+    is therefore <b>discovery completeness of the harmful P0&rarr;K5 edge</b> &mdash; not the world-model
+    and not the planner. All prototype-vs-frozen labels below are load-bearing.
+  </p>
+
+  <div class="rel">
+    <b>Supersedes (absorbed, moved to <code>reports/archive/2026-09-06/</code>).</b>
+    <code>e2-pdcor-seed0-baseline</code> (retired pdCor seed-0 numbers) &middot;
+    <code>e2-improvement-synthesis</code> (4-agent speed/quality analysis; its Step-0/1b noise-escalation
+    branch is superseded, &sect;2.3) &middot; <code>cmi-pdcor-rcot-comparison</code> (&sect;7) &middot;
+    <code>e2-rcot-recovery</code> (RCoT-v1 B=99 as-run) &middot; <code>e2-rcot-lowrecall-diagnosis</code>
+    &middot; <code>e2-rcot-v2-recovery</code> (B=299 on the OLD env) &middot;
+    <code>e2-operating-point-redesign-asrun</code> (live-trap freeze) &middot;
+    <code>e2-rcot-v2-recovery-REDESIGNED</code> &middot; <code>e2-thesis-endtoend-livetrap</code> &middot;
+    <code>e2-p0k5-recovery-experiment</code> (DEV) &middot; <code>e3-chain-recovery-derisk</code> (DEV) &middot;
+    <code>e2-latent-confounding-prereg-DRAFT</code> (superseded typed-truth reframe, &sect;8).
+  </div>
+
+  <div class="rel">
+    <b>Firewall (holds throughout).</b> All discovery-method work here is <em>recovery-method</em>
+    validation of E2's mechanism class. It says nothing about whether E2's <em>decision</em> gap is real;
+    the recorded E2 decision null (<code>GATE_CONTRACT_E2.md</code>, commit <code>8d70a4f</code>,
+    <code>xfail(strict=True)</code>) stood untouched until the operating-point redesign (&sect;3)
+    deliberately made the trap live. A conservative / partial recovery is a valid recorded boundary
+    result, not a defect to tune away.
+  </div>
+
+  <h2>1. Frozen artifacts and provenance</h2>
+  <div class="tbl">
+    <table>
+      <caption>Table 1. The anchors everything cites. Prototype-vs-frozen status is load-bearing.</caption>
+      <thead><tr><th>method / event</th><th>protocol_commit</th><th>key config</th><th>status</th></tr></thead>
+      <tbody>
+        <tr><td>pdCor (U-centered partial distance corr)</td><td class="mono">828e345</td><td class="mono">B_perm=999, per-target BH-FDR q=0.05, n=4000</td><td class="warn">RETIRED as LIVE method</td></tr>
+        <tr><td>RCoT-v1 (<code>E2_RCOT_DISCOVERY_PROTOCOL.md</code>)</td><td class="mono">eba381a</td><td class="mono">null=block_perm, reps=99, dz=25</td><td class="mut">FROZEN; first-freeze outcome</td></tr>
+        <tr><td>RCoT-v2 (<code>..._V2.md</code>)</td><td class="mono">8052e10 (733e838)</td><td class="mono">only change: reps 99&rarr;299</td><td class="disc">FROZEN; shipped E2 selector</td></tr>
+        <tr><td>Operating-point redesign</td><td class="mono">8ed31bf; env <b>9d87a60</b></td><td class="mono">id_ranges[6]:(&minus;60,65)&rarr;(1.5,4.0); KPI_MEAN_STD[5] re-derived</td><td class="disc">FROZEN (trap live)</td></tr>
+        <tr><td>E2 decision null</td><td class="mono">8d70a4f</td><td class="mono">xfail(strict=True) (FAIL)</td><td class="mut">untouched by discovery work</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Modules: <code>cdd_oran/e2slice/discovery_rcot.py</code> (v1 numerics),
+    <code>discovery_rcot_v2.py</code> (thin sibling, only reps differ; v1 100% preserved + loadable),
+    <code>evaluate_rcot.py</code> / <code>evaluate_rcot_v2.py</code> (scorers, mirror <code>evaluate.py</code>).
+    Anti-p-hacking ordering enforced every run: <b>Phase A</b> &mdash; all masks persisted +
+    content-hashed + fail-closed re-loaded (re-deriving every protocol constant) BEFORE any truth read;
+    <b>Phase B</b> &mdash; recovery scored against <code>E2V2Env().true_adj_matrix()</code> into a separate
+    record. No seed was ever dropped or reweighted. All runs single-core
+    (<span class="mono">OMP/MKL/OPENBLAS_NUM_THREADS=1</span>).
+  </p>
+  <p>
+    E2 truth (pre-redesign): <b>16 NCP&rarr;KPI edges, 0 KPI&rarr;KPI edges</b> &mdash; all 36 lagged
+    KPI&rarr;KPI candidates are true-negatives (KPIs are a pure function of the <em>current</em> params, no
+    autoregression; verified in <code>dataset.py</code>, params drawn mutually-independently every step so
+    <span class="mono">P<sup>m&minus;1</sup> &perp; P<sup>m</sup></span>).
+  </p>
+
+  <h2>2. The discovery-method arc: pdCor &rarr; RCoT-v1 &rarr; RCoT-v2</h2>
+  <figure>
+    <img src="fig1_method_arc.png" alt="NCP recall and KPI-KPI false-positive rate across pdCor, RCoT-v1, RCoT-v2">
+    <figcaption>
+      <b>Figure 1. The method arc.</b> <b>Left:</b> NCP&rarr;KPI recall &mdash; pdCor (retired, seed-0)
+      <span class="mono">0.813</span>; RCoT-v1 <span class="mono">0.163</span> (recall collapse); RCoT-v2
+      <span class="mono">0.769</span> (recall restored at B=299); RCoT-v2 on the redesigned live-trap env
+      <span class="mono">0.650</span> (hatched &mdash; see &sect;4). <b>Right:</b> KPI&rarr;KPI
+      false-positive rate. pdCor over-selects at <span class="mono">17/36</span> (&asymp;9&times; the nominal
+      FDR); every RCoT variant holds <span class="mono">6/360</span> (rejection <span class="mono">0.983</span>)
+      &mdash; the block-conditional-permutation null is what buys the calibration.
+    </figcaption>
+  </figure>
+
+  <h3>2.1 pdCor &mdash; the retired baseline (seed-0 only, n=1)</h3>
+  <p>
+    The frozen pdCor run only ever completed <b>seed-0</b>: seeds 1&ndash;2 failed to launch
+    (<span class="mono">rc=127</span>, 0-byte outputs, rows generated but no discovery), seeds 3&ndash;9
+    never existed. Seed-0 discovery ran <b>&asymp;31,138 s &asymp; 8.65 h</b> single-core (epoch
+    timestamps; the <code>time</code> wrapper was unavailable). Run <span class="mono">git_sha f0768430</span>,
+    <span class="mono">dataset_hash f223764&hellip;</span> Scored seed-0 recovery
+    (<code>replicate-00/recovery.json</code>, verbatim):
+  </p>
+  <ul>
+    <li><b>NCP&rarr;KPI (real edges): P 0.929 / R 0.813 / F1 0.867</b> &mdash; 13/16 edges, 1 FP. Missed:
+      P2&rarr;K1, P1&rarr;K4, <b>P0&rarr;K5</b>.</li>
+    <li><b>KPI&rarr;KPI: 0 TP / 17 FP of 36, rejection 0.528</b> &mdash; &asymp;9&times; the nominal FDR.</li>
+  </ul>
+  <p>
+    The failure is isolated to the Z-dependent lagged-KPI candidates; independent-parameter NCP candidates
+    calibrate cleanly. Diagnosed cause: <b>marginal-permutation miscalibration</b> &mdash; permuting a
+    candidate column that is a smooth function of a shared parent vector destroys its dependence on Z, so
+    the null samples <em>joint</em> not <em>conditional</em> independence and is too tight, landing
+    Z-dependent true-negatives in its upper tail. The pdCor denominator guard fired 0 times (the failure is
+    invisible to it). Deeper limit: <span class="mono">|pdCor|</span> is a conditional-<em>association</em>
+    score, not a CI certificate &mdash; <span class="mono">pdCor=0 &rArr;&#x0338; X&perp;Y|Z</span>
+    (S&eacute;kely&ndash;Rizzo 2014). pdCor kept on disk as a documented naive-DAG baseline.
+  </p>
+  <p>
+    <b>Decision (user-greenlit 2026-09-06):</b> retire permutation-pdCor as the LIVE method; move to a
+    genuine CI test with an analytic / conditional-permutation null (RCoT). The pivotal reason was
+    <em>quality</em> (the 9&times; over-selection is a method property, not a bug), not merely the
+    &asymp;8.65 h/seed cost.
+  </p>
+
+  <h3>2.2 RCoT-v1 (B=99) &mdash; over-selection fixed, recall collapsed</h3>
+  <p>
+    RCoT (randomized-Fourier-feature kernel CI test, RFF approx of KCIT, analytic weighted-&chi;<sup>2</sup>
+    <em>or</em> block-conditional-permutation null) with per-target BH-FDR. Frozen with
+    <span class="mono">null=block_perm, reps=99</span> (user approved block_perm over the analytic null).
+    10 seeds, &asymp;14.5 min total, guard fired 0/84 every seed. 10-seed envelope: <b>NCP&rarr;KPI P 0.674 /
+    R 0.163 / F1 0.251</b>; <b>KPI&rarr;KPI 6/360 FP (mean 0.60/36), rejection 0.983</b>. So the
+    block-conditional-permutation null <b>crushed the KPI&rarr;KPI over-selection</b> (0.983 vs pdCor's
+    0.528) &mdash; the calibration property RCoT was built to buy holds &mdash; but <b>recall collapsed</b>
+    to 0.163 (two seeds selected nothing).
+  </p>
+
+  <h3>2.3 The low-recall diagnosis &mdash; noiselessness FALSIFIED</h3>
+  <p>
+    This is the pivotal method-iteration correction. The <code>e2-improvement-synthesis</code> brief had
+    flagged a <b>Step-1b escalation branch</b>: that E2's noiselessness (<span class="mono">Y=f(Z)</span>
+    exactly) might defeat <em>any</em> CI test and turn the fix into a benchmark-design (add-noise)
+    decision. <b>That branch was falsified.</b> Diagnosis (<code>e2-rcot-lowrecall-diagnosis</code>,
+    truth-free on the byte-faithful test-bed <code>calib_study4_correct</code> + validation that re-scoring
+    the frozen masks reproduced every persisted number):
+  </p>
+  <ul>
+    <li><b>Not noiselessness, not low power, not over-conditioning.</b> The block_perm conditional test
+      rejects the true edge raw at <b>128/160 (80%)</b> of true edges (raw p&lt;0.05). Raw power is
+      &asymp;0.75&ndash;0.78 for <em>every</em> conditioning set &mdash; <code>Z_full</code>,
+      <code>Z_params_only</code>, <code>Z_none</code> (marginal), <code>Z_coparents</code> all within
+      &lt;0.03 &mdash; so &ldquo;condition on everything &rArr; explain away the true parent&rdquo; is
+      <b>falsified</b>.</li>
+    <li><b>Root cause = BH &times; permutation-resolution arithmetic.</b> With <code>reps=99</code> the
+      minimum p-value is pinned at the floor <span class="mono">1/(99+1)=0.010</span>, which cannot clear
+      the per-target BH leading threshold <span class="mono">0.05/14=0.00357</span>. The
+      strong-but-quantized true-edge p is discarded at selection, not at the test.</li>
+    <li><b>Fix (truth-free validated) = <code>block_perm_reps &ge; 299</code></b> (floor
+      <span class="mono">0.0033 &lt; 0.00357</span>): BH power <span class="mono">0.086&rarr;~0.74</span>
+      while KPI&rarr;KPI FP stays &asymp;0.010. <code>analytic_hbe</code> also restores recall
+      (0.163&rarr;0.769) but its KPI&rarr;KPI FP <b>grows with n</b> (0.037&rarr;0.120 as n:1000&rarr;4000)
+      &mdash; reopening the over-selection &mdash; so it is reported only as a sensitivity variant,
+      <b>not adopted</b>.</li>
+  </ul>
+  <p><b>No benchmark-noise change is needed for E2 recall.</b> The escalation to a noise decision was
+    superseded by this diagnosis.</p>
+
+  <h3>2.4 RCoT-v2 (B=299) &mdash; the shipped selector</h3>
+  <p>
+    Only change from v1: <code>block_perm_reps 99&rarr;299</code> (fresh pre-registration,
+    protocol_commit_v2 <span class="mono">8052e10</span>; v1 byte-preserved and still loadable). 10 seeds,
+    <b>&asymp;1.7 h</b> (&asymp;3&times; v1's cost), single-core, no seed dropped. 10-seed envelope on the
+    <b>OLD (pre-redesign) env</b>: <b>NCP&rarr;KPI P 0.964 [0.86, 1.00] / R 0.769 [0.75, 0.81] / F1 0.855
+    [0.80, 0.90]</b>; <b>KPI&rarr;KPI 6/360 total FP, rejection 0.983</b>.
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table 2. Method comparison, all E2, OLD env.</caption>
+      <thead><tr><th>method</th><th>NCP R</th><th>NCP F1</th><th>KPI&rarr;KPI FP</th><th>runtime</th></tr></thead>
+      <tbody>
+        <tr><td class="disc">RCoT-v2 (B=299)</td><td class="mono">0.769</td><td class="mono disc">0.855</td><td class="mono">6/360</td><td class="mono">~1.7 h / 10 seeds</td></tr>
+        <tr><td>RCoT-v1 (B=99)</td><td class="mono">0.163</td><td class="mono">0.251</td><td class="mono">6/360</td><td class="mono">~14 min / 10 seeds</td></tr>
+        <tr><td class="mut">pdCor (retired, seed-0)</td><td class="mono">0.813</td><td class="mono orac">0.867</td><td class="mono orac">17/36</td><td class="mono">~8.65 h / seed</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    RCoT-v2 matches pdCor on true edges (F1 0.855 vs 0.867) at <b>higher precision</b>, without pdCor's
+    17/36 over-selection, and &asymp;300&times; faster. <b>RCoT-v2 is a solid E2 discovery building block.</b>
+  </p>
+
+  <h2>3. Operating-point redesign &mdash; making the trap LIVE (FROZEN <span class="mono">9d87a60</span>)</h2>
+  <p>
+    The recorded E2 decision null was FAIL (the shared-knob trap was dormant at the old operating point).
+    The pre-registered redesign (<code>E2_OPERATING_POINT_REDESIGN.md</code>, applied verbatim) shifted
+    <b>only P6's range</b> <span class="mono">id_ranges[6]:(&minus;60,65)&rarr;(1.5,4.0)</span> and
+    re-derived the K5 standardization constant
+    <span class="mono">KPI_MEAN_STD[5]:(&minus;10.140367,12.583744)&rarr;(&minus;0.956730,4.771898)</span>
+    (deterministic n=1e6 re-derivation; <span class="mono">tau_E2=0.10</span>, the P0 grid, bank rules, and
+    degeneracy definitions untouched). K0&ndash;K4 verified <b>bit-identical</b> two ways (P6 is
+    K5-exclusive, drawn after P0&ndash;P5; the n=1e6 re-derivation returned KPI[0..4] unchanged).
+  </p>
+  <div class="tbl">
+    <table>
+      <caption>Table 3. Acceptance criteria &mdash; all PASS (&sect;5 of the redesign doc).</caption>
+      <thead><tr><th>criterion</th><th>value</th><th>threshold</th><th>result</th></tr></thead>
+      <tbody>
+        <tr><td>A. mean_positive(gap_norm)</td><td class="mono disc">0.190022</td><td class="mono">&ge; tau_E2 = 0.10</td><td class="disc">PASS</td></tr>
+        <tr><td>B. mean_negative(gap_norm)</td><td class="mono">0.000000</td><td class="mono">&le; 0.01</td><td class="disc">PASS</td></tr>
+        <tr><td>C. factor-removal positive gap (drop xApp4/K5)</td><td class="mono">0.000000</td><td class="mono">&le; 0.01</td><td class="disc">PASS</td></tr>
+        <tr><td>D. feasibility</td><td class="mono">32 pos + 32 neg</td><td class="mono">32 + 32</td><td class="disc">PASS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Degeneracy guards (32 positive-bank states, true-K5 threshold &minus;25 satisfy-below):
+    reachable-satisfied 32/32; not-free-at-optimum 30/32; both-regimes-coexist 32/32; genuine-cost 30/32.
+    The trap is a genuine trade-off, not a maximized number or an unsatisfiable trap. <span class="mono">tau_E2</span>
+    was not tuned (truth-free prediction was &asymp;0.204; observed 0.190). The RCoT-v1/v2 recovery runs of
+    &sect;2 are on the OLD env and are now stale run-outputs (re-run below), not test failures.
+  </p>
+
+  <h2>4. RCoT-v2 on the redesigned env &mdash; the harmful edge gets HARDER</h2>
+  <p>
+    RCoT-v2 (protocol_commit_v2 <span class="mono">8052e10</span>, B=299, dz=25, no RCoT constant changed)
+    re-run on the redesigned env (<span class="mono">9d87a60</span>), 10 seeds, n=4000:
+  </p>
+  <ul>
+    <li><b>NCP&rarr;KPI: P 0.992 [0.917, 1.000] / R 0.650 [0.625, 0.688] / F1 0.785 [0.769, 0.815]</b>;
+      KPI&rarr;KPI 6/360.</li>
+    <li><b>Harmful edge P0&rarr;K5 recovered: <span class="orac">0/10</span></b> (OLD env: 3/10).
+      Beneficial P0&rarr;{K0,K1,K2}: <b>10/10</b> each (OLD env: 10/10).</li>
+  </ul>
+  <div class="gate" style="border-left-color:var(--warn)">
+    <b style="color:var(--warn)">Tension surfaced (real, honest).</b> The operating-point redesign that
+    made the <em>decision</em> trap live (gap 0.190) simultaneously made the <em>harmful edge</em> strictly
+    harder to discover &mdash; NCP recall dropped <span class="mono">0.769&rarr;0.650</span> and P0&rarr;K5
+    recovery dropped <span class="mono">3/10&rarr;0/10</span>. Both facts are recorded as-run; neither was
+    tuned. On the live trap the <b>frozen</b> discovery method never recovers P0&rarr;K5 &mdash; which sets
+    up both the end-to-end thesis (&sect;5, the failure is downstream-meaningful) and the P0&rarr;K5
+    recovery experiment (&sect;6, a method that <em>can</em> recover it).
+  </div>
+
+  <h2>5. End-to-end thesis on the LIVE trap &mdash; the thesis FIRED (DEV, uncommitted)</h2>
+  <p>
+    <b>Status:</b> dev-only; nothing committed, no tracked source modified, <code>runs/</code> untouched.
+    Runner <code>scratchpad/e2_thesis_endtoend.py</code>. The prototypes named in the task
+    (<code>ms_world_model_dev.py</code>, <code>decision_harness/</code>, <code>trap_live/</code>) did
+    <b>not</b> exist in tree or history; the spine was rebuilt directly on the FROZEN locked machinery
+    &mdash; <code>cdd_oran/analysis/v2_regret.py</code> (objective <span class="mono">R</span> = hinge cost
+    over the panel <span class="mono">{xApp0,1,2,4}</span>,
+    <span class="mono">P0_GRID=linspace(&minus;100,100,101)</span>, 2-advance actuation lag) and
+    <code>scripts/e2_decision_gate.py</code> (the frozen 32 K5-positive + 32 K5-negative committed-state
+    bank). Full spine run over the 32 K5-positive states &mdash; <b>discovered-structure &rarr; world-model
+    &rarr; H=1 decision &rarr; REALIZED score on the TRUE env</b>. Three arms differ <b>only in the world
+    model</b> used to select <span class="mono">do(P0)</span>; realized R always scored on the TRUE env.
+  </p>
+  <figure>
+    <img src="fig3_endtoend_thesis.png" alt="Three-arm realized R and trap-fall over 32 K5-positive states">
+    <figcaption>
+      <b>Figure 3. The end-to-end thesis, realized on the TRUE env.</b> Over the 32 K5-positive states,
+      the <span class="orac">oracle / complete fan-out</span> world model (incl. P0&rarr;K5) reaches mean
+      realized R <span class="mono">&minus;42.33</span> with <b>regret 0</b> and falls into the trap only
+      6/32; the <span class="disc">discovered decoy</span> world model
+      (<code>E2V2Env(decoy_omit_p0_k5=True)</code>) reaches <span class="mono">&minus;57.48</span>, regret
+      <span class="mono">+15.15</span>, and falls in <b>30/32</b>; the do-nothing floor is
+      <span class="mono">&minus;102.56</span> (regret 60.23, trap-fall 32/32).
+    </figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 4. Three-arm end-to-end contrast over the 32 K5-positive states (DEV spine).</caption>
+      <thead><tr><th>arm</th><th>mean realized R</th><th>mean regret</th><th>trap-fall</th><th>true-K5 satisfied</th></tr></thead>
+      <tbody>
+        <tr><td class="mut">do-nothing (floor)</td><td class="mono">&minus;102.56</td><td class="mono">60.23</td><td class="mono">32/32 (1.00)</td><td class="mono">0/32 (0.00)</td></tr>
+        <tr><td class="orac">oracle / complete fan-out</td><td class="mono orac">&minus;42.33</td><td class="mono orac">0.00</td><td class="mono">6/32 (0.19)</td><td class="mono">26/32 (0.81)</td></tr>
+        <tr><td class="disc">discovered structure (decoy)</td><td class="mono disc">&minus;57.48</td><td class="mono disc">15.15</td><td class="mono">30/32 (0.94)</td><td class="mono">2/32 (0.06)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><b>Oracle</b> (world model = TRUE <code>E2V2Env</code>, complete fan-out incl. P0&rarr;K5) prevents
+      the harmful move: regret 0, true K5 &le; &minus;25 in 26/32.</li>
+    <li><b>Discovered</b> (world model = <code>E2V2Env(decoy_omit_p0_k5=True)</code>) systematically falls
+      into the trap: regret +15.15 (median +9.0, max +51.2), realized R strictly worse than oracle in 25/32.</li>
+    <li><b>Null control (K5-negative bank, trap inactive): oracle and discovered are byte-identical</b>
+      (both &minus;60.85, regret 0, trap-fall 0/32). Missing P0&rarr;K5 costs <em>nothing exactly where the
+      trap is inactive</em> &mdash; the failure localizes precisely to the trap states.</li>
+  </ul>
+  <p>
+    The decoy is the faithful model of the real discovered masks: across all 10 discovery seeds
+    (<code>runs/e2slice-redesign/replicate-00..09/discovery_rcot_v2.json</code>), P0&rarr;{K0,K1,K2}
+    recovered 10/10, P0&rarr;K5 <b>0/10</b>, and K5's discovered parents are at most <span class="mono">{P6}</span>
+    or empty &mdash; <b>never P0, never any KPI</b>, so no direct or indirect P0&rarr;K5 path in any seed.
+    Spurious KPI&rarr;KPI FPs are inert under an env-mechanism world model
+    (<span class="mono">k_t=f(p_{t&minus;1})</span>, no KPI&rarr;KPI channel), so the discovered arm is one
+    deterministic structure, not a 10-way average. Mechanism note: the discovered arm's live-trap
+    predicted/realized gap is modest (&minus;61.6 vs &minus;57.5) rather than a wild over-prediction &mdash;
+    the decoy freezes K5 at its already-violated committed value (~0), so it does not over-promise on K5;
+    it simply <b>has no lever to fix it</b>.
+  </p>
+  <p>
+    <b>Verdict.</b> The end-to-end thesis &mdash; never previously exercised &mdash; <b>fired</b>:
+    complete/oracle fan-out rejects the locally-attractive/globally-harmful P0 move; the discovered
+    structure (missing P0&rarr;K5 in 10/10) falls into the trap; the two arms are identical where the trap
+    is inactive. <b>The binding constraint to the E5 thesis on E2 is discovery completeness of the harmful
+    P0&rarr;K5 edge &mdash; not the world-model and not the planner.</b> Caveat: the world model is
+    mechanism-restricted-to-structure (a deliberate structure ablation isolating the missing edge from
+    mechanism-estimation noise); a data-fit world model would add fitting error but cannot change the
+    qualitative result, since K5's discovered parents contain no P0 path in any seed
+    (<span class="mono">&part;K5/&part;P0 &equiv; 0</span> either way).
+  </p>
+
+  <h2>6. P0&rarr;K5 recovery experiment &mdash; the harmful edge IS observationally recoverable (DEV)</h2>
+  <p>
+    <b>Status:</b> DEV / analysis prototype, ran 2026-09-07 night (agent <code>af0008a1</code>), filed
+    under 09-06. Nothing frozen / committed / pre-registered; truth read only at scoring. Live-trap E2
+    (<span class="mono">9d87a60</span>). Runner <code>scratchpad/p0k5_full.py</code>. The harmful edge is
+    <b>co-parent-gated</b>:
+  </p>
+  <div class="eq">k5 = &minus;35 &middot; exp( &minus;((p7 + p0 &minus; 25)&sup2;) / (2 &middot; safe_exp(p6)&sup2;) ),&nbsp;&nbsp; true parents {P0, P6, P7}</div>
+  <p>
+    P0 buried additively with P7 inside a Gaussian bump of width P6, ~1% marginal variance, fully
+    nonlinear. Because E2 params are mutually-independent exogenous roots,
+    <span class="mono">do(P0) == observational marginal</span> (no confounding to break); the edge is
+    recoverable <b>only by conditioning on / controlling the co-parents</b>.
+  </p>
+  <figure>
+    <img src="fig2_p0k5_recovery.png" alt="P0-K5 recovery and NCP recall across four methods">
+    <figcaption>
+      <b>Figure 2. Only stratified conditioning recovers the harmful edge.</b> <b>Left:</b> harmful
+      P0&rarr;K5 recovered across 10 seeds &mdash; M1 frozen RCoT-v2, M2 do(P0)-marginal, and M4
+      superset+prune all <span class="mono">0/10</span>; only <span class="disc">M3 STRATIFIED</span>
+      recovers it <b>10/10</b>. <b>Right:</b> NCP&rarr;KPI recall &mdash; M3 also <em>raises</em> overall
+      recall (15.3 of 16) versus &asymp;10&ndash;11 for the others, while keeping KPI&rarr;KPI FP low (0.30).
+    </figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 5. Four methods, all truth-free, BH-FDR q=0.05 per target, 10 seeds, n=4000.</caption>
+      <thead><tr><th>method</th><th>P0&rarr;K5</th><th>P0&rarr;{K0,K1,K2}</th><th>NCP recall /16</th><th>KPI&rarr;KPI FP</th><th>param FP</th></tr></thead>
+      <tbody>
+        <tr><td>M1 frozen RCoT-v2 baseline</td><td class="mono">0/10</td><td class="mono">30/30</td><td class="mono">~10&ndash;11</td><td class="mono">0.60</td><td class="mono mut">&mdash;</td></tr>
+        <tr><td>M2 do(P0)-marginal (control)</td><td class="mono">0/10</td><td class="mono">30/30</td><td class="mono">11.2</td><td class="mono">0.70</td><td class="mono">0.20</td></tr>
+        <tr><td class="disc">M3 STRATIFIED [primary]</td><td class="mono disc">10/10</td><td class="mono">30/30</td><td class="mono disc">15.3</td><td class="mono">0.30</td><td class="mono">0.30</td></tr>
+        <tr><td>M4 superset+prune</td><td class="mono">0/10</td><td class="mono">30/30</td><td class="mono">11.2</td><td class="mono">0.00</td><td class="mono">0.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    M3 = <span class="mono">S* = max over stratifier g (g over ALL candidates, g&ne;i) of conditional
+    &eta;&sup2;(target | cand_i binned, pooled within g's strata)</span>, with a conditional-permutation
+    null permuting cand_i within each g-stratum and re-maxing over g (a proper max-statistic CI test).
+    <b>Truth-free:</b> g ranges over all candidates &mdash; the method <em>discovers</em> that stratifying
+    by P6/P7 opens the gate, it is not told they are the co-parents. M3's P0&rarr;K5 cond-perm p =
+    <b>0.0033 on all 10 seeds</b> (the 1/300 floor &mdash; the observed statistic beats all 299
+    permutations every seed). Marginal &eta;&sup2;(K5|P0)=0.001&ndash;0.005; marginal-perm p
+    0.08&ndash;0.98 (never significant); P0&rarr;K5 is not even in the loose (q=0.20) marginal superset (0/10).
+  </p>
+  <p><b>Findings.</b> (1) The harmful co-parent-gated edge <b>IS recoverable from purely observational
+    data</b> &mdash; no interventional data required &mdash; the lever is the conditioning / stratification
+    strategy, not intervention. (2) Both controls fail as diagnosed: interventional-marginal (M2) draws the
+    same weak marginal; superset-then-prune (M4) can't admit an edge whose marginal signal is ~zero. (3) M3
+    is not flagging everything &mdash; it <em>improves</em> NCP recall (15.3 vs ~10) while keeping
+    KPI&rarr;KPI FP low (0.30). (4) This closes the E2 loop in principle: observational stratified
+    discovery &rarr; complete structure &rarr; (already-proven &sect;5) world-model + decision reject the
+    harmful action, with <em>discovered</em> not oracle structure.
+  </p>
+  <div class="gate" style="border-left-color:var(--warn)">
+    <b style="color:var(--warn)">Hard-stop / user-gated.</b> This is a truth-free prototype, <b>not</b> a
+    frozen method. p sits at the permutation floor (B=299 cannot distinguish &ldquo;just below floor&rdquo;
+    seeds). Promoting the max-over-g stratified test to the LIVE E2 method = <b>fresh pre-registration +
+    its own calibration study</b> (FP control across a null at more seeds; sensitivity to strata count /
+    within-bin / min-per-stratum). <b>Do NOT freeze from these numbers.</b>
+  </div>
+
+  <h2>7. Methodological note &mdash; CMI vs pdCor vs RCoT (journal-carryover)</h2>
+  <p>
+    Positions the project's discovery statistic on a clean axis for the journal extension:
+    <b>model-based CI (CMI) &rarr; model-free association (pdCor) &rarr; model-free CI (RCoT).</b>
+  </p>
+  <ul>
+    <li><b>CMI (conference/CDL):</b> <span class="mono">I(s<sub>t+1</sub><sup>j</sup>; s<sub>t</sub><sup>i</sup>
+      | rest)</span> via a learned masked predictor <span class="mono">p&#770;<sub>&theta;</sub></span>.
+      Information-theoretic; population value is 0 &hArr; CI, but the estimate is model-limited. Requires
+      offline training. Cheap at inference (one shared full pass + one batched masked pass via
+      <code>vmap</code>, <code>cdl.py</code>).</li>
+    <li><b>pdCor (E-series, Plan 007):</b> U-centered partial distance correlation, a single rank-1
+      projection to condition on Z. Model-free, but <b>NOT a CI test</b> &mdash;
+      <span class="mono">pdCor=0 &rArr;&#x0338; X&perp;Y|Z</span> (S&eacute;kely&ndash;Rizzo 2014); a
+      conditional <em>association</em> score whose rank-1 partial cannot residualize a target that is a
+      rich deterministic function of a high-dim Z. <span class="mono">O(N&sup2;)</span> &times;
+      permutations. <b>This is the structural reason it over-selects</b> (FPs concentrate on
+      conditioning-set-dependent candidates).</li>
+    <li><b>RCoT (successor):</b> RFF partial cross-covariance
+      <span class="mono">C&#770;<sub>AB&middot;C</sub></span>, statistic
+      <span class="mono">S'=n&Vert;C&#770;<sub>AB&middot;C</sub>&Vert;<sub>F</sub><sup>2</sup></span>,
+      analytic weighted-&chi;<sup>2</sup> null (or block-perm). Model-free like pdCor yet a CI test like
+      CMI (asymptotic; finite-D approximate). <span class="mono">O(d&sup2;N)</span>, linear in N. <b>RCoT
+      recovers the CI-testing posture of the original CMI without a trained density model</b> &mdash; the
+      natural successor for the label-free slice. The one honest caveat for the journal is the
+      noiseless-determinism regime, characterized empirically (&sect;2.3) before RCoT was committed.</li>
+  </ul>
+  <p class="mut">
+    Refs: S&eacute;kely&ndash;Rizzo 2014 (Ann. Stat. 42(6)); Strobl&ndash;Zhang&ndash;Visweswaran 2019 /
+    RCIT (arXiv:1702.03877); Wang et al., CDL, ICML 2022.
+  </p>
+
+  <h2>8. Superseded method iteration &mdash; the typed-truth / latent-confounding reframe (NOT taken)</h2>
+  <p>
+    A pre-registration DRAFT (<code>e2-latent-confounding-prereg-DRAFT</code>, never frozen/committed)
+    proposed re-posing E2 truth as <b>typed edges</b> &mdash; directed P&rarr;KPI (manipulable) +
+    bidirected KPI&harr;KPI (shared-latent-parent / confounded siblings) &mdash; scored by two separate
+    metrics, plus a <b>new contemporaneous-sibling construction</b> and a two-regime (latent vs observed
+    shared parent) ablation.
+  </p>
+  <p>
+    <b>This path was not taken, and the draft's own &sect;2 explains why:</b> the current E2 construction
+    does <b>not contain confounded siblings among the scored pairs</b>. A scored KPI&rarr;KPI edge pairs a
+    lagged candidate <span class="mono">K_i=f(P<sup>m&minus;1</sup>)</span> with a next-step target
+    <span class="mono">K_j=f(P<sup>m</sup>)</span>, and <span class="mono">P<sup>m&minus;1</sup> &perp;
+    P<sup>m</sup></span>, so they are genuinely independent true-negatives. The KPI&rarr;KPI false positives
+    were therefore a <b>marginal-permutation calibration artifact, not genuine confounding</b> &mdash; so
+    relabeling them as &ldquo;true &harr; detections&rdquo; would have been the goalpost-moving move the
+    discipline forbids. The confounded-null calibration study that motivated the reframe had tested the
+    <b>wrong DGP</b>; that Step-0 verdict was retracted. The actual fix shipped was the RCoT block_perm
+    conditional test (&sect;2.4), which controls the co-parent spurious dependence directly. The draft is
+    retained (archived) as a documented superseded iteration.
+  </p>
+
+  <h2>9. E3 multi-hop chain recovery &mdash; de-risk of the E5 critical path (DEV)</h2>
+  <p>
+    <b>Status:</b> dev-only, ran 2026-09-07, no freeze / pre-registration &mdash; a calibration /
+    measurement study (the same move as plan 008 for RCoT), not an E3 discovery protocol. Scratchpad
+    <code>e3_chain_derisk/</code>. Included here because it is the sharpest unbuilt discovery risk toward
+    E5 (see the direction report): every prior result validated KPI&rarr;KPI as <em>true-negatives to
+    reject</em>; <b>nothing had ever been validated to <em>recover</em> a KPI&rarr;KPI chain.</b>
+  </p>
+  <div class="eq">E3 SCM (e3.py, coeff exactly 1, linear + noiseless):<br>
+    K0 = P0(t&minus;1);&nbsp; K1 = K0(t&minus;1);&nbsp; K2 = P1 + K1(t&minus;1);&nbsp; K3 = P2 + K1(t&minus;1);&nbsp; K4 = P3(t&minus;1)<br>
+    true graph: P0&rarr;K0&rarr;K1&rarr;{K2,K3} + P1&rarr;K2, P2&rarr;K3, P3&rarr;K4 &mdash; 7 true edges of 45 candidates</div>
+  <p>
+    <b>K1 is the intermediate KPI</b> (descendant of K0, parent of {K2,K3}) = the 2-hop chain target.
+    Method: <span class="mono">|partial_corr(i,j|all other inputs)|</span> FULL conditioning (E1-v2 as-is)
+    vs a LOW-ORDER PC-stable min over <span class="mono">|S|&le;2</span>; family-wise permutation-null
+    threshold (never truth). 10 seeds, n=4000. <b>Result: both methods recall 1.00 / precision 1.00 / F1
+    1.00</b> &mdash; 70/70 true edges (incl. both chain hops K0&rarr;K1 and K1&rarr;{K2,K3}), <b>0 FP, 0
+    collinearity STOPs</b>. Chain edges score exactly 1.0 under FULL conditioning <em>despite</em> real
+    collinearity (P0&ndash;K0=0.74, K0&ndash;K1=0.74, P0&ndash;K1=0.57), because each target is an exact
+    linear function of its recorded parents so residualizing removes the mediator's shared variance from
+    target and input identically (scale/collinearity-invariant). <b>The plan-007 over-conditioning hazard
+    is REFUTED with numbers</b>, even though its collinearity precondition is genuinely present. Ancestry
+    decoys (P0&rarr;K1 skip-K0, K0&rarr;K2 skip-K1, etc.): marginal 0.40&ndash;0.75 &rarr;
+    <b>FULL/LOW-ORDER 0.000</b>, correctly separated by conditioning on the mediator.
+  </p>
+  <p>
+    <b>Honest caveats.</b> Noiselessness carries the crisp 1.0/0.0 separation; <b>E5 turns noise ON</b>.
+    The low-order min-statistic already shows attenuation here (chain edges 0.46 vs direct-param
+    0.56&ndash;1.0 vs threshold ~0.045) &mdash; under noise that margin shrinks first, so <b>prefer FULL
+    conditioning for the chain and re-run this calibration at E5-level noise before trusting it</b>. This
+    validates <b>stage-1 skeleton recovery only</b> (the edge set); it does <b>not</b> exercise the
+    downstream E5 spine (discovered structure &rarr; multi-intervention world-model &rarr; planner &rarr;
+    reject) &mdash; that load-bearing blocker remains (see the direction report). Orientation is free (arch
+    forbids within-step KPI&rarr;KPI; all fan-out lagged).
+  </p>
+
+  <h2>10. State of play (E2 empirical) &mdash; FROZEN vs DEV</h2>
+  <ul>
+    <li><b>FROZEN &amp; shipped:</b> RCoT-v2 (<span class="mono">8052e10</span>, B=299) discovery method;
+      live-trap env (<span class="mono">9d87a60</span>, gate ACCEPT, gap 0.190).</li>
+    <li><b>Recorded results:</b> RCoT-v2 on live-trap env (NCP R 0.650, P0&rarr;K5 0/10); pdCor retired
+      seed-0 baseline; RCoT-v1 first-freeze outcome.</li>
+    <li><b>DEV prototypes (user-gated, not frozen):</b> end-to-end thesis spine (thesis FIRED); stratified
+      P0&rarr;K5 recovery (10/10 observationally); E3 chain de-risk (recall 1.00). None may be promoted to
+      a LIVE / frozen method without a fresh pre-registration + calibration study.</li>
+    <li><b>The one binding constraint</b> to the E5 thesis on E2 is <b>discovery completeness of the
+      harmful P0&rarr;K5 edge</b> &mdash; &sect;5 proves the downstream spine already rejects the trap given
+      complete structure; &sect;6 shows a (still-unfrozen) method that recovers the edge observationally.</li>
+  </ul>
+
+  <div class="foot">
+    <p><b>Provenance.</b> RCoT-v2 protocol <code>docs/benchmark/E2_RCOT_DISCOVERY_PROTOCOL_V2.md</code>
+    (protocol_commit_v2 <code>8052e10</code>, locked module <code>733e838</code>); operating-point redesign
+    <code>docs/benchmark/E2_OPERATING_POINT_REDESIGN.md</code> (pre-reg <code>8ed31bf</code>, env-change
+    <code>9d87a60</code>); E2 decision null <code>GATE_CONTRACT_E2.md</code> <code>8d70a4f</code>. Frozen
+    recovery outputs under <code>runs/e2slice-redesign/replicate-00..09/discovery_rcot_v2.json</code>. DEV
+    runners: <code>scratchpad/e2_thesis_endtoend.py</code>, <code>scratchpad/p0k5_full.py</code>,
+    <code>scratchpad/e3_chain_derisk/</code> (nothing committed, <code>runs/</code> untouched).</p>
+    <p><b>Figures.</b> <code>OMP_NUM_THREADS=1 MPLBACKEND=Agg .venv/Scripts/python.exe
+    reports/2026-09-06-e2-discovery-method-and-livetrap/make_figs.py</code> &mdash; all numbers transcribed
+    from this consolidated record (the as-run provenance above); no figure invents a number. This report
+    lives under the gitignored <code>reports/</code> tree. matplotlib 3.11.1 &middot; numpy 2.4.2.</p>
+  </div>
+
+</div>
+</body>
+</html>

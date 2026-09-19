@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An E1 one-step prediction pipeline and oracle–dense recovery control (2026-09-02)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .expl{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; font-weight:650;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--accent); border:1px solid var(--accent);
+    border-radius:4px; padding:.05em .45em; margin-left:.4em; vertical-align:.08em}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>An E1 one-step prediction pipeline, and an oracle&ndash;dense recovery-control measurement on the v2 SCM</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-02</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> 57bcd46</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> a new self-contained v2 prediction pipeline built from scratch; one recovery-control measurement on E1; type/lint baseline restored; no changes to the legacy training path, no retraining of prior checkpoints</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> This is a delta on <em>2026-09-01 &mdash; Discovery recall, its
+    decision-relevance, and a planner-search correctness fix</em>, whose standing position is that the
+    learned causal structure earns its keep in <em>prediction</em> and out-of-distribution generalisation,
+    but not, on the current (legacy) environments, in the <em>decision</em>; and which recorded that the
+    difficulty axes of those environments are entangled, so a benchmark redesign is the agreed next step.
+    That work operated post-hoc on saved legacy-environment checkpoints. The present report begins building
+    the measurement apparatus for the redesigned suite on the <em>v2</em> environments: a from-scratch,
+    fully provenance-tracked one-step prediction pipeline on the locked E1 SCM, and a calibration of its
+    zero point on the E1 recovery control. It introduces no scientific claim about causal discovery. Two
+    scope boundaries are load-bearing throughout: (i) the two model arms here are a <b>matched minimal
+    pair</b> (a masked-input MLP), <em>not</em> the <code>CDL</code>/<code>MLPInference</code> models used
+    in prior reports; (ii) E1 is the linear, noiseless recovery control, and the graph is <em>supplied</em>
+    to the oracle arm, not learned, so nothing here bears on discovery.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    We build a self-contained one-step prediction pipeline on the v2 E1 structural causal model
+    (<code>generate&rarr;split&rarr;train&rarr;eval&rarr;verify</code>) with an explicit provenance
+    contract: transition rows are a deterministic, byte-regenerable function of the coordinate tape and are
+    content-hashed; the train/test split is at the <em>episode</em> level (no transition-level temporal
+    leakage) and is bound to the dataset hash; both model arms consume identical rows and split identifiers;
+    trained artifacts reload and reproduce their predictions exactly. On this pipeline we measure a
+    recovery control: an oracle arm whose per-KPI heads are masked to the true structural parents, and a
+    dense arm of <b>identical capacity</b> (644 parameters each) whose heads see all inputs; the graph
+    enters only as a fixed input mask, so capacity is matched by construction and the sole difference is the
+    structural prior. On held-out episodes (192 rows) both arms recover the linear E1 mechanism: aggregate
+    test MSE is <span class="orac mono">4.3&times;10<sup>&minus;7</sup></span> (oracle) and
+    <span class="disc mono">1.4&times;10<sup>&minus;6</sup></span> (dense), i.e. root errors below
+    <span class="mono">0.4%</span> of the KPI standard deviation for both. The oracle&rsquo;s advantage is a
+    small structural-prior effect concentrated on the single-parent KPI <span class="mono">K1</span>
+    (per-KPI MSE <span class="orac mono">1.2&times;10<sup>&minus;14</sup></span> vs
+    <span class="disc mono">1.2&times;10<sup>&minus;6</sup></span>): the dense arm spends capacity
+    suppressing seven spurious inputs, the oracle arm does not. Because the graph is supplied and E1 is the
+    clean control, this is not a discovery result. The measurement fixes the benchmark&rsquo;s zero point:
+    on E1, a supplied oracle graph confers negligible held-out prediction separation over a matched dense
+    model, so any prediction-level separation of interest must originate in harder environments. Separately,
+    the type-check debt was reduced to zero with annotation-level fixes and no suppressions, restoring a
+    green <code>ruff</code>/<code>ty</code>/<code>pytest</code> baseline that every pipeline commit preserves.
+  </p>
+
+  <h2>1. Context and scope</h2>
+  <p>
+    The prior reports established the project&rsquo;s prediction-level contribution and a decision-level
+    STOP verdict on the legacy environments, and identified benchmark redesign as the precondition for
+    further model work. Before the redesigned environments can be evaluated, they need an evaluation
+    apparatus whose correctness is independent of the models under test: a pipeline that persists data,
+    splits it without leakage, trains comparable arms on identical inputs, evaluates held-out prediction,
+    and can prove that a saved artifact reproduces its results. This report builds that apparatus on the
+    simplest v2 environment (E1) and validates it against the one case whose answer is known in advance
+    &mdash; the recovery control &mdash; before any discovery or harder environment is introduced.
+  </p>
+  <p>
+    The work is deliberately minimal and is <em>not</em> wired into the legacy <code>train.py</code> /
+    <code>get_env</code> / <code>ExperimentConfig</code> path: the v2 environments remain disconnected
+    simulator fixtures, and the pipeline is a standalone package (<code>cdd_oran/e1slice/</code>) with its
+    own CLI. This isolates pipeline correctness from the discovery/planning stack, which is the next,
+    separately testable layer.
+  </p>
+
+  <h2>2. The pipeline and its provenance contract</h2>
+  <p>
+    The pipeline has five stages (Fig&nbsp;1), each emitting a hashed, reloadable artifact. A transition row
+    is <span class="mono">x = (params, prev_kpis)</span> at the committed state <span class="mono">s_t</span>
+    and <span class="mono">y =</span> the latent KPI vector after exactly one <code>advance</code>. Because
+    <code>advance</code> computes <span class="mono">k<sub>t+1</sub> = f(prev_params, prev_kpis)</span> from
+    the committed state and only then commits the pending (post-action) params, the action applied at step
+    <span class="mono">t</span> does not enter <span class="mono">y<sub>t</sub></span> (one-step actuation
+    latency); the label is therefore a clean function of the recorded <span class="mono">x</span>, and the
+    per-episode random-action policy serves only to diversify the params seen along a trajectory.
+    Observation noise is off, so latent equals observed.
+  </p>
+  <figure>
+    <img src="fig1_pipeline.png" alt="Five-stage pipeline: generate, split, train, eval, verify, with per-stage artifacts and a provenance band">
+    <figcaption><b>Figure 1.</b> The E1 slice pipeline. Each stage writes an artifact under a run directory;
+      provenance (dataset, SCM, split and metrics hashes, git SHA, and a <span class="mono">schema_version</span>)
+      is carried through so a run is traceable and a dataset is byte-regenerable from its coordinates. The
+      configuration shown produced <span class="mono">768</span> rows over <span class="mono">48</span>
+      episodes (<span class="mono">16</span> recorded steps each), split <span class="mono">36/12</span> by
+      episode.</figcaption>
+  </figure>
+  <p>
+    Four properties are enforced and tested rather than assumed:
+  </p>
+  <ul>
+    <li><b>Episode-level split.</b> Whole episodes are assigned to train or test by ranking a stable
+      per-episode hash; every row of an episode lands in one split, so a training episode&rsquo;s later
+      timesteps cannot leak into test. Row-index selection is tested to never cross the split.</li>
+    <li><b>Identical inputs per arm.</b> Both arms consume the same rows object and the same train-episode
+      identifiers; the split is bound to the dataset hash and the binding is asserted before training and
+      before evaluation.</li>
+    <li><b>Recorded provenance.</b> The manifest stores the dataset hash, SCM hash and full SCM identity,
+      configuration, seeds, <span class="mono">schema_version = e1slice.v1</span>, and the git SHA with a
+      dirty flag.</li>
+    <li><b>Reload reproduction.</b> The live model&rsquo;s test predictions are stored at train time; the
+      <code>verify</code> stage reloads each on-disk artifact, re-predicts, and requires the maximum
+      absolute difference to fall within a frozen tolerance. Observed:
+      <span class="mono">0.0 &le; 10<sup>&minus;6</sup></span> for both arms.</li>
+  </ul>
+  <p>
+    Evaluation metrics are written to an immutable, deterministic <code>metrics.json</code> (a re-run
+    reproduces the file, and it carries a content hash over the numeric results).
+  </p>
+
+  <h2>3. The matched oracle&ndash;dense contrast</h2>
+  <p>
+    The two arms share one architecture &mdash; a small per-output MLP head (hidden width 16) for each of
+    the four KPIs &mdash; and differ only by a fixed, non-trainable input mask (Fig&nbsp;2). For KPI
+    <span class="mono">j</span>, head <span class="mono">j</span> receives <span class="mono">x &odot; m<sub>j</sub></span>.
+    The oracle mask is the true-parent set of each KPI, read from <code>E1V2Env.true_adj_matrix()</code>
+    (the source indexing already matches the <span class="mono">[params | KPIs]</span> input layout); the
+    dense mask is all-ones. Because the mask is a buffer, not a parameter, both arms carry an identical
+    parameter budget (<span class="mono">644</span>), so the comparison isolates the structural prior from
+    capacity. The E1 mechanism the arms are fitting is
+  </p>
+  <div class="eq">
+    K0 = a0·P0 &nbsp; K1 = a1·P1 &nbsp; K2 = a2·P2 + b2·K0 &nbsp; K3 = a3·P3 + b3·K1<br>
+    a = (1,1,1,1), &nbsp; b2 = b3 = 0.5 &nbsp; (one-step lag; K*_prev is the previous latent KPI)
+  </div>
+  <figure>
+    <img src="fig2_mask.png" alt="Two 4x8 input-mask heatmaps: oracle with six active cells on the true parents, dense with all thirty-two active">
+    <figcaption><b>Figure 2.</b> The input masks that distinguish the arms. Rows are the four predicted KPIs;
+      columns are the eight inputs <span class="mono">[P0..P3 | K0..K3]</span>. The <span class="orac">oracle</span>
+      lights only the six true structural parents (<span class="mono">K0&larr;P0, K1&larr;P1,
+      K2&larr;{P2,K0}, K3&larr;{P3,K1}</span>); the <span class="disc">dense</span> arm lights all
+      thirty-two. Parameter count is identical (<span class="mono">644</span>); only the mask differs.</figcaption>
+  </figure>
+
+  <h2>4. Recovery-control measurement</h2>
+  <p>
+    On the 192 held-out rows both arms recover the mechanism: predicted and true next-step KPIs lie on the
+    identity line for both (Fig&nbsp;3). Aggregate test MSE is
+    <span class="orac mono">4.25&times;10<sup>&minus;7</sup></span> (oracle) and
+    <span class="disc mono">1.43&times;10<sup>&minus;6</sup></span> (dense); the corresponding root errors
+    are <span class="mono">6.5&times;10<sup>&minus;4</sup></span> and
+    <span class="mono">1.2&times;10<sup>&minus;3</sup></span>, i.e. roughly <span class="mono">0.2%</span>
+    and <span class="mono">0.4%</span> of the KPI standard deviation (<span class="mono">&sigma;&nbsp;&asymp;&nbsp;0.29&ndash;0.32</span>).
+    The per-KPI breakdown (Table&nbsp;1, Fig&nbsp;4) locates the oracle&rsquo;s advantage: it is largest on
+    the single-parent identity map <span class="mono">K1 = a1·P1</span>, where the masked oracle head sees
+    only <span class="mono">P1</span> and fits to near machine precision
+    (<span class="orac mono">1.2&times;10<sup>&minus;14</sup></span>), while the dense head must additionally
+    drive seven spurious weights toward zero and settles near the same
+    <span class="mono">&asymp;10<sup>&minus;6</sup></span> floor as its other outputs. On the two-parent KPI
+    <span class="mono">K3</span> (which reads a KPI parent, <span class="mono">K1</span>) both arms are at
+    their highest error (<span class="orac mono">1.6&times;10<sup>&minus;6</sup></span>,
+    <span class="disc mono">2.9&times;10<sup>&minus;6</sup></span>), and the gap between arms is smallest
+    there.
+  </p>
+
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Held-out one-step prediction error on E1 (192 test rows, noiseless latent target).
+        Per-KPI and aggregate MSE; training MSE and matched parameter count for reference.</caption>
+      <thead><tr><th>arm</th><th>K0</th><th>K1</th><th>K2</th><th>K3</th><th>test MSE</th><th>test MAE</th><th>train MSE</th><th>params</th></tr></thead>
+      <tbody>
+        <tr><td class="orac">oracle</td><td>2.4e&minus;08</td><td>1.2e&minus;14</td><td>3.1e&minus;08</td><td>1.6e&minus;06</td><td>4.25e&minus;07</td><td>1.4e&minus;04</td><td>3.8e&minus;08</td><td>644</td></tr>
+        <tr><td class="disc">dense</td><td>7.3e&minus;07</td><td>1.2e&minus;06</td><td>9.2e&minus;07</td><td>2.9e&minus;06</td><td>1.43e&minus;06</td><td>5.4e&minus;04</td><td>4.7e&minus;07</td><td>644</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure>
+    <img src="fig3_parity.png" alt="Parity plot of predicted versus true next-step KPI for both arms; both fall on the identity line">
+    <figcaption><b>Figure 3.</b> Held-out predicted vs. true next-step KPI (all four KPIs pooled, 192 rows),
+      <span class="orac">oracle</span> and <span class="disc">dense</span> overlaid on the identity line
+      (dashed). Both arms recover the mechanism; the point of the figure is the absence of visible
+      separation at the scale of the data, not a ranking.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="fig4_per_kpi_mse.png" alt="Grouped bar chart, log scale, of per-KPI held-out MSE for oracle and dense, with a 1e-6 reference line">
+    <figcaption><b>Figure 4.</b> Per-KPI held-out MSE (log scale). The oracle&rsquo;s advantage is
+      concentrated on the single-parent identity map <span class="mono">K1</span> (eight orders of magnitude,
+      an artefact of that KPI being a one-input identity the mask trivialises), and is small elsewhere; both
+      arms sit at or below the <span class="mono">&asymp;10<sup>&minus;6</sup></span> floor on the
+      remaining KPIs. The differences are within a near-perfect fit of a linear, noiseless mechanism and
+      should not be read as a generalisation gap.</figcaption>
+  </figure>
+
+  <h2>5. Interpretation and relation to the standing position</h2>
+  <p>
+    E1 is the recovery control by design, so the informative content of this measurement is the
+    <em>magnitude</em> of the oracle&ndash;dense prediction separation, not its sign. With generous shared
+    capacity on a linear noiseless mechanism, a matched dense model recovers E1 to within a fraction of a
+    percent of the KPI scale, and a supplied oracle graph improves held-out MSE by a factor of about three
+    that is dominated by one trivially-structured KPI. In the terms of the prior reports&rsquo;
+    prediction-vs-decision framing, this fixes the <em>prediction-level zero point</em>: on the clean
+    control, structure &mdash; even a perfect, supplied structure &mdash; buys negligible held-out
+    prediction advantage. Any prediction-level separation that would matter for the thesis must therefore
+    come from environments where a dense model of matched capacity cannot recover the mechanism from all
+    inputs: residual non-linearity, unobserved confounding, observation noise, or shared-parent coupling
+    that penalises spurious edges. Establishing those environments and re-running this same pipeline on them
+    is the intended use of the apparatus.
+  </p>
+  <p>
+    This report does not revisit the decision level and does not involve any learned graph; it is consistent
+    with, and does not alter, the standing STOP position or the established prediction-level contribution.
+  </p>
+
+  <h2>6. Reproducibility and tooling baseline</h2>
+  <p>
+    The type-check debt noted in prior working notes (20 <code>ty</code> diagnostics) was reduced to zero
+    with annotation-level fixes and no suppressions: a correlated-branch <span class="mono">None</span>
+    narrowed by an explicit invariant assertion in <code>models/cdl.py</code>; a stale snapshot tuple
+    annotation corrected to its true arity; a test double replaced by the real typed object so a function
+    contract is actually checked; two dictionary-unpack call sites given explicit keywords or a
+    <span class="mono">TypedDict</span>; and one imprecise NumPy stub bridged with a documented boundary
+    cast. The changes were split into a behavior-affecting commit (the assertion) and an annotation-only
+    commit. The resulting baseline &mdash; <span class="mono">ruff 0</span>, <span class="mono">ty 0</span>,
+    <span class="mono">pytest 190 passed / 1 xfailed</span> &mdash; is preserved by every pipeline commit;
+    the pipeline adds 23 tests covering determinism, schema, leakage, capacity matching, immutability, and
+    reload reproduction.
+  </p>
+
+  <h2>7. Limitations</h2>
+  <ul>
+    <li><b>Not the science arms.</b> The oracle and dense arms are a matched minimal pair chosen to isolate
+      the structural prior from capacity; they are not the <code>CDL</code> and <code>MLPInference</code>
+      models the project uses elsewhere. Substituting those (and matching their capacity, which is
+      non-trivial because of CDL&rsquo;s per-child heads) is a separate layer.</li>
+    <li><b>Easiest environment, no noise.</b> E1 is linear and noiseless and the graph is supplied. Both
+      arms fitting is the expected and intended outcome; the result does not generalise to E2&ndash;E5 and
+      is not evidence about discovery.</li>
+    <li><b>Single configuration and seed.</b> The numbers are for one dataset configuration
+      (<span class="mono">48&times;16</span>, <span class="mono">env_seed 0</span>) and one weight seed;
+      the pipeline is deterministic, but a multi-seed envelope on the separation magnitude is not yet
+      computed.</li>
+    <li><b>Unweighted MSE.</b> Per-KPI and aggregate MSE weight all KPIs equally and are not
+      decision-aligned; the single-parent <span class="mono">K1</span> dominates the arm difference for a
+      structural reason unrelated to decision value.</li>
+    <li><b>Held-out, not out-of-distribution.</b> The test episodes are drawn from the same generating
+      distribution as train; no distribution shift is exercised, and there is no action-executing episodic
+      runner yet.</li>
+  </ul>
+
+  <h2>8. Direction</h2>
+  <p>
+    The apparatus is the substrate for the next two independently testable layers, in order: (i) causal
+    discovery on this same persisted-data spine, replacing the supplied oracle mask with a learned one, so
+    that recall and its prediction-relevance can be measured under controlled data rather than post-hoc on
+    legacy checkpoints; and (ii) an action-executing episodic runner to move from one-step prediction to
+    in-distribution&rarr;OOD trajectory evaluation. Both are prerequisites to re-testing the standing
+    STOP position under the redesigned suite. The environments in which a matched dense arm should fail to
+    recover the mechanism &mdash; and where an oracle or learned graph could therefore show a
+    prediction-level separation &mdash; are E2&ndash;E5; running this pipeline on them is deferred to those
+    layers and to the environment redesign it depends on.
+  </p>
+
+  <div class="foot">
+    <b>Artifacts.</b> Pipeline package <code>cdd_oran/e1slice/</code> (<code>dataset.py</code>,
+    <code>split.py</code>, <code>model.py</code>, <code>evaluate.py</code>); CLI
+    <code>scripts/e1_slice.py</code> (<code>generate | split | train | eval | verify</code>); tests
+    <code>tests/test_e1slice_*.py</code> (23). Figures generated by the co-located
+    <code>make_figs.py</code> from a live pipeline run.<br>
+    <b>Code.</b> Pipeline commits <code>f746e3f</code> (dataset), <code>1ffe67d</code> (split),
+    <code>ed758a4</code> (arms + training), <code>57bcd46</code> (eval + verify); tooling baseline
+    <code>02fe62c</code> (assertion narrowing), <code>fb91e2a</code> (annotations). Branch
+    <code>feat/v2</code>; no retraining of prior checkpoints; no legacy-path changes.<br>
+    <b>Data.</b> Deterministic E1 run: <span class="mono">n_episodes=48</span>,
+    <span class="mono">steps=16</span>, <span class="mono">warmup=2</span>,
+    <span class="mono">env_seed=0</span>, <span class="mono">obs_noise=0</span>, split
+    <span class="mono">test_fraction=0.25</span>, <span class="mono">split_seed=0</span>; model
+    <span class="mono">hidden=(16,)</span>, <span class="mono">lr=1e-2</span>,
+    <span class="mono">epochs=300</span>, <span class="mono">weight_seed=0</span>;
+    <span class="mono">dataset_hash=cfce4c10c7a7</span>,
+    <span class="mono">scm_hash=85a6379e36df</span>, <span class="mono">schema=e1slice.v1</span>.
+  </div>
+
+</div>
+</body>
+</html>

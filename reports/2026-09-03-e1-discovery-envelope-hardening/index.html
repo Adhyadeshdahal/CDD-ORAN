@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learned E1 discovery, its multi-seed envelope, and a provenance-integrity hardening pass (2026-09-03)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--orac); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--ink)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Learned E1 discovery, its multi-seed envelope, and a provenance-integrity hardening pass</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-03</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Commit:</b> 786891c</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> a label-free discovery arm on the E1 pipeline; a 10-seed envelope of the three-arm result; a review-driven provenance/integrity hardening pass; two corrections to the 2026-09-02 report. No trained E2&ndash;E5 experiments; no legacy-path changes.</span>
+  </div>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> This is a delta on <em>2026-09-02 &mdash; An E1 one-step prediction
+    pipeline, and an oracle&ndash;dense recovery-control measurement</em>, which built a provenance-tracked
+    prediction pipeline on the locked E1 SCM and fixed the prediction zero point with two supplied-graph
+    arms (oracle, dense). It <b>supersedes</b> that report on two points it flagged as open: the
+    supplied-graph oracle is here replaced by a <em>learned</em> discovery arm, so the report now bears on
+    causal discovery; and the single-seed measurement is extended to a 10-replicate envelope. It also
+    records two corrections to the prior report&rsquo;s wording (Section&nbsp;7) and a provenance-integrity
+    hardening pass (Section&nbsp;6) prompted by an adversarial code review. E1 remains the linear, noiseless
+    recovery control; the standing decision-level STOP position is untouched.
+  </div>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    On the E1 one-step prediction pipeline we add a third, <b>learned</b> arm: a label-free discovery rule
+    (per-KPI OLS on standardized training features; edge score = <span class="mono">|standardized
+    coefficient|</span>; a single global <code>largest_gap</code> threshold with floor
+    <span class="mono">10<sup>&minus;3</sup></span>) whose protocol is frozen and committed before its
+    recovery number is read. On the frozen single-seed slice it recovers <b>all four NCP&rarr;KPI edges</b>
+    (precision 1.000) and <b>misses both KPI&rarr;KPI edges</b> (K0&rarr;K2, K1&rarr;K3), for overall
+    recall <span class="mono">0.667</span>. The miss is a property of the global cut, not of
+    identifiability: the two KPI&rarr;KPI coefficients are nonzero and correctly signed
+    (<span class="mono">0.439</span>, <span class="mono">0.456</span>) but fall in the gap <em>below</em>
+    the threshold (<span class="mono">0.674</span>), which lands between the KPI&rarr;KPI score band
+    (&asymp;<span class="mono">0.44</span>) and the NCP&rarr;KPI band (&asymp;<span class="mono">0.9</span>).
+    A 10-replicate envelope (env/weight seed <span class="mono">= r</span>, split seed
+    <span class="mono">= 0</span>) shows this pattern is <b>exactly stable</b>: standard deviation is
+    <span class="mono">0</span> on all nine graph-recovery metrics, and every replicate&rsquo;s cut falls in
+    the same band gap (range <span class="mono">0.650&ndash;0.682</span>). In prediction, the three arms
+    order <span class="orac">oracle</span> &lt; <span class="mono" style="color:var(--accent)">dense</span>
+    &lt; <span class="disc">discovered</span> by held-out MSE in all ten replicates (means
+    <span class="orac mono">2.7&times;10<sup>&minus;7</sup></span>,
+    <span class="mono" style="color:var(--accent)">1.4&times;10<sup>&minus;5</sup></span>,
+    <span class="disc mono">9.9&times;10<sup>&minus;3</sup></span>): the discovered arm pays four orders of
+    magnitude for the two missing KPI&rarr;KPI parents its K2/K3 heads cannot see. <b>This does not clear the
+    E1 recovery gate</b>, which requires the two KPI&rarr;KPI edges; downstream E2&ndash;E5 decision results
+    therefore remain uninterpretable, as the locked contract states. The measurement runs on a
+    provenance/integrity-hardened pipeline (Section&nbsp;6) and its digest is committed and byte-reproducible
+    from the runner.
+  </p>
+
+  <h2>1. Context and scope</h2>
+  <p>
+    The 2026-09-02 report established the apparatus &mdash; a persisted, hashed, leakage-controlled
+    <code>generate&rarr;split&rarr;train&rarr;eval&rarr;verify</code> pipeline &mdash; and used it to fix the
+    prediction zero point with a <em>supplied</em> graph: a masked-input oracle arm whose per-KPI heads see
+    only the true parents, and a dense arm of equal parameter count seeing all inputs. That report made no
+    discovery claim. This report closes that gap on the control environment: it replaces the supplied oracle
+    mask with a <em>learned</em> one, produced by a frozen label-free rule, and asks the one question the
+    control can answer in advance &mdash; whether a label-free method recovers the known E1 graph, and at
+    what prediction cost when it does not. It then measures the stability of that answer across ten seeds and
+    hardens the pipeline&rsquo;s provenance guarantees against a review. No harder environment is introduced
+    and no legacy training path is touched.
+  </p>
+
+  <h2>2. The learned discovery arm and its frozen protocol</h2>
+  <p>
+    Discovery consumes only the persisted training rows (the <code>train_episodes</code> from
+    <code>split.json</code>); it reads no test rows and imports no environment truth (an AST check enforces
+    the latter). For each KPI it standardizes the input features, fits ordinary least squares with an
+    intercept, and takes the edge score to be the absolute standardized coefficient. The included edges are
+    those whose score is at or above a single threshold chosen by <code>largest_gap</code> &mdash; the
+    largest gap in the sorted score distribution above a floor of <span class="mono">10<sup>&minus;3</sup></span>.
+    The rule has no free parameter to tune after the fact: the floor and method are frozen constants, and the
+    protocol document is committed (<span class="mono">e5312a6</span>) and recorded as
+    <code>protocol_commit</code> inside every <code>discovery.json</code> the method writes, before any
+    recovery number is computed. A partial or null recovery is a valid outcome and is reported as produced.
+  </p>
+  <p>
+    The discovered mask becomes a third prediction arm on the same footing as the 2026-09-02 pair: the same
+    per-KPI MLP architecture, the same training rows and identifiers, the same weight seed; only the fixed
+    input mask differs. The three arms are matched by <em>registered parameter count</em>
+    (<span class="mono">644</span> each) and architecture &mdash; not by effective capacity (Section&nbsp;7).
+  </p>
+
+  <h2>3. Recovery: the NCP&rarr;KPI skeleton is recovered, the KPI&rarr;KPI edges are not</h2>
+  <p>
+    On the frozen single-seed slice the rule recovers exactly the four NCP&rarr;KPI edges and no false
+    positives, and misses both KPI&rarr;KPI edges (Fig&nbsp;1, Table&nbsp;1). The informative detail is
+    <em>why</em> the two edges are missed. The fitted coefficients on the true KPI&rarr;KPI parents are not
+    zero: <span class="mono">K0&rarr;K2 = 0.439</span> and <span class="mono">K1&rarr;K3 = 0.456</span>, well
+    separated from the near-zero scores of the non-edges. But the score distribution is bimodal &mdash; a
+    KPI&rarr;KPI band near <span class="mono">0.44</span> and an NCP&rarr;KPI band near
+    <span class="mono">0.9</span> &mdash; and the single global <code>largest_gap</code> cut falls in the gap
+    between them at <span class="mono">0.674</span> (Fig&nbsp;2). The edges are therefore missed by the
+    <em>global threshold</em>, and were not shown to be interventionally or statistically unresolvable; their
+    signal is present in the coefficients. The natural non-retuning remedy is per-band or per-child
+    thresholding, which would be a new method under its own freeze, not a change to this one.
+  </p>
+  <figure>
+    <img src="fig1_recovery_graph.png" alt="4x8 grid of predicted KPI against inputs; the four NCP-to-KPI cells filled as recovered, the two KPI-to-KPI cells hatched as missed">
+    <figcaption><b>Figure 1.</b> Discovered vs. true E1 structure. Rows are the four predicted KPIs; columns
+      the eight inputs <span class="mono">[P0..P3 | K0..K3]</span>. The four <span class="disc">NCP&rarr;KPI</span>
+      parents are recovered; the two <span class="orac">KPI&rarr;KPI</span> parents (K2&larr;K0, K3&larr;K1)
+      are missed. Precision <span class="mono">1.000</span>, recall <span class="mono">0.667</span>, no false
+      positives.</figcaption>
+  </figure>
+  <figure>
+    <img src="fig2_score_gap.png" alt="Edge scores on a horizontal axis by type; KPI-to-KPI points at 0.44-0.46, NCP-to-KPI near 0.9-1.0, non-edges near 0, with the largest-gap threshold at 0.674 between the bands">
+    <figcaption><b>Figure 2.</b> The mechanism of the miss. Edge score is <span class="mono">|standardized
+      OLS coefficient|</span>. The two true <span class="warn">KPI&rarr;KPI</span> edges (0.439, 0.456) sit
+      in the gap below the <code>largest_gap</code> cut (dashed, <span class="mono">0.674</span>), which
+      separates them from the <span class="disc">NCP&rarr;KPI</span> band. The shaded strip is the range of
+      the cut across all ten seeds (<span class="mono">0.650&ndash;0.682</span>): it lands in the same band
+      gap every time.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 1. Graph-recovery envelope over 10 replicates (directed cell-wise PRF vs.
+        <code>true_adj_matrix</code>). Mean; standard deviation is <span class="mono">0</span> on every cell.</caption>
+      <thead><tr><th>block</th><th>precision</th><th>recall</th><th>F1</th><th>tp</th><th>fp</th><th>fn</th><th>std (all)</th></tr></thead>
+      <tbody>
+        <tr><td>overall</td><td>1.000</td><td>0.667</td><td>0.800</td><td>4</td><td>0</td><td>2</td><td>0</td></tr>
+        <tr><td class="disc">NCP&rarr;KPI</td><td>1.000</td><td>1.000</td><td>1.000</td><td>4</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td class="orac">KPI&rarr;KPI</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0</td><td>0</td><td>2</td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>4. The multi-seed envelope: determinism, and the prediction cost of the miss</h2>
+  <p>
+    Across ten replicates (dataset <span class="mono">48&times;16</span>, warmup 2, noise 0;
+    <span class="mono">env_seed = weight_seed = r</span>, <span class="mono">split_seed = 0</span>) the
+    recovery pattern is not merely typical but <em>exact</em>: standard deviation is <span class="mono">0</span>
+    on all nine graph metrics (Fig&nbsp;4), and every replicate&rsquo;s cut falls in the same band gap. The
+    KPI&rarr;KPI recall floor is thus a deterministic property of this frozen control, not a seed artifact.
+  </p>
+  <p>
+    In prediction, the structural difference between arms is now visible at the scale of the data, unlike the
+    supplied oracle&ndash;dense contrast of the prior report. The three arms order
+    <span class="orac">oracle</span> &lt; <span class="mono" style="color:var(--accent)">dense</span> &lt;
+    <span class="disc">discovered</span> by held-out MSE in <b>all ten</b> replicates (Fig&nbsp;3,
+    Table&nbsp;2). The discovered arm&rsquo;s error is four orders of magnitude above the oracle&rsquo;s: its
+    K2 and K3 heads are masked away from K0 and K1, so they cannot represent
+    <span class="mono">K2 = a2·P2 + b2·K0</span> or <span class="mono">K3 = a3·P3 + b3·K1</span> at all, and
+    the missing-parent bias dominates the held-out error. The paired differences are reported as effect
+    envelopes with a deterministic bootstrap interval; <b>no hypothesis-significance claim is made from ten
+    seeds</b>.
+  </p>
+  <figure>
+    <img src="fig3_envelope_mse.png" alt="Log-scale strip plot of held-out MSE for oracle, dense, discovered across 10 seeds; oracle near 1e-7, dense near 1e-5, discovered near 1e-2">
+    <figcaption><b>Figure 3.</b> Three-arm held-out one-step MSE across the ten replicates (log scale), with
+      the per-arm mean marked. The ordering <span class="orac">oracle</span> &lt;
+      <span class="mono" style="color:var(--accent)">dense</span> &lt; <span class="disc">discovered</span>
+      holds in every replicate; the discovered arm&rsquo;s <span class="mono">&asymp;10<sup>&minus;2</sup></span>
+      band is the cost of the two unrecovered KPI&rarr;KPI parents.</figcaption>
+  </figure>
+  <figure>
+    <img src="fig4_recovery_stability.png" alt="Edge recall by block against replicate; three flat lines at 1.0 (ncp-kpi), 0.667 (overall), 0.0 (kpi-kpi), all with zero variance">
+    <figcaption><b>Figure 4.</b> Recovery is deterministic across seeds: recall is flat at
+      <span class="mono">1.000</span> (NCP&rarr;KPI), <span class="mono">0.667</span> (overall), and
+      <span class="mono">0.000</span> (KPI&rarr;KPI), with zero variance on every block.</figcaption>
+  </figure>
+  <div class="tbl">
+    <table>
+      <caption>Table 2. Held-out one-step prediction MSE over 10 replicates, and paired arm differences with
+        a deterministic bootstrap 95% interval (resample seed 0, 10<sup>4</sup> resamples). Envelope only, no
+        significance claim.</caption>
+      <thead><tr><th>arm / pair</th><th>mean</th><th>min</th><th>max</th><th>bootstrap 95% CI</th></tr></thead>
+      <tbody>
+        <tr><td class="orac">oracle MSE</td><td>2.70e&minus;07</td><td>2.82e&minus;09</td><td>1.08e&minus;06</td><td class="mut">&mdash;</td></tr>
+        <tr><td style="color:var(--accent);font-weight:600">dense MSE</td><td>1.43e&minus;05</td><td>1.11e&minus;06</td><td>6.14e&minus;05</td><td class="mut">&mdash;</td></tr>
+        <tr><td class="disc">discovered MSE</td><td>9.90e&minus;03</td><td>8.58e&minus;03</td><td>1.16e&minus;02</td><td class="mut">&mdash;</td></tr>
+        <tr><td>discovered &minus; oracle</td><td>9.90e&minus;03</td><td>8.58e&minus;03</td><td>1.16e&minus;02</td><td>[9.18e&minus;03, 1.06e&minus;02]</td></tr>
+        <tr><td>dense &minus; oracle</td><td>1.40e&minus;05</td><td>9.79e&minus;07</td><td>6.14e&minus;05</td><td>[4.93e&minus;06, 2.65e&minus;05]</td></tr>
+        <tr><td>dense &minus; discovered</td><td>&minus;9.89e&minus;03</td><td>&minus;1.16e&minus;02</td><td>&minus;8.56e&minus;03</td><td>[&minus;1.06e&minus;02, &minus;9.17e&minus;03]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>5. Gate status and its downstream consequence</h2>
+  <div class="gate">
+    <b>The E1 recovery gate is not passed.</b> The benchmark specification requires near-perfect recovery
+    <em>including correct orientation of the two KPI&rarr;KPI edges</em>; this frozen method recovers neither
+    (overall recall <span class="mono">0.667</span>, KPI&rarr;KPI recall <span class="mono">0.000</span>).
+    This is an honest partial-recovery result, not a green gate. Per the locked contract, E2&ndash;E5
+    decision results remain uninterpretable until a discovery method clears this gate &mdash; a bar this
+    method does not meet. Closing the KPI&rarr;KPI floor is deferred to a new discovery method under its own
+    freeze; no trained E2&ndash;E5 experiment is run here.
+  </div>
+
+  <h2>6. Provenance and integrity hardening</h2>
+  <p>
+    The pipeline and sweep runner were hardened after an adversarial code review; every fix is a guard or a
+    re-derivation and none changed a computed value (the single-seed slice reproduces bit-for-bit, and the
+    archived <code>discovery.json</code> still loads). The review was itself two-round: each unit&rsquo;s
+    first pass was reviewed, real defects were verified against the code before routing a second pass, and
+    two of those second-round defects were substantive rather than cosmetic. The closed items:
+  </p>
+  <ul>
+    <li><b>Loader provenance (fail-closed).</b> <code>load_dataset</code> now re-derives and binds
+      <code>scm_hash</code>, checks the stored <code>scm_identity</code> blob against the config-induced SCM,
+      and binds <code>warmup</code> to the rows via the recorded <span class="mono">time</span> coordinate
+      (each episode&rsquo;s times must be the contiguous block <span class="mono">warmup..warmup+steps&minus;1</span>).
+      <code>load_discovery</code> enforces the frozen constants (<code>protocol_commit</code>, method, floor),
+      the exact relation <span class="mono">score = |coefficient|</span>, and a re-derivation of the
+      threshold from <code>largest_gap</code>.</li>
+    <li><b>Sweep integrity.</b> A replicate&rsquo;s persisted seeds (env, split, weight) and journal index are
+      validated against the frozen matrix without integer truncation, so a copied or mislabelled run cannot
+      be reported as a distinct seed; a semantically invalid or incomplete envelope now forces a nonzero exit
+      rather than passing on return code alone.</li>
+    <li><b>Corruption path.</b> In the legacy no-calibration discovery path, a stale calibrated posterior
+      left by a prior run into the same output directory is now removed <em>before</em> the enumeration graph
+      is refreshed, closing a window in which a mid-run failure could leave a new enumeration graph paired
+      with an old posterior.</li>
+    <li><b>Regret domain guard.</b> The episodic <code>paired_regret</code> now rejects a planner action
+      outside the oracle&rsquo;s action grid, while leaving regret unclamped (non-negativity remains a
+      property to verify, not to enforce).</li>
+    <li><b>Atomicity and hygiene.</b> The dataset&rsquo;s rows and manifest are published as an atomic pair,
+      and a forced regeneration now clears stale downstream <code>discovery.json</code>/<code>recovery.json</code>.</li>
+  </ul>
+  <p>
+    The integration baseline on the merged tree is <span class="mono">ruff 0</span>,
+    <span class="mono">ty 0</span>, <span class="mono">pytest</span> green (1 xfailed).
+  </p>
+
+  <h2>7. Corrections to the 2026-09-02 report</h2>
+  <p>
+    Two statements in the prior report are narrowed here, on the same evidence:
+  </p>
+  <ul>
+    <li><b>&ldquo;Identical capacity&rdquo; &rarr; registered-parameter match.</b> The prior report described
+      the arms as of &ldquo;identical capacity (644 parameters each)&rdquo;. The parameter count and
+      architecture are indeed identical, but a masked-out input contributes zero signal and its weights are
+      never trained, so the masked arms have strictly fewer <em>effective</em> free parameters than the dense
+      arm. The comparison controls architecture and parameter budget, not effective capacity; the discovered
+      arm in particular is not capacity-matched to the dense arm in the effective sense.</li>
+    <li><b>Anti-p-hacking claim, narrowed.</b> The discovery protocol&rsquo;s guarantee is that the
+      <em>method</em> was frozen before it produced any recovery number &mdash; not that E1 ground truth was
+      never inspected (the SCM and its true edges were defined and tested earlier). The defensible claim is
+      the narrower one.</li>
+  </ul>
+  <p>
+    Neither correction changes a number in either report; both make the framing match what the artifacts
+    support.
+  </p>
+
+  <h2>8. Limitations</h2>
+  <ul>
+    <li><b>Control environment, one method.</b> E1 is linear and noiseless; the discovery rule is a single
+      frozen linear-OLS/<code>largest_gap</code> control. The KPI&rarr;KPI floor is a property of this method
+      on this environment and does not generalise to E2&ndash;E5 or to other discovery rules.</li>
+    <li><b>Envelope, not inference.</b> Ten paired seeds with a fixed split seed give an effect envelope and a
+      deterministic bootstrap interval, not a hypothesis test; the interval is a descriptive summary of the
+      paired mean.</li>
+    <li><b>Not the science arms.</b> The three arms are a matched masked-MLP family chosen to isolate the
+      structural prior; they are not the <code>CDL</code>/<code>MLPInference</code> models used elsewhere.</li>
+    <li><b>One-step, held-out.</b> The evaluation is one-step prediction on in-distribution held-out episodes;
+      there is no distribution shift and no action-executing episodic rollout in this measurement (the v2
+      rollout kernel exists and is tested, but is not exercised as an E-result here).</li>
+  </ul>
+
+  <h2>9. Direction</h2>
+  <p>
+    The learned E1 slice is now green as apparatus but red as a gate: it recovers the intervention-reachable
+    NCP&rarr;KPI skeleton exactly and stably, and leaves a deterministic KPI&rarr;KPI floor whose cause is
+    localised to the global threshold. The next step on the discovery axis is a method that resolves the two
+    bands &mdash; per-band or per-child thresholding &mdash; introduced under its own freeze and measured with
+    this same envelope, so that clearing (or not clearing) the E1 recovery gate is itself a preregistered
+    result. Only once the gate is green does the locked contract permit interpreting the E2&ndash;E5 decision
+    layer; that work, and the episodic rollout it depends on, remain deferred.
+  </p>
+
+  <div class="foot">
+    <b>Artifacts.</b> Discovery + arms <code>cdd_oran/e1slice/</code>
+    (<code>discovery.py</code>, <code>model.py</code>, <code>evaluate.py</code>, <code>aggregate.py</code>);
+    sweep <code>scripts/e1_slice_sweep.py</code>; frozen protocol + result
+    <code>docs/benchmark/E1_DISCOVERY_PROTOCOL.md</code>, <code>E1_DISCOVERY_RESULT.md</code>,
+    <code>plan003_frozen_artifacts/</code>; committed envelope digest
+    <code>docs/benchmark/plan004_envelope_digest/</code> (<code>summary.json</code>,
+    <code>run_provenance.json</code>, <code>replicates.jsonl</code>). Figures generated by the co-located
+    <code>make_figs.py</code> from the committed digest and archived discovery.<br>
+    <b>Code.</b> Discovery arm frozen at <code>e5312a6</code> (protocol) then implemented; envelope runner
+    <code>cd3b0f4</code>; review remediation merged into <code>feat/v2</code> at <code>5152c6d</code>
+    (units A <code>80ccab5</code>, C <code>30f81d8</code>, B <code>5152c6d</code>); digest committed
+    <code>786891c</code>. No trained E2&ndash;E5 experiment; no legacy-path change.<br>
+    <b>Data.</b> Frozen matrix: replicates <span class="mono">0..9</span>,
+    <span class="mono">env_seed = weight_seed = r</span>, <span class="mono">split_seed = 0</span>; dataset
+    <span class="mono">48&times;16</span>, <span class="mono">warmup 2</span>,
+    <span class="mono">obs_noise 0</span>; split <span class="mono">test_fraction 0.25</span>; model
+    <span class="mono">hidden (16,)</span>, <span class="mono">lr 1e-2</span>,
+    <span class="mono">300 epochs</span>, <span class="mono">batch 64</span>. Replicate-00 reproduces the
+    2026-09-02 single-seed slice bit-for-bit (<span class="mono">dataset_hash cfce4c10</span>,
+    <span class="mono">split_hash ec6658d0</span>). Env: Python <span class="mono">3.12.13</span>, NumPy
+    <span class="mono">2.4.2</span>, Torch <span class="mono">2.10.0+cu128</span>;
+    <span class="mono">complete = true</span>, <span class="mono">10/10</span>, no failed replicates,
+    <span class="mono">git_dirty = false</span> at <span class="mono">5152c6d</span>.
+  </div>
+
+</div>
+</body>
+</html>

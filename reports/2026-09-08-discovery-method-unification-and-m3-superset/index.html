@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discovery-method unification & the M3 superset test (2026-09-08)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-size:17px; line-height:1.62;}
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);}
+  .rel b{color:var(--ink)}
+  .gate{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);}
+  .gate b{color:var(--good)}
+  .gate.cut{border-left-color:var(--orac)} .gate.cut b{color:var(--orac)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .gate.acc{border-left-color:var(--accent)} .gate.acc b{color:var(--accent)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums; vertical-align:top}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Discovery-method unification &amp; the M3 superset test</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-08</span> &nbsp;·&nbsp;
+    <span><b>Author:</b> internal@brihatech.com</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Status:</b> TRUTH-FREE DEV analysis &mdash; nothing frozen, committed, or pre-registered.</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> whether one discovery method covers all environments; the M3 uniform-application test; and the resulting method-selection decision.</span>
+  </div>
+
+  <p class="abstract">This delta tests a single question raised after the noise-robustness layer:
+  can <b>one</b> discovery method serve the finalized engine, applied uniformly to every environment,
+  rather than a method chosen per environment (which would require ground truth to select and is therefore
+  benchmark overfitting)? The candidate was <b>M3</b>, the stratified conditional-CI method that recovers
+  E2's co-parent-gated harmful edge. Applied uniformly at fixed hyperparameters, M3 recovers <b>every</b>
+  true edge on E1/E2/E3 including every KPI&rarr;KPI edge (recall 100%), but its false-positive control
+  <b>collapses on E1</b> (realized FDR 0.81, declaring 100% of null pairs) while remaining nominal on
+  E2/E3. The cause is E1's single-parameter actuation design (rank-deficient inputs), which breaks M3's
+  permutation null. A structured multi-persona review then converged on one mechanism &mdash;
+  <b>design-adaptive M3</b> &mdash; but a critical review established that this convergence is only
+  evidenced at the two tested extremes, leaving the deployment-relevant middle unverified. The report
+  records the decision: adopt <b>design-adaptive M3 with fail-closed abstention</b> as the primary
+  hypothesis, and validate it with a calibration stress test across the design-diversity continuum before
+  treating it as settled. All work here is truth-free DEV analysis; nothing frozen is changed.</p>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> Successor to
+    <code>reports/2026-09-07-harmful-edge-derisk-and-noise-robustness/</code> (M3 recovery of P0&rarr;K5,
+    the FP-calibration FAIL and its downstream inertness for E2's single-control decision, the E3 multi-step
+    world model, and the noise-robustness sweep). That report closed the E2 <em>discovered-arm</em> loop for a
+    single-control decision; this one asks whether the discovery <em>method</em> generalizes into a single
+    engine. Method landscape unchanged: RCoT-v2 frozen (E2 skeleton), partial-correlation frozen (E1 + E3
+    exact-linear), M3 a DEV prototype (the gated edge).
+  </div>
+
+  <div class="gate warn">
+    <b>Result: M3 is a recall superset, not a false-positive-controlled superset.</b> No single statistic at
+    fixed hyperparameters covers all three environments &mdash; partial-corr/RCoT miss E2's gated edge; M3
+    over-declares on E1. The failure is driven by the data-collection design, is self-diagnosable without
+    truth, and points to a <b>design-adaptive M3 with fail-closed abstention</b> as the primary single-method
+    hypothesis &mdash; not yet validated across the intermediate design regime.
+  </div>
+
+  <h2>1. The question: one method, applied uniformly</h2>
+  <p>
+    The finalized engine needs a discovery stage that is <em>one</em> fixed procedure applied identically to
+    every environment. Selecting a different method per environment based on which recovers best requires
+    knowing the true graph &mdash; unavailable at deployment &mdash; so per-environment selection is
+    benchmark overfitting, not a methodology. The three benchmarks already show that neither of the frozen
+    linear/kernel methods is universal: partial-correlation and RCoT-v2 (kernel conditional independence
+    under full conditioning on the other 13 candidates) recover P0&rarr;{K0,K1,K2} but <span class="mono">
+    miss the co-parent-gated harmful edge P0&rarr;K5 (0/10 seeds)</span> &mdash; the signal (~1% marginal
+    variance, gated by P6/P7) is not in the marginal or in a globally-conditioned CI test. M3 recovers it
+    (20/20). The open question was whether M3, conversely, is a <em>strict superset</em>: does it also
+    recover the E1 and E3 edges (including KPI&rarr;KPI) and keep false positives controlled, at its fixed
+    hyperparameters?
+  </p>
+
+  <h2>2. The M3 superset test</h2>
+  <p>
+    M3 was applied uniformly to E1, E2, E3 at its fixed hyperparameters
+    (<span class="mono">NC=6, NB=8, min/stratum=40, B=299, BH q=0.05</span>; no per-environment tuning). The
+    statistic for a candidate&ndash;target pair is
+  </p>
+  <div class="eq">S* = max over stratifier g &ne; i of  &Sigma;<sub>s</sub> BSS<sub>s</sub>(y | cand<sub>i</sub> binned within g-stratum s) / &Sigma;<sub>s</sub> TSS<sub>s</sub>(y)<br>null: within each g-stratum permute cand<sub>i</sub>, re-max over g &rarr; p = (1 + #{S*<sub>b</sub> &ge; S*}) / (B+1)</div>
+  <p>
+    The only code change from the E2 version was generalizing the hardcoded 14-candidate shape to
+    <span class="mono">n_cand = X.shape[1]</span>; the statistic, null, shared-null factorization and
+    per-<span class="mono">(seed,target,i)</span> RNG seeding are unchanged. A <b>correctness gate</b>
+    confirmed this: the generalized code reproduces the frozen 20-seed E2 records bit-for-bit
+    (<span class="mono">max|&Delta;S*| = 0, max|&Delta;p| = 0</span> over 168 records; P0&rarr;K5 at the
+    permutation floor both seeds), so the E1 behaviour below is a real property of the method, not an
+    artifact of the generalization. Results were re-scored from raw records independently of the run summary.
+  </p>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 1 &mdash; M3 applied uniformly (10 seeds E1/E3, 20 seeds E2; n=4000). Recall over true edges; type-I and FDR over null pairs.</caption>
+    <thead><tr><th>Env (design)</th><th>Recall (all true edges)</th><th>KPI&rarr;KPI recall</th><th>Per-test type-I</th><th>Null-p at floor</th><th>Post-BH FDR</th></tr></thead>
+    <tbody>
+      <tr><td>E1 (single-param actuation)</td><td>100%</td><td class="mono">2/2</td><td class="orac">1.0000</td><td class="orac">97.7%</td><td class="orac">0.8125</td></tr>
+      <tr><td>E2 (full-rank i.i.d.)</td><td>100%</td><td class="mono">n/a (none)</td><td>0.0522</td><td class="mut">&mdash;</td><td class="warn">0.0760</td></tr>
+      <tr><td>E3 (full-rank i.i.d.)</td><td>100%</td><td class="mono">3/3</td><td class="disc">0.0237</td><td class="disc">0.5%</td><td class="disc">0.0667</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <figure>
+    <img src="fig1_recall_vs_fp.png" alt="Bar chart: recall 100% in all three envs; type-I and FDR near-nominal on E2/E3 but 1.0 and 0.81 on E1">
+    <figcaption><b>Figure 1.</b> M3 recovers every true edge in all three environments &mdash; including every
+    KPI&rarr;KPI edge (E1: K0&rarr;K2, K1&rarr;K3; E3: K0&rarr;K1, K1&rarr;K2, K1&rarr;K3) &mdash; so it is a
+    recall superset. But false-positive control holds only on the full-rank designs (E2/E3, FDR ~0.07) and
+    collapses on E1, where it declares 100% of null candidate pairs (realized FDR 0.81, per-test type-I 1.0).
+    Recall being 100% everywhere, the discriminating axis is false-positive control, not recovery.</figcaption>
+  </figure>
+
+  <h3>2.1 Why E1 collapses</h3>
+  <p>
+    E1's dataset uses <b>single-parameter actuation per step</b> (one knob perturbed at a time), producing a
+    low-diversity, strongly inter-dependent input design. Under this design, after M3 stratifies on a
+    variable and bins a candidate, the target shows between-bin variance for <em>every</em> candidate, and
+    the within-stratum conditional-permutation null cannot separate real conditional dependence from
+    design-induced spurious structure: 97.7% of null-pair p-values are pinned at the permutation floor
+    <span class="mono">1/300 = 0.00333</span>. Because that floor sits below the BH rank-1 threshold
+    (<span class="mono">0.05/m</span>), floored nulls are auto-declared and BH admits the rest &mdash; FDR
+    0.81. E2/E3 sample all parameters i.i.d. per step (full-rank randomized design), the null is valid, and
+    M3 is clean. The failure is a property of the <em>design</em> meeting M3's aggressiveness, not of the
+    edge types (KPI&rarr;KPI recall is perfect on both E1 and E3) and not a bug (correctness gate passed).
+  </p>
+
+  <figure>
+    <img src="fig2_null_pvalue_hist.png" alt="Two histograms of null-pair permutation p-values: E1 entirely at the floor, E3 approximately uniform">
+    <figcaption><b>Figure 2.</b> Null-pair permutation p-value distributions. On E1 (left) 97.7% of null
+    p-values collapse onto the permutation floor &mdash; the null is uninformative under the rank-deficient
+    design, so BH declares nearly everything. On E3 (right, full-rank i.i.d.) the null p-values are
+    approximately uniform (0.5% at the floor), the calibration BH assumes. This p-value-at-floor fraction is
+    an <em>observable</em> diagnostic of the failure regime &mdash; computable without ground truth.</figcaption>
+  </figure>
+
+  <h2>3. Method-selection review (multi-persona + adversarial critique)</h2>
+  <p>
+    Given that M3 is not a strict superset, the question becomes what the single engine should be. Five
+    research positions were solicited under distinct lenses, then a separate reviewer critiqued the
+    synthesis. The point of interest is not the vote but the mechanism they converge on.
+  </p>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 2 &mdash; positions on the single-method question.</caption>
+    <thead><tr><th>Lens</th><th>Verdict</th><th>Core claim</th></tr></thead>
+    <tbody>
+      <tr><td>Unifier</td><td>single-method</td><td>M3's E1 failure is a null-calibration problem under rank-deficient design; replace naive shuffling with a design-adaptive null (block/residual permutation conditioned on the actuation support, or Model-X knockoff) + studentized max + drop degenerate strata.</td></tr>
+      <tr><td>Experimental design</td><td>single-method</td><td>The lever is data collection: full-rank / factorial / interventional actuation makes M3 clean everywhere (E5 is interventional anyway). Feasible in a non-RT rApp; not in a near-RT xApp; fails if forced purely passive.</td></tr>
+      <tr><td>Bounded ensemble</td><td>bounded ensemble</td><td>Two members (partial-corr for linear/overt + M3 for gated) keyed by a failure-mode taxonomy (linearity &times; design-rank &times; signal-locality) &mdash; bounded by axes, not environments. Aggregate by "trust the member whose null is valid here," not voting.</td></tr>
+      <tr><td>Systems realism</td><td>bounded ensemble</td><td>The compute constraint does not bind discovery: it is offline periodic structure-learning (non-RT rApp, minutes/batch); 2&ndash;3 statistical tests are cheap. The real constraint is the online world-model + planner path.</td></tr>
+      <tr><td>Adaptive single</td><td>hybrid</td><td>M3 + a diagnostic-gated null-switch is a two-member router in disguise; the switch boundary is itself a place to be silently wrong at ambiguous diagnostics.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    All five reduce to the same mechanism: <b>M3 plus a design-aware null/calibration layer</b>, with the
+    failure regime detected from observable design diagnostics (design rank, null-p-at-floor fraction). The
+    systems-realism lens separately removes the constraint that motivated avoiding an ensemble in the first
+    place: discovery runs offline, so "several cheap statistical tests" is not the cost class of "several ML
+    models on the control loop."
+  </p>
+
+  <h3>3.1 The critique that matters</h3>
+  <p>
+    The adversarial review rejected the framing that this is settled. Its load-bearing point: the observed
+    agreement holds only at the <b>two tested extremes</b> &mdash; rank-deficient E1 and full-rank E2/E3. The
+    deployed system will operate in the <b>middle</b>: partial collinearity, sparse strata, weak overlap,
+    imperfect actuation models. That is precisely where the design diagnostic may not cleanly indicate which
+    null is valid, and where selecting the stratifier and calibration rule from the data can further distort
+    calibration. The recommendation currently extrapolates across that region without evidence. Corollaries:
+  </p>
+  <ul>
+    <li>Blocking the permutation on the tested variable's active/inactive state can remove the very variation
+      needed to test it; residual permutation is valid only under an adequate nuisance model; Model-X moves
+      the problem to correctly estimating the conditional actuation distribution.</li>
+    <li>Exact deterministic co-actuation between a cause and an unobserved gate is an <em>identifiability</em>
+      failure, not a calibration edge case &mdash; no null fixes it.</li>
+    <li>It is genuinely "one method" only if pre-specified as a single procedure with established joint error
+      control (diagnostics, calibration choice, degeneracy rules, multiplicity correction, and abstention).
+      If "M3" merely labels a runtime switch among nulls whose joint error control is unproven, the
+      single-method claim is self-deception.</li>
+  </ul>
+
+  <figure>
+    <img src="fig3_continuum.png" alt="Schematic: E1 and E2/E3 as tested endpoints of a design-diversity axis with an unverified middle band and a stress-test sampling row">
+    <figcaption><b>Figure 3.</b> The design-diversity continuum. Evidence exists only at the endpoints (E1,
+    FDR 0.81; E2/E3, FDR 0.07). The unverified middle &mdash; partial collinearity, sparse strata, weak
+    overlap &mdash; is the actual deployment regime and is where the single-method-vs-router distinction is
+    decided. The validate-first stress test samples this continuum before any recovery-power claim.</figcaption>
+  </figure>
+
+  <h2>4. Decision and the validation that gates it</h2>
+  <div class="gate acc">
+    <b>Primary hypothesis for the single engine: design-adaptive M3 with fail-closed abstention</b>, supported
+    where possible by intervention-aware data collection. Deploy in the offline non-RT discovery path. When
+    overlap / identifiability is inadequate, the engine <b>requests factorial dither or returns "not
+    identifiable"</b> &mdash; it does not silently switch tests. A bounded partial-correlation fallback, if
+    kept, is an independently-executed subordinate invoked only on abstention, not a co-equal voter.
+  </div>
+  <p>This resolves the five stated objections to an ensemble as follows:</p>
+  <ul>
+    <li><b>Compute (constrained env):</b> does not bind &mdash; discovery is offline/periodic; the online
+      world-model + planner path is the real budget.</li>
+    <li><b>How many techniques:</b> target is one procedure; any fallback is bounded by design-diagnostic
+      axes, not by the number of environments.</li>
+    <li><b>Overlap / complementarity:</b> a single procedure has neither problem; a fallback covers exactly
+      the abstention regime, by construction.</li>
+    <li><b>Aggregation / trust:</b> no voting &mdash; one pre-specified calibration plus fail-closed
+      abstention. "I cannot tell here" replaces a silent guess.</li>
+  </ul>
+  <p>
+    <b>Validate-first (gates the whole direction).</b> A pre-declared calibration stress test that sweeps the
+    design-diversity continuum &mdash; increasing co-actuation / condition number &times; conditioning overlap
+    &times; stratum sparsity, from E1-like to E2/E3-like &mdash; measuring per-test type-I error and post-BH
+    FDR of the <em>complete</em> adaptive pipeline (including data-driven stratifier and null selection), and
+    establishing where the pipeline must abstain <em>before</em> recovery power is scored. If validity holds
+    across the continuum, the single-method engine is earned. If it fails in the ambiguous middle, the honest
+    outcome is a bounded diagnostic router or redesigned experimentation &mdash; not "one method." Either way,
+    this makes the previously-deferred M3 FDR / multiplicity fix binding rather than optional.
+  </p>
+
+  <h2>5. Status</h2>
+  <div class="gate">
+    <b>Established this delta.</b> (1) No single statistic at fixed hyperparameters is a strict superset:
+    partial-corr/RCoT miss the gated edge; M3 over-declares on E1 (FDR 0.81) while recovering all edges
+    including KPI&rarr;KPI. (2) The E1 failure is caused by single-parameter actuation (rank-deficient design)
+    and is observable without truth (null-p-at-floor 97.7%). (3) Correctness gate: the dimension-generalized
+    M3 reproduces frozen E2 bit-for-bit. (4) Decision: design-adaptive M3 with fail-closed abstention as the
+    primary hypothesis, gated by a calibration stress test.
+  </div>
+  <div class="gate warn">
+    <b>Open / not done.</b> The adaptive null and the design diagnostic are unbuilt. The stress test is
+    unwritten (next session). No end-to-end discovery &rarr; world-model &rarr; planner run under noise. E5
+    registration, the M3 FDR fix, E3 discovery freeze, and any package module remain user-gated. Nothing here
+    is frozen or committed.
+  </div>
+
+  <div class="foot">
+    <b>Provenance.</b> Truth-free DEV artifacts under <code>scratchpad/</code>:
+    <code>m3_superset/</code> (<code>m3_general.py</code> dimension-generalized method, <code>gate_e2.py</code>
+    correctness gate, <code>run.py</code>, <code>results_e1.json</code>, <code>results_e3.json</code>,
+    <code>VERDICT.md</code>), <code>p0k5_fp_calibration/</code> (E2 20-seed calibration, <code>results.json</code>).
+    Figures regenerable via <code>make_figs.py</code> (reads those JSONs live). All numbers re-scored from raw
+    records independently of run summaries; the correctness gate was re-run independently
+    (<span class="mono">max|&Delta;| = 0</span>). The five research positions and the adversarial review were
+    produced by separate agents; their content is summarized, not quoted, and none was used to select a method
+    by ground truth. Nothing here changes a frozen constant, mechanism, gate, or package module.
+    &nbsp;·&nbsp; <code>reports/2026-09-08-discovery-method-unification-and-m3-superset/</code>
+  </div>
+
+</div>
+</body>
+</html>

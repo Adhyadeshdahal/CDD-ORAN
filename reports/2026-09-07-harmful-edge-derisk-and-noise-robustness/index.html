@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmful-edge discovery de-risk & noise-robustness (2026-09-07)</title>
+<style>
+  :root{
+    --bg:#ffffff; --paper:#ffffff; --ink:#1a1d22; --muted:#4c545e; --faint:#79818c;
+    --rule:#e2e5ea; --band:#f5f6f8; --accent:#0E5F73; --disc:#0E7A73; --orac:#A8412F;
+    --warn:#C8792B; --code-bg:#f3f4f6; --good:#0E7A73;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#15181d; --paper:#1b1f26; --ink:#e7eaef; --muted:#aab2be; --faint:#7c8593;
+      --rule:#2b313b; --band:#20252d; --accent:#4FB3C9; --disc:#3fb3a8; --orac:#e08a72;
+      --warn:#e0a24b; --code-bg:#232833; --good:#3fb3a8;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:17px; line-height:1.62;
+  }
+  .sheet{max-width:760px; margin:0 auto; padding:3.2rem 1.3rem 5rem}
+  .sans{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.25; color:var(--ink)}
+  h1{font-size:1.6rem; font-weight:700; letter-spacing:-.01em; margin:0 0 .5rem; text-wrap:balance}
+  h2{font-size:1.16rem; font-weight:650; margin:2.6rem 0 .5rem; padding-bottom:.35rem; border-bottom:1px solid var(--rule)}
+  h3{font-size:1rem; font-weight:650; margin:1.6rem 0 .35rem; color:var(--muted)}
+  p{margin:.7rem 0}
+  a{color:var(--accent)}
+  .doc-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.82rem; color:var(--faint); margin-top:.4rem}
+  .doc-meta span{white-space:nowrap}
+  .doc-meta b{color:var(--muted); font-weight:600}
+  .rel{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.86rem;
+    background:var(--band); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    padding:.7rem .95rem; margin:1.3rem 0 0; color:var(--muted);
+  }
+  .rel b{color:var(--ink)}
+  .gate{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.9rem;
+    background:var(--band); border-left:3px solid var(--good); border-radius:0 6px 6px 0;
+    padding:.75rem 1rem; margin:1.3rem 0; color:var(--muted);
+  }
+  .gate b{color:var(--good)}
+  .gate.cut{border-left-color:var(--orac)} .gate.cut b{color:var(--orac)}
+  .gate.warn{border-left-color:var(--warn)} .gate.warn b{color:var(--warn)}
+  .gate.acc{border-left-color:var(--accent)} .gate.acc b{color:var(--accent)}
+  .abstract{font-size:.98rem; color:var(--muted)}
+  .abstract b{color:var(--ink)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:.08em .35em; border-radius:4px}
+  .eq{background:var(--band); border:1px solid var(--rule); border-radius:8px; padding:.7rem 1rem; margin:1rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.86rem; overflow-x:auto; line-height:1.5}
+  figure{margin:1.7rem 0; text-align:center}
+  figure img{max-width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#fff}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.83rem; color:var(--faint); margin-top:.55rem; text-align:left; text-wrap:pretty}
+  figcaption b{color:var(--muted); font-weight:600}
+  .tbl{overflow-x:auto; margin:1.2rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  caption{caption-side:top; text-align:left; font-size:.83rem; color:var(--faint); margin-bottom:.5rem}
+  th,td{padding:.42rem .7rem; border-bottom:1px solid var(--rule); text-align:right; font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:650; border-bottom:1.5px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:1.5px solid var(--rule)}
+  .disc{color:var(--disc); font-weight:600}
+  .orac{color:var(--orac); font-weight:600}
+  .warn{color:var(--warn); font-weight:600}
+  .mut{color:var(--faint)}
+  ul,ol{margin:.7rem 0; padding-left:1.3rem}
+  li{margin:.35rem 0}
+  .foot{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:.78rem; color:var(--faint); line-height:1.7}
+  .foot code{background:var(--code-bg)}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>Harmful-edge discovery de-risk &amp; noise-robustness</h1>
+  <div class="doc-meta">
+    <span><b>Project:</b> CDD-ORAN</span> &nbsp;·&nbsp;
+    <span><b>Date:</b> 2026-09-07</span> &nbsp;·&nbsp;
+    <span><b>Author:</b> internal@brihatech.com</span> &nbsp;·&nbsp;
+    <span><b>Branch:</b> feat/v2</span> &nbsp;·&nbsp;
+    <span><b>Status:</b> TRUTH-FREE DEV prototypes / analysis &mdash; nothing frozen, committed, or pre-registered here.</span> &nbsp;·&nbsp;
+    <span><b>Scope:</b> M3 false-positive calibration, E2 single-control downstream inertness, E3 multi-step structural world model, and the pre-declared observation-noise robustness sweep.</span>
+  </div>
+
+  <p class="abstract">This report records the layer that closes the E2 <b>discovered-arm</b> loop and de-risks
+  the two remaining structural unknowns on the road to E5. The E2 harmful shared-knob edge
+  <span class="mono">P0&rarr;K5</span> &mdash; which the original partial-correlation method dropped in 7/10
+  seeds &mdash; is recovered <b>20/20 seeds</b> by the M3 stratified conditional-CI method. A pre-declared
+  false-positive calibration study then finds M3 is <b>per-test nominal but over-declares under BH</b>
+  (realized FDR 0.076 vs&nbsp;q=0.05); we show that overshoot is <b>provably inert</b> for E2's single-control
+  decision (0 action mismatches vs the oracle). A structural (mechanism-restricted) <b>multi-step</b> world
+  model reproduces the frozen E3 decoy gap bit-for-bit and makes the E3 discovered arm act as the oracle.
+  Finally, a pre-declared noise sweep shows the load-bearing edges in <b>both</b> benchmarks survive
+  observation noise to <span class="mono">0.50&nbsp;&sigma;</span> at 10/10. Everything below is a DEV
+  prototype or truth-free analysis; nothing frozen is changed.</p>
+
+  <div class="rel">
+    <b>Relation to prior reports.</b> Builds directly on the 2026-09-06 empirical record
+    (<code>reports/2026-09-06-e2-discovery-method-and-livetrap/</code>) &mdash; the discovery-method arc,
+    the operating-point redesign (<code>9d87a60</code>, trap live at 0.19), the 3-arm thesis fire, and the
+    first stratified <span class="mono">P0&rarr;K5</span> recovery prototype (10/10). Sits alongside the
+    2026-09-07 learned-arm record (<code>reports/2026-09-07-eseries-learned-arms-and-e2-design-decision/</code>).
+    The research frame &mdash; <b>goal is E5</b>, discovery-completeness of the harmful edge is the binding
+    constraint &mdash; is set in <code>reports/2026-09-06-e5-direction-and-causal-upgrade-synthesis.md</code>.
+  </div>
+
+  <div class="gate acc">
+    <b>Net for the E2 spine: CLOSED and accepted.</b> M3 recovers every <span class="mono">P0</span> edge
+    including the harmful <span class="mono">P0&rarr;K5</span>; its BH-FDR overshoot does not touch the E2
+    decision; the multi-step world model and noise robustness remove the two structural risks flagged for
+    E3&rarr;E5. <b>User decision (2026-09-07):</b> accept M3 as sufficient for the E2 spine, <b>defer</b> the
+    FDR fix until it actually binds (a multi-control decision or a learned world model), and move to E5
+    prerequisites. The FDR fix is real and understood &mdash; but every candidate fix is a method change =
+    fresh pre-registration, so it is <b>not</b> undertaken here.
+  </div>
+
+  <h2>1. M3 false-positive calibration &mdash; per-test PASS, post-BH FDR FAIL</h2>
+  <p>
+    The M3 stratified conditional-CI method scores an edge <span class="mono">cand&rarr;target</span> by the
+    maximum over stratifiers <span class="mono">g</span> of the pooled within-stratum conditional
+    <span class="mono">&eta;&sup2;</span>, calibrated by a within-stratum conditional-permutation null that
+    re-maxes over&nbsp;<span class="mono">g</span>. We ran a truth-free calibration on the live-trap E2
+    (<code>9d87a60</code>): 20 seeds &times; 84 candidate&ndash;target pairs, <span class="mono">n=4000</span>,
+    at the pre-declared hyperparameters (<span class="mono">NC=6, NB=8, min/stratum=40, B=299, BH q=0.05</span>).
+    Hyperparameters were fixed <em>before</em> scoring; the <span class="mono">results.json</span> (1680 records)
+    was re-scored independently from raw records and matches the run summary exactly.
+  </p>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 1 &mdash; M3 calibration on live-trap E2 (20 seeds, n=4000).</caption>
+    <thead><tr><th>Metric</th><th>Value</th><th>Wilson 95% CI</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Build: <span class="mono">P0&rarr;K5</span> declared</td><td>20 / 20</td><td>all at perm floor 0.00333</td><td class="disc">PASS</td></tr>
+      <tr><td>Build: NCP (param&rarr;KPI) recall</td><td>0.950</td><td>304 / 320</td><td class="disc">PASS</td></tr>
+      <tr><td>Per-test type-I (pooled nulls)</td><td>0.0522</td><td>[0.0416, 0.0653]</td><td class="disc">PASS</td></tr>
+      <tr><td>Post-BH realized FDR</td><td>0.0760</td><td>[0.0520, 0.1098]</td><td class="orac">FAIL</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <figure>
+    <img src="fig2_fp_calibration.png" alt="Per-test type-I error includes q=0.05 (PASS); post-BH FDR CI is entirely above q=0.05 (FAIL)">
+    <figcaption><b>Figure 1.</b> M3 is per-test nominal &mdash; the pooled type-I CI straddles
+    <span class="mono">q=0.05</span> &mdash; but the realized FDR after Benjamini&ndash;Hochberg runs
+    <span class="mono">~1.5&times;</span> nominal, with the <em>entire</em> CI above&nbsp;q. Mechanism: the
+    permutation floor (<span class="mono">1/300 = 0.00333</span>) sits <em>below</em> the BH rank-1 threshold
+    (<span class="mono">0.05/14 = 0.00357</span>), so an unlucky null at the floor auto-declares; BH's
+    adaptivity (genuine edges in the same target raise the cutoff) admits the rest. This is the same
+    <span class="mono">floor&harr;rank-1</span> knot as the RCoT v1&rarr;v2 fix, now on its other edge. Raising
+    <span class="mono">B</span> is not a clean lever (it lowers the floor further under rank-1); every real fix
+    is a method change requiring fresh pre-registration.</figcaption>
+  </figure>
+
+  <h2>2. The FDR overshoot is inert for E2's single-control decision</h2>
+  <p>
+    Before treating the calibration miss as blocking, we tested whether it changes any <em>decision</em>. The
+    E2 decision gate moves exactly one knob (<span class="mono">P0</span>) and M3 recovers all four
+    <span class="mono">P0</span> edges (<span class="mono">P0&rarr;{K0,K1,K2,K5}</span>) with zero false
+    <span class="mono">P0</span> edges. We built a restricted-structure world model &mdash; the true E2
+    mechanism restricted to the <em>discovered</em> edge set, non-included parents frozen at their committed
+    value, false edges inert &mdash; and ran the frozen E2 decision gate on the M3-discovered structure across
+    20 seeds (32-item positive/negative bank each &rarr; 640 decisions).
+  </p>
+  <div class="tbl">
+  <table>
+    <caption>Table 2 &mdash; E2 discovered-structure arm vs oracle and decoy (frozen gate).</caption>
+    <thead><tr><th>Arm</th><th>Mean positive-regret</th><th>Action mismatches vs oracle</th></tr></thead>
+    <tbody>
+      <tr><td>Oracle (true structure)</td><td class="disc">0.000000</td><td>&mdash;</td></tr>
+      <tr><td>Discovered (M3)</td><td class="disc">0.000000</td><td class="disc">0 / 640</td></tr>
+      <tr><td>Decoy (<span class="mono">P0&rarr;K5</span> omitted)</td><td class="orac">0.190022</td><td>reproduces frozen 0.19 (&lt;1e-3)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>
+    The FDR overshoot manifests as occasional false <em>non-</em><span class="mono">P0</span> edges, which the
+    single-control decision never reads. It is therefore provably inert here. <b>Caveats:</b> this rides on
+    (i)&nbsp;a single-control decision and (ii)&nbsp;a <em>structural</em>, not learned, world model &mdash;
+    exactly the two conditions under which the deferred FDR fix would begin to bind. See Figure&nbsp;3.
+  </p>
+
+  <h2>3. Multi-step structural world model de-risks E3</h2>
+  <p>
+    E5 needs signed interventional effects propagated through <em>discovered</em> structure over multiple hops
+    &mdash; the load-bearing capability that every prior synthesis converges on, and the one the one-step
+    <span class="mono">rollout</span> path does not cover on discovered edges. E3 is the first benchmark that
+    requires it: a depth-3 lagged cascade <span class="mono">P0&rarr;K0&rarr;K1&rarr;{K2,K3}</span> plus direct
+    edges, with a <span class="mono">truncate_fanout</span> decoy that zeroes <span class="mono">K1&rarr;K2</span>
+    and <span class="mono">K1&rarr;K3</span>. We built a multi-step mechanism-restricted world model
+    (<code>e3_multistep_wm/</code>) that chains KPIs through discovered edges with the correct one-step lag.
+  </p>
+  <ul>
+    <li>Reproduces the frozen E3 decoy gap <b>bit-for-bit</b>: <span class="mono">gap_norm = 0.11801514</span>
+      (raw 8.4056), <span class="mono">max|repro&minus;frozen| = 0.0</span>.</li>
+    <li>Partial-corr discovery recovers <b>all 7 true edges 10/10 seeds</b>, including both fan-out chain edges
+      <span class="mono">K1&rarr;K2</span>, <span class="mono">K1&rarr;K3</span>; <b>0 false positives</b>.</li>
+    <li>Discovered arm regret <b>0.0</b>, <b>0 / 320</b> action mismatches vs the oracle.</li>
+  </ul>
+
+  <figure>
+    <img src="fig3_derisk_ledger.png" alt="Bar chart: decoy structure incurs 0.190 (E2) and 0.118 (E3) regret while oracle and discovered arms are both 0.000">
+    <figcaption><b>Figure 2.</b> In both benchmarks the discovered-structure arm is indistinguishable from the
+    oracle (regret <span class="mono">0.000</span>), while the decoy &mdash; a plausible-but-wrong structure that
+    omits the harmful edge / truncates the fan-out &mdash; is what fails
+    (<span class="mono">0.190</span> for E2's single-control decision, <span class="mono">0.118</span> for E3's
+    multi-step do-propagation gap). E2 units are normalized positive-regret; E3 units are the normalized
+    decision gap. This is the thesis atom &mdash; <em>complete</em> discovered structure rejects the
+    locally-attractive, globally-harmful action &mdash; demonstrated end-to-end from discovery through
+    world-model to decision on two benchmarks.</figcaption>
+  </figure>
+
+  <h2>4. Noise-robustness sweep &mdash; load-bearing edges survive to 0.50&nbsp;&sigma;</h2>
+  <p>
+    All results above are noiseless. Every project memory names discovery-completeness under noise as the
+    binding constraint to E5, so we ran a pre-declared exploratory sweep
+    (<code>noise_robustness/PREDECLARE.md</code>): observation noise <span class="mono">&sigma;_obs = frac &times;
+    &sigma;_KPI</span> added to KPI columns only (params are exact exogenous roots), grid
+    <span class="mono">frac &isin; {0, 0.02, 0.05, 0.10, 0.20, 0.35, 0.50}</span>, 10 seeds,
+    <span class="mono">n=4000</span>, method hyperparameters held fixed (no per-noise tuning). The whole curve
+    is reported; no noise level was selected or tuned to. The <span class="mono">frac=0</span> point is the
+    exact noiseless control and reproduces the prior de-risk (E2 <span class="mono">P0&rarr;K5</span> 10/10 at
+    the perm floor; E3 chain 10/10). The E2 <span class="mono">P0&rarr;K5</span> recovery table was re-scored
+    independently from raw records.
+  </p>
+
+  <figure>
+    <img src="fig1_noise_robustness.png" alt="Two line panels: E2 P0->K5 and E3 chain edges stay at 10/10 across all noise levels to 0.50 sigma">
+    <figcaption><b>Figure 3.</b> Recovery of the load-bearing edges vs observation noise (10 seeds). <b>Left,
+    E2 (M3):</b> the harmful <span class="mono">P0&rarr;K5</span> and the beneficial fan-out
+    <span class="mono">P0&rarr;{K0,K1,K2}</span> hold at 10/10 through <span class="mono">0.50&nbsp;&sigma;</span>;
+    the only weak edge is the Gaussian-width co-parent <span class="mono">P6&rarr;K5</span> (1&ndash;2/10) &mdash;
+    weak at <span class="mono">frac=0</span> too, an M3 limitation on width/variance-modulating parents, not a
+    noise effect. <b>Right, E3 (partial-corr):</b> all 7 edges, including the errors-in-variables chain
+    (a <em>noisy lagged-KPI</em> predictor), hold at 10/10 through <span class="mono">0.50&nbsp;&sigma;</span>.
+    The noise is real, not a no-op: at <span class="mono">0.50&nbsp;&sigma;</span> the true partial-corrs fall
+    from 1.0 to ~0.73&ndash;0.77 and nulls rise from 0 to ~0.02&ndash;0.04 &mdash; the largest-gap threshold
+    still separates them cleanly. False positives stay at&nbsp;~0 (E2 mean FP peaks at 0.30 at
+    <span class="mono">0.50&nbsp;&sigma;</span>; E3 FP is 0 throughout).</figcaption>
+  </figure>
+
+  <div class="tbl">
+  <table>
+    <caption>Table 3 &mdash; primary-edge recovery (x/10 seeds); noise level where recovery first drops below 8/10.</caption>
+    <thead><tr><th>Benchmark · edge</th><th>frac 0.00</th><th>0.10</th><th>0.20</th><th>0.35</th><th>0.50</th><th>&lt;8/10 at</th></tr></thead>
+    <tbody>
+      <tr><td>E2 · <span class="mono">P0&rarr;K5</span> (harmful)</td><td>10</td><td>10</td><td>10</td><td>10</td><td>10</td><td class="disc">never</td></tr>
+      <tr><td>E2 · <span class="mono">P0&rarr;{K0,K1,K2}</span> (min)</td><td>10</td><td>10</td><td>10</td><td>10</td><td>10</td><td class="disc">never</td></tr>
+      <tr><td>E3 · <span class="mono">K1&rarr;K2</span> (chain)</td><td>10</td><td>10</td><td>10</td><td>10</td><td>10</td><td class="disc">never</td></tr>
+      <tr><td>E3 · <span class="mono">K1&rarr;K3</span> (chain)</td><td>10</td><td>10</td><td>10</td><td>10</td><td>10</td><td class="disc">never</td></tr>
+      <tr><td class="mut">E2 · <span class="mono">P6&rarr;K5</span> (width co-parent)</td><td class="mut">2</td><td class="mut">1</td><td class="mut">2</td><td class="mut">1</td><td class="mut">1</td><td class="mut">frac 0 (noise-independent)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>
+    The pre-declared expectation &mdash; that E3's errors-in-variables chain would be more fragile than E2's
+    clean-param predictor &mdash; <b>did not materialize</b> at <span class="mono">n=4000</span>. Both curves are
+    flat at ceiling because both methods threshold on a signal-vs-null gap that noise <em>shrinks but does not
+    close</em> in this range. Net: <b>discovery-completeness of the load-bearing edges is not the failure mode
+    under moderate observation noise</b> (&le;0.50&nbsp;&sigma;) in these two benchmarks.
+  </p>
+
+  <h2>5. What this changes, and what it does not</h2>
+  <div class="gate">
+    <b>Resolved.</b> (1)&nbsp;E2 harmful-edge discovery: M3 recovers <span class="mono">P0&rarr;K5</span> 20/20.
+    (2)&nbsp;M3's FDR overshoot: real but inert for E2, fix deferred by user decision. (3)&nbsp;Multi-step
+    do-propagation on discovered structure: built and validated on E3 (bit-exact decoy, 0 regret).
+    (4)&nbsp;Noise robustness of the load-bearing edges: holds to 0.50&nbsp;&sigma; on both benchmarks.
+  </div>
+  <div class="gate warn">
+    <b>Open / deferred (user-gated).</b> The M3 FDR fix (step-down / studentized max, floor-aware rank-1 guard,
+    BY, or a calibrated per-test threshold) &mdash; each is a method change requiring fresh pre-registration;
+    undertake only when a <b>multi-control</b> decision or a <b>learned</b> world model makes it bind. The weak
+    <span class="mono">P6&rarr;K5</span> width co-parent (an M3 limitation on variance-modulating parents, not
+    noise) is not load-bearing for the E5 decision but is a known gap. Noise above 0.50&nbsp;&sigma; and a full
+    end-to-end discovery&rarr;world-model&rarr;planner run <em>under noise</em> are unprobed.
+  </div>
+  <p>
+    <b>Toward E5.</b> The remaining frontier is composition: register E5 (shared-knob decision where complete
+    causal fan-out rejects a locally-attractive but globally-harmful action) and run the full spine &mdash;
+    discovered structure &rarr; multi-step signed world model &rarr; planner &rarr; decision &mdash; with noise
+    on. Each of those pieces now exists and is de-risked in isolation; none is composed yet, and E5 registration
+    is a user-gated freeze step. This report deliberately stops at the decision-ready boundary.
+  </p>
+
+  <div class="foot">
+    <b>Provenance.</b> Truth-free DEV prototypes under <code>scratchpad/</code>:
+    <code>p0k5_fp_calibration/</code> (M3 <code>m3_core.py</code>, <code>results.json</code>, VERDICT),
+    <code>p0k5_downstream/</code> (<code>RestrictedE2WorldModel</code>, <code>downstream_results.json</code>),
+    <code>e3_multistep_wm/</code> (<code>world_model.py</code>, <code>results.json</code>),
+    <code>noise_robustness/</code> (<code>PREDECLARE.md</code>, <code>e2_sweep.py</code>, <code>e3_sweep.py</code>,
+    <code>results_e2.json</code>, <code>results_e3.json</code>). Figures regenerable via
+    <code>make_figs.py</code> (reads those JSONs live). All numbers re-scored from raw records by the
+    orchestrator. Nothing here changes a frozen constant, mechanism, gate, or package module; nothing is
+    committed to the E-series pipeline. Frozen reference numbers: E2 decoy gate mean-positive 0.190022; E3 decoy
+    gate gap_norm 0.118015. &nbsp;·&nbsp; <code>reports/2026-09-07-harmful-edge-derisk-and-noise-robustness/</code>
+  </div>
+
+</div>
+</body>
+</html>
