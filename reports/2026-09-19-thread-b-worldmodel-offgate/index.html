@@ -174,8 +174,11 @@ defects that do <em>not</em> touch the primary negative but bound the end-to-end
   cached K0–K2 grids instead of recomputing them with the arm-specific / common warm-up. Measured incidence:
   <strong>2/40 seeds (500029, 500030)</strong>. It perturbs only discovered <code>netOmit</code> for those two
   seeds (netNull / benA cancel K0–K2; the forced track uses oracle K0–K2 and is unaffected), and 2/40 cannot
-  flip an all-strong-δ headline failing by wide margins. Conclusion robust; literal EE certification needs a
-  bounded rescore.</li>
+  flip an all-strong-δ headline failing by wide margins. <strong>Verified by erratum (2026-09-19):</strong>
+  implementing the A3 rollout literally (additive module, frozen harness byte-unchanged; bit-exact no-op on a
+  non-bad_disc seed) and rescoring shifted 39 cells' <code>netOmit</code> by at most 0.0081 (one seed of 40 →
+  cell-mean shift ~2e-4); the MECH and EE headlines are <strong>identical</strong> to the original. The
+  end-to-end track is now literally certified.</li>
   <li><strong>T2 diagnostics incomplete:</strong> CL256/GOLS/ANISO fields are in the records (curves emitted
   here), but the A9 H-* 2×2 factorial and the §5 spurious-P0-sensitivity / held-out-error diagnostics were
   never built into the harness and are absent.</li>
@@ -229,10 +232,10 @@ clears all three strong δ. q=100% is a reference row, not a success. Full per-c
 
 <h2>8. What next (open — user decision)</h2>
 <ol>
-  <li><strong>Bounded conformance erratum</strong> (optional, does not change the verdict): implement the A3
-  rollout literally, record <code>bad_disc</code>/<code>needs_ref</code>, rescore the 2 affected seeds on the
-  same frozen bank with an independent scorer, and emit the H-* / sensitivity diagnostics. Conformance to the
-  registered method, not tuning.</li>
+  <li><strong>Bounded conformance erratum — A3 part DONE (2026-09-19):</strong> the A3 rollout was implemented
+  literally and the 2 <code>bad_disc</code> seeds rescored (see §5) — verdict unchanged, end-to-end track now
+  literally certified. <em>Still outstanding (verdict-irrelevant, larger build):</em> the A9 H-* 2×2 factorial,
+  the §5 spurious-P0-sensitivity / held-out-error diagnostics, and a per-cell CPU-equivalence pass.</li>
   <li><strong>Then either close Thread B</strong> — "confirmatory negative for CL64 uniform strong-δ safety;
   partial decision benefit; residual off-gate generalization prevents low-occupancy deployment safety on this
   E2-ID bank" — and fold it into the occupancy-conditional world-model-bottleneck record; <strong>or
