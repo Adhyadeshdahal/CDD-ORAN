@@ -237,31 +237,45 @@ both nets ≥ −0.01 (with bootstrap bound) and frac_N ≥ 0.80.</p>
 clears all three strong δ. q=100% is a reference row, not a success. Full per-cell values in
 <code>figures_data.json</code>.</p>
 
-<h2>8. What next (open — user decision)</h2>
+<h2>8. Resolution — Thread B closed via option A (STOP), 2026-09-22</h2>
+<p><strong>Decision: stop E2-ID estimator iteration.</strong> After the certified CL64 negative, the open
+choice was (A) close, or (B) pre-register one fresh C-bank test of a principled regularized action-effect
+estimator. Two truth-blind DEV diagnostics resolved that gate <em>against</em> a C test:</p>
 <ol>
-  <li><strong>Bounded conformance erratum — A3 part DONE (2026-09-19):</strong> the A3 rollout was implemented
-  literally and the 2 <code>bad_disc</code> seeds rescored (see §5) — verdict unchanged; the A3-literal
-  end-to-end rescore is complete (full pre-registration conformance still pending — A0/A4/A8 + diagnostics).
-  <em>Still outstanding (verdict-irrelevant, larger build):</em> the A9 H-* 2×2 factorial,
-  the §5 spurious-P0-sensitivity / held-out-error diagnostics, and a per-cell CPU-equivalence pass.</li>
-  <li><strong>Then either close Thread B</strong> — "confirmatory negative for CL64 uniform strong-δ safety;
-  partial decision benefit; residual off-gate generalization prevents low-occupancy deployment safety on this
-  E2-ID bank" — and fold it into the occupancy-conditional world-model-bottleneck record; <strong>or
-  pre-register one fresh C-bank</strong> test of a regularized / ANISO-motivated action-effect estimator, with
-  every constant unchanged and frozen before scoring (the discriminating prediction: keep CL64-scale in-gate
-  benefit while holding dOff and its U95 ≤ 0.02 at all strong δ).</li>
+  <li><strong>Mechanism probe</strong> (<code>b_probe_mechanism.{py,json,md}</code>, seed-0 dev; sol-reviewed
+  <code>sol_B_probe_review.md</code>): CL64's residual off-gate collateral is <strong>composition bias</strong>,
+  not variance. Off-gate states whose (P6,P7)-context neighborhoods straddle the gate boundary borrow the
+  in-gate P0 slope (|slope| ≈ 0.32–0.73, ∝ δ; corr(straddle, |slope|) ≈ 0.98), which discovery-only ridge+GCV
+  correctly refuses to shrink (it reads as signal). So <strong>shrinkage-only estimators are ruled out.</strong></li>
+  <li><strong>Composition-aware honest tree</strong> (<code>b_tree_qualify.{py,json,md}</code>; the counterexample
+  sol raised — a varying-coefficient tree over (P6,P7) splitting on randomized-P0 slope heterogeneity, every
+  constant tuned <em>discovery-only</em>, firewall-audited): DEV-qualified across 4 seeds incl. q=0.02 →
+  <strong>FAILS.</strong> Genuine partial gain (beats CL64 off-gate in 39/40 cell-seeds, reaches the omit floor
+  in 24/40) but does not clear a C-test bar: still-large straddle sensitivity (near-clean off-gate in only
+  4/40), 16–25% in-gate benefit loss at q=0.02 and q=0.1, and seed-fragility (offP0sens 3.8/11.9/8.1/17.9 across
+  seeds at q0.1/δ3.2 — worse than CL64 on seed 3). Because it is firewall-clean, this is a real capability limit.</li>
 </ol>
-<p>Do not retune EQ/NI/FRAC/the strong-δ set/k on B; do not add δ points to hunt a boundary. If no
-independently-motivated estimator can make that prediction, the sharper decision is to stop iterating in E2-ID
-and fold the corrected negative into the record.</p>
+<p><strong>Why STOP is grounded, not assumed:</strong> both live estimator families were tested to conclusion.
+The residual failure is a <strong>finite-sample boundary-resolution wall</strong> — at low occupancy there are
+too few in-gate discovery rows to <em>both</em> localize the thin gate band <em>and</em> estimate its slope
+without borrowing across the boundary or starving the in-gate signal. That is a discovery/structure problem
+(recover the gate as structure → multi-intervention world-model), not a bounded-estimator problem, and it meets
+sol's own pre-stated STOP condition.</p>
+<p><strong>The upgraded negative (folded into the occupancy-conditional WM-bottleneck record):</strong> a learned
+neighborhood world-model cannot separate in-gate from off-gate action effects near the gate boundary at low
+occupancy without recovering the gate as structure. <strong>Next thread:</strong> the structural /
+multi-intervention world-model direction (recover the gate/structure, propagate do-effects through it) — the E5
+lever the project record already names. <em>Verdict-irrelevant conformance debt left open</em> (does not affect
+the negative): A9 H-* 2×2 factorial, §5 sensitivity / held-out diagnostics, per-cell CPU-equivalence.</p>
 
 <div class="foot">
   Raw run: <code>scratchpad/design_adaptive_m3/gated_mde_B_records/</code> (1000 cells) ·
   <code>b_result.json</code>, <code>b_result_secondary.json</code>, <code>b_bad_disc_incidence.json</code>,
   <code>b_spot_verify.json</code>, <code>sol_B_result_review.md</code>, <code>b_run_manifest.json</code>
-  (content b8c1aa4dfe96). Figures regenerated live from the raw records by <code>make_figs.py</code> →
-  <code>figures_data.json</code>. DEV / truth-free; nothing frozen, committed, or promoted. reports/ is
-  gitignored by repo convention.
+  (content b8c1aa4dfe96). Closeout &amp; resolution (§8): <code>sol_B_closeout_review.md</code>,
+  <code>b_probe_mechanism.{py,json,md}</code> + <code>sol_B_probe_review.md</code>,
+  <code>b_tree_qualify.{py,json,md}</code>. Figures regenerated live from the raw records by
+  <code>make_figs.py</code> → <code>figures_data.json</code>. reports/ is tracked in git as of 6bb66b0.
 </div>
 
 </div>
