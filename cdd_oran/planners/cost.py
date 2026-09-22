@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import numpy as np
 import torch
 
-from cdd_oran.envs.base import XApp
+from cdd_oran.envs.legacy.base import XApp
 
 
 def risk_adjust(kpis, stds, direction: int, kappa: float):
@@ -186,7 +186,7 @@ def _self_check() -> None:
 
     # Parity: vectorised score_batch must EQUAL the reference loop -- both allclose
     # (bit-identical here) and, the real gate, identical argmin over the candidates.
-    from cdd_oran.envs.env_ii import ORANEnvironment2  # 2-KPI xApp (3,4) exercises float32 sums
+    from cdd_oran.envs.legacy.env_ii import ORANEnvironment2  # 2-KPI xApp (3,4) exercises float32 sums
 
     env = ORANEnvironment2()
     xapps = env.xapps

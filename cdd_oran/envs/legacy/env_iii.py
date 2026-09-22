@@ -13,8 +13,8 @@ from math import exp
 import numpy as np
 
 from cdd_oran.config import DEFAULT_CONFIG
-from cdd_oran.envs.base import BaseORANEnv
-from cdd_oran.envs.stats_cache import get_cached_mean_std
+from cdd_oran.envs.legacy.base import BaseORANEnv
+from cdd_oran.envs.legacy.stats_cache import get_cached_mean_std
 
 # Default observation-noise std on the (normalised) KPI channels. CMI-robustness knob.
 DEFAULT_NOISE_SCALE = 0.05

@@ -1,7 +1,7 @@
 """v2 benchmark environments (SEMANTICS.md-conformant code path).
 
 This subpackage is a NEW code path, deliberately independent of the legacy
-``cdd_oran.envs.base.BaseORANEnv`` and ``env_i..iv`` modules so that legacy behavior stays
+``cdd_oran.envs.legacy.base.BaseORANEnv`` and ``env_i..iv`` modules so that legacy behavior stays
 byte-identical (benchmark-version boundary, PD4 / review MAJOR 7). It implements the
 apply/advance split, one-step actuation latency, a **coordinate-keyed exogenous tape** whose
 draws are a pure function of ``(env_seed, episode, time, variable)`` (never a mutable

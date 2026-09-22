@@ -1,9 +1,10 @@
 """Import-firewall tests: the E-series must not transitively load the RETIRED legacy envs.
 
-Background: ``cdd_oran/envs/__init__.py`` EAGERLY imports ``env_i..iv``. Historically the pure
-precision/recall/F1 helper ``_prf`` lived in ``analysis/threshold_sweep.py``, which does a
-module-level ``from cdd_oran.envs import get_env`` -- so any consumer of ``_prf`` (recovery_metrics,
-the e1slice/e2slice evaluators) transitively pulled in the legacy envs just to reach a pure metric.
+Background: the RETIRED legacy envs now live in ``cdd_oran/envs/legacy/`` (quarantined 2026-09-22) and
+``cdd_oran/envs/__init__.py`` imports nothing at module top. Historically the pure precision/recall/F1
+helper ``_prf`` lived in ``analysis/threshold_sweep.py``, which does a module-level
+``from cdd_oran.envs.legacy import get_env`` -- so any consumer of ``_prf`` (recovery_metrics, the
+e1slice/e2slice evaluators) transitively pulled in the legacy envs just to reach a pure metric.
 
 This suite proves ``_prf`` now lives in the pure ``cdd_oran.analysis.prf`` module and that the
 analysis layer (``prf``, ``recovery_metrics``) no longer loads the legacy envs. Each check runs in a
@@ -31,8 +32,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 # imported (v2 is a subpackage of it); after the Option-B fix that package is env-free (it imports
 # env_i..iv only lazily), so the firewall is precisely "env_i..iv are not loaded", not "the envs
 # package is untouched".
-_LEGACY = ("cdd_oran.envs.env_i", "cdd_oran.envs.env_ii",
-           "cdd_oran.envs.env_iii", "cdd_oran.envs.env_iv")
+_LEGACY = ("cdd_oran.envs.legacy.env_i", "cdd_oran.envs.legacy.env_ii",
+           "cdd_oran.envs.legacy.env_iii", "cdd_oran.envs.legacy.env_iv")
 
 
 def _loaded_legacy_modules(import_target: str) -> list[str]:
@@ -117,12 +118,12 @@ def test_v2_env_submodule_import_is_legacy_free(v2_module: str):
 
 
 def test_legacy_get_env_mean_std_reexports_still_work():
-    # Behavior-neutral: the lazy PEP 562 __getattr__ must still serve the re-exported legacy names
-    # to any archival caller, identical to a direct submodule import.
-    import cdd_oran.envs as envs
-    from cdd_oran.envs.env_i import ORANEnvironment1 as DirectEnv1
-    from cdd_oran.envs.statistics import get_env_i_mean_std as direct_mean_std
+    # Behavior-neutral: the lazy PEP 562 __getattr__ on cdd_oran.envs.legacy must still serve the
+    # re-exported legacy names to any archival caller, identical to a direct submodule import.
+    import cdd_oran.envs.legacy as legacy
+    from cdd_oran.envs.legacy.env_i import ORANEnvironment1 as DirectEnv1
+    from cdd_oran.envs.legacy.statistics import get_env_i_mean_std as direct_mean_std
 
-    assert envs.ORANEnvironment1 is DirectEnv1
-    assert envs.get_env_i_mean_std is direct_mean_std
-    assert envs.get_env_iii_mean_std.__name__ == "get_env_iii_mean_std"
+    assert legacy.ORANEnvironment1 is DirectEnv1
+    assert legacy.get_env_i_mean_std is direct_mean_std
+    assert legacy.get_env_iii_mean_std.__name__ == "get_env_iii_mean_std"

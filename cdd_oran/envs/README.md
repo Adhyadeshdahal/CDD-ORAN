@@ -5,16 +5,18 @@ exists so we never conflate them again.
 
 ## 1. LEGACY (v1) — Environment I / II / III / IV — RETIRED
 
-Files: `base.py` (`BaseORANEnv`, `XApp`/`Param`/`KPI`), `env_i.py`..`env_iv.py`
-(`ORANEnvironment1..4`), `statistics.py`, `stats_cache.py`; factory `get_env()` in `__init__.py`;
-configs `configs/env_*_cdl.yaml` / `env_*_mlp.yaml`; results under `runs/EnvironmentI..IV/`.
+Files: **all under `legacy/`** (quarantined 2026-09-22) — `legacy/base.py` (`BaseORANEnv`,
+`XApp`/`Param`/`KPI`), `legacy/env_i.py`..`env_iv.py` (`ORANEnvironment1..4`), `legacy/statistics.py`,
+`legacy/stats_cache.py`; factory `get_env()` in `legacy/__init__.py` — import it explicitly:
+`from cdd_oran.envs.legacy import get_env`. Configs `configs/env_*_cdl.yaml` / `env_*_mlp.yaml`; results
+under `runs/EnvironmentI..IV/`.
 
 - The original v1 benchmark. **Implemented but retired.** All the historical objective / OOD /
   planner decision-value work (e.g. the −0.083→+0.303 numbers) was measured here.
 - **Do not build new work on these.** They are kept only for archival and reproduction.
-- Status: **quarantined.** Deprecation markers + import-seam decoupling are in progress; a full code
-  removal is deferred (it touches `planners/cost.py`, `config.py`, and ~8 tests) until the E-series
-  fully supersedes them.
+- Status: **quarantined into `cdd_oran/envs/legacy/` (2026-09-22).** Import paths are honest
+  (`cdd_oran.envs.legacy.*`); `envs/__init__.py` loads no legacy. Full code removal is deferred (gated on
+  porting the kept baselines — QACM et al. — to `V2Env`; see `plans/012`, `plans/014`).
 
 ## 2. E-SERIES redesign — E1 / E2 / E3 / E4 / E5 — the LIVE benchmark
 

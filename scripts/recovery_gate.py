@@ -48,7 +48,7 @@ def _train_command(env, seed, steps, device):
 def _load_graph(run_dir):
     """Read the frozen CMI matrix + ground truth (no retrain, no forward passes)."""
     from cdd_oran.config import load_config
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
     from cdd_oran.models import get_model
 
     run_dir = Path(run_dir)

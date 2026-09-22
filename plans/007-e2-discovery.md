@@ -5,13 +5,19 @@
 > ordering below is the anti-p-hacking guarantee — do not run the method against E2 truth until
 > the protocol doc is committed and its SHA is recorded in the artifacts.
 >
-> **STATUS: PROTOCOL FROZEN + IMPL COMPLETE; RUN = TODO (parked, ready).** Protocol frozen at
+> **STATUS: SUPERSEDED / RETIRED (2026-09-22) — DO NOT RUN.** pdCor (`protocol_commit 828e345`) is the
+> retired E2 discovery baseline, superseded by RCoT (plan 008) then **RCoT-v2 (plan 009, the canonical
+> frozen E2 method** — `cdd_oran/e2slice/discovery_rcot_v2.py`). Only a single seed was ever produced
+> (`runs/e2slice-recovery/replicate-00/discovery.json`); the parked ~5–18-day run is ABANDONED. Kept only
+> as a retired method-comparison baseline. Historical status below.
+>
+> **(historical) PROTOCOL FROZEN + IMPL COMPLETE; RUN = TODO (parked, ready).** Protocol frozen at
 > `protocol_commit = 828e345`. Implementation banked on `feat/v2 @ c0101e6` (`cdd_oran/e2slice/` +
 > scripts + tests; 440 tests green; adversarial review verdict GENUINE; firewall verified twice).
 > The frozen run has NOT been executed: at the frozen §14 constants it is memory-bandwidth-bound and
 > takes ~5–18 days on the current 16 GiB/~3 GiB-free machine (the smoke extrapolation missed a CPU
-> cache cliff). **The run is a standing TODO — run it whenever a high-RAM/high-bandwidth machine is
-> free (see "## RUN STATUS" below).** Nothing about E2 truth has been examined; the freeze is intact.
+> cache cliff). **The parked run is ABANDONED — do NOT execute it (superseded by RCoT-v2, plan 009).**
+> pdCor is retired; the ~5–18-day rerun must not be run.
 
 ## Status
 
@@ -239,10 +245,10 @@ parent-hash / shape / numeric / `protocol_commit` mismatch (Plan 003 fail-closed
       decision-value evidence; the E2 decision null (`8d70a4f`) stands untouched.
 - [ ] Full verification passes; artifacts fail-closed; adversarial review verdict recorded.
 
-## RUN STATUS — TODO (parked, ready to execute on adequate hardware)
+## RUN STATUS — ABANDONED (do NOT run; superseded by RCoT-v2)
 
-The frozen discovery run is banked and ready. **Orchestrator: run it whenever a machine (or a bigger
-machine) is free; it may run as long as needed.** Runbook:
+pdCor is the retired E2 discovery baseline. **Do NOT execute this run** — the canonical E2 method is RCoT-v2
+(plan 009), already run (all 10 seeds, F1 0.855). The runbook below is historical only. Runbook:
 
 - **Entry point**: `scripts/e2_slice_recovery_sweep.py` (10-seed envelope driver), or the
   `scripts/e2_slice.py` `generate`/`discover`/`recover` subcommands for manual phase control.

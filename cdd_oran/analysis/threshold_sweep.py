@@ -17,7 +17,7 @@ import numpy as np
 
 from cdd_oran.analysis.prf import _prf
 from cdd_oran.config import load_config
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import get_model
 
 # ``_prf`` now lives in the pure ``cdd_oran.analysis.prf`` module (no env import); it is re-exported

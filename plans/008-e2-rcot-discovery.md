@@ -5,8 +5,10 @@
 > anti-p-hacking guarantee — do NOT run the method against E2 truth until the protocol doc is committed
 > and its SHA is recorded in the artifacts.
 >
-> **STATUS: PROTOCOL FROZEN (human-approved, primary null `block_perm`); IMPL BUILT + ADVERSARIALLY
-> REVIEWED + LOCKED; RUN = pending execution.**
+> **STATUS: DONE (2026-09-22 correction) — RUN COMPLETE, all 10 seeds.** Impl locked in
+> `cdd_oran/e2slice/discovery_rcot.py`; run finished: `runs/e2slice-recovery/replicate-{00..09}/discovery_rcot.json`
+> (protocol_commit `eba381a`). RESULT = low recall (R 0.163 / F1 0.251) — this diagnosis motivated
+> **RCoT-v2 (plan 009, canonical)**. RCoT-v1 kept as the retired predecessor. (Was: "RUN = pending execution".)
 > The frozen pre-registration is `docs/benchmark/E2_RCOT_DISCOVERY_PROTOCOL.md` (this plan's sibling).
 > The method is implemented and hardened in `cdd_oran/e2slice/discovery_rcot.py` (16 unit tests green;
 > reads/scores NO truth); at the freeze its `PROTOCOL_COMMIT` is set to the protocol-doc commit SHA and

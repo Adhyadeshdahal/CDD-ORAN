@@ -14,8 +14,8 @@ from torch.distributions import Normal
 
 from cdd_oran.config import DEFAULT_CONFIG
 from cdd_oran.conflicts import detect_conflict_edges, state_to_tensor
-from cdd_oran.envs import get_env
-from cdd_oran.envs.base import XApp
+from cdd_oran.envs.legacy import get_env
+from cdd_oran.envs.legacy.base import XApp
 from cdd_oran.models.cdl import CDL
 from cdd_oran.planners.cem import ModelBasedCEM
 from cdd_oran.planners.cost import score_batch

@@ -1,5 +1,9 @@
 # Frozen E2 discovery protocol — U-centered partial distance correlation (contract)
 
+> **SUPERSEDED / RETIRED (2026-09-22).** pdCor is the retired E2 discovery baseline. The canonical E2 method
+> is **RCoT-v2** (`E2_RCOT_DISCOVERY_PROTOCOL_V2.md`, plan 009, `cdd_oran/e2slice/discovery_rcot_v2.py`). This
+> doc is kept for historical / method-comparison provenance only — do not use for the live pipeline.
+
 This contract is **frozen before it is executed**. Once committed, this document's commit SHA is
 recorded as `protocol_commit` inside every artifact this method produces (the persisted discovery
 mask and its descendants). The ordering is the anti-p-hacking guarantee: the discovery *method* is

@@ -1,8 +1,8 @@
-# E2 operating-point redesign — PRE-REGISTRATION (DRAFT, nothing frozen)
+# E2 operating-point redesign — FROZEN + IMPLEMENTED (live in `envs/v2/e2.py`)
 
-**Status:** DRAFT pre-registration for review. Nothing here is frozen, committed, or scored against any
-discovery / world-model / planner method yet. On approval it is frozen via the two-commit ordering in §8
-BEFORE any method is re-scored.
+**Status: FROZEN + IMPLEMENTED (2026-09-22 correction).** This redesign was approved, frozen, and merged —
+it is live in `cdd_oran/envs/v2/e2.py` today (commit `9d87a60` "trap now LIVE", ancestor of HEAD). The
+pre-registration text below is retained as the historical contract; it is no longer a draft.
 
 ## 1. Motivation (verified finding)
 E2's shared-knob decision is currently a **frozen preregistered NULL**: `mean_positive(gap_norm)=0.0162 <

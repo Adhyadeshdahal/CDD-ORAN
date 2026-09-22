@@ -334,7 +334,7 @@ def _case_config(environment: str, case_seed: int):
 def generate_case_bank(environment: str, case_seed: int = CASE_SEED, n_cases: int = 30) -> dict[str, Any]:
     """Generate deterministic true-graph case/conflict keys and normalized states."""
     from cdd_oran.conflicts import denormalize_params, detect_conflict_edges, state_to_tensor
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
     from cdd_oran.utils.seeding import seed_everything
 
     if n_cases <= 0:

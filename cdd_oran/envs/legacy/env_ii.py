@@ -1,8 +1,8 @@
 from math import exp
 
 from cdd_oran.config import DEFAULT_CONFIG
-from cdd_oran.envs.base import BaseORANEnv
-from cdd_oran.envs.statistics import get_env_ii_mean_std
+from cdd_oran.envs.legacy.base import BaseORANEnv
+from cdd_oran.envs.legacy.statistics import get_env_ii_mean_std
 
 
 def safe_exp(x):

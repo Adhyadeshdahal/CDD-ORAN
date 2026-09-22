@@ -42,8 +42,8 @@ from math import exp
 import numpy as np
 
 from cdd_oran.config import DEFAULT_CONFIG
-from cdd_oran.envs.base import BaseORANEnv
-from cdd_oran.envs.stats_cache import get_cached_mean_std
+from cdd_oran.envs.legacy.base import BaseORANEnv
+from cdd_oran.envs.legacy.stats_cache import get_cached_mean_std
 
 DEFAULT_NOISE_SCALE = 0.05
 # Latent-confounder strength (normalised KPI units) shared by K6 and K7.

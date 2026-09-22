@@ -1,5 +1,10 @@
 # FROZEN pre-registration — E2 discovery via RCoT (conditional-independence test)
 
+> **SUPERSEDED by RCoT-v2 (2026-09-22).** This is RCoT-**v1** (`discovery_rcot.py`, low recall R 0.163). The
+> canonical frozen E2 method is **RCoT-v2** (`E2_RCOT_DISCOVERY_PROTOCOL_V2.md`, plan 009,
+> `cdd_oran/e2slice/discovery_rcot_v2.py`, `block_perm_reps` 99→299, F1 0.855). Use v2 for the live pipeline;
+> v1 kept as the retired predecessor.
+
 > **STATUS: FROZEN.** This document is the frozen pre-registration contract, human-approved with the
 > primary null pinned to **`block_perm`** (§7.3). **Committing this document is the freeze point:** its
 > commit SHA is recorded as `protocol_commit` inside every `discovery_rcot.json` artifact, and the

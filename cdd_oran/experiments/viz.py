@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import get_model
 from cdd_oran.utils.seeding import seed_everything
 from cdd_oran.viz import visualize_causal_graph, visualize_cmi_heatmap, visualize_panels

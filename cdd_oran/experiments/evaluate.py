@@ -45,7 +45,7 @@ from cdd_oran.conflicts import (
     detect_conflict_edges,
     state_to_tensor,
 )
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import get_model
 from cdd_oran.planners import get_planners
 from cdd_oran.utils.runs import read_metrics, write_metrics

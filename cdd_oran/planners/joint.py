@@ -163,7 +163,7 @@ def _self_check():
 
     from cdd_oran.config import DEFAULT_CONFIG
     from cdd_oran.conflicts import state_to_tensor
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
     from cdd_oran.models import get_model
 
     cfg = replace(DEFAULT_CONFIG, device="cpu", model_kind="cdl")

@@ -35,7 +35,7 @@ from cdd_oran.analysis.attribution import (
 )
 from cdd_oran.analysis.graph_posterior import GraphPosterior
 from cdd_oran.config import load_config
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import (
     PosteriorStructureSampler,
     build_oracle_enumeration_graph,

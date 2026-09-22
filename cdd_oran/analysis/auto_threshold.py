@@ -129,7 +129,7 @@ def report(run_dir: str | Path) -> dict:
     """Score each auto threshold vs ground truth (validation only) against the
     hardcoded threshold and the sweep-optimal (oracle) threshold."""
     from cdd_oran.config import load_config
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
     from cdd_oran.models import get_model
 
     run_dir = Path(run_dir)

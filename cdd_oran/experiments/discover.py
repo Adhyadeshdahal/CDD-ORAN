@@ -51,7 +51,7 @@ import torch.nn.functional as F
 from cdd_oran.analysis.edge_stability import collect_transitions
 from cdd_oran.analysis.graph_posterior import GraphPosterior, IsotonicCalibrator
 from cdd_oran.config import ExperimentConfig
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import freeze_enumeration_graph, get_model, node_names, sha256_file
 from cdd_oran.policies import RandomPolicy
 from cdd_oran.utils.runs import create_run_dir

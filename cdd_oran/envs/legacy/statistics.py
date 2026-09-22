@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from cdd_oran.envs.stats_cache import get_cached_mean_std
+from cdd_oran.envs.legacy.stats_cache import get_cached_mean_std
 
 NUM_SAMPLES = 1_000_000
 CHUNK = 100_000

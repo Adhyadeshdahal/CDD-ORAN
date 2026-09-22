@@ -553,7 +553,7 @@ def main(argv=None):
     from dataclasses import replace
 
     from cdd_oran.config import load_config
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
 
     # Reject a leaking calibration run BEFORE any bootstrap or calibrator fit: same path, OR same
     # ENVIRONMENT as the target (its true adjacency IS the target's, so fitting the calibrator on

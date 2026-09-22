@@ -232,7 +232,7 @@ def load_run(run_dir, device="cpu", config_path=None):
     sha256 for identity checks); oracle CDL runs rebuild structure from ``env.true_adj_matrix``
     inside ``get_model`` (no artifacts); MLP runs load the dense world model directly."""
     from cdd_oran.config import load_config
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
     from cdd_oran.models import (
         get_model,
         make_structure_sampler,
@@ -356,7 +356,7 @@ def run_attribution(
     """Load every run, validate the comparison, build ONE explicit held-out set (default
     ``evaluation_param_ranges``), score each variant on it with a shared attribution structure
     seed, and write the comparison table. Returns ``(rows, markdown)``."""
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
 
     names = list(names or [])
     if not run_dirs:

@@ -7,7 +7,11 @@
 
 ## Status
 
-- **STATUS: PROTOCOL FROZEN (human-approved); IMPL BUILT + LOCKED + tested; RUN = pending execution.**
+- **STATUS: DONE (2026-09-22 correction) — RUN COMPLETE + CANONICAL.** RCoT-v2 is the current frozen E2
+  discovery method (`cdd_oran/e2slice/discovery_rcot_v2.py`, `PROTOCOL_COMMIT_V2 = 8052e10`); run finished
+  all 10 seeds (`runs/e2slice-recovery/replicate-{00..09}/discovery_rcot_v2.json`). RESULT = P 0.964 / R 0.769
+  / F1 0.855. Canonical E2 discovery per `docs/ARCHITECTURE.md`. (Was: "RUN = pending execution"; the unchecked
+  Done-criteria boxes below are stale.)
 - **Priority**: P1 (recall fix for the frozen RCoT E2 discovery method; sibling to Plan 008)
 - **Depends on**: Plan 008 (frozen RCoT-v1 method + dataset + evaluate machinery),
   `reports/2026-09-06-e2-rcot-lowrecall-diagnosis.md` (the diagnosis that motivates v2)

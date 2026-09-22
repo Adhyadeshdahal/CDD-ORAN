@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from cdd_oran.config import DEFAULT_CONFIG, ExperimentConfig
 from cdd_oran.conflicts import state_to_tensor
-from cdd_oran.envs import get_env
+from cdd_oran.envs.legacy import get_env
 from cdd_oran.models import get_model
 from cdd_oran.policies.random_policy import RandomPolicy
 from cdd_oran.utils.runs import create_run_dir, write_metrics

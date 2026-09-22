@@ -118,7 +118,7 @@ def make_structure_sampler(cfg: ExperimentConfig, seed=0, env=None):
     rejects uncalibrated artifacts (review blocker #2)."""
     if cfg.model.structure_source == "oracle":
         if env is None:
-            from cdd_oran.envs import get_env
+            from cdd_oran.envs.legacy import get_env
 
             env = get_env(cfg)
         return build_oracle_sampler(env, seed=seed)
@@ -210,7 +210,7 @@ def freeze_enumeration_graph(run_dir, out_path, device=None):
     from dataclasses import replace
 
     from cdd_oran.config import load_config
-    from cdd_oran.envs import get_env
+    from cdd_oran.envs.legacy import get_env
 
     run_dir = Path(run_dir)
     cfg = load_config(run_dir / "config.yaml")
@@ -262,7 +262,7 @@ def stage_run_artifacts(cfg: ExperimentConfig, run_dir, env=None):
 
     run_dir = Path(run_dir)
     if env is None:
-        from cdd_oran.envs import get_env
+        from cdd_oran.envs.legacy import get_env
 
         env = get_env(cfg)
     if not cfg.model.posterior_artifact:
