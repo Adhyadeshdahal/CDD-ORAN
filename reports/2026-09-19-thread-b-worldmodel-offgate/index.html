@@ -61,9 +61,9 @@
 <div class="verdict">
   <span class="tag">Partial win</span><span class="tag bad">Fails the registered bar</span>
   <p><strong>The context-local action estimator (CL64) is a genuine partial improvement, but it does not
-  meet the pre-registered uniform strong-δ safety bar at any finite occupancy.</strong> CL64 captures the
-  in-gate action effect (large, growing decision benefit) and cuts off-gate collateral far below the
-  flat-kNN reference — passing the mechanism at moderate δ — but its incremental off-gate collateral rises
+  meet the pre-registered uniform strong-δ safety bar at any finite occupancy.</strong> CL64 delivers a
+  large, growing decision-level in-gate benefit and cuts off-gate collateral well below the
+  flat-kNN reference in most strong cells — passing the mechanism at moderate δ — but its incremental off-gate collateral rises
   and <em>saturates above</em> the 0.02 bar by δ=1.6, so the mechanism headline is <strong>False at every
   occupancy</strong>. End-to-end, the discovered complete arm is net-superior only at high occupancy. On this
   fixed E2-ID bank, under the registered K0–K2 pipeline and planner, <strong>residual world-model off-gate
@@ -120,7 +120,7 @@ of {0.8,1.6,3.2}, the mechanism verdict is <strong>fail at every occupancy</stro
 <figure>
   <img src="fig2_partial_win.png" alt="Partial win: in-gate benefit vs off-gate collateral">
   <figcaption>Fig 2 — The two halves of the partial win. Right: CL64 delivers large, growing in-gate decision
-  benefit (benA reaches 0.10–0.16) — it captures the action effect. Left: but off-gate collateral crosses the
+  benefit (benA reaches 0.10–0.16) — a decision-level in-gate benefit. Left: but off-gate collateral crosses the
   0.02 bar and saturates. A useful estimator in-gate that is not yet safe off-gate.</figcaption>
 </figure>
 
@@ -172,13 +172,16 @@ defects that do <em>not</em> touch the primary negative but bound the end-to-end
 <ul>
   <li><strong>A3 rollout not literal for <code>bad_disc</code> seeds:</strong> the discovered CL path uses the
   cached K0–K2 grids instead of recomputing them with the arm-specific / common warm-up. Measured incidence:
-  <strong>2/40 seeds (500029, 500030)</strong>. It perturbs only discovered <code>netOmit</code> for those two
-  seeds (netNull / benA cancel K0–K2; the forced track uses oracle K0–K2 and is unaffected), and 2/40 cannot
+  <strong>2/40 seeds (500029, 500030)</strong>. It can perturb all three discovered rollouts (native, matched,
+  null) for those two seeds; the forced track uses oracle K0–K2 and is unaffected, and 2/40 cannot
   flip an all-strong-δ headline failing by wide margins. <strong>Verified by erratum (2026-09-19):</strong>
   implementing the A3 rollout literally (additive module, frozen harness byte-unchanged; bit-exact no-op on a
-  non-bad_disc seed) and rescoring shifted 39 cells' <code>netOmit</code> by at most 0.0081 (one seed of 40 →
-  cell-mean shift ~2e-4); the MECH and EE headlines are <strong>identical</strong> to the original. The
-  end-to-end track is now literally certified.</li>
+  non-bad_disc seed) and rescoring changed native-deploy regret in <strong>39 of the 50 affected-seed
+  records</strong> by at most 0.0081 <em>per seed</em> (the largest finite-q aggregate movement in mean
+  <code>netOmit</code> is ~2.2e-4; two already-failing per-seed N decisions flip at δ=0.8 and remain failing);
+  the MECH and EE headlines are <strong>identical</strong> to the original. The A3-literal end-to-end rescore is
+  complete and its verdict is unchanged — full pre-registration conformance is still pending (the A0/A4/A8
+  waivers, diagnostics, and provenance items below).</li>
   <li><strong>T2 diagnostics incomplete:</strong> CL256/GOLS/ANISO fields are in the records (curves emitted
   here), but the A9 H-* 2×2 factorial and the §5 spurious-P0-sensitivity / held-out-error diagnostics were
   never built into the harness and are absent.</li>
@@ -187,7 +190,11 @@ defects that do <em>not</em> touch the primary negative but bound the end-to-end
   0.49 accepted as co-maximal ties, and no per-scored-cell CPU-reference check ran. Primary CL anchors passed
   strictly.</li>
   <li><strong>Provenance:</strong> manifest omits <code>b_run_sweep.py</code> and <code>b_score.py</code>
-  (scratchpad untracked, so the dirty-diff hash does not cover them).</li>
+  (scratchpad untracked, so the dirty-diff hash does not cover them). The erratum artifacts
+  (<code>b_erratum.py</code>, the 50 replacement records, <code>b_erratum_result.json</code>) are likewise not
+  bound into a manifest and the corrected records do not carry the original manifest hash — a bounded
+  documentation gap; all 21 original manifest-listed artifacts still hash-match in the current checkout, so the
+  frozen harness is byte-unchanged.</li>
 </ul>
 
 <h2>6. Interpretation (scoped)</h2>
@@ -233,8 +240,9 @@ clears all three strong δ. q=100% is a reference row, not a success. Full per-c
 <h2>8. What next (open — user decision)</h2>
 <ol>
   <li><strong>Bounded conformance erratum — A3 part DONE (2026-09-19):</strong> the A3 rollout was implemented
-  literally and the 2 <code>bad_disc</code> seeds rescored (see §5) — verdict unchanged, end-to-end track now
-  literally certified. <em>Still outstanding (verdict-irrelevant, larger build):</em> the A9 H-* 2×2 factorial,
+  literally and the 2 <code>bad_disc</code> seeds rescored (see §5) — verdict unchanged; the A3-literal
+  end-to-end rescore is complete (full pre-registration conformance still pending — A0/A4/A8 + diagnostics).
+  <em>Still outstanding (verdict-irrelevant, larger build):</em> the A9 H-* 2×2 factorial,
   the §5 spurious-P0-sensitivity / held-out-error diagnostics, and a per-cell CPU-equivalence pass.</li>
   <li><strong>Then either close Thread B</strong> — "confirmatory negative for CL64 uniform strong-δ safety;
   partial decision benefit; residual off-gate generalization prevents low-occupancy deployment safety on this
