@@ -1,8 +1,32 @@
 # Plan 015 — E5: the composed shared-knob benchmark (design spec, for review)
 
-**Status: DESIGN / FOR REVIEW (2026-09-23).** Read `docs/ARCHITECTURE.md` + `plans/014` first. This
-spec captures the validated E5 mechanism and the composed build; **nothing here is frozen or built** —
-it exists for user + sol review before `e5.py` is written. Registration/freeze remain user-gated.
+**Status: BUILD IN PROGRESS / DEV, sol-reviewed (2026-09-23).** Read `docs/ARCHITECTURE.md` + `plans/014`
+first. `cdd_oran/envs/v2/e5.py`, `scripts/e5_spine.py`, `scripts/e5_baselines.py`, and
+`cdd_oran/benchmark/MaskedE5WorldModel` are BUILT (DEV, not frozen; no `GATE_CONTRACT_E5.md` yet).
+An adversarial sol review (`scratchpad/sol_review_e5_spine.md`) corrected an overstated first headline;
+this spec now reflects the honest, real-methods result. Registration/freeze remain user-gated.
+
+## 0. Honest result so far (real methods, CORE layer only — sol-corrected)
+
+On the CORE layer (chain/confound/noise OFF, H=1), at the harmful edge's natural RARE operating regime
+(gate occupancy ≈ 5%, where `base(G1,G2)` is near the K_harm threshold), with **real discovery masks**
+run end-to-end through the spine on a 40-state in-gate bank:
+
+| method | recovers P0→K_harm? | in-gate-conditional regret (norm) | K_harm violations |
+|---|---|---|---|
+| oracle graph | — | 0.000 | 18/40 |
+| **SHAP-DAG (Sharma, GBDT proxy)** | **no** (ratio 0.026) | **0.378** (raw 34.8) | 40/40 |
+| **two-tower reconstruction (GNN-style)** | **no** | **0.378** | 40/40 |
+| pooled \|corr\| | yes | 0.000 | 18/40 |
+| stratified operating-point (ours) | yes | 0.000 | 18/40 |
+
+**Supported claim:** the two named learned-importance SOTA competitors (SHAP-DAG, GNN) prune a
+subdominant decision-critical edge and walk into the conflict; a truth-free operating-point-stratified
+test recovers it. **NOT yet supported:** "beats correlational methods" (pooled `|corr|` recovers it —
+needs the confound layer); the chain/confound/noise composition (not yet evaluated); unconditional
+(deployment-weighted ≈ 0.019 at 5% occupancy, report both). Reward geometry + occupancy were tuned
+during construction, so this is a **constructed stress case**, to be frozen + sensitivity-swept before
+any confirmatory comparison. Honest amplitude×occupancy separation: `scratchpad/e5_design/`.
 
 ## 1. Why E5 exists (what E2 could NOT show)
 
@@ -77,11 +101,16 @@ band). `Pc` = a chain-driving param. (Latent `Z` = confounder, not a param.)
   where `base(G1,G2)` is the DOMINANT benign parent (large amplitude → subdominance of the P0 term),
   the gate is the thin operating-point band, and `θ·Z` is the confounding term. Satisfy-below
   threshold, positioned so the in-gate P0 push tips it over (decision-critical).
-- **Confound (E4-style), latent Z.** `Z → P0_behavior` (obs mode) and `Z → K_harm`, so the
-  *observational* P0–K_harm association is spurious/masked; the discovery corpus uses randomized-`do(P0)`
-  (interventional) to identify the true effect. E5 exposes both an **obs** and a **do** corpus: methods
-  that don't deconfound (fit observational data) get the wrong sign/magnitude; the causal pipeline uses
-  the interventional corpus + backdoor over `Z`'s observable proxies where available.
+- **Confound (E4-style), FULLY LATENT Z (no observable proxy; §6.3).** `Z → P0_behavior` (obs mode)
+  and `Z → K_harm`, so the *observational* P0–K_harm association is confounded; the causal pipeline uses
+  the randomized-`do(P0)` corpus, which identifies the true effect **by randomization** (no backdoor set
+  needed). E5 exposes both an **obs** and a **do** corpus: correlational methods on the obs corpus get
+  the confounded association; ours uses the do corpus.
+  **⚠️ NOT YET CORRECT IN CODE (sol #6):** with the current signs, `Z` raises both `P0_behavior` and
+  `K_harm` and the true effect is positive, so `Z` *reinforces* rather than *masks* the association;
+  `generate_p0()` is also not yet wired into a corpus generator. To make correlation FAIL, one structural
+  sign must flip so the confound cancels the (subdominant) marginal association. This is the key
+  remaining build for the "beats correlational" claim.
 - **Noise ON.** `obs_noise_scale > 0` and process noise ON (E5 is the realistic-noise env — E1–E4 ran
   largely noise-off). Discovery + decision must be robust to it.
 
@@ -101,9 +130,12 @@ non-descendant KPIs excluded from the panel (E3 pattern).
 - **Metric**: normalized regret = `G_oracle − G_planner` (`docs/benchmark/GATES.md`), plus
   harmful-edge (and harmful-*path*) discovery P/R/F1, and decision accuracy (fraction of seeds
   rejecting the harmful action, matching oracle). Sharma-unit ATE table for legibility.
-- **Headline**: on E5, SHAP-DAG/GNN prune the subdominant edge → walk into the trap (regret > 0); CI
-  methods miss the gated edge; observational fits get the confounded sign; **only the stratified
-  ensemble → do-propagation → action avoids it (regret ≈ 0).** The one figure the paper needs.
+- **Headline (HYPOTHESIS pending confound + composed eval + H≥2):** on the fully-composed E5, SHAP-DAG/GNN
+  prune the subdominant edge; correlational fits on the obs corpus get the confounded association; **only
+  stratified discovery → do-propagation on the do corpus avoids the conflict (regret ≈ 0).** STATUS: the
+  SHAP-DAG/GNN half is DEMONSTRATED on the CORE layer with real runs (§0); the correlational/confound half
+  is NOT yet built (§3 ⚠️); the chain (needs H≥2) and noise layers are not yet evaluated. Mark as a
+  hypothesis in any writeup until the composed evaluation exists.
 
 ## 5. Build plan (after this spec is approved)
 
