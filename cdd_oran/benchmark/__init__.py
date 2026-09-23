@@ -7,6 +7,12 @@ executor of the ``docs/benchmark/SEMANTICS.md`` §1 call list, its exhaustive op
 
 from __future__ import annotations
 
+from cdd_oran.benchmark.masked_world_model import (
+    TRUE_PARAM_EDGES,
+    MaskedE2WorldModel,
+    make_masked_factory,
+    param_edges_from_binary_mask,
+)
 from cdd_oran.benchmark.rollout import (
     Action,
     EnvFactory,
@@ -22,11 +28,15 @@ from cdd_oran.benchmark.rollout import (
 __all__ = [
     "Action",
     "EnvFactory",
+    "MaskedE2WorldModel",
     "OracleResult",
     "RegretResult",
     "RolloutResult",
     "ScoreFn",
+    "TRUE_PARAM_EDGES",
     "enumerate_open_loop",
+    "make_masked_factory",
     "paired_regret",
+    "param_edges_from_binary_mask",
     "rollout_open_loop",
 ]
