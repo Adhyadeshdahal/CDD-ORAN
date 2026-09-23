@@ -30,6 +30,11 @@ url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [dependency-groups]
+baselines = [
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "shap>=0.52.0",
+]
 dev = [
     "pytest>=9.1.1",
     "ruff>=0.9",
