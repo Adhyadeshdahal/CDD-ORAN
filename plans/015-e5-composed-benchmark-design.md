@@ -106,11 +106,20 @@ band). `Pc` = a chain-driving param. (Latent `Z` = confounder, not a param.)
   the randomized-`do(P0)` corpus, which identifies the true effect **by randomization** (no backdoor set
   needed). E5 exposes both an **obs** and a **do** corpus: correlational methods on the obs corpus get
   the confounded association; ours uses the do corpus.
-  **⚠️ NOT YET CORRECT IN CODE (sol #6):** with the current signs, `Z` raises both `P0_behavior` and
-  `K_harm` and the true effect is positive, so `Z` *reinforces* rather than *masks* the association;
-  `generate_p0()` is also not yet wired into a corpus generator. To make correlation FAIL, one structural
-  sign must flip so the confound cancels the (subdominant) marginal association. This is the key
-  remaining build for the "beats correlational" claim.
+  **✅ BUILT (2026-09-23, sol-reviewed conditional pass — `scripts/e5_confound.py`, `tests/test_e5_confound.py`).**
+  Sol #6 fixed: default `theta` flipped `+2.5 → −2.5` (`Z → K_harm` negative, `lam>0` positive) so the
+  confound MASKS the true `+subdom`. The confound demonstration is the OBS-vs-DO contrast of an
+  ORACLE-GATE IN-STRATUM OLS estimator (Option A scope — grant true `base(G1,G2)`/gate/form, contest only
+  the scalar in-gate P0 coefficient; fitted world model = `E5V2Env(subdom=α̂, theta=0)`, drift-safe):
+  OBS slope is confound-biased `+0.117` → regret **0.208** (walks into the trap); randomized `do(P0) ⟂ Z`
+  identifies `+0.198` → regret **0.002**. A paired **θ=0 difference-in-differences control** gives
+  `R_OBS−R_DO = 0.000` (no confound → both identify), so DiD = **+0.206** is attributable to confounding;
+  a 5-seed panel is tight (OBS 0.208, DO 0.0005, gap 0.206–0.208). **Honest scope (sol):** the winning arm
+  REQUIRES interventional data (value of intervention capability under a fully-latent Z, NOT a superiority
+  claim over observational methods); marginal pooled OLS sign-reverses (−0.073) but adds no decision
+  contrast (gate dilution already breaks its DO arm — saturation, not absence of confounding); GBDT is
+  diagnostic-only (hyperparameter-sensitive PD slope). Truth-free gate DISCOVERY → effect estimation
+  END-TO-END (propagating discovery uncertainty) is DEFERRED (overlaps M3 productization, §6.5).
 - **Noise ON.** `obs_noise_scale > 0` and process noise ON (E5 is the realistic-noise env — E1–E4 ran
   largely noise-off). Discovery + decision must be robust to it.
 

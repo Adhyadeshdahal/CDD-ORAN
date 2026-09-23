@@ -3,8 +3,23 @@
 The centerpiece benchmark: a shared knob whose harmful edge is invisible to variance-based discovery
 (SHAP-DAG / GNN) yet decision-critical, composed with the E2 fan-out, an E3-style chain, an E4-style
 latent confounder, and noise. Only stratified-CI discovery → do-propagation → action-selection avoids
-the trap; SHAP/GNN miss the subdominant edge, RCoT/pdCor miss the gated edge, observational fits get the
-confounded sign.
+the trap; SHAP/GNN miss the subdominant edge, RCoT/pdCor miss the gated edge, and a marginal
+correlational effect estimate fit on the OBSERVATIONAL corpus gets the confounded (sign-reversed) P0→K_harm
+relationship.
+
+Confound sign (E4 pattern; sol review #6, 2026-09-23). The true gated effect ``subdom·(P0−C0)`` is
+POSITIVE (high P0 tips K_harm). For the latent confounder to MASK that association rather than reinforce
+it, the confound path product must be NEGATIVE: ``Z → P0_behavior`` is positive (``lam>0``, natural) and
+``Z → K_harm`` is NEGATIVE (``theta<0``, default ``theta=-2.5``). The confound-layer demonstration
+(``scripts/e5_confound.py``) is the OBS-vs-DO contrast of an ORACLE-GATE IN-STRATUM OLS estimator: on the
+observational corpus its in-gate slope is confound-BIASED (~+0.117 vs true +0.20 → the planner walks into
+the trap); on the randomized ``do(P0) ⟂ Z`` corpus it IDENTIFIES the true gated effect (~+0.201). The
+winning arm REQUIRES interventional data — this is the value of intervention capability under a
+fully-latent confounder, not a superiority claim over observational methods. HONESTY (sol lanes): a
+MARGINAL pooled OLS slope sign-reverses on OBS (−0.073) but is already decision-broken on DO by gate
+dilution (+0.011), so its confound contribution does not add DECISION contrast; a covariate-aware GBDT
+fit ATTENUATES (~50%) and is decision-broken even on DO (intrinsic shrinkage). Do NOT generalize to
+"correlational methods" as a category, and do NOT read those arms' OBS-DO gaps as confounding wins.
 
 This module is NOT yet frozen (no GATE_CONTRACT_E5.md). Constants below are the DESIGN values from the
 validated probes (`scratchpad/e5_design/`); standardization moments are computed, not yet frozen. Every
@@ -116,9 +131,11 @@ class E5V2Env(V2Env):
         env_seed: int = 0,
         obs_noise_scale: float = 0.0,
         *,
-        subdom: float = 0.20,        # core gated-subdominant DIRECT edge (0 -> off)
+        subdom: float = 0.20,        # core gated-subdominant DIRECT edge (0 -> off), POSITIVE
         chain_gamma: float = 0.20,   # gated 2-hop chain edge (0 -> off)
-        theta: float = 2.5,          # latent confounder Z -> K_harm (0 -> off)
+        theta: float = -2.5,         # latent confounder Z -> K_harm; NEGATIVE so it MASKS the +subdom
+                                     # association (E4 pattern, sol #6). lam>0, theta<0 => confound
+                                     # bias < 0 opposes true +0.20 -> marginal OBS fit sign-reverses.
         lam: float = LAM_DEFAULT,    # Z -> P0_behavior coupling (obs mode)
         mode: str = MODE_DO,         # 'do' = identifiable corpus; 'obs' = Z-confounded behavior
         process_noise: bool = False,
