@@ -93,9 +93,16 @@ band). `Pc` = a chain-driving param. (Latent `Z` = confounder, not a param.)
 - **Benign pull.** `K_ben = A_ben·exp(-((P0-μ_ben)²)/(2 w_ben²))` — a broad bump **peaked in the
   harmful P0 zone**, peak just below its own satisfy-above threshold ⇒ ~unsatisfiable ⇒ the planner
   chases the peak (into the gate). This is the "locally-good" pull.
-- **Chain (E3-style), multi-hop harmful path.** `P0 → K_mid → K_harm` (unit-ish coefficients, one hop
-  each) so the harmful influence is partly *indirect*: discovery must trace a 2-hop path, not just a
+- **Chain (E3-style), multi-hop harmful path.** `P0 → K_mid → K_harm` (`C_CHAIN=1`, `chain_gamma=0.2`,
+  gated) so the harmful influence is partly *indirect*: discovery must trace a 2-hop path, not just a
   direct edge. The decoy truncates the chain's contribution to `K_harm` (E3 `truncate_fanout` pattern).
+  **✅ BUILT (2026-09-23, `scripts/e5_chain.py`, `tests/test_e5_chain.py`).** The scored terminal needs
+  H=2 (3 advances) for the acted P0 to traverse both hops (sol #4): `scripts/e5_spine.py` gains an
+  H-parameterized rollout (`score_grid_h`; H=1 delegates byte-identically to the frozen v2_regret path).
+  Result — the chain edge (`K_harm ← K_mid`, a KPI→KPI edge param-only discovery can't propose) is INERT
+  at H=1 (miss-chain regret 0.000 == oracle) and ACTIVE at H=2 (miss-chain regret **0.311**); the in-gate
+  harm is `subdom + chain_gamma·C_CHAIN = 0.40` (twice the direct-only 0.20), and missing BOTH paths at
+  H=2 leaves it fully uncorrected (regret **0.637**, 40/40 K_harm violations).
 - **The harmful KPI (the core).**
   `K_harm = base(G1,G2)  +  γ·K_mid  +  subdom·(P0−C0)·1[G1≤τ1, |G2−c2|≤w]  +  θ·Z`
   where `base(G1,G2)` is the DOMINANT benign parent (large amplitude → subdominance of the P0 term),

@@ -21,13 +21,37 @@ _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO not in sys.path:
     sys.path.insert(0, _REPO)
 
-from cdd_oran.analysis.v2_regret import P0_GRID, PanelXApp, score_grid  # noqa: E402
+from cdd_oran.analysis.v2_regret import P0_GRID, PanelXApp, reward, score_grid  # noqa: E402
 from cdd_oran.benchmark.masked_world_model import MaskedE5WorldModel  # noqa: E402
 from cdd_oran.envs.v2.e5 import E5V2Env, _gate  # noqa: E402
 
 P0 = E5V2Env.P0
 HARMFUL_EDGE = (E5V2Env.K_HARM, E5V2Env.P0)  # (1, 0): the subdominant gated direct edge
+CHAIN_EDGE = (E5V2Env.K_HARM, E5V2Env.K_MID)  # KPI-source: the 2-hop chain edge (needs H>=2 to score)
 NEUTRAL_STEPS = 3
+
+
+def _rollout_terminal(env, param_id, v, H):
+    """apply_action(param_id,v) then (H+1) advances; return the terminal (scored) latent KPI vector.
+    H=1 is the frozen v2_regret call list (apply + 2 advances). H>=2 lets the acted param traverse a
+    mediated KPI->KPI chain (each extra hop needs one more advance; sol review #4)."""
+    env.apply_action(param_id, float(v))
+    k = None
+    for _ in range(H + 1):
+        k = env.advance()
+    return k
+
+
+def score_grid_h(env, snap, param_id, panel, H, grid=P0_GRID):
+    """``score_grid`` generalized to horizon H. H=1 delegates to the FROZEN v2_regret path (byte-identical);
+    H>=2 rolls (H+1) advances so a 2-hop chain surfaces in the scored terminal."""
+    if H == 1:
+        return score_grid(env, snap, param_id, panel, grid)
+    scores = np.empty(len(grid), dtype=float)
+    for i, v in enumerate(grid):
+        env.restore(snap)
+        scores[i] = reward(_rollout_terminal(env, param_id, float(v), H), panel)
+    return scores
 
 
 def e5_panel() -> list[PanelXApp]:
@@ -63,18 +87,20 @@ def is_in_gate(snap) -> bool:
     return _gate(g1, g2, E5V2Env.TAU1, E5V2Env.C2, E5V2Env.W_GATE)
 
 
-def spine_regret_e5(param_edges, kpi_edges, states, panel, *, subdom=0.20, chain_gamma=0.20):
+def spine_regret_e5(param_edges, kpi_edges, states, panel, *, subdom=0.20, chain_gamma=0.20, H=1):
     """Per-state metrics of a masked-structure planner vs the true (Z-out) oracle. Layer config
     (subdom, chain_gamma) is applied to BOTH the true env and the world model so they differ ONLY by
-    the mask (sol #4). Returns a dict with normalized + RAW regret, D(s), action mismatches, and the
-    planner's K_harm constraint-violation rate under truth (sol asks for raw + violation metrics)."""
+    the mask (sol #4). ``H`` is the rollout horizon: H=1 scores the DIRECT edge (frozen path); H>=2 also
+    scores the 2-hop chain P0->K_mid->K_harm (sol #4 — a mediated hop needs one more advance). Returns a
+    dict with normalized + RAW regret, D(s), action mismatches, and the planner's K_harm
+    constraint-violation rate under truth (sol asks for raw + violation metrics)."""
     norm, raw, ds, mism, viol = [], [], [], 0, 0
     for seed, snap in states:
         true_env = E5V2Env(env_seed=seed, theta=0.0, subdom=subdom, chain_gamma=chain_gamma)
         wm = MaskedE5WorldModel(param_edges, kpi_edges, env_seed=seed,
                                 subdom=subdom, chain_gamma=chain_gamma)
-        s_true = score_grid(true_env, snap, P0, panel)
-        s_wm = score_grid(wm, snap, P0, panel)
+        s_true = score_grid_h(true_env, snap, P0, panel, H)
+        s_wm = score_grid_h(wm, snap, P0, panel, H)
         g_star = float(s_true.max())
         d = g_star - float(s_true.min())
         a_wm = int(np.argmax(s_wm))
@@ -83,10 +109,10 @@ def spine_regret_e5(param_edges, kpi_edges, states, panel, *, subdom=0.20, chain
         ds.append(d)
         norm.append(r_raw / d if d > 1e-9 else 0.0)
         mism += int(a_wm != int(np.argmax(s_true)))
-        # K_harm (satisfy-below) violation at the planner's chosen action, under truth:
+        # K_harm (satisfy-below) violation at the planner's chosen action, under truth (horizon H):
         te2 = E5V2Env(env_seed=seed, theta=0.0, subdom=subdom, chain_gamma=chain_gamma)
-        te2.restore(snap); te2.apply_action(P0, float(P0_GRID[a_wm]))
-        te2.advance(); k = te2.advance()
+        te2.restore(snap)
+        k = _rollout_terminal(te2, P0, float(P0_GRID[a_wm]), H)
         viol += int(k[E5V2Env.K_HARM] > E5V2Env.kpi_thresholds[E5V2Env.K_HARM])
     n = len(states)
     return {"mean_norm": float(np.mean(norm)), "mean_raw": float(np.mean(raw)),
