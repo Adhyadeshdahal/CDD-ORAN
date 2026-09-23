@@ -21,7 +21,7 @@ _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO not in sys.path:
     sys.path.insert(0, _REPO)
 
-from cdd_oran.analysis.v2_regret import PanelXApp, score_grid  # noqa: E402
+from cdd_oran.analysis.v2_regret import P0_GRID, PanelXApp, score_grid  # noqa: E402
 from cdd_oran.benchmark.masked_world_model import MaskedE5WorldModel  # noqa: E402
 from cdd_oran.envs.v2.e5 import E5V2Env, _gate  # noqa: E402
 
@@ -50,8 +50,8 @@ def true_edges(env: E5V2Env | None = None):
     return frozenset(param_edges), frozenset(kpi_edges)
 
 
-def committed_state(seed: int):
-    env = E5V2Env(env_seed=seed, theta=0.0)
+def committed_state(seed: int, subdom=0.20, chain_gamma=0.20):
+    env = E5V2Env(env_seed=seed, theta=0.0, subdom=subdom, chain_gamma=chain_gamma)
     env.reset(episode=0)
     for _ in range(NEUTRAL_STEPS):
         env.neutral_step()
@@ -63,26 +63,41 @@ def is_in_gate(snap) -> bool:
     return _gate(g1, g2, E5V2Env.TAU1, E5V2Env.C2, E5V2Env.W_GATE)
 
 
-def spine_regret_e5(param_edges, kpi_edges, states, panel):
-    """Per-state normalized regret of a masked-structure planner vs the true (Z-out) oracle."""
-    gaps, mism = [], 0
+def spine_regret_e5(param_edges, kpi_edges, states, panel, *, subdom=0.20, chain_gamma=0.20):
+    """Per-state metrics of a masked-structure planner vs the true (Z-out) oracle. Layer config
+    (subdom, chain_gamma) is applied to BOTH the true env and the world model so they differ ONLY by
+    the mask (sol #4). Returns a dict with normalized + RAW regret, D(s), action mismatches, and the
+    planner's K_harm constraint-violation rate under truth (sol asks for raw + violation metrics)."""
+    norm, raw, ds, mism, viol = [], [], [], 0, 0
     for seed, snap in states:
-        true_env = E5V2Env(env_seed=seed, theta=0.0)  # Z integrated out for scoring
-        wm = MaskedE5WorldModel(param_edges, kpi_edges, env_seed=seed)
+        true_env = E5V2Env(env_seed=seed, theta=0.0, subdom=subdom, chain_gamma=chain_gamma)
+        wm = MaskedE5WorldModel(param_edges, kpi_edges, env_seed=seed,
+                                subdom=subdom, chain_gamma=chain_gamma)
         s_true = score_grid(true_env, snap, P0, panel)
         s_wm = score_grid(wm, snap, P0, panel)
         g_star = float(s_true.max())
         d = g_star - float(s_true.min())
         a_wm = int(np.argmax(s_wm))
-        gaps.append((g_star - float(s_true[a_wm])) / d if d > 1e-9 else 0.0)
+        r_raw = g_star - float(s_true[a_wm])
+        raw.append(r_raw)
+        ds.append(d)
+        norm.append(r_raw / d if d > 1e-9 else 0.0)
         mism += int(a_wm != int(np.argmax(s_true)))
-    return gaps, mism
+        # K_harm (satisfy-below) violation at the planner's chosen action, under truth:
+        te2 = E5V2Env(env_seed=seed, theta=0.0, subdom=subdom, chain_gamma=chain_gamma)
+        te2.restore(snap); te2.apply_action(P0, float(P0_GRID[a_wm]))
+        te2.advance(); k = te2.advance()
+        viol += int(k[E5V2Env.K_HARM] > E5V2Env.kpi_thresholds[E5V2Env.K_HARM])
+    n = len(states)
+    return {"mean_norm": float(np.mean(norm)), "mean_raw": float(np.mean(raw)),
+            "mean_Ds": float(np.mean(ds)), "action_mismatches": mism, "n": n,
+            "harm_violations": viol, "per_state_norm": norm}
 
 
-def build_ingate_bank(n=40, pool=4000):
+def build_ingate_bank(n=40, pool=6000, subdom=0.20, chain_gamma=0.20):
     states = []
     for seed in range(pool):
-        snap = committed_state(seed)
+        snap = committed_state(seed, subdom=subdom, chain_gamma=chain_gamma)
         if is_in_gate(snap):
             states.append((seed, snap))
         if len(states) >= n:
@@ -91,17 +106,18 @@ def build_ingate_bank(n=40, pool=4000):
 
 
 def main() -> int:
+    # CORE layer sanity: oracle vs single-edge ablation (NOT a method comparison — see e5_baselines).
+    subdom, chain = 0.20, 0.0
     panel = e5_panel()
-    bank = build_ingate_bank()
-    p_true, k_true = true_edges()
-    print(f"E5 spine (CORE layer, H=1): {len(bank)} in-gate states; harmful edge {HARMFUL_EDGE}")
-
-    o_gaps, o_m = spine_regret_e5(p_true, k_true, bank, panel)
-    miss = (p_true - {HARMFUL_EDGE}, k_true)
-    m_gaps, m_m = spine_regret_e5(miss[0], miss[1], bank, panel)
-    print(f"  oracle (all true edges)   : mean_pos={np.mean(o_gaps):.4f}  mism={o_m}")
-    print(f"  missed harmful edge (1,0) : mean_pos={np.mean(m_gaps):.4f}  mism={m_m}  "
-          f"(frac>0 {np.mean(np.array(m_gaps) > 1e-6):.2f})")
+    bank = build_ingate_bank(subdom=subdom, chain_gamma=chain)
+    p_true, k_true = true_edges(E5V2Env(subdom=subdom, chain_gamma=chain))
+    print(f"E5 spine CORE sanity (H=1): {len(bank)} in-gate states; harmful edge {HARMFUL_EDGE}")
+    o = spine_regret_e5(p_true, k_true, bank, panel, subdom=subdom, chain_gamma=chain)
+    m = spine_regret_e5(p_true - {HARMFUL_EDGE}, k_true, bank, panel, subdom=subdom, chain_gamma=chain)
+    print(f"  oracle graph          : norm={o['mean_norm']:.4f} raw={o['mean_raw']:.3f} "
+          f"mism={o['action_mismatches']} harm_viol={o['harm_violations']}/{o['n']}")
+    print(f"  oracle minus P0->K_harm: norm={m['mean_norm']:.4f} raw={m['mean_raw']:.3f} "
+          f"mism={m['action_mismatches']} harm_viol={m['harm_violations']}/{m['n']} D(s)~{m['mean_Ds']:.2f}")
     return 0
 
 

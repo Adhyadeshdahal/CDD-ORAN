@@ -183,14 +183,23 @@ class MaskedE5WorldModel:
         kpi_edges: Iterable[tuple[int, int]] = (),
         env_seed: int = 0,
         obs_noise_scale: float = 0.0,
+        *,
+        subdom: float | None = None,
+        chain_gamma: float | None = None,
     ) -> None:
         from cdd_oran.envs.v2.e5 import E5V2Env  # lazy: avoid import cycle
 
         self.param_edges = frozenset((int(k), int(p)) for (k, p) in param_edges)
         self.kpi_edges = frozenset((int(k), int(s)) for (k, s) in kpi_edges)
-        # theta=0 integrates the latent Z out for planning; subdom/chain stay at TRUE magnitudes —
-        # the mask, not the coefficients, decides which parents are live.
-        self._env = E5V2Env(env_seed=env_seed, obs_noise_scale=obs_noise_scale, theta=0.0)
+        # theta=0 integrates the latent Z out for planning (mean-KPI surrogate). subdom/chain_gamma
+        # MUST match the TRUE env's layer config so the world model differs from truth ONLY by the
+        # mask, not by the mechanism coefficients (sol finding #4 — corpus/spine/model consistency).
+        kw = {}
+        if subdom is not None:
+            kw["subdom"] = float(subdom)
+        if chain_gamma is not None:
+            kw["chain_gamma"] = float(chain_gamma)
+        self._env = E5V2Env(env_seed=env_seed, obs_noise_scale=obs_noise_scale, theta=0.0, **kw)
         self.num_params = self._env.num_params
         self.num_kpis = self._env.num_kpis
         self._committed_params: np.ndarray | None = None

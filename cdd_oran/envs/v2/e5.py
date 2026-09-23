@@ -76,11 +76,17 @@ class E5V2Env(V2Env):
     # Dominant benign parent of K_harm (large amplitude -> subdominance of the P0 term). Centered on
     # the gate (MU_BASE = C2) and amplitude tuned so in-gate base sits JUST BELOW the K_harm threshold
     # (80), so the subdominant P0 term tips a fraction of in-gate states over it (decision-critical).
-    # A_BASE kept so in-gate base_max (A_BASE + B1*G1_max = 72 + 5.5 = 77.5) stays < K_harm threshold
-    # 80 — so the subdominant P0 term, not base alone, is what tips K_harm over (clean attribution).
+    # A_BASE so in-gate base_max (A_BASE + B1*G1_max = 72 + 5.5 = 77.5) stays < K_harm threshold 80 —
+    # the subdominant P0 term, not base alone, tips K_harm over. W_BASE=25 keeps base HIGH-VARIANCE over
+    # the full G2 range (a strong bump) so it DOMINATES P0's SHAP importance (subdominance); the gate is
+    # then aligned to the near-threshold sub-band where the edge is decision-critical.
     A_BASE, MU_BASE, W_BASE, B1 = 72.0, 25.0, 25.0, 2.0
-    # Gate (thin operating-point band).
-    TAU1, C2, W_GATE = 2.75, 25.0, 12.6   # ~occupancy 0.2 (probe 2/3 operating point)
+    # Gate = the near-threshold operating band. W_GATE=12.6 gives occupancy
+    # P(G1<=TAU1)*P(|G2-C2|<=W_GATE) = 0.5 * (25.2/250) ≈ 0.05. HONEST framing (sol #5): the harmful
+    # edge is BOTH RARE (~5% occupancy, aligned with where base is near threshold) AND amplitude-
+    # SUBDOMINANT. Both suppress its pooled variance footprint; see the occupancy×amplitude sweep. Do
+    # NOT claim occupancy 0.2 or attribute the discovery miss to amplitude alone.
+    TAU1, C2, W_GATE = 2.75, 25.0, 12.6
     C0 = 0.0
     # Distractor (satisfiable: peak 70 >= threshold 55 near P3=0).
     A_DIST, MU_DIST, W_DIST = 70.0, 0.0, 10.0
