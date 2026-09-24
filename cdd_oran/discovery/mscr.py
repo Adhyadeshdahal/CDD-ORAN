@@ -77,7 +77,7 @@ class MSCRResult:
 
     def param_edges(self) -> set[tuple[int, int]]:
         """Declared edges as ``(kpi_index, param_index)``, the convention of ``_TRUE_ADJACENCY``."""
-        return {(int(k), int(p)) for k, p in zip(*np.nonzero(self.declared))}
+        return {(int(k), int(p)) for k, p in zip(*np.nonzero(self.declared), strict=True)}
 
 
 def equal_count_labels(values: np.ndarray, nbins: int) -> np.ndarray:

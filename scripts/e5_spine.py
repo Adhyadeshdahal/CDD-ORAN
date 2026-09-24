@@ -54,10 +54,26 @@ def score_grid_h(env, snap, param_id, panel, H, grid=P0_GRID):
     return scores
 
 
-def e5_panel() -> list[PanelXApp]:
-    """Panel {K_ben above, K_harm below, K_dist above} in raw units (standardization pending)."""
+# Per-KPI (mean, std) from scripts/e5_standardization.py (n=1e6, seed 0, uniform id_ranges, independent
+# lagged P0 for the chain term, composed subdom=chain_gamma=0.2, theta=0 = Z at its mean, no noise).
+E5_KPI_MOMENTS = {
+    0: (4.161893, 4.634914),     # K_ben
+    1: (23.514415, 24.662764),   # K_harm
+    2: (0.075764, 57.680719),    # K_mid (conduit; not in the panel)
+    3: (41.874536, 20.192141),   # K_dist
+}
+
+
+def e5_panel(standardized: bool = False) -> list[PanelXApp]:
+    """Panel {K_ben above, K_harm below, K_dist above}; standardized by E5_KPI_MOMENTS if requested.
+
+    Default stays RAW for now: the DEV reward geometry was tuned in raw units, and under the locked
+    standardized convention the decision contrast collapses (CORE 0.378 -> 0.0095, CONFOUND DiD
+    0.206 -> 0.0008; scratchpad/e5_design/std_rerun/). E5 must be re-balanced before its freeze.
+    """
     return [
-        PanelXApp((k,), 0.0, 1.0, E5V2Env.kpi_thresholds[k], E5V2Env.directions[k])
+        PanelXApp((k,), *(E5_KPI_MOMENTS[k] if standardized else (0.0, 1.0)),
+                  E5V2Env.kpi_thresholds[k], E5V2Env.directions[k])
         for k in E5V2Env.panel_kpi_ids
     ]
 
