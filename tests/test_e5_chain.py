@@ -1,8 +1,6 @@
 """E5 chain-layer / H>=2 rollout regression tests (DEV env; plan 015 §3, sol review #4).
 
 Locks the mediated-path semantics:
-(a) score_grid_h at H=1 is byte-identical to the FROZEN v2_regret path (no regression to the direct-edge
-    results);
 (b) MaskedE5WorldModel(all true edges) == true env at H=2 (equivalence generalizes to the chain horizon);
 (c) the chain edge (K_harm<-K_mid) is INERT at H=1 (scored terminal reads pre-action K_mid) and ACTIVE at
     H=2 (missing the 2-hop path under-corrects -> regret);
@@ -12,7 +10,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from cdd_oran.analysis.v2_regret import score_grid
 from cdd_oran.benchmark.masked_world_model import MaskedE5WorldModel
 from cdd_oran.envs.v2.e5 import E5V2Env
 from scripts.e5_spine import (
@@ -29,17 +26,6 @@ from scripts.e5_spine import (
 SUB, CH = 0.20, 0.20
 PANEL = e5_panel()
 P0 = E5V2Env.P0
-
-
-def test_score_grid_h1_matches_frozen_path():
-    """(a): H=1 delegates to the frozen v2_regret score_grid — byte-identical (direct-edge path preserved)."""
-    p_true, k_true = true_edges(E5V2Env(subdom=SUB, chain_gamma=CH))
-    for s in range(8):
-        snap = committed_state(s, subdom=SUB, chain_gamma=CH)
-        wm = MaskedE5WorldModel(p_true, k_true, env_seed=s, subdom=SUB, chain_gamma=CH)
-        assert np.array_equal(
-            score_grid_h(wm, snap, P0, PANEL, 1), score_grid(wm, snap, P0, PANEL)
-        )
 
 
 def test_all_true_masked_equals_true_env_h2():

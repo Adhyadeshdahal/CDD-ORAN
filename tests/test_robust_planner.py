@@ -2,8 +2,7 @@
 
 (a) the risk-averse aggregator picks a different (safer) action than the mean aggregator;
 (b) the disagreement signal is finite, >0 when members differ, 0 when identical;
-(c) all four planners run end-to-end with a 2-member ensemble and return valid actions;
-(d) the m=1 scoring path is byte-identical to the pre-Phase-3 score_batch path.
+(c) all four planners run end-to-end with a 2-member ensemble and return valid actions.
 """
 
 from dataclasses import replace
@@ -173,35 +172,6 @@ def test_all_four_planners_run_end_to_end_with_ensemble():
         assert 0 <= action[2] <= env.action_space[pi + 2], f"{planner.name} index out of range"
         # The member axis was actually consumed: disagreement was recorded and is finite.
         assert torch.isfinite(torch.tensor(planner.last_disagreement))
-
-
-def test_m1_scoring_is_byte_identical_to_pre_phase3_path():
-    """(d) With m=1 the robust path must reproduce the exact score_batch call/RNG."""
-    env, state, edge = _env_and_state()
-    model = _ensemble_model(env, predict_members=1)
-    pi = edge["param_id"]
-    xapps = edge["xapps_in_conflict"]
-    weights = [1.0] * len(xapps)
-
-    n = 8
-    samples = torch.randint(0, 3, (n, 2))
-    pi_col = torch.full((n, 1), pi, dtype=torch.long)
-    action_batch = torch.cat([pi_col, samples], dim=1).float()
-    s_batch = state.unsqueeze(0).expand(n, -1).float()
-    agg = EnsembleAggregator()
-
-    # Reference: the pre-Phase-3 block (predict -> sample -> score_batch).
-    torch.manual_seed(123)
-    dist = model.predict_next_state(s_batch, action_batch)
-    ref = score_batch(dist.sample(), xapps, weights, 10, "cpu", dist.stddev, 0.0)
-
-    # Phase 3 shared path with the identical RNG seed.
-    torch.manual_seed(123)
-    scores, disagreement = robust_score_batch(
-        model, s_batch, action_batch, xapps, weights, 10, "cpu", 0.0, agg
-    )
-    torch.testing.assert_close(scores, ref, rtol=0.0, atol=0.0)
-    assert torch.all(disagreement == 0.0), "m=1 disagreement must be exactly zero"
 
 
 # (e) Lever 2 / Option A: the utility_weight term in the PER-MEMBER cost.

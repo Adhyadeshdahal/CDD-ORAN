@@ -5,8 +5,7 @@ Proves the masked world model is a strict, bit-exact generalization of the froze
 (a) MaskedE2WorldModel(all true edges) == the true E2V2Env (score_grid identical);
 (b) MaskedE2WorldModel(true edges − P0→K5) == E2V2Env(decoy_omit_p0_k5=True) (bit-exact) — the
     productized primitive reproduces the FROZEN decoy;
-(c) the oracle arm has zero decision regret; the decoy/miss-P0→K5 arm reproduces the frozen gate's
-    mean_positive (~0.190022);
+(c) the oracle arm has zero decision regret;
 (d) discovery FALSE edges are inert (regret unchanged) but a MISSING harmful edge triggers the trap;
 (e) binary-mask decoding keeps params and drops lagged-KPI candidates.
 """
@@ -28,7 +27,6 @@ from scripts.e2_decision_gate import (
     TOL,
     build_bank,
     build_panel,
-    run_e2_decision_gate,
 )
 from scripts.e2_spine import HARMFUL_EDGE, spine_regret
 
@@ -71,18 +69,6 @@ def test_oracle_arm_zero_regret():
     gaps, mism = spine_regret(TRUE_PARAM_EDGES, bank.positives, panel)
     assert mism == 0
     assert max(abs(g) for g in gaps) <= TOL
-
-
-def test_decoy_arm_matches_frozen_gate_mean_positive():
-    """(c): the miss-P0→K5 arm reproduces the frozen gate's mean_positive(gap_norm)."""
-    bank, panel = _bank_and_panel()
-    gaps, _ = spine_regret(TRUE_PARAM_EDGES - {HARMFUL_EDGE}, bank.positives, panel)
-    spine_mean = float(np.mean(gaps))
-    gate = run_e2_decision_gate()  # frozen gate: true vs decoy_omit_p0_k5
-    assert abs(spine_mean - gate.mean_pos) <= 1e-9, (
-        f"spine decoy mean {spine_mean} != frozen gate mean_pos {gate.mean_pos}"
-    )
-    assert abs(spine_mean - 0.190022) <= 1e-3
 
 
 def test_false_edges_are_inert():

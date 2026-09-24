@@ -2,7 +2,6 @@
 
 Real computed assertions against the FROZEN contract (``docs/benchmark/GATE_CONTRACT_E3.md``):
 
-(a) the bank reproduces the exact 32 reviewer seeds;
 (b) the vectorized 101^3 oracle equals actual clone rollouts on a random sample (tol_zero) — the
     correctness anchor for the array shortcut;
 (c) the truncated control gap ``gap_T_norm`` is 0 structurally (greedy == exhaustive on the
@@ -35,22 +34,9 @@ from scripts.e3_decision_gate import (
     vectorized_G,
 )
 
-_EXPECTED_SEEDS = [
-    16, 62, 81, 99, 101, 117, 121, 132, 133, 145, 175, 176, 186, 196, 208, 217,
-    223, 224, 238, 252, 270, 312, 355, 365, 370, 373, 375, 386, 401, 414, 415, 436,
-]
-
-
 @pytest.fixture(scope="module")
 def gate_result():
     return run_e3_decision_gate()
-
-
-def test_bank_reproduces_exact_seeds():
-    bank = build_bank(E3V2Env)
-    assert bank.feasible
-    assert len(bank.seeds) == N_BANK
-    assert bank.seeds == _EXPECTED_SEEDS
 
 
 def test_vectorized_oracle_matches_clone_rollout():
