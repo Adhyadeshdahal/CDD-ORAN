@@ -1,6 +1,6 @@
 # Implementation Plans
 
-Generated on 2026-09-02 against commit `57bcd46`. These plans are the recommended
+Generated on 2026-09-02 against commit `57bcd46` (index extended 2026-09-24). These plans are the recommended
 overnight queue. Every executor must use its own git worktree and branch, read its plan
 fully, run every verification gate, and stop rather than silently changing a preregistered
 scientific contract.
@@ -16,6 +16,17 @@ scientific contract.
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 | 006 | KPI->KPI-capable E1 discovery (fresh freeze) | P1 | L | 003, 004 | DONE (merged 85dd09a; E1 recovery gate PASSED, 6/6 edges all 10 seeds; review GENUINE) |
 | 007 | E2 nonlinear label-free discovery (fresh freeze) | P1 | L | 006, E2V2Env (8d70a4f) | IMPL COMPLETE (protocol 828e345; impl c0101e6, 440 tests, review GENUINE); **RUN = TODO** (parked ~5-18d on current box; run on high-RAM/bandwidth machine — see plan "RUN STATUS") |
+
+| 008 | E2 RCoT discovery (v1, fresh freeze) | P1 | L | 007 | DONE, SUPERSEDED by 009 (v1 kept loadable; low NCP->KPI recall diagnosed as BH x perm-floor) |
+| 009 | E2 RCoT-v2 (block_perm_reps 99->299) | P1 | S | 008 | DONE (frozen 8052e10/733e838; 10-seed run P 0.964 / R 0.769) |
+| 011 | Planner-objective decision | - | - | - | DECISION RECORD |
+| 012 | Legacy Env I-IV retirement | P2 | M | QACM V2Env port | IN PROGRESS (hard-delete after QACM port) |
+| 013 | E5 finalization: occupancy-conditional claim | - | - | - | DECISION RECORD (2026-09-16, E2-ID era; predates the built E5 env) |
+| 014 | Causal conflict-mitigation build | P0 | L | - | **ACTIVE** (current build plan; read with docs/ARCHITECTURE.md) |
+| 015 | E5 composed benchmark design | P0 | L | 014 | **IN PROGRESS**; freeze BLOCKED: decision contrast collapses under standardized scoring (2026-09-24), reward geometry must be re-balanced |
+
+Plan 010 (GPU acceleration) was removed on 2026-09-24: MSCR-v2 at B=2999 runs about 20 s/seed on CPU,
+so the GPU decision it prepared no longer matters.
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <reason>`.
 
