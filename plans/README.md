@@ -16,7 +16,6 @@ scientific contract.
 | 005 | Build the v2 episodic rollout kernel | P2 | M | - | DONE (merged c5d3663) |
 | 006 | KPI->KPI-capable E1 discovery (fresh freeze) | P1 | L | 003, 004 | DONE (merged 85dd09a; E1 recovery gate PASSED, 6/6 edges all 10 seeds; review GENUINE) |
 | 007 | E2 nonlinear label-free discovery (fresh freeze) | P1 | L | 006, E2V2Env (8d70a4f) | IMPL COMPLETE (protocol 828e345; impl c0101e6, 440 tests, review GENUINE); **RUN = TODO** (parked ~5-18d on current box; run on high-RAM/bandwidth machine — see plan "RUN STATUS") |
-
 | 008 | E2 RCoT discovery (v1, fresh freeze) | P1 | L | 007 | DONE, SUPERSEDED by 009 (v1 kept loadable; low NCP->KPI recall diagnosed as BH x perm-floor) |
 | 009 | E2 RCoT-v2 (block_perm_reps 99->299) | P1 | S | 008 | DONE (frozen 8052e10/733e838; 10-seed run P 0.964 / R 0.769) |
 | 011 | Planner-objective decision | - | - | - | DECISION RECORD |
