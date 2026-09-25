@@ -21,7 +21,8 @@ import torch
 class MLPMember:
     """One 2x64 SiLU MLP on standardized inputs/target; prediction runs in numpy for rollout speed."""
 
-    def __init__(self, x: np.ndarray, y: np.ndarray, seed: int, epochs: int = 1500, lr: float = 3e-3):
+    def __init__(self, x: np.ndarray, y: np.ndarray, seed: int, epochs: int = 1500, lr: float = 3e-3,
+                 group_l1: float = 0.0):
         torch.manual_seed(seed)
         self.mx, self.sx = x.mean(0), x.std(0) + 1e-12
         self.my, self.sy = float(y.mean()), float(y.std()) + 1e-12
@@ -33,7 +34,10 @@ class MLPMember:
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, epochs)
         for _ in range(epochs):
             opt.zero_grad()
-            torch.nn.functional.mse_loss(net(xt), yt).backward()
+            loss = torch.nn.functional.mse_loss(net(xt), yt)
+            if group_l1:  # group lasso: one L2 norm per input over its first-layer weight column
+                loss = loss + group_l1 * torch.linalg.vector_norm(net[0].weight, dim=0).sum()
+            loss.backward()
             opt.step()
             sched.step()
         self.layers = [(m.weight.detach().numpy().T, m.bias.detach().numpy()) for m in net if hasattr(m, "weight")]
@@ -53,9 +57,11 @@ def fit_kpi_models(
     parents: Mapping[int, Sequence[int]],
     members: int = 3,
     epochs: int = 1500,
+    group_l1: Mapping[int, float] | float = 0.0,
 ) -> list:
     """One predictor per KPI column of ``y``: mean over ``members`` MLPs on ``x[:, parents[k]]``.
-    A KPI with no parents is predicted as its corpus mean."""
+    A KPI with no parents is predicted as its corpus mean. ``group_l1`` (per KPI or global) adds a group-lasso
+    penalty on each input's first-layer weights (0 = none, the D1 default)."""
     models = []
     for k in range(y.shape[1]):
         par = list(parents.get(k, []))
@@ -63,7 +69,8 @@ def fit_kpi_models(
             mu = float(y[:, k].mean())
             models.append(lambda z, mu=mu: mu)
             continue
-        ens = [MLPMember(x[:, par], y[:, k], seed=m, epochs=epochs) for m in range(members)]
+        lam = group_l1.get(k, 0.0) if isinstance(group_l1, Mapping) else group_l1
+        ens = [MLPMember(x[:, par], y[:, k], seed=m, epochs=epochs, group_l1=lam) for m in range(members)]
         models.append(lambda z, e=ens, pa=par: float(np.mean([m.predict(z[pa][None, :])[0] for m in e])))
     return models
 
