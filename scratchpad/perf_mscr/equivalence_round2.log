@@ -1,0 +1,11 @@
+cpu: R1 buffered uint32 state + R2 block boundaries (last block 1 row; block<ns) + R3 3 targets x n_jobs(1,2,3,5) x PCG64/MT19937 -> IDENTICAL
+   example final state after bank: has_uint32=1 (before), after=ref(has_uint32=1, uinteger=1017093381) new(has_uint32=1, uinteger=1017093381) equal=True
+torch:cpu: R1 buffered uint32 state + R2 block boundaries (last block 1 row; block<ns) + R3 3 targets x n_jobs(1,2,3,5) x PCG64/MT19937 -> IDENTICAL
+   example final state after bank: has_uint32=1 (before), after=ref(has_uint32=1, uinteger=1017093381) new(has_uint32=1, uinteger=1017093381) equal=True
+cuda: R1 buffered uint32 state + R2 block boundaries (last block 1 row; block<ns) + R3 3 targets x n_jobs(1,2,3,5) x PCG64/MT19937 -> IDENTICAL
+   example final state after bank: has_uint32=1 (before), after=ref(has_uint32=1, uinteger=1017093381) new(has_uint32=1, uinteger=1017093381) equal=True
+R4 resolve_device('gpu') -> ValueError: MSCR device must be 'auto', 'cpu', 'cuda[:k]' or 'torch:<device>', got 'gpu'
+R4 resolve_device('cuda:99') -> ValueError: MSCR device 'cuda:99': only 1 CUDA device(s)
+R4 resolve_device('torch:nonsense') -> ValueError: invalid MSCR torch device 'torch:nonsense': Expected one of cpu, cuda, ipu, xpu, mkldnn, opengl, opencl, ideep, hip, ve, fpga, maia, xla, lazy, vulkan, mps, meta, hpu, mtia, privateuseone device type at start of device string: nonsense
+R4 resolve_device('CPU') -> ValueError: MSCR device must be 'auto', 'cpu', 'cuda[:k]' or 'torch:<device>', got 'CPU'
+ALL IDENTICAL

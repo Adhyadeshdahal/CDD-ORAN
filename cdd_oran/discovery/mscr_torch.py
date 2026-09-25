@@ -17,6 +17,11 @@ Why the output is identical rather than "close":
    elementwise float64 adds, which IEEE-754 rounds identically on every device (a pure add has no FMA).
 4. The per-draw tail ``sum_k gs_k^2 / size_k`` and everything after it run in numpy, as in v2.
 
+Scope of the identity claim: verified (scratchpad/perf_mscr/) with numpy 2.4.2 and torch 2.10 on CPU
+(torch:cpu) and on one CUDA device (RTX 2050, CUDA 12.8), for PCG64 generators (parallel jump-ahead) and
+MT19937 (sequential draws). Any other numpy version or device must pass ``device_selfcheck`` (auto
+selection does this) and should be re-checked with scratchpad/perf_mscr/equivalence_check.py.
+
 Targets are batched: all targets share the strata plan (it depends on x only) and the stream positions,
 so one device sort covers every target's block. A small bit-identity self-check runs once per device
 before auto-selection trusts it (``device_selfcheck``).
@@ -84,7 +89,10 @@ def _reduceat_last(yp, offsets: np.ndarray):
     for length, ks in by_len.items():
         idx = torch.as_tensor(np.array([np.arange(bounds[k], bounds[k] + length) for k in ks]), device=yp.device)
         seg = yp[..., idx]  # (..., len(ks), length)
-        out[..., ks] = seg[..., 0] + _np_pairwise(seg[..., 1:])
+        if length == 1:  # numpy returns a singleton segment's element unchanged (no add at all)
+            out[..., ks] = seg[..., 0]
+        else:
+            out[..., ks] = seg[..., 0] + _np_pairwise(seg[..., 1:])
     return out
 
 
@@ -197,14 +205,19 @@ def rowsums_torch(ys, plan, cfg: MSCRConfig, rngs, device: str, n_jobs: int, blo
 
 def device_selfcheck(device: str) -> bool:
     """Bit-identity of this kernel vs the numpy kernel on ``device`` (tiny, cached per process).
-    Covers the short-segment (8..128) and recursive (>128) pairwise paths and multi-target batching."""
+
+    Segment lengths exercised (rest = length - 1 goes through ``_np_pairwise``): n=520, nc=6, nb=8 gives
+    strata of 86-87 rows and segments of 10-11 (8-accumulator branch); n=700, nc=2, nb=2 gives 175-row
+    segments (recursive branch, > 129); n=60, nc=2, nb=16 gives 30-row strata and 1-2-row segments
+    (singleton and sub-8 branch). Two targets exercise target batching."""
     if device in _SELFCHECK:
         return _SELFCHECK[device]
     ok = True
     try:
         rng = np.random.default_rng(12345)
         for n, cfg in ((520, MSCRConfig(nc=6, nb=8, min_stratum=40, n_perm=40)),
-                       (700, MSCRConfig(nc=2, nb=2, min_stratum=10, n_perm=24))):
+                       (700, MSCRConfig(nc=2, nb=2, min_stratum=10, n_perm=24)),
+                       (60, MSCRConfig(nc=2, nb=16, min_stratum=10, n_perm=24))):
             x = rng.uniform(size=(n, 3))
             y = rng.normal(size=(n, 2))
             plan = _strata_plan(x, cfg)

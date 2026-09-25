@@ -101,7 +101,15 @@ def _between_ss(y: np.ndarray, labels: np.ndarray, nbins: int) -> float:
 
 # ---------------------------------------------------------------------------------------------- runtime
 # Execution choices (threads, device, block size) never change a result bit: see ``_build_banks``.
-# Validated against the frozen v2 code by scratchpad/perf_mscr/equivalence_check.py.
+# Scope of that claim: verified against the frozen v2 code (scratchpad/perf_mscr/equivalence_check.py)
+# with numpy 2.4.2 (the uv.lock pin; v2's own bits depend on numpy's argsort tie order and reduceat
+# summation order), for PCG64 (parallel jump-ahead) and MT19937 (sequential) generators, on CPU and on
+# the tested CUDA device (RTX 2050). Other numpy versions / devices: re-run that check.
+#
+# Constrained or shared hosts: the defaults use every usable CPU and a CUDA GPU when one passes the
+# self-check. Set MSCR_NUM_THREADS=<k> to cap threads (OMP_NUM_THREADS is honoured as a fallback, so
+# multi-process launchers that pin it get one thread per process) and MSCR_DEVICE=cpu to keep MSCR off a
+# GPU that other jobs use (each CUDA-initialising process also costs ~0.3-0.5 GB host RAM).
 _BLOCK_ELEMS = 1 << 18  # CPU bank block: (rows x ns) uniforms per task, 2 MiB of float64
 
 
@@ -119,11 +127,16 @@ def resolve_n_jobs(n_jobs: int | None = None) -> int:
 
 def resolve_device(device: str | None = None) -> str:
     """Bank device: explicit value > $MSCR_DEVICE > 'cuda' when torch sees a GPU that passes the
-    bit-identity self-check > 'cpu' (numpy). 'auto' means the same as None."""
+    bit-identity self-check > 'cpu' (numpy). 'auto' means the same as None.
+
+    Accepted: 'auto', 'cpu' (numpy), 'cuda', 'cuda:<k>', 'torch:<torch device>' (e.g. 'torch:cpu').
+    Anything else, or a CUDA device that does not exist, raises ValueError here, before any work."""
     if device is None or device == "auto":
         device = os.environ.get("MSCR_DEVICE", "auto").strip() or "auto"
-    if device != "auto":
+    if device == "cpu":
         return device
+    if device != "auto":
+        return _validate_torch_device(device)
     try:
         import torch
     except ImportError:
@@ -134,6 +147,25 @@ def resolve_device(device: str | None = None) -> str:
         if device_selfcheck("cuda"):
             return "cuda"
     return "cpu"
+
+
+def _validate_torch_device(device: str) -> str:
+    if not (device.startswith("cuda") or device.startswith("torch:")):
+        raise ValueError(f"MSCR device must be 'auto', 'cpu', 'cuda[:k]' or 'torch:<device>', got {device!r}")
+    try:
+        import torch
+    except ImportError as e:
+        raise ValueError(f"MSCR device {device!r} needs torch, which is not installed") from e
+    try:
+        dev = torch.device(device.removeprefix("torch:"))
+    except RuntimeError as e:
+        raise ValueError(f"invalid MSCR torch device {device!r}: {e}") from e
+    if dev.type == "cuda":
+        if not torch.cuda.is_available():
+            raise ValueError(f"MSCR device {device!r} requested but CUDA is not available")
+        if dev.index is not None and dev.index >= torch.cuda.device_count():
+            raise ValueError(f"MSCR device {device!r}: only {torch.cuda.device_count()} CUDA device(s)")
+    return device
 
 
 # ------------------------------------------------------------------------------------ permutation bank
@@ -262,14 +294,15 @@ def _build_banks(
 ):
     """Banks for every target column of ``y`` (target j uses ``rngs[j]``): a list of (denom, null, strata).
 
-    Bit-identical to v2's per-target ``_build_bank`` for any n_jobs / device / block_elems: each target
-    consumes its own stream exactly as v2 did (same draws, same order, see ``_stream_tasks``); every
-    null draw is computed per row by the same argsort -> gather -> reduceat -> row-sum kernel (or its
-    exact replica on torch, ``mscr_torch``); per-stratum contributions are accumulated in stratum order.
+    Bit-identical to v2's per-target ``_build_bank`` for any n_jobs / device / block_elems (tested scope:
+    see the runtime section above): each target consumes its own stream exactly as v2 did (same draws,
+    same order, see ``_stream_tasks``); every null draw is computed per row by the same argsort ->
+    gather -> reduceat -> row-sum kernel (or its exact replica on torch, ``mscr_torch``); per-stratum
+    contributions are accumulated in stratum order.
     """
+    dev = resolve_device(device)  # validate before any work
     plan = _strata_plan(x, cfg)
     ys = [[[y[rows, j] for rows, _, _ in kept] for kept in plan] for j in range(y.shape[1])]
-    dev = resolve_device(device)
     if dev == "cpu":
         rowsums = _rowsums_cpu(ys, plan, cfg, rngs, resolve_n_jobs(n_jobs), block_elems or _BLOCK_ELEMS)
     else:
@@ -357,7 +390,8 @@ def discover_mscr(
         the v2 confirmatory run bit-for-bit.
     n_jobs, device : execution only, never the result. ``n_jobs`` = worker threads (default: see
         ``resolve_n_jobs``); ``device`` = 'cpu' (numpy), 'cuda[:k]' or any torch device for the bank
-        (default: see ``resolve_device``). Every combination returns bit-identical output.
+        (default: see ``resolve_device``; ``$MSCR_NUM_THREADS`` / ``$MSCR_DEVICE`` for shared hosts).
+        Every combination returned bit-identical output in the tested scope (see the runtime section).
     """
     cfg = config or frozen_config()
     x = np.asarray(x, dtype=np.float64)
@@ -371,6 +405,7 @@ def discover_mscr(
 
     n_t = y.shape[1]
     jobs = resolve_n_jobs(n_jobs)
+    device = resolve_device(device)
     rngs = [np.random.default_rng([int(seed), j, cfg.n_perm]) for j in range(n_t)]
     banks = _build_banks(x, y, cfg, rngs, n_jobs=jobs, device=device)
 

@@ -1,0 +1,4 @@
+tie fallback on torch:cpu: IDENTICAL
+OOM row-halving retry on torch:cpu: IDENTICAL
+tie fallback on cuda: IDENTICAL
+OOM row-halving retry on cuda: IDENTICAL

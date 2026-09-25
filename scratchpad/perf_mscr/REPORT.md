@@ -32,7 +32,7 @@ fastest hardware available at run time. Speed-ups are projections.
 
 - Memory peak per stratum in v2: 2·B·ns·8 bytes, i.e. 192 MB at n=24000.
 
-## 2. Tier A (bit-identical)
+## 2. Tier A (bit-identical within the tested scope, see Round 2)
 Files: `cdd_oran/discovery/mscr.py` and the new `cdd_oran/discovery/mscr_torch.py`.
 `discover_mscr(..., n_jobs=None, device=None)`; the private helpers keep their signatures.
 
@@ -71,7 +71,7 @@ the numpy version.
 - **B1 One bank shared across targets:** each target's p-vector keeps the same law; only the dependence
   between targets changes. About 3x.
 - **B2 GPU (Philox) random numbers:** about 20x. The torch version and device class must be recorded.
-- **B3 Hardening** (fixes BUG-1/2 and RISK-3/4, NIT-6):
+- **B3 Hardening** (fixes BUG-1/2 and RISK-3/4, NIT-6; v2.1 only, never folded into Tier A):
   - centre y per stratum;
   - treat a near-zero total sum of squares as zero;
   - break candidate ties with a seeded random key;
@@ -82,8 +82,9 @@ Each Tier-B change requires re-validation (calibration plus flip rate; fresh con
 user's call).
 
 ## 5. Tier C (design only)
-- **Sequential Monte Carlo (Besag–Clifford):** the p-value is valid, but it saves about nothing here,
-  because the bank is shared and each E2 KPI has 2–3 true edges needing the full B.
+- **Sequential Monte Carlo (Besag–Clifford):** the p-value is valid. It is *projected* (by counting
+  draws, not measured) to save about nothing here, because the bank is shared and each E2 KPI has 2–3 true
+  edges needing the full B.
 - **Analytic Beta null:** fails in the ~2e-4 tail needed, and the max over conditioners is dependent.
 
 Not recommended.
@@ -109,3 +110,43 @@ per-target seeding.
 - The defaults for device and thread resolution.
 - The v2.1 re-validation bar.
 - Whether BUG-1/2 are fixed in v2.1 or guarded in callers.
+
+## Round 2 (sol review)
+Sol found no mismatch in Tier A, and its re-run of the CUDA checks passed. Its merge conditions were handled
+on `perf/mscr-opt` as follows (small n only):
+
+1. **Buffered 32-bit RNG state.** `equivalence_round2.py` R1: the caller's generators start with
+   `has_uint32=1` (after `integers(..., dtype=int32)`). The final state, including `has_uint32` and
+   `uinteger`, equals v2's sequential consumption for PCG64 (the jump-ahead path, where `_finish_stream`
+   restores the buffer that `advance()` clears) and for MT19937 (the sequential path). Example:
+   `has_uint32=1, uinteger=1017093381` for both.
+2. **Singleton and sub-8 segments.** `_reduceat_last` now returns a length-1 segment's element directly,
+   with no add. The old code was already exact, because `x + (-0.0) == x` bitwise for every x including
+   ±0, and numpy's sub-8 loop also starts from -0.0. But the special case makes the intent explicit.
+   `check_segments.py` compares against `np.add.reduceat` for segment lengths 1, 2, 3, 7, 8, 9, 10, 16,
+   17, 100, 128, 129, 130, 131, 257, 500 and 501, each next to lengths 1, 2, 9 and 130, with all
+   −0.0, all +0.0 and mixed-sign zero rows. It checks values and zero signs, and it is IDENTICAL on
+   cpu and cuda. `device_selfcheck` now also covers 1–2-row segments (n=60, nc=2, nb=16), and its
+   docstring lists the lengths it actually covers (1–2, 10–11, 175).
+3. **Block boundaries.** R2 covers a last block of exactly one row (ns=50, block 200 gives 4 rows per
+   block, and n_perm=41 leaves a final 1-row block; the task offsets are asserted), plus block_elems=10
+   < ns, which is the `max(1, ...)` one-row-per-task path. R3 checks full output (pvals, s_star,
+   declared), the raw bank and the end state for 3 targets × n_jobs {1, 2, 3, 5} × PCG64/MT19937 ×
+   block sizes {200, 10, 50, auto}, all with buffered RNGs. IDENTICAL on cpu, torch:cpu and cuda.
+4. **Scope and robustness.**
+   - The identity claim is now stated, in the module docstrings, for numpy 2.4.2, PCG64 (jump-ahead)
+     and MT19937 (sequential) generators, CPU / torch:cpu, and the tested CUDA device (RTX 2050,
+     torch 2.10 + CUDA 12.8). Other numpy versions or devices must re-run the checks, and the torch
+     path is also gated by `device_selfcheck`.
+   - `MSCR_NUM_THREADS` and `MSCR_DEVICE` are documented for constrained or shared hosts, including the
+     `OMP_NUM_THREADS` fallback and the host RAM each CUDA process costs.
+   - Device strings are validated up front (`resolve_device`, called first in `discover_mscr` and
+     `_build_banks`). `gpu`, `CPU`, `cuda:99` and `torch:nonsense` now raise `ValueError`.
+   - The BUG-1/2 fixes stay out of Tier A (B3, v2.1 with calibration).
+   - The "saves about nothing" verdict for sequential MC is labelled a projection.
+
+Re-run after these changes: `equivalence_check.py` (cpu: 17 cases × 7 paths; cuda: 17 × 3) ALL IDENTICAL.
+`check_tie_fallback.py` (torch:cpu, cuda) tie fallback and OOM retry IDENTICAL.
+`tests/test_discovery_mscr.py` passes. ruff and ty are clean.
+Logs: `equivalence_cpu.log`, `equivalence_cuda.log`, `equivalence_round2.log`, `check_segments.log`,
+`check_tie_fallback.log`, `pytest.log`.
