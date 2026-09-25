@@ -183,3 +183,93 @@ class OpenLoopSequencePlanner:
     ) -> float:
         """Return the H=1 first action (single-decision selection)."""
         return self.act_sequence(model_factory, snapshot, param_id, grid, 1, R)[0]
+
+
+def qacm_v2(
+    model_factory: ModelFactory,
+    snapshot,
+    param_id: int,
+    grid: Sequence[float],
+    H: int,
+    R: Scorer,
+) -> list[float]:
+    """QACM on the V2 interface: exhaustive one-step choice of the conflict knob, re-decided each step.
+
+    QACM (``qacm.py``) enumerates every value of the single conflict parameter, predicts the next
+    state, and minimizes ``Σ w·distance·s − (Σ satisfied)^2``, which is exactly ``−R`` under the
+    locked panel. Applied once per step on the predicted state, that is :func:`greedy_fm`; this alias
+    names the market baseline explicitly. It is myopic by construction.
+    """
+    return greedy_fm(model_factory, snapshot, param_id, grid, H, R)
+
+
+def _sequence_return(model_factory, snapshot, param_id, actions, R) -> float:
+    return _cumulative_return(_rollout_sequence_scored(model_factory, snapshot, param_id, actions), R)
+
+
+def _snap_to_grid(values, grid: np.ndarray) -> list[float]:
+    return [float(grid[int(np.argmin(np.abs(grid - v)))]) for v in values]
+
+
+def cem_sequence(
+    model_factory: ModelFactory,
+    snapshot,
+    param_id: int,
+    grid: Sequence[float],
+    H: int,
+    R: Scorer,
+    n_samples: int = 64,
+    n_elite: int = 8,
+    n_iters: int = 8,
+    seed: int = 0,
+) -> list[float]:
+    """Cross-entropy method over open-loop sequences. Samples are snapped to the grid before being
+    rolled, so every evaluated and returned sequence lies on the same action grid as the other arms.
+    Budget = n_samples * n_iters rollouts. Returns the best sequence evaluated."""
+    g = np.asarray(grid, dtype=float)
+    lo, hi = float(g.min()), float(g.max())
+    rng = np.random.default_rng(seed)
+    mu, sd = np.full(H, (lo + hi) / 2), np.full(H, (hi - lo) / 2)
+    best_seq, best_g = None, -np.inf
+    for _ in range(n_iters):
+        cand = [_snap_to_grid(np.clip(rng.normal(mu, sd), lo, hi), g) for _ in range(n_samples)]
+        rets = np.array([_sequence_return(model_factory, snapshot, param_id, c, R) for c in cand])
+        order = np.argsort(-rets, kind="stable")
+        if rets[order[0]] > best_g:
+            best_g, best_seq = float(rets[order[0]]), cand[order[0]]
+        elite = np.array([cand[i] for i in order[:n_elite]])
+        mu, sd = elite.mean(0), np.maximum(elite.std(0), (hi - lo) / 200)
+    return list(best_seq)
+
+
+def mppi_sequence(
+    model_factory: ModelFactory,
+    snapshot,
+    param_id: int,
+    grid: Sequence[float],
+    H: int,
+    R: Scorer,
+    n_samples: int = 64,
+    n_iters: int = 8,
+    temperature: float = 1.0,
+    seed: int = 0,
+) -> list[float]:
+    """MPPI-style path-integral update over open-loop sequences (softmax-weighted mean of perturbed
+    samples, grid-snapped; temperature is relative to the batch return spread). Budget = n_samples * n_iters rollouts. Returns the best sequence evaluated."""
+    g = np.asarray(grid, dtype=float)
+    lo, hi = float(g.min()), float(g.max())
+    rng = np.random.default_rng(seed)
+    mu, sd = np.full(H, (lo + hi) / 2), (hi - lo) / 3
+    best_seq, best_g = None, -np.inf
+    for _ in range(n_iters):
+        raw = np.clip(mu + rng.normal(0.0, sd, size=(n_samples, H)), lo, hi)
+        cand = [_snap_to_grid(r, g) for r in raw]
+        rets = np.array([_sequence_return(model_factory, snapshot, param_id, c, R) for c in cand])
+        i = int(np.argmax(rets))
+        if rets[i] > best_g:
+            best_g, best_seq = float(rets[i]), cand[i]
+        # scale-free temperature: relative to this batch's return spread (reward units vary by env)
+        w = np.exp((rets - rets.max()) / (temperature * (rets.std() + 1e-12)))
+        mu = (w[:, None] * np.asarray(cand)).sum(0) / w.sum()
+        sd = max(sd * 0.7, (hi - lo) / 200)
+    return list(best_seq)
