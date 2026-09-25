@@ -46,7 +46,10 @@ SCOPE: binding, from the sol review of the v2 result. Read before using the outp
 
 from __future__ import annotations
 
+import os
+from collections import deque
 from dataclasses import dataclass
+from typing import Any, cast
 
 import numpy as np
 
@@ -96,36 +99,214 @@ def _between_ss(y: np.ndarray, labels: np.ndarray, nbins: int) -> float:
     return float(np.sum(tb[mask] ** 2 / nb[mask]) - total * total / len(y))
 
 
-def _build_bank(x: np.ndarray, y: np.ndarray, cfg: MSCRConfig, rng: np.random.Generator):
-    """Per conditioner g: strata rows, pooled TSS, and n_perm shared null draws of S_g."""
-    n_cols = x.shape[1]
-    denom = np.zeros(n_cols)
-    null = np.zeros((n_cols, cfg.n_perm))
-    strata = []
-    for g in range(n_cols):
+# ---------------------------------------------------------------------------------------------- runtime
+# Execution choices (threads, device, block size) never change a result bit: see ``_build_banks``.
+# Validated against the frozen v2 code by scratchpad/perf_mscr/equivalence_check.py.
+_BLOCK_ELEMS = 1 << 18  # CPU bank block: (rows x ns) uniforms per task, 2 MiB of float64
+
+
+def resolve_n_jobs(n_jobs: int | None = None) -> int:
+    """Worker threads: explicit value > $MSCR_NUM_THREADS > $OMP_NUM_THREADS > usable CPU count."""
+    if n_jobs is not None:
+        return max(1, int(n_jobs))
+    for var in ("MSCR_NUM_THREADS", "OMP_NUM_THREADS"):
+        val = os.environ.get(var, "").strip()
+        if val.isdigit() and int(val) > 0:
+            return int(val)
+    counter = getattr(os, "process_cpu_count", None) or os.cpu_count
+    return max(1, counter() or 1)
+
+
+def resolve_device(device: str | None = None) -> str:
+    """Bank device: explicit value > $MSCR_DEVICE > 'cuda' when torch sees a GPU that passes the
+    bit-identity self-check > 'cpu' (numpy). 'auto' means the same as None."""
+    if device is None or device == "auto":
+        device = os.environ.get("MSCR_DEVICE", "auto").strip() or "auto"
+    if device != "auto":
+        return device
+    try:
+        import torch
+    except ImportError:
+        return "cpu"
+    if torch.cuda.is_available():
+        from cdd_oran.discovery.mscr_torch import device_selfcheck
+
+        if device_selfcheck("cuda"):
+            return "cuda"
+    return "cpu"
+
+
+# ------------------------------------------------------------------------------------ permutation bank
+def _strata_plan(x: np.ndarray, cfg: MSCRConfig) -> list[list[tuple[np.ndarray, np.ndarray, np.ndarray]]]:
+    """Per conditioner g, the kept strata as (rows, bin sizes, bin offsets). Depends on x only."""
+    plan = []
+    for g in range(x.shape[1]):
         lab = equal_count_labels(x[:, g], cfg.nc)
-        bss_null = np.zeros(cfg.n_perm)
-        tss = 0.0
-        info = []
+        kept = []
         for s in range(cfg.nc):
             rows = np.nonzero(lab == s)[0]
             if len(rows) < cfg.min_stratum:
                 continue
-            y_s = y[rows]
-            ns = len(y_s)
+            ns = len(rows)
             sizes = np.bincount((np.arange(ns) * cfg.nb) // ns, minlength=cfg.nb).astype(np.int64)
-            offsets = np.concatenate(([0], np.cumsum(sizes)[:-1]))
-            t_s = y_s.sum()
-            tss += float(np.dot(y_s, y_s)) - t_s * t_s / ns
-            perm = np.argsort(rng.random((cfg.n_perm, ns)), axis=1)
-            groupsums = np.add.reduceat(y_s[perm], offsets, axis=1)
-            bss_null += np.sum(groupsums ** 2 / sizes[None, :], axis=1) - t_s * t_s / ns
-            info.append((rows, y_s))
-        denom[g] = tss
-        if tss > 0:
-            null[g] = bss_null / tss
-        strata.append(info)
-    return denom, null, strata
+            kept.append((rows, sizes, np.concatenate(([0], np.cumsum(sizes)[:-1]))))
+        plan.append(kept)
+    return plan
+
+
+def _stream_tasks(plan, n_perm: int, block_elems: int) -> tuple[list[tuple[int, int, int, int, int]], int]:
+    """Bank work in v2 stream order (g, kept stratum, row block) as (g, k, lo, hi, first draw index).
+
+    v2 draws ``rng.random((n_perm, ns))`` per (g, kept stratum) in that order. ``random`` fills C-order
+    with exactly one 64-bit output per double, so the block (rows lo..hi) of stratum (g, k) is the
+    contiguous stream segment starting at the returned draw index; the total is the v2 consumption.
+    """
+    tasks, pos = [], 0
+    for g, kept in enumerate(plan):
+        for k, (rows, _, _) in enumerate(kept):
+            ns = len(rows)
+            step = max(1, block_elems // ns)
+            for lo in range(0, n_perm, step):
+                hi = min(lo + step, n_perm)
+                tasks.append((g, k, lo, hi, pos))
+                pos += (hi - lo) * ns
+    return tasks, pos
+
+
+def _jumpable(rng: np.random.Generator) -> bool:
+    return type(rng.bit_generator) in (np.random.PCG64, np.random.PCG64DXSM)
+
+
+def _uniforms_at(state: Any, bg_type, start: int, shape: tuple[int, int]) -> np.ndarray:
+    """``shape`` uniforms from draw index ``start`` of the stream whose state is ``state`` (jump-ahead)."""
+    bg = bg_type()
+    bg.state = state
+    bg.advance(start)
+    return np.random.Generator(bg).random(shape)
+
+
+def _finish_stream(rng: np.random.Generator, state: Any, total: int) -> None:
+    """Leave ``rng`` exactly where sequential v2 draws would (advance() clears the 32-bit buffer, which
+    ``random`` never touches, so restore it)."""
+    bg = cast("np.random.PCG64", type(rng.bit_generator)())
+    bg.state = state
+    bg.advance(total)
+    end = dict(bg.state)
+    end["has_uint32"], end["uinteger"] = state["has_uint32"], state["uinteger"]
+    rng.bit_generator.state = end
+
+
+def _null_rows(y_s: np.ndarray, u: np.ndarray, offsets: np.ndarray, sizes: np.ndarray) -> np.ndarray:
+    """sum_k (group sum_k)^2 / size_k for each row of uniforms ``u`` (one random partition per row)."""
+    perm = np.argsort(u, axis=1)
+    groupsums = np.add.reduceat(y_s[perm], offsets, axis=1)
+    return np.sum(groupsums ** 2 / sizes[None, :], axis=1)
+
+
+def _rowsums_cpu(ys, plan, cfg: MSCRConfig, rngs, n_jobs: int, block_elems: int):
+    """rowsums[j][g][k] = the (n_perm,) per-draw sum_k gs^2/size for target j, numpy kernel.
+
+    Serial: draws in stream order from each target's generator. Parallel: each task regenerates its own
+    stream segment by PCG64 jump-ahead (no shared generator, no ordering constraint), so RNG, sort,
+    gather and reduce all scale across threads (numpy releases the GIL in each); generators without
+    jump-ahead draw sequentially on the caller and only the kernel runs in the pool.
+    """
+    tasks, total = _stream_tasks(plan, cfg.n_perm, block_elems)
+    rowsums = [[[np.empty(cfg.n_perm) for _ in kept] for kept in plan] for _ in rngs]
+
+    def run(j, t, u):
+        g, k, lo, hi, _ = t
+        _, sizes, offsets = plan[g][k]
+        rowsums[j][g][k][lo:hi] = _null_rows(ys[j][g][k], u, offsets, sizes)
+
+    def shape(t):
+        return (t[3] - t[2], len(plan[t[0]][t[1]][0]))
+
+    def run_jump(j, t, state, bgt):
+        run(j, t, _uniforms_at(state, bgt, t[4], shape(t)))
+
+    if n_jobs <= 1:
+        for j, rng in enumerate(rngs):
+            for t in tasks:
+                run(j, t, rng.random(shape(t)))
+        return rowsums
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(n_jobs) as pool:
+        futs, window = [], deque()
+        for j, rng in enumerate(rngs):  # all targets' tasks share one pool (no per-target tail idle)
+            if _jumpable(rng):
+                state, bgt = rng.bit_generator.state, type(rng.bit_generator)
+                futs += [pool.submit(run_jump, j, t, state, bgt) for t in tasks]
+                _finish_stream(rng, state, total)
+                continue
+            for t in tasks:  # no jump-ahead: draw on the caller, at most 2 * n_jobs blocks in flight
+                window.append(pool.submit(run, j, t, rng.random(shape(t))))
+                futs.append(window[-1])
+                if len(window) >= 2 * n_jobs:
+                    window.popleft().result()
+        for f in futs:
+            f.result()
+    return rowsums
+
+
+def _build_banks(
+    x: np.ndarray,
+    y: np.ndarray,
+    cfg: MSCRConfig,
+    rngs: list[np.random.Generator],
+    n_jobs: int | None = None,
+    device: str | None = None,
+    block_elems: int | None = None,
+):
+    """Banks for every target column of ``y`` (target j uses ``rngs[j]``): a list of (denom, null, strata).
+
+    Bit-identical to v2's per-target ``_build_bank`` for any n_jobs / device / block_elems: each target
+    consumes its own stream exactly as v2 did (same draws, same order, see ``_stream_tasks``); every
+    null draw is computed per row by the same argsort -> gather -> reduceat -> row-sum kernel (or its
+    exact replica on torch, ``mscr_torch``); per-stratum contributions are accumulated in stratum order.
+    """
+    plan = _strata_plan(x, cfg)
+    ys = [[[y[rows, j] for rows, _, _ in kept] for kept in plan] for j in range(y.shape[1])]
+    dev = resolve_device(device)
+    if dev == "cpu":
+        rowsums = _rowsums_cpu(ys, plan, cfg, rngs, resolve_n_jobs(n_jobs), block_elems or _BLOCK_ELEMS)
+    else:
+        from cdd_oran.discovery.mscr_torch import device_selfcheck, rowsums_torch
+
+        if not device_selfcheck(dev):
+            raise RuntimeError(f"MSCR bank on {dev!r} is not bit-identical to the numpy bank; use device='cpu'")
+        rowsums = rowsums_torch(ys, plan, cfg, rngs, dev, resolve_n_jobs(n_jobs), block_elems)
+    banks = []
+    for j in range(y.shape[1]):
+        denom = np.zeros(x.shape[1])
+        null = np.zeros((x.shape[1], cfg.n_perm))
+        strata = []
+        for g, kept in enumerate(plan):
+            bss_null = np.zeros(cfg.n_perm)
+            tss = 0.0
+            info = []
+            for k, (rows, _, _) in enumerate(kept):
+                y_s = ys[j][g][k]
+                ns = len(y_s)
+                t_s = y_s.sum()
+                tss += float(np.dot(y_s, y_s)) - t_s * t_s / ns
+                bss_null += rowsums[j][g][k] - t_s * t_s / ns
+                info.append((rows, y_s))
+            denom[g] = tss
+            if tss > 0:
+                null[g] = bss_null / tss
+            strata.append(info)
+        banks.append((denom, null, strata))
+    return banks
+
+
+def _build_bank(x: np.ndarray, y: np.ndarray, cfg: MSCRConfig, rng: np.random.Generator,
+                n_jobs: int | None = None, device: str | None = None, block_elems: int | None = None):
+    """Per conditioner g: strata rows, pooled TSS, and n_perm shared null draws of S_g (one target)."""
+    return _build_banks(x, np.asarray(y, dtype=np.float64).reshape(-1, 1), cfg, [rng],
+                        n_jobs=n_jobs, device=device, block_elems=block_elems)[0]
 
 
 def _s_star(col: np.ndarray, i: int, denom, strata, cfg: MSCRConfig) -> float:
@@ -164,6 +345,8 @@ def discover_mscr(
     n_params: int,
     seed: int,
     config: MSCRConfig | None = None,
+    n_jobs: int | None = None,
+    device: str | None = None,
 ) -> MSCRResult:
     """Run MSCR-v2 param->KPI discovery.
 
@@ -172,6 +355,9 @@ def discover_mscr(
     y : (n, n_targets) target KPIs.
     seed : dataset seed; the bank for target j uses ``default_rng([seed, j, n_perm])``, reproducing
         the v2 confirmatory run bit-for-bit.
+    n_jobs, device : execution only, never the result. ``n_jobs`` = worker threads (default: see
+        ``resolve_n_jobs``); ``device`` = 'cpu' (numpy), 'cuda[:k]' or any torch device for the bank
+        (default: see ``resolve_device``). Every combination returns bit-identical output.
     """
     cfg = config or frozen_config()
     x = np.asarray(x, dtype=np.float64)
@@ -184,13 +370,28 @@ def discover_mscr(
         raise ValueError(f"need 1 <= n_params <= n_cols and n_cols >= 2, got {n_params}, {x.shape[1]}")
 
     n_t = y.shape[1]
+    jobs = resolve_n_jobs(n_jobs)
+    rngs = [np.random.default_rng([int(seed), j, cfg.n_perm]) for j in range(n_t)]
+    banks = _build_banks(x, y, cfg, rngs, n_jobs=jobs, device=device)
+
+    def observed(ji: tuple[int, int]) -> float:
+        j, i = ji
+        denom, _, strata = banks[j]
+        return _s_star(x[:, i], i, denom, strata, cfg)
+
+    pairs = [(j, i) for j in range(n_t) for i in range(n_params)]
+    if jobs > 1:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(jobs) as pool:
+            obs = list(pool.map(observed, pairs))
+    else:
+        obs = [observed(ji) for ji in pairs]
+    s_star = np.array(obs, dtype=np.float64).reshape(n_t, n_params)
     pvals = np.zeros((n_t, n_params))
-    s_star = np.zeros((n_t, n_params))
     declared = np.zeros((n_t, n_params), dtype=bool)
     for j in range(n_t):
-        denom, null, strata = _build_bank(x, y[:, j], cfg, np.random.default_rng([int(seed), j, cfg.n_perm]))
         for i in range(n_params):
-            s_star[j, i] = _s_star(x[:, i], i, denom, strata, cfg)
-            pvals[j, i] = _pval(s_star[j, i], i, null)
+            pvals[j, i] = _pval(s_star[j, i], i, banks[j][1])
         declared[j] = by_declare(pvals[j], cfg.q)
     return MSCRResult(pvals=pvals, s_star=s_star, declared=declared, config=cfg)
