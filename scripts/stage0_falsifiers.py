@@ -6,7 +6,7 @@
   score     applies the pre-declared rules (DEV tau / lambda selection, bootstrap bounds) -> runs/stage0/score.json
 
 Truth is used only to score. MSCR is frozen. Thresholds/lambdas for baselines are chosen on DEV records only.
-  PYTHONPATH=. OMP_NUM_THREADS=4 .venv/Scripts/python.exe -u scripts/stage0_falsifiers.py {collect|score}
+  PYTHONPATH=. .venv/Scripts/python.exe -u scripts/stage0_falsifiers.py {collect|score}
 """
 from __future__ import annotations
 
@@ -18,7 +18,6 @@ import sys
 import time
 
 import numpy as np
-import torch
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _REPO)
@@ -38,6 +37,7 @@ from cdd_oran.envs.v2.e5 import E5V2Env  # noqa: E402
 from scripts import e2_decision_gate as g2  # noqa: E402
 from scripts.e2_baseline_shap_dag import fit_shap_importances  # noqa: E402
 from scripts.e5_baselines import corpus as e5_corpus  # noqa: E402
+from scripts.runtime_info import runtime_info  # noqa: E402
 
 OUT_DIR = os.path.join(_REPO, "runs", "stage0")
 REC = os.path.join(OUT_DIR, "records.jsonl")
@@ -88,7 +88,7 @@ def _check_seeds() -> dict:
              "cdd_oran/discovery/mscr.py", "cdd_oran/benchmark/learned_world_model.py"]
     head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=_REPO).stdout.strip()
     dirty = subprocess.run(["git", "status", "--porcelain", *files], capture_output=True, text=True, cwd=_REPO).stdout.strip()
-    return {"git_head": head, "uncommitted": dirty,
+    return {"git_head": head, "uncommitted": dirty, "runtime": runtime_info(),
             "sha256": {f: hashlib.sha256(open(os.path.join(_REPO, f), "rb").read()).hexdigest() for f in files}}
 
 
@@ -376,7 +376,6 @@ def collect() -> None:
         json.dump(_check_seeds(), open(prov_path, "w"), indent=1)
     else:
         _check_seeds()
-    torch.set_num_threads(4)
     done = _done()
     collect_dither(done)
     collect_detect(done)

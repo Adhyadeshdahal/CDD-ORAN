@@ -4,7 +4,7 @@
   confirm  S1-S5 on fresh seeds 900000-900099 (MSCR vs SHAP-GBDT proxy vs two-tower reconstruction,
            pooled |corr| reported). Provenance hashes are written BEFORE scoring.
 
-Run detached (long): PYTHONPATH=. OMP_NUM_THREADS=1 .venv/Scripts/python.exe -u
+Run detached (long): PYTHONPATH=. .venv/Scripts/python.exe -u
     scripts/e5_structure_gate.py {dev|confirm}
 Truth is used only to score. Nothing here tunes anything.
 """
@@ -28,6 +28,7 @@ from cdd_oran.discovery.mscr import _build_bank, _pval, _s_star  # noqa: E402
 from cdd_oran.envs.v2.e5 import E5V2Env  # noqa: E402
 from scripts.e5_baselines import NK, NP, corpus, corr_mask, gnn_mask, shap_mask  # noqa: E402
 from scripts.e5_spine import HARMFUL_EDGE, true_edges  # noqa: E402
+from scripts.runtime_info import runtime_info  # noqa: E402
 
 N_ROWS = 24_000
 DEV_SEEDS = list(range(20))
@@ -37,7 +38,9 @@ CONFIRM_SEEDS = list(range(900_000, 900_100))
 # e5_env_core_validate). The confirm seeds must be disjoint from all of it.
 USED_E5_SEED_RANGES = [(0, 5999)]
 N_COLPERM = 64
-N_WORKERS = 8
+# Seed-level process pool, resolved at run time: $E5_GATE_WORKERS, else one per CPU. Each worker gets an
+# equal share of the CPUs for torch and MSCR. Lower E5_GATE_WORKERS on memory-limited hosts.
+N_WORKERS = int(os.environ.get("E5_GATE_WORKERS", 0)) or max(1, os.cpu_count() or 1)
 OUT_DIR = os.path.join(_REPO, "runs", "e5-structure-gate")
 _H4 = sum(1.0 / k for k in range(1, NP + 1))
 ALPHA_GATED = [0.05 * k / (NP * _H4) for k in range(1, NP + 1)] + [0.02]
@@ -63,7 +66,9 @@ def _dev_job(seed: int) -> dict:
 
 def _confirm_job(seed: int) -> dict:
     import torch
-    torch.set_num_threads(1)
+    share = max(1, (os.cpu_count() or 1) // N_WORKERS)
+    torch.set_num_threads(share)
+    os.environ.setdefault("MSCR_NUM_THREADS", str(share))
     x, y = corpus(n=N_ROWS, seed=seed)
     res = discover_mscr(x, y, n_params=NP, seed=seed)
     shap_m, imps = shap_mask(x, y)
@@ -142,7 +147,8 @@ def provenance() -> dict:
     dirty = subprocess.run(["git", "status", "--porcelain", *files], capture_output=True, text=True,
                            cwd=_REPO).stdout.strip()
     sha = {f: hashlib.sha256(open(os.path.join(_REPO, f), "rb").read()).hexdigest() for f in files}
-    return {"git_head": head, "uncommitted_changes": dirty, "sha256": sha}
+    return {"git_head": head, "uncommitted_changes": dirty, "sha256": sha, "runtime": runtime_info(),
+            "n_workers": N_WORKERS}
 
 
 def main_dev():

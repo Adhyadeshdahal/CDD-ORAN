@@ -4,7 +4,7 @@ MSCR discovery -> learned per-KPI world model -> planner, on E2 (H=1, one knob) 
 710000-710009. One JSON line per (env, n, seed, arm) is appended to runs/d1-decision-study/records.jsonl as
 it completes; `score` computes the gates from those records. Provenance is written before any scoring.
 
-  PYTHONPATH=. OMP_NUM_THREADS=4 .venv/Scripts/python.exe -u scripts/d1_decision_study.py {run|score}
+  PYTHONPATH=. .venv/Scripts/python.exe -u scripts/d1_decision_study.py {run|score}
 """
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ import sys
 import time
 
 import numpy as np
-import torch
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _REPO)
@@ -31,6 +30,7 @@ from cdd_oran.envs.v2.e3 import E3V2Env  # noqa: E402
 from cdd_oran.planners.sequence import cem_sequence, mppi_sequence, qacm_v2  # noqa: E402
 from scripts import e2_decision_gate as g2  # noqa: E402
 from scripts import e3_decision_gate as g3  # noqa: E402
+from scripts.runtime_info import runtime_info  # noqa: E402
 
 SEEDS = list(range(710_000, 710_010))
 USED = {"E2": [(0, 19), (100_000, 100_003), (500_000, 500_039), (600_000, 616_383), (800_000, 800_099)],
@@ -54,7 +54,7 @@ def provenance() -> dict:
     head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=_REPO).stdout.strip()
     dirty = subprocess.run(["git", "status", "--porcelain", *files], capture_output=True, text=True,
                            cwd=_REPO).stdout.strip()
-    return {"git_head": head, "uncommitted": dirty,
+    return {"git_head": head, "uncommitted": dirty, "runtime": runtime_info(),
             "sha256": {f: hashlib.sha256(open(os.path.join(_REPO, f), "rb").read()).hexdigest() for f in files}}
 
 
@@ -212,7 +212,6 @@ def main_run() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     if not os.path.exists(os.path.join(OUT_DIR, "provenance.json")):
         json.dump(provenance(), open(os.path.join(OUT_DIR, "provenance.json"), "w"), indent=1)
-    torch.set_num_threads(4)
     done = set()
     if os.path.exists(REC):
         done = {(r["env"], r["n"], r["seed"], r["arm"]) for r in map(json.loads, open(REC))}
