@@ -40,8 +40,16 @@ randomized data --MSCR (model-free CI test)--> graph --fit per-KPI models on gra
   **parameter** candidates. Evidence:
   - E2, 100 fresh seeds: family FDR 0.008 (UB 0.012), gated P0→K5 100/100, param-edge recall 0.945
     (`scratchpad/p0k5_fp_calibration/VERDICT_v2.md`).
-  - E5, 100 fresh seeds: harmful edge 100/100, FDR 0.022 (UB 0.032), recall 1.00, while the SHAP-GBDT and
-    two-tower proxies miss it 100/100 (`docs/benchmark/E5_STRUCTURE_RESULT.md`).
+  - E5 (NOISELESS CORE), 100 fresh seeds: harmful edge 100/100, FDR 0.022 (UB 0.032), recall 1.00. The
+    SHAP-GBDT and two-tower proxies miss it 100/100 **at τ = 0.10 only**: Stage 0 found SHAP at τ ≤ 0.02
+    matches MSCR on this noiseless corpus (`docs/benchmark/E5_STRUCTURE_RESULT.md`, `STAGE0_RESULT.md`).
+  - E2, Stage 0: MSCR is the only detector that finds the gated edge with FDR control (SHAP finds it but its
+    FDR is ≥ 0.10 at every τ).
+  - Stage 0 (`docs/benchmark/STAGE0_RESULT.md`): on bounded setpoint+dither data MSCR still finds the gated
+    edge (recall 1.00) but its family FDR is 0.54–0.67, because its permutation null ignores block structure.
+    A block-aware MSCR is needed before any deployment claim on such data.
+  - Runtime: CPU-parallel and CUDA permutation banks (`mscr_torch.py`), bit-identical to the serial v2 path;
+    device and threads are resolved at run time (`MSCR_DEVICE`, `MSCR_NUM_THREADS`).
   - Scope: randomized designs only; known failure on single-parameter-actuation data (E1); KPI→KPI
     selection is exploratory (no FDR evidence). RCoT-v2 (E2) and partial correlation (E1) remain as frozen
     earlier methods.
@@ -68,6 +76,10 @@ randomized data --MSCR (model-free CI test)--> graph --fit per-KPI models on gra
   by 5% is costly. E5 makes **no decision claim**; this motivates a later cautious-planner study.
 
 ## Gaps
+
+- **All E5 evidence is noiseless CORE**, although the agreed E5 design has noise ON. On that corpus SHAP at
+  τ ≤ 0.02 matches MSCR's detection (Stage 0). The noisy comparison is pre-declared in
+  `docs/benchmark/E5_NOISE_DETECT.md`.
 
 - The learned world model and the planners are not yet in a pre-registered decision study (next step).
 - E3 separates myopic from look-ahead planners but not CEM from MPPI: a harder planning testbed (several

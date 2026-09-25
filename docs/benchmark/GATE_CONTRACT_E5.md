@@ -1,5 +1,7 @@
 # E5 Composed Gate Contract: STRUCTURE-ONLY (FROZEN preregistration)
 
+> **Scope note (added 2026-09-25, rules and results unchanged):** this E5 evidence is **NOISELESS CORE only**. The agreed E5 design (`plans/015` §3) has noise ON; the noise layer was never applied (the corpus generator bypasses it) and this departure was not flagged before the freeze. Stage 0 later found that on this noiseless corpus the SHAP-GBDT proxy, at its DEV-selected τ = 0.005 (τ = 0.005–0.02 all matched on the swept grid), matched MSCR (`docs/benchmark/STAGE0_RESULT.md`), so the 'competitors miss it' result is specific to τ = 0.10. A synthetic observation-noise stress test of the CORE discovery corpus (not process noise, not the fully composed E5) is pre-declared in `docs/benchmark/E5_NOISE_DETECT.md`.
+
 **Status: FROZEN 2026-09-24 (user: "freeze E5").** The freeze point is the commit that introduced this
 status line. No equation, constant, corpus spec, arm, threshold, seed range or gate below may change; a
 failed confirmatory check is recorded as-is.
