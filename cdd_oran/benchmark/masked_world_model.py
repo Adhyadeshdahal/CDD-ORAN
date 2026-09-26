@@ -72,6 +72,33 @@ def param_edges_from_binary_mask(
     )
 
 
+def _edge_mask(edges: frozenset[tuple[int, int]], num_kpis: int, num_sources: int) -> np.ndarray:
+    """Boolean ``(num_kpis, num_sources)`` matrix, True where ``(kpi, source)`` is a declared edge.
+
+    Out-of-range pairs are ignored (they can never be looked up by a per-KPI mechanism call).
+    """
+    mask = np.zeros((num_kpis, num_sources), dtype=bool)
+    for kpi, src in edges:
+        if 0 <= kpi < num_kpis and 0 <= src < num_sources:
+            mask[kpi, src] = True
+    return mask
+
+
+def _group_kpis_by_mask(*masks: np.ndarray) -> list[tuple[tuple[np.ndarray, ...], np.ndarray]]:
+    """Group KPIs whose mask rows coincide across every ``masks`` matrix.
+
+    Returns ``[(rows, kpi_indices), ...]`` where ``rows[i]`` is the shared row of ``masks[i]``.
+    KPIs with identical rows see identical masked inputs, so one mechanism call serves them all.
+    """
+    groups: dict[tuple[bytes, ...], list[int]] = {}
+    for kpi in range(masks[0].shape[0]):
+        groups.setdefault(tuple(m[kpi].tobytes() for m in masks), []).append(kpi)
+    return [
+        (tuple(m[kpis[0]].copy() for m in masks), np.array(kpis, dtype=np.intp))
+        for kpis in groups.values()
+    ]
+
+
 class MaskedE2WorldModel(E2V2Env):
     """``E2V2Env`` whose per-parent live-vs-committed use is governed by a discovered edge set."""
 
@@ -86,6 +113,12 @@ class MaskedE2WorldModel(E2V2Env):
             (int(k), int(p)) for (k, p) in param_edges
         )
         self._committed_ref: np.ndarray | None = None
+        # Per-KPI live-param masks, precomputed once, grouped by identical mask row so the TRUE
+        # mechanism is evaluated once per distinct masked input (``_update_kpis`` is pure: no RNG,
+        # no side effects), not once per KPI.
+        self._kpi_groups = _group_kpis_by_mask(
+            _edge_mask(self.param_edges, self.num_kpis, self.num_params)
+        )
         # decoy_omit_p0_k5 stays False: the mask fully governs which parents are live, and the
         # per-KPI true-mechanism call below reads the live p[0] for the K5 term.
         super().__init__(env_seed=env_seed, obs_noise_scale=obs_noise_scale, episode=episode)
@@ -101,27 +134,17 @@ class MaskedE2WorldModel(E2V2Env):
         # rollout even after apply_action moves live params (mirrors the decoy's _decoy_p0_ref).
         self._committed_ref = self.prev_params.copy()
 
-    def _masked_params_for_kpi(self, p: np.ndarray, kpi: int) -> np.ndarray:
-        """``p`` with every param NOT a live parent of ``kpi`` replaced by the committed reference.
-
-        Non-parents of ``kpi`` are masked too, but that is a no-op: KPI ``kpi``'s true equation never
-        reads a param that is not its parent, so their value cannot affect the result.
-        """
-        ref = self._committed_ref if self._committed_ref is not None else p
-        out = np.array(ref, dtype=float, copy=True)
-        for j in range(len(p)):
-            if (kpi, j) in self.param_edges:
-                out[j] = p[j]
-        return out
-
     def _update_kpis(self, prev_params: np.ndarray, prev_kpis: np.ndarray) -> np.ndarray:
         p = np.asarray(prev_params, dtype=float)
-        # Evaluate the TRUE mechanism once per KPI on that KPI's masked param vector, keeping only
-        # that KPI's value. The mechanisms are never copied here — E2V2Env owns them.
+        # Every param NOT a live parent of a KPI is replaced by the committed reference. Non-parents
+        # are masked too, but that is a no-op: a KPI's true equation never reads a non-parent.
+        ref = p if self._committed_ref is None else np.asarray(self._committed_ref, dtype=float)
+        # Evaluate the TRUE mechanism once per distinct masked param vector, keeping only the values
+        # of the KPIs sharing that mask. The mechanisms are never copied here — E2V2Env owns them.
         out = np.empty(self.num_kpis, dtype=float)
-        for kpi in range(self.num_kpis):
-            p_k = self._masked_params_for_kpi(p, kpi)
-            out[kpi] = E2V2Env._update_kpis(self, p_k, prev_kpis)[kpi]
+        for (live,), kpis in self._kpi_groups:
+            p_k = np.where(live, p, ref)
+            out[kpis] = E2V2Env._update_kpis(self, p_k, prev_kpis)[kpis]
         return out
 
 
@@ -204,6 +227,10 @@ class MaskedE5WorldModel:
         self.num_kpis = self._env.num_kpis
         self._committed_params: np.ndarray | None = None
         self._committed_kpis: np.ndarray | None = None
+        self._kpi_groups = _group_kpis_by_mask(
+            _edge_mask(self.param_edges, self.num_kpis, self.num_params),
+            _edge_mask(self.kpi_edges, self.num_kpis, self.num_kpis),
+        )
 
     # rollout interface (SEMANTICS §4): restore / apply_action / advance / snapshot
     def restore(self, snap: tuple) -> None:
@@ -217,30 +244,22 @@ class MaskedE5WorldModel:
     def apply_action(self, param_id: int, value: float) -> None:
         self._env.apply_action(param_id, value)
 
-    def _masked_inputs(self, p: np.ndarray, kprev: np.ndarray, kpi: int):
-        """Per-KPI: params frozen to committed except declared param-parents; prev-KPIs frozen except
-        declared chain-parents."""
-        ref_p = self._committed_params if self._committed_params is not None else p
-        ref_k = self._committed_kpis if self._committed_kpis is not None else kprev
-        p_k = np.array(ref_p, dtype=float, copy=True)
-        k_k = np.array(ref_k, dtype=float, copy=True)
-        for j in range(len(p)):
-            if (kpi, j) in self.param_edges:
-                p_k[j] = p[j]
-        for s in range(len(kprev)):
-            if (kpi, s) in self.kpi_edges:
-                k_k[s] = kprev[s]
-        return p_k, k_k
-
     def _update_masked(self, prev_params: np.ndarray, prev_kpis: np.ndarray) -> np.ndarray:
+        """Per-KPI: params frozen to committed except declared param-parents; prev-KPIs frozen except
+        declared chain-parents. The TRUE mechanism is evaluated once per distinct masked input (it is
+        pure here: ``process_noise`` is off and ``theta=0``), keeping the values of the KPIs sharing it.
+        """
         from cdd_oran.envs.v2.e5 import E5V2Env  # lazy
 
         p = np.asarray(prev_params, dtype=float)
         kprev = np.asarray(prev_kpis, dtype=float)
+        ref_p = p if self._committed_params is None else np.asarray(self._committed_params, dtype=float)
+        ref_k = kprev if self._committed_kpis is None else np.asarray(self._committed_kpis, dtype=float)
         out = np.empty(self.num_kpis, dtype=float)
-        for kpi in range(self.num_kpis):
-            p_k, k_k = self._masked_inputs(p, kprev, kpi)
-            out[kpi] = E5V2Env._update_kpis(self._env, p_k, k_k)[kpi]
+        for (live_p, live_k), kpis in self._kpi_groups:
+            p_k = np.where(live_p, p, ref_p)
+            k_k = np.where(live_k, kprev, ref_k)
+            out[kpis] = E5V2Env._update_kpis(self._env, p_k, k_k)[kpis]
         return out
 
     def advance(self) -> np.ndarray:
