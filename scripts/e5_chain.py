@@ -25,7 +25,12 @@ if _REPO not in sys.path:
 
 from cdd_oran.envs.v2.e5 import E5V2Env  # noqa: E402
 from scripts.e5_spine import (  # noqa: E402
-    CHAIN_EDGE, HARMFUL_EDGE, build_ingate_bank, e5_panel, spine_regret_e5, true_edges,
+    CHAIN_EDGE,
+    HARMFUL_EDGE,
+    build_ingate_bank,
+    e5_panel,
+    spine_regret_e5,
+    true_edges,
 )
 
 SUBDOM, CHAIN = 0.20, 0.20

@@ -60,7 +60,7 @@ def _rollout(actions: tuple[float, ...], p0: float = 0.0, kA0: float = 0.0, kB0:
 
     kA2, kB2 = _step(kA_prev=_kA1, kB_prev=_kB1, p=p1)
 
-    kA3, kB3 = _step(kA_prev=kA2, kB_prev=kB2, p=p2)
+    _kA3, kB3 = _step(kA_prev=kA2, kB_prev=kB2, p=p2)
 
     G = kB2 + kB3
     return (kB2, kB3), G

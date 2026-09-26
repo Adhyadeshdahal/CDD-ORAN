@@ -34,6 +34,7 @@ from scripts.e3_decision_gate import (
     vectorized_G,
 )
 
+
 @pytest.fixture(scope="module")
 def gate_result():
     return run_e3_decision_gate()

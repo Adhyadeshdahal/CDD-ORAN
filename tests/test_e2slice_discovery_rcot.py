@@ -109,8 +109,8 @@ def test_both_null_variants_give_valid_pvalues():
         Z = rng.normal(size=(n, 3))
         X = rng.normal(size=n)
         Y = rng.normal(size=n)
-        s_h, p_h, g_h = rcot_pvalue_analytic(X, Y, Z, cfg_hbe, seed=r)
-        s_p, p_p, g_p = rcot_pvalue_block_perm(X, Y, Z, cfg_perm, seed=r)
+        _s_h, p_h, g_h = rcot_pvalue_analytic(X, Y, Z, cfg_hbe, seed=r)
+        _s_p, p_p, g_p = rcot_pvalue_block_perm(X, Y, Z, cfg_perm, seed=r)
         assert 0.0 <= p_h <= 1.0 and not g_h
         assert 0.0 <= p_p <= 1.0 and not g_p
 

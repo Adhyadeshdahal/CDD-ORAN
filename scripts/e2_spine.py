@@ -36,7 +36,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from cdd_oran.analysis.v2_regret import P0_GRID, score_grid  # noqa: E402
+from cdd_oran.analysis.v2_regret import score_grid  # noqa: E402
 from cdd_oran.benchmark.masked_world_model import (  # noqa: E402
     TRUE_PARAM_EDGES,
     MaskedE2WorldModel,

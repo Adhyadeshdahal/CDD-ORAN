@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from cdd_oran.envs.v2.e5 import E5V2Env, _gate
+from cdd_oran.envs.v2.e5 import E5V2Env
 from scripts.e5_confound import (
     LAM,
     SUBDOM,

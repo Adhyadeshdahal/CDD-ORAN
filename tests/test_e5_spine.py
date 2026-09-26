@@ -16,7 +16,7 @@ from cdd_oran.benchmark.masked_world_model import (
     MaskedE5WorldModel,
     edges_from_binary_mask_e5,
 )
-from cdd_oran.envs.v2.e5 import E5V2Env, _gate
+from cdd_oran.envs.v2.e5 import E5V2Env
 from scripts.e5_spine import HARMFUL_EDGE, committed_state, e5_panel, is_in_gate, true_edges
 
 SUB, CH = 0.20, 0.0  # core layer

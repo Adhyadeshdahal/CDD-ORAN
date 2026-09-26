@@ -15,7 +15,6 @@ of every inequality are computed from the gate, never hard-coded:
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from cdd_oran.envs.v2.e2 import E2V2Env, safe_exp
 from scripts.e2_decision_gate import (
