@@ -43,13 +43,18 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: <reason>`, `REJECTED: <r
 
 ## Canonical Verification
 
-The current verified baseline is:
+The current verified baseline (2026-09-26, `feat/v2`) is:
 
 ```text
-uv run ruff check .    -> pass
-uv run ty check        -> pass
-uv run pytest          -> 190 passed, 1 xfailed
+uv run ruff check cdd_oran scripts tests cli.py  -> 7 findings, all accepted (5 in frozen harnesses,
+                                                     1 cited by plan 012, 1 unfixable semicolon line)
+uv run ty check cdd_oran scripts tests cli.py    -> 20 diagnostics, all false positives (sys.path
+                                                     imports, loose JSON typing), 17 in frozen files
+uv run pytest                                    -> 507 passed
 ```
+
+`ruff check .` also scans the untracked `scratchpad/` and archived `reports/` scripts (~1,000
+findings); those are not gated. Audit details: `.tmp/CLEANUP_AUDIT.md` (local, gitignored).
 
 `uv run ruff format --check .` is not currently a valid repository gate: 53 existing files
 would be reformatted. Executors must format only files they modify and must not create a

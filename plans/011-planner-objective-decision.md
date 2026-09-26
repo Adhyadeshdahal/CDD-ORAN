@@ -38,7 +38,7 @@ floor**.
   satisfaction threshold; once an xApp is "satisfied" the objective is indifferent to how far above it sits,
   so the planner stops climbing (`qacm.py:103` strict-`<` argmin) and leaves ~+1.3 utility on the table.
   Fix = additive z-utility term `utility_weight` (**Option A**), validated: legacy Env I **−0.083 → +0.303**
-  at λ=0.25. Source: memory `option-a-utility-weight-validated`; `.temp/new_arch/reports/lever2_objective_design.md`.
+  at λ=0.25. Source: memory `option-a-utility-weight-validated`; `plans/archive/sources/lever2_objective_design.md` (copied from `.temp/new_arch/reports/`).
 - **FM-2 — OOD model trust.** Planner optimizes model-predicted KPIs; off-distribution the model is
   confidently wrong. Ensemble-disagreement penalty exists but `ood_threshold: null` (OFF by default).
   Lifting it: legacy Env I **−0.083 → +0.297**.
@@ -67,7 +67,7 @@ third-party (other authors') work. Reclassify it from an ensemble member to a st
 1. **do-nothing** (scored floor);
 2. **our causal solution** (the discovered-structure + world-model + objective-fixed decision);
 3. **market baselines**, including **QACM** (verified a genuine varied policy — 191 distinct actions / 210
-   panels, `.temp/new_arch/reports/qacm_collapse_check.md`), and do-nothing / random-action references.
+   panels, `plans/archive/sources/qacm_collapse_check.md`), and do-nothing / random-action references.
 
 `docs/benchmark/SPEC.md` currently uses QACM only as "the SAME single-control planner for both arms" (E2
 lines 265-268; E4 `GATE_CONTRACT_E2.md:154`) and **never states it is third-party** — that committed
