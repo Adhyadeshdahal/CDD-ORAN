@@ -76,7 +76,13 @@ Selected λ per KPI (DEV E2 0–4, validation MSE): K0–K4 = 1e-3, K5 = 3e-3.
 | 0.20, 4000 | 100% | 290 | 1.00 / 1.00 | 0.54 | 0 |
 | 0.10, 12000 | 100% | 1019 | 1.00 / 1.00 | 0.67 | 0 |
 
-- **Method:** recall among gate-visiting corpora is 1.00, far above the 0.80 screen. **Not falsified.**
+- **Method:** recall among gate-visiting corpora is 1.00, far above the 0.80 screen. **Not falsified** under
+  the pre-registered rule. **Correction (2026-09-26, rules and numbers unchanged):** this pass is
+  uninformative. At δ = 0.05 and 0.10 (both n), MSCR v2 declared **all 48 knob→KPI pairs in all 20
+  corpora**: FDR 0.67 is exactly the complete graph's FDR. At δ = 0.20 the graph is complete except K5. So
+  "recall 1.00" means MSCR declares everything on this design, not that it detects the gated edge. The
+  cause is that the setpoint blocks confound every knob with every KPI, and v2's null ignores blocks
+  (diagnosis: `scratchpad/block_mscr/DESIGN.md`).
 - **Data regime:** 95% of corpora visit the gate at the primary level, far above 25%. So the bounded regime
   does not rarely visit the gate.
 - **FDR caveat (important):** family FDR on dither data is **0.54–0.67**. As pre-declared, this is
