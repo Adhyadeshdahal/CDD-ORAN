@@ -62,7 +62,7 @@ class TrueSimWM:
         sla0 = dict(sim.plant.sla)
         hs = dict(ctx.half_state)
         sim.step_apply(decide(plan, ctx.obs, ctx.site, ctx.D, sim.last_change, ctx.rb_at, True, hs))
-        for i in range(1, ctx.H):
+        for i in range(1, ctx.H + 1):             # H full seconds after the decision: (t, t + H] = the labels' window
             if sim.sec >= sim.total_s:
                 break
             o = sim.step_propose()

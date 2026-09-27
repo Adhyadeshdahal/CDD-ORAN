@@ -695,17 +695,17 @@ def continuation_check(cfg, n_slots: int = 2, mixture: StepMixture = DEFAULT_STE
     wm, out, pend = TrueSimWM("accept_all"), [], None
     while env.sec < env.total_s and len(out) < n_slots:
         obs = env.step_propose()
+        if pend is not None and env.sec >= pend[0] + H:          # window (t, t+H] closes with second t+H's ticks
+            out.append((pend[0], pend[1], objective(pend[2], env.plant.sla, lam_e, w_ll)))
+            pend = None
         hs0, n0 = dict(col.half_state), len(col.rows)
         dec = col.act(obs)
-        if len(col.rows) > n0 and pend is None and obs["t"] + H - 1 <= env.total_s:
+        if len(col.rows) > n0 and pend is None and obs["t"] + H <= env.total_s:
             ctx = DecisionContext(obs, col.site, col.regions, H, float(D), lam_e, w_ll, dict(env.last_change),
                                   dict(col.rb_at), env, hs0)
             pend = (obs["t"], wm.score(ctx, [col.plan])[0].mean, dict(env.plant.sla))
         env.step_apply(dec)
         col.record(dec)
-        if pend is not None and env.sec >= pend[0] + H - 1:
-            out.append((pend[0], pend[1], objective(pend[2], env.plant.sla, lam_e, w_ll)))
-            pend = None
     return out
 
 
