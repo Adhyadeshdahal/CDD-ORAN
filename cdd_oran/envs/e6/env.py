@@ -15,6 +15,8 @@ obs = {"t", "new_reports", "config" (knob -> value), "requests", "static": {cell
 """
 from __future__ import annotations
 
+import copy
+
 from . import config as C
 from .ric import KPM, feasible, knob_get, knob_set
 from .sim import Plant, _rng
@@ -46,6 +48,8 @@ class E6Env:
         self.update_xapp = int(r.integers(max(len(self.xapps), 1)))
         self.total_s = int(total_s)
         self.stats = {"req": 0, "acc": 0, "rej": 0, "mod": 0, "def": 0, "writes": 0}
+        self.sec = 0
+        self._static = None
 
     def static(self):
         lay = self.plant.lay
@@ -66,55 +70,69 @@ class E6Env:
         return True, v2
 
     def run(self, arbiter=None):
-        p, st = self.plant, self.static()
-        for sec in range(1, self.total_s + 1):
-            for _ in range(C.TICKS_PER_CONTROL):
-                p.tick()
-            now = float(sec)
-            self.kpm.second(sec)
-            new = self.kpm.deliver(now)
-            if self.update_at is not None and now >= self.update_at:
-                self.xapps[self.update_xapp].update_version()
-                self.update_at = None
-            reqs = [d["req"] for d in self.deferred]
-            for x in self.xapps:
-                x.observe(new)
-                if x.due(now):
-                    reqs.extend(x.propose(now))
-            dec = {"decisions": ["accept"] * len(reqs), "writes": []}
-            if arbiter is not None:
-                obs = {"t": now, "new_reports": new, "config": self.config(), "requests": reqs, "static": st}
-                dec = arbiter(obs)
-            old_def = {id(d["req"]): d["age"] for d in self.deferred}
-            self.deferred = []
-            for r, d in zip(reqs, dec["decisions"], strict=True):
-                self.stats["req"] += 1
-                x = next(a for a in self.xapps if a.name == r["xapp"])
-                if d == "defer":
-                    age = old_def.get(id(r), 0) + 1
-                    if age <= 10:
-                        self.deferred.append({"req": r, "age": age})
-                        self.stats["def"] += 1
-                        continue
-                    d = "reject"
-                if d == "reject":
-                    self.stats["rej"] += 1
-                    x.result(r, False, knob_get(p, r["knob"]), now)
-                    continue
-                v = r["prop"] if d == "accept" else float(d[1])
-                ok, applied = self._apply(r["knob"], v, now)
-                self.stats["acc" if d == "accept" else "mod"] += int(ok)
-                x.result(r, ok, applied, now)
-            for k, v in dec.get("writes", []):
-                if self.writes_used >= self.write_budget * max(self.cfg.scored_s, 1) / 3600 + 1e-9:
-                    break
-                ok, _ = self._apply(k, v, now)
-                if ok:
-                    self.writes_used += 1
-                    self.stats["writes"] += 1
-            if self.log_on:
-                self.log.append({"t": now, "config": self.config(), "reports": new, "n_req": len(reqs)})
+        while self.sec < self.total_s:
+            self.step(arbiter)
         return self.score()
+
+    def copy(self):
+        """Independent copy for lookahead rollouts (shares only the immutable layout and gain maps)."""
+        memo = {id(self.plant.gm): self.plant.gm, id(self.plant.lay): self.plant.lay}
+        return copy.deepcopy(self, memo)
+
+    def step(self, arbiter=None):
+        """Advance one control second (plant ticks, KPM, xApps, arbiter, RIC apply)."""
+        p = self.plant
+        if self._static is None:
+            self._static = self.static()
+        st = self._static
+        for _ in range(C.TICKS_PER_CONTROL):
+            p.tick()
+        self.sec += 1
+        sec = self.sec
+        now = float(sec)
+        self.kpm.second(sec)
+        new = self.kpm.deliver(now)
+        if self.update_at is not None and now >= self.update_at:
+            self.xapps[self.update_xapp].update_version()
+            self.update_at = None
+        reqs = [d["req"] for d in self.deferred]
+        for x in self.xapps:
+            x.observe(new)
+            if x.due(now):
+                reqs.extend(x.propose(now))
+        dec = {"decisions": ["accept"] * len(reqs), "writes": []}
+        if arbiter is not None:
+            obs = {"t": now, "new_reports": new, "config": self.config(), "requests": reqs, "static": st}
+            dec = arbiter(obs)
+        old_def = {id(d["req"]): d["age"] for d in self.deferred}
+        self.deferred = []
+        for r, d in zip(reqs, dec["decisions"], strict=True):
+            self.stats["req"] += 1
+            x = next(a for a in self.xapps if a.name == r["xapp"])
+            if d == "defer":
+                age = old_def.get(id(r), 0) + 1
+                if age <= 10:
+                    self.deferred.append({"req": r, "age": age})
+                    self.stats["def"] += 1
+                    continue
+                d = "reject"
+            if d == "reject":
+                self.stats["rej"] += 1
+                x.result(r, False, knob_get(p, r["knob"]), now)
+                continue
+            v = r["prop"] if d == "accept" else float(d[1])
+            ok, applied = self._apply(r["knob"], v, now)
+            self.stats["acc" if d == "accept" else "mod"] += int(ok)
+            x.result(r, ok, applied, now)
+        for k, v in dec.get("writes", []):
+            if self.writes_used >= self.write_budget * max(self.cfg.scored_s, 1) / 3600 + 1e-9:
+                break
+            ok, _ = self._apply(k, v, now)
+            if ok:
+                self.writes_used += 1
+                self.stats["writes"] += 1
+        if self.log_on:
+            self.log.append({"t": now, "config": self.config(), "reports": new, "n_req": len(reqs)})
 
     def score(self):
         S = self.plant.sla
