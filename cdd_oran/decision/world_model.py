@@ -31,6 +31,7 @@ class DecisionContext:
     last_change: Mapping = field(default_factory=dict)   # knob -> time of its latest applied change
     rb_at: Mapping = field(default_factory=dict)         # knob -> change time we rolled back (no rollback of those)
     env: Any = None                   # PRIVILEGED env handle between step_propose and step_apply (TrueSimWM only)
+    half_state: Mapping = field(default_factory=dict)    # arbiter's "half" toggle state (copied per rollout)
 
 
 @runtime_checkable
@@ -46,21 +47,29 @@ def objective(sla0: Mapping, sla1: Mapping, lam_e: float, w_ll: float) -> float:
 
 
 class TrueSimWM:
-    """Privileged: env.copy() between the phases, replay the plan for H s on the true tape (std = 0). NOT deployable."""
+    """Privileged: env.copy() between the phases, roll H s on the true tape (std = 0). NOT deployable.
+    continuation: "accept_all" (default; DESIGN rev v2 estimand = plan for D s, then accept-all — same as EffectWM's
+    default) or "hold" (plan held for all H s: the scratch oracle rounds 1-3 / wg3_oracle.py semantics)."""
     privileged = True
 
-    def __init__(self):
-        self.n_roll = 0
+    def __init__(self, continuation: str = "accept_all"):
+        if continuation not in ("accept_all", "hold"):
+            raise ValueError(continuation)
+        self.continuation, self.n_roll = continuation, 0
 
     def _rollout(self, ctx: DecisionContext, plan: Plan) -> float:
         sim = ctx.env.copy()
         sla0 = dict(sim.plant.sla)
-        sim.step_apply(decide(plan, ctx.obs, ctx.site, ctx.D, sim.last_change, ctx.rb_at, True))
-        for _ in range(ctx.H - 1):
+        hs = dict(ctx.half_state)
+        sim.step_apply(decide(plan, ctx.obs, ctx.site, ctx.D, sim.last_change, ctx.rb_at, True, hs))
+        for i in range(1, ctx.H):
             if sim.sec >= sim.total_s:
                 break
             o = sim.step_propose()
-            sim.step_apply(decide(plan, o, ctx.site, ctx.D, sim.last_change, ctx.rb_at, False))
+            if self.continuation == "accept_all" and i >= int(ctx.D):
+                sim.step_apply({"decisions": ["accept"] * len(o["requests"]), "writes": [], "rollback": []})
+            else:
+                sim.step_apply(decide(plan, o, ctx.site, ctx.D, sim.last_change, ctx.rb_at, False, hs))
         self.n_roll += 1
         return objective(sla0, sim.plant.sla, ctx.lam_e, ctx.w_ll)
 

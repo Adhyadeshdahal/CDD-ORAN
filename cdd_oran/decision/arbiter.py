@@ -34,6 +34,7 @@ class WG3Arbiter:
         self.plan = P.accept_all(self.regions)
         self.until, self.picks = -1.0, {}
         self.rb_at = {}                   # knob -> change time we rolled back (never roll back our own rollback)
+        self.half_state = {}              # knob -> single-quantum "half" requests seen (plans.half_step toggle)
 
     def _ok(self, s: Score, s_acc: Score, plan) -> bool:
         return self.confidence is None or P.is_accept_all(plan) or bool(self.confidence(s, s_acc))
@@ -70,9 +71,10 @@ class WG3Arbiter:
         first = False
         if obs["t"] >= self.start_s and obs["t"] >= self.until:
             ctx = DecisionContext(obs, self.site, self.regions, self.H, float(self.D), self.lam_e, self.w_ll,
-                                  last_change, self.rb_at, env if getattr(self.wm, "privileged", False) else None)
+                                  last_change, self.rb_at, env if getattr(self.wm, "privileged", False) else None,
+                                  dict(self.half_state))
             self.plan, self.until, first = self.choose(ctx), obs["t"] + self.D, True
-        return P.decide(self.plan, obs, self.site, self.D, last_change, self.rb_at, first)
+        return P.decide(self.plan, obs, self.site, self.D, last_change, self.rb_at, first, self.half_state)
 
     def record(self, dec: dict, last_change: dict) -> None:
         """After apply: remember which change each rollback created (so it is never rolled back itself)."""

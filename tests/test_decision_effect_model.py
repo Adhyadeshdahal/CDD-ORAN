@@ -126,6 +126,52 @@ def test_selector_neighbour_policy_captures_spillover():
     assert np.allclose(sel.sum(1), 1.0) and np.all(np.diag(sel) == 0)
 
 
+def synth_v2(n_ep, seed, E=30, R=10, fut_effect=-8.0, H=90, D=20):
+    """v2-like episodes: context-free step-mixture codes (collect.step_schedule), future assignments = the region's
+    own later codes, eMBB y = 5 u - DELTA u [TS reject] + fut_effect * fut[TS reject] + noise."""
+    rng = np.random.default_rng(seed)
+    out = []
+    F = int(np.ceil(H / D)) - 1
+    for i in range(n_ep):
+        s = CO.step_schedule(seed * 1000 + i, E + F, list(range(R)), CO.DEFAULT_STEP_MIXTURE)
+        code = s["code"][:E].astype(int)
+        fc = np.stack([s["code"][j:j + E] for j in range(1, F + 1)], -1)
+        fut = EM.future_features(fc, H, D)
+        u, v, g = rng.uniform(size=(E, R)), rng.normal(size=(E, R)), rng.normal(size=(E, 1))
+        y = np.zeros((E, R, len(EM.COMPONENTS)))
+        y[..., 1] = 5 * u + 2 * v + g - DELTA * u * EM.policy_features(code)[..., I_TS] \
+            + fut_effect * fut[..., I_TS] + rng.normal(0, 2, (E, R))
+        out.append({"own": np.stack([u, v], -1), "glob": g, "code": code, "prop": s["prop"][:E],
+                    "prop_eff": s["prop"][:E], "y": y, "active": tuple(P.XAPPS), "H": H, "version": 2, "D": D,
+                    "fut": fut})
+    return out
+
+
+def test_future_covariates_and_continuation():
+    eps = synth_v2(20, seed=7)
+    on = _model(n_members=2).fit(eps)
+    off = _model(n_members=2, use_future=False).fit(eps)
+    ipw = _model(n_members=2, weighting="ipw").fit(eps)
+    assert on.future_on and not off.future_on and on.weighting_used == "none" and ipw.weighting_used == "ipw"
+    d = on.stack(eps)
+    M, R = d["code"].shape
+    u = d["own"][..., 0]
+    truth = -DELTA * u
+
+    def err(m):
+        est = np.array([m.effects(d["own"][i], d["glob"][i], np.full((1, R), TS_REJECT))[0, :, 1] for i in range(M)])
+        return np.abs(est - truth).mean()
+    assert err(on) < err(off) and err(on) < 0.6
+    own, glob = d["own"][0], d["glob"][0]
+    codes = np.array([[TS_REJECT] * R, [0] * R])
+    acc, hold = on.member_effects(own, glob, codes), on.member_effects(own, glob, codes, "hold")
+    assert np.all(acc[:, 1] == 0) and np.all(hold[:, 1] == 0)          # accept-all is 0 under both continuations
+    extra = EM.hold_features(TS_REJECT, 90, 20)[I_TS] * -8.0            # planted future effect of holding pi
+    assert abs((hold - acc)[:, 0, :, 1].mean() - extra) < 1.5
+    with pytest.raises(ValueError):
+        _model(use_future=True).fit(synth(2, seed=0))
+
+
 # ------------------------------------------------------------------------------------------------ gate
 def _pipeline(n_ep, rng, sd, per_ep=10, n_cand=20):
     """Argmax pipeline: candidates' true improvements tau, predictions tau + episode effect + noise; the arbiter
@@ -241,6 +287,30 @@ def test_effect_wm_plugs_into_wg3_arbiter(e6_model):
     with pytest.raises(ValueError):                   # model horizon must match the arbiter's
         wm.score(DecisionContext({"t": 1.0, "requests": [], "new_reports": []}, wm.site, wm.regions, 90, 20.0,
                                  1.0, 1.0), [P.accept_all(wm.regions)])
+
+
+def test_v2_episodes_carry_future_features_and_serve_with_declared_continuation():
+    trs = [CO.collect_episode_v2(_cfg(s), label_H=40) for s in (17, 18)]
+    eps = [EM.episode_from_trace(t, H=40) for t in trs]
+    e = eps[0]
+    assert e["version"] == 2 and e["fut"].shape == e["code"].shape + (len(EM.POLICY_NAMES),)
+    fc = CO.future_assignments(trs[0], 40)["code"][: len(e["code"])]
+    assert np.allclose(e["fut"], EM.future_features(fc, 40, 20))
+    assert "fut" not in EM.episode_from_trace(trs[0], H=40, future=False)
+    m = EM.PolicyEffectModel(40, n_members=2).fit(eps)
+    assert m.future_on and m.weighting_used == "none"
+    env = E6Env(_cfg(16), log=False, wg3=True)
+    wms = [EM.EffectWM(m, env.plant.lay.cell_site, continuation=c) for c in ("accept_all", "hold")]
+    while env.sec < 61:
+        obs = env.step_propose()
+        for wm in wms:
+            wm.observe(obs)
+        env.step_apply({"decisions": ["accept"] * len(obs["requests"]), "writes": [], "rollback": []})
+    obs = env.step_propose()
+    ctx = DecisionContext(obs, wms[0].site, wms[0].regions, 40, 20.0, 1.0, 1.0)
+    plans = [P.accept_all(wms[0].regions), P.network(wms[0].regions, P.uniform("reject"))]
+    sa, sh = (wm.score(ctx, plans) for wm in wms)
+    assert sa[0].mean == 0.0 == sh[0].mean and sa[1].mean != sh[1].mean
 
 
 def test_uncalibrated_gate_reproduces_accept_all_and_oracle_record_runs(e6_model):

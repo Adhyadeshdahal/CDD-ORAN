@@ -1,49 +1,176 @@
 {
   "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed.",
   "E1": {
-    "used": [[0, 9]],
+    "used": [
+      [
+        0,
+        9
+      ]
+    ],
     "note": "E1 discovery envelopes/recovery replicates; E1 is not used by Stage 0."
   },
   "E2": {
     "used": [
-      [0, 39],
-      [100000, 116383],
-      [200000, 200399],
-      [500000, 500039],
-      [600000, 616383],
-      [710000, 710009],
-      [722000, 722019],
-      [723000, 723009],
-      [724000, 724019],
-      [800000, 800099],
-      [900000, 1099999]
+      [
+        0,
+        39
+      ],
+      [
+        100000,
+        116383
+      ],
+      [
+        200000,
+        200399
+      ],
+      [
+        500000,
+        500039
+      ],
+      [
+        600000,
+        616383
+      ],
+      [
+        710000,
+        710009
+      ],
+      [
+        722000,
+        722019
+      ],
+      [
+        723000,
+        723009
+      ],
+      [
+        724000,
+        724019
+      ],
+      [
+        800000,
+        800099
+      ],
+      [
+        900000,
+        1099999
+      ]
     ],
     "note": "0-39: calibration/dev corpora + Thread-A discovery seeds; 100000-116383 Thread-A deploy states (incl. 100000-100003 anchors); 200000-200399 Thread-A sign seeds; 500000-500039 Thread-B discovery; 600000-616383 Thread-B deploy; 710000-710009 decision study D1; 800000-800099 MSCR-v2 confirmatory; 900000-1099999 Thread-A reference states. The E2 decision-gate bank pool (env seeds 0-4095) is covered by the E2 bank note below. 722000-722019 Stage 0 F-detect test; 723000-723009 Stage 0 F-graph test; 724000-724019 Stage 0 F-dither test (all delta levels). Stage 0 DEV reused 0-19 (F-detect) and 0-4 (F-graph lambda).",
-    "bank_env_seeds": [[0, 4095]]
+    "bank_env_seeds": [
+      [
+        0,
+        4095
+      ]
+    ]
   },
   "E3": {
     "used": [
-      [0, 0],
-      [710000, 710009]
+      [
+        0,
+        0
+      ],
+      [
+        710000,
+        710009
+      ]
     ],
     "note": "corpus seed 0 (DEV probes), 710000-710009 decision study D1.",
-    "bank_env_seeds": [[0, 4095]]
+    "bank_env_seeds": [
+      [
+        0,
+        4095
+      ]
+    ]
   },
   "E5": {
     "used": [
-      [0, 19],
-      [900000, 900099],
-      [922000, 922019],
-      [930000, 930019]
+      [
+        0,
+        19
+      ],
+      [
+        900000,
+        900099
+      ],
+      [
+        922000,
+        922019
+      ],
+      [
+        930000,
+        930019
+      ]
     ],
     "note": "0-19 DEV corpora/probes; 900000-900099 structure-gate confirmatory. 922000-922019 Stage 0 F-detect test. 930000-930019 E5_NOISE_DETECT test (both kappa levels). E5_NOISE_DETECT reuses DEV 0-19 parameter seeds with fresh noise streams (DEV only, not independent).",
-    "bank_env_seeds": [[0, 5999]],
+    "bank_env_seeds": [
+      [
+        0,
+        5999
+      ]
+    ],
     "claimed_by": {
-      "E5_NOISE_DETECT": [[930000, 930019]]
+      "E5_NOISE_DETECT": [
+        [
+          930000,
+          930019
+        ]
+      ]
     }
   },
-  "rng_stream_tags": [2999, 29990, 191919, 313131, 424242, 700002, 777001, 909090],
+  "rng_stream_tags": [
+    2999,
+    29990,
+    191919,
+    313131,
+    424242,
+    700002,
+    777001,
+    909090,
+    8808,
+    5151,
+    6262,
+    7707,
+    7708
+  ],
   "rng_stream_notes": {
     "E5_NOISE_DETECT observation noise": "default_rng([seed, 5, int(round(1000*kappa))]), kappa in {0.1, 0.3} -> tags (5, 100) and (5, 300)"
+  },
+  "E6": {
+    "used": [
+      [
+        0,
+        30
+      ],
+      [
+        100000,
+        100179
+      ],
+      [
+        110000,
+        110179
+      ]
+    ],
+    "note": "E6 DEV (2026-09-27): seeds 0-30 reserved for development (11-15 used by subset sweeps, baselines, headroom oracles, gate A/B). TEST seeds must be drawn from >= 960000 and registered here when the E6 protocol is frozen; none used yet. 2026-09-28: DEV policy 100000-100179 and probe 110000-110179 reserved (see dev_reserved).",
+    "dev_reserved": {
+      "policy_episodes": [
+        [
+          100000,
+          100179
+        ]
+      ],
+      "probe_episodes": [
+        [
+          110000,
+          110179
+        ]
+      ],
+      "mapping": "seed = base + 30*stratum + j; base = 100000 (policy, collector v2) | 110000 (probe); stratum = 2*scenario_idx + load_idx with scenarios (base, surge, mistune) and loads (medium, high) -> 0 base-medium, 1 base-high, 2 surge-medium, 3 surge-high, 4 mistune-medium, 5 mistune-high; j = 0..29, j < 20 fit, j >= 20 untouched diagnostics. Implemented as cdd_oran.decision.collect.dev_seed / dev_stratum. Paired accept-all / no-probe reference episodes reuse the episode seed (same plant tape).",
+      "rng_stream_tags": {
+        "7707": "decision.collect v1 collector draws default_rng([seed, 7707, epoch, region])",
+        "7708": "decision.collect v2 step collector draws default_rng([seed, 7708, epoch, region])"
+      },
+      "note": "Reserved 2026-09-28 per SOL_DATA_DESIGN.md (c): 180 policy + 180 independently seeded probe episodes (30 per load x scenario stratum). DEV only; probes never in TEST. Numeric overlap with E2 ranges is irrelevant (registry is per world)."
+    }
   }
 }

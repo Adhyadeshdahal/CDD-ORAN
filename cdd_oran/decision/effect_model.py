@@ -21,6 +21,19 @@ interactions with context. Context features: RUNTIME-observable only (never lab_
 ``ContextSelector`` = the graph-as-soft-prior hook: which neighbouring regions (all / none / weights: graph mask,
 SHAP mask, topology) and which context columns enter. Neighbour context and policies enter as weighted means.
 
+Future-assignment covariates (v2 collector data, ``collect.RandomizedStepPolicy``): with H > D the label window
+(t_e, t_e + H] also covers the region's own later epochs e+1 .. e+F (F = ceil(H/D) - 1), whose policies were drawn by
+the same outcome-independent randomization, so they are valid covariates. ``fut`` (E, R, 13) = sum_j w_j phi(code
+of epoch e+j), w_j = (H - j D) / H = share of the window the epoch's policy acts on (exposure-weighted future policy).
+They enter as main effects (``use_future``; "auto" = on iff every episode carries them). At serve time the
+continuation is declared by ``EffectWM(continuation=...)``: "accept_all" (default) sets fut = 0 for the candidate
+AND the accept-all reference, i.e. the scored estimand is "pi for one epoch (D s), then accept-all" (DESIGN.md
+REVISION v2 item 1); "hold" sets fut = sum_j w_j phi(pi) for the candidate (pi held for H, as TrueSimWM's rollout
+does). With the linear ridge learner and accept_all the fut block cancels in the contrast; it still removes the
+future draws' variance/bias from the policy coefficients.
+Weighting: ``weighting="auto"`` (default) = "none" when every episode comes from the v2 collector (context-free
+propensities by design: weights are not needed for consistency and only cost efficiency), else "ipw".
+
 Train/serve parity: the context is built by ONE function (``assemble_features``) from the collector's own
 ``RandomizedJointPolicy._context`` code path (reused via a shim at serve time) + per-xApp request counts. The
 collector keeps the latest delivered fast KPM report across seconds, which is NOT in the epoch's obs: at serve time
@@ -150,9 +163,27 @@ def horizon_outcomes(trace: Trace, t0s, H: int, site) -> tuple[np.ndarray, np.nd
     return Y, valid
 
 
-def episode_from_trace(trace: Trace, H: int) -> dict:
+def future_features(fut_codes, H: int, D: int) -> np.ndarray:
+    """fut_codes (..., F) region codes of epochs e+1 .. e+F (-1 = none) -> (..., 13) exposure-weighted policy
+    features sum_j (H - j D) / H * phi(code_j)."""
+    fc = np.asarray(fut_codes, int)
+    F = fc.shape[-1]
+    w = np.array([(H - j * D) / H for j in range(1, F + 1)])
+    ph = np.where((fc >= 0)[..., None], PHI[np.maximum(fc, 0)], 0.0)             # (..., F, 13)
+    return np.einsum("...fk,f->...k", ph, w)
+
+
+def hold_features(codes, H: int, D: int) -> np.ndarray:
+    """Future features of holding ``codes`` (...) for the whole horizon -> (..., 13)."""
+    F = max(int(np.ceil(H / D)) - 1, 0)
+    return policy_features(codes) * sum((H - j * D) / H for j in range(1, F + 1))
+
+
+def episode_from_trace(trace: Trace, H: int, future: bool | str = "auto") -> dict:
     """Collector trace -> episode dict for ``PolicyEffectModel.fit`` (valid epochs only, i.e. t_e + H <= end).
-    Keys: own (E, R, F), glob (E, G), code, prop, prop_eff (E, R), y (E, R, C), t (E,), active (xApp names)."""
+    Keys: own (E, R, F), glob (E, G), code, prop, prop_eff (E, R), y (E, R, C), t (E,), active (xApp names),
+    version (collector version: 1 or 2), D; + fut (E, R, 13) future-assignment features when ``future`` is True or
+    "auto" and the trace is v2 data (``collect.future_assignments`` for this H)."""
     a = trace.arrays
     site = np.asarray(trace.meta["cell_region"])
     regions = [int(g) for g in a["pol_region_ids"]]
@@ -168,9 +199,17 @@ def episode_from_trace(trace: Trace, H: int) -> dict:
         own.append(o)
         glob.append(g)
     Y, valid = horizon_outcomes(trace, a["pol_t"], H, site)
-    return {"own": np.array(own)[valid], "glob": np.array(glob)[valid], "code": a["pol_code"][valid].astype(int),
-            "prop": a["pol_prop"][valid], "prop_eff": a["pol_prop_eff"][valid], "y": Y[valid],
-            "t": a["pol_t"][valid], "active": tuple(trace.meta["collector"]["active_xapps"]), "H": int(H)}
+    col = trace.meta["collector"]
+    out = {"own": np.array(own)[valid], "glob": np.array(glob)[valid], "code": a["pol_code"][valid].astype(int),
+           "prop": a["pol_prop"][valid], "prop_eff": a["pol_prop_eff"][valid], "y": Y[valid],
+           "t": a["pol_t"][valid], "active": tuple(col["active_xapps"]), "H": int(H),
+           "version": int(col.get("version", 1)), "D": int(col.get("D", 20))}
+    has_fut = "pol_fut_code" in a
+    if future is True and not has_fut:
+        raise ValueError("future=True needs v2 collector data (pol_fut_code)")
+    if future is True or (future == "auto" and has_fut):
+        out["fut"] = future_features(CO.future_assignments(trace, H)["code"], H, out["D"])[valid]
+    return out
 
 
 # ------------------------------------------------------------------------------------------------ context selector
@@ -229,14 +268,17 @@ class PolicyEffectModel:
     policy x context interactions, RidgeCV per member; default) or "hgb" (sklearn HistGradientBoosting per
     component on [context, policy]). Members are fitted on bootstrap resamples of EPISODES (of epochs when fewer
     than ``min_boot_episodes`` episodes are given). ``weighting``: "ipw" (stabilized logged-propensity weights,
-    clipped at ``clip_w``) or "none" (naive regression)."""
+    clipped at ``clip_w``), "none" (unweighted regression) or "auto" (none for v2 data, else ipw). ``use_future``:
+    True / False / "auto" (on iff every episode has ``fut``)."""
 
     def __init__(self, H: int, n_members: int = 5, learner: str = "ridge", selector: ContextSelector | None = None,
-                 weighting: str = "ipw", own_names: Sequence[str] = OWN, glob_names: Sequence[str] = GLOB,
+                 weighting: str = "auto", own_names: Sequence[str] = OWN, glob_names: Sequence[str] = GLOB,
                  n_bins: int = 4, alphas=(1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0), clip_w: float = 30.0,
-                 min_boot_episodes: int = 4, seed: int = 0):
-        if learner not in ("ridge", "hgb") or weighting not in ("ipw", "none"):
-            raise ValueError("learner in {ridge, hgb}, weighting in {ipw, none}")
+                 min_boot_episodes: int = 4, seed: int = 0, use_future: bool | str = "auto"):
+        if learner not in ("ridge", "hgb") or weighting not in ("ipw", "none", "auto"):
+            raise ValueError("learner in {ridge, hgb}, weighting in {ipw, none, auto}")
+        self.use_future = use_future
+        self.future_on, self.D, self.weighting_used = False, None, None
         self.H, self.K, self.learner, self.weighting = int(H), int(n_members), learner, weighting
         self.selector = selector if selector is not None else ContextSelector()
         self.own_names, self.glob_names = tuple(own_names), tuple(glob_names)
@@ -248,7 +290,8 @@ class PolicyEffectModel:
     # ---- data
     @staticmethod
     def stack(episodes: Sequence[Mapping]) -> dict:
-        keys = ("own", "glob", "code", "prop", "prop_eff", "y")
+        keys = ("own", "glob", "code", "prop", "prop_eff", "y") + (("fut",) if all("fut" in e for e in episodes)
+                                                                     else ())
         out = {k: np.concatenate([np.asarray(e[k]) for e in episodes]) for k in keys}
         out["ep"] = np.concatenate([np.full(len(e["code"]), i) for i, e in enumerate(episodes)])
         return out
@@ -256,7 +299,7 @@ class PolicyEffectModel:
     def weights(self, code, prop) -> np.ndarray:
         """Stabilized IPW weights s(class) / p(code | x), class = default code vs any other; mean 1 per class."""
         code, p = np.asarray(code).ravel(), np.asarray(prop, float).ravel()
-        if self.weighting == "none":
+        if (self.weighting_used or self.weighting) == "none":
             return np.ones_like(p)
         w = 1.0 / p
         for m in (code == 0, code != 0):
@@ -279,6 +322,11 @@ class PolicyEffectModel:
             edges.append(np.asarray(e, float))
         self.basis = _Basis(own_ix, nbr_ix, mod_ix, edges)
 
+    def _fut(self, fut, M, R):
+        if not self.future_on:
+            return np.zeros((M * R, 0))
+        return np.zeros((M * R, len(POLICY_NAMES))) if fut is None else np.asarray(fut, float).reshape(M * R, -1)
+
     def _raw(self, own, glob, A, A_nbr=None):
         """own (M, R, F), glob (M, G), A (M, R, 13) own-region policies, A_nbr (default A) the policies whose
         neighbour aggregates W @ A_nbr enter -> flat blocks (M * R, ...)."""
@@ -297,10 +345,11 @@ class PolicyEffectModel:
         mod = own[..., b.mod_ix].reshape(M * R, -1)
         return o, g, nb, a, na, mod
 
-    def _design(self, own, glob, A, A_nbr=None):
+    def _design(self, own, glob, A, A_nbr=None, fut=None):
         o, g, nb, a, na, mod = self._raw(own, glob, A, A_nbr)
+        fu = self._fut(fut, *A.shape[:2])
         if self.learner == "hgb":
-            return np.hstack([o, g, nb, a, na])
+            return np.hstack([o, g, nb, a, na, fu])
         b = self.basis
         bins = [(mod[:, i:i + 1] > e[None, :]).astype(float) for i, e in enumerate(b.edges) if len(e)]
         bins = np.hstack(bins) if bins else np.zeros((len(o), 0))
@@ -308,7 +357,7 @@ class PolicyEffectModel:
         h = np.hstack([np.ones((len(o), 1)), zmod, bins])                  # effect modifiers (span of the base)
         inter = (a[:, :, None] * h[:, None, :]).reshape(len(o), -1)
         ninter = (na[:, :, None] * h[:, None, : 1 + zmod.shape[1]]).reshape(len(o), -1)
-        return np.hstack([o, g, nb, bins, a, na, inter, ninter])
+        return np.hstack([o, g, nb, bins, a, na, inter, ninter, fu])
 
     # ---- fit / predict
     def fit(self, episodes: Sequence[Mapping]) -> PolicyEffectModel:
@@ -318,13 +367,19 @@ class PolicyEffectModel:
         d = self.stack(episodes)
         M, R = d["code"].shape
         self.R = R
+        if self.use_future is True and "fut" not in d:
+            raise ValueError("use_future=True needs episodes with fut (v2 collector data)")
+        self.future_on = "fut" in d and self.use_future in (True, "auto")
+        self.D = int(episodes[0].get("D", 20))
+        v2 = all(int(e.get("version", 1)) == 2 for e in episodes)
+        self.weighting_used = ("none" if v2 else "ipw") if self.weighting == "auto" else self.weighting
         self.W = self.selector.matrix(R)
         own_flat = d["own"].reshape(M * R, -1)
         self._init_basis(own_flat)
         mod = np.nan_to_num(own_flat[:, self.basis.mod_ix])
         self.basis.mu, self.basis.sd = mod.mean(0), mod.std(0) + 1e-9
         self.support = SupportDetector().fit(np.hstack([own_flat, np.repeat(d["glob"], R, axis=0)]))
-        X = self._design(d["own"], d["glob"], policy_features(d["code"]))
+        X = self._design(d["own"], d["glob"], policy_features(d["code"]), fut=d.get("fut"))
         Y = d["y"].reshape(M * R, -1)
         w = self.weights(d["code"], d["prop"])
         ep = d["ep"]
@@ -364,14 +419,19 @@ class PolicyEffectModel:
             return Z @ a + b
         return np.column_stack([m.predict(Z) for m in a])
 
-    def member_effects(self, own, glob, codes) -> np.ndarray:
+    def member_effects(self, own, glob, codes, continuation: str = "accept_all") -> np.ndarray:
         """Per-member contrasts vs accept-all. own (R, F) or (M, R, F); glob (G,) or (M, G); codes (M, R) of the
-        region policies (neighbour policies = the other regions' codes in the same row) -> (K, M, R, C)."""
+        region policies (neighbour policies = the other regions' codes in the same row) -> (K, M, R, C).
+        ``continuation`` (only with future features): "accept_all" -> fut = 0 on both sides; "hold" -> the
+        candidate's fut = its own policy held over H (the reference keeps fut = 0)."""
+        if continuation not in ("accept_all", "hold"):
+            raise ValueError("continuation in {accept_all, hold}")
         codes = np.atleast_2d(np.asarray(codes, int))
         M, R = codes.shape
         own = np.broadcast_to(own, (M, R, np.shape(own)[-1]))
         glob = np.broadcast_to(np.asarray(glob, float), (M, np.shape(glob)[-1]))
-        Xa = self._design(own, glob, policy_features(codes))
+        fut = hold_features(codes, self.H, self.D) if continuation == "hold" and self.future_on else None
+        Xa = self._design(own, glob, policy_features(codes), fut=fut)
         X0 = self._design(own, glob, np.zeros((M, R, len(POLICY_NAMES))))
         out = [(self._predict_member(m, Xa) - self._predict_member(m, X0)).reshape(M, R, -1) for m in self.members]
         return np.array(out)
@@ -409,14 +469,15 @@ class PolicyEffectModel:
                 continue
             sub = PolicyEffectModel(self.H, self.K, self.learner, self.selector, self.weighting, self.own_names,
                                     self.glob_names, self.n_bins, self.alphas, self.clip_w,
-                                    self.min_boot_episodes, self.seed + 1 + f).fit(tr)
+                                    self.min_boot_episodes, self.seed + 1 + f, self.use_future).fit(tr)
             own, glob, code = d["own"][te], d["glob"][te], d["code"][te]
+            fut = d["fut"][te] if "fut" in d else None         # logged future assignments kept as covariates
             A = policy_features(code)
             rows = np.repeat(te, R)
 
-            def mu(A_own, own=own, glob=glob, A=A, sub=sub):
-                # own region's policy replaced, neighbours' policies as logged
-                X = sub._design(own, glob, A_own, A)
+            def mu(A_own, own=own, glob=glob, A=A, sub=sub, fut=fut):
+                # own region's policy replaced, neighbours' policies and future assignments as logged
+                X = sub._design(own, glob, A_own, A, fut=fut)
                 return np.mean([sub._predict_member(m, X) for m in sub.members], axis=0)
 
             mpi, m0 = mu(policy_features(np.full(code.shape, candidate))), mu(np.zeros_like(A))
@@ -449,11 +510,15 @@ class EffectWM:
     contrast vs accept-all (so accept-all scores exactly 0). ``observe(obs)`` must be fed every second
     (``run_episode``). A plan is ``ood`` if it deviates from accept-all in a region whose context is outside the
     training support, or if the tracked context is stale. ``stratifier(own, glob) -> hashable`` tags scores with a
-    calibration stratum for the gate."""
+    calibration stratum for the gate. ``continuation`` = what the future-assignment features are set to
+    (module docstring): "accept_all" (default; the arbiter's declared default continuation) or "hold"."""
     privileged = False
 
     def __init__(self, model: PolicyEffectModel, site, w_rlf: float = 0.0, w_churn: float = 0.0,
-                 stratifier: Callable | None = None, check_support: bool = True):
+                 stratifier: Callable | None = None, check_support: bool = True, continuation: str = "accept_all"):
+        if continuation not in ("accept_all", "hold"):
+            raise ValueError("continuation in {accept_all, hold}")
+        self.continuation = continuation
         self.model, self.site = model, np.asarray(site)
         self.regions = sorted({int(x) for x in self.site})
         self.w_rlf, self.w_churn, self.stratifier, self.check_support = w_rlf, w_churn, stratifier, check_support
@@ -474,7 +539,7 @@ class EffectWM:
         own, glob = self.features(ctx.obs)
         codes = np.array([[CO.encode(p[g]) for g in self.regions] for p in plans], int)
         cw = self.model.cost_weights(ctx.lam_e, ctx.w_ll, self.w_rlf, self.w_churn)
-        mem = (self.model.member_effects(own, glob, codes) @ cw).sum(-1)           # (K, P)
+        mem = (self.model.member_effects(own, glob, codes, self.continuation) @ cw).sum(-1)   # (K, P)
         bad_region = np.zeros(len(self.regions), bool)
         if self.check_support and self.model.support is not None:
             bad_region = self.model.support.outside(np.hstack([own, np.repeat(glob[None], len(own), 0)]))

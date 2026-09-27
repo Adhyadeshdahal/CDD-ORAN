@@ -68,6 +68,40 @@ def test_rollback_only_first_second_in_window_flagged_region_and_not_our_own():
     assert P.decide(plan, obs, SITE, 20, last, {("hys", 0): 50.0}, True)["rollback"] == [("hys", 0), ("cio", 1, 3)]
 
 
+def test_half_halves_the_slew_rate():
+    hs = {}
+    assert P.half_step(("cio", 0, 2), 0.0, 3.0, hs) == ("modify", 2.0)          # multi-quantum: a real half move
+    assert P.half_step(("cio", 0, 2), 0.0, -2.0, hs) == ("modify", -1.0)
+    assert P.half_step(("ll_ratio", 1), 0.1, 0.3, hs) == ("modify", 0.2)
+    assert P.half_step(("ttt", 1), 40.0, 320.0, hs) == ("modify", 160.0)       # TTT: half the index distance
+    assert hs == {}                                                               # toggles only single quanta
+    seq0 = [P.half_step(("cio", 0, 2), 0.0, 1.0, hs) for _ in range(6)]       # phase (0 + 2) % 2 = 0
+    seq1 = [P.half_step(("cio", 1, 2), 0.0, -1.0, hs) for _ in range(6)]      # phase 1
+    assert seq0 == ["accept", "reject"] * 3 and seq1 == ["reject", "accept"] * 3
+    assert P.half_step(("sleep", 4), 0.0, 1.0, hs) == "accept" and hs[("sleep", 4)] == 1
+    plan = {0: P.uniform("half"), 1: P.uniform("half")}
+    obs = {"t": 100.0, "requests": [_req("TS", ("cio", 0, 2), 0.0, 1.0), _req("TS", ("cio", 0, 2), 0.0, 1.0)]}
+    st = {}
+    assert P.decide(plan, obs, SITE, 20, {}, {}, True, st)["decisions"] == ["accept", "reject"]
+    assert P.decide(plan, obs, SITE, 20, {}, {}, True, st)["decisions"] == ["accept", "reject"] and st[("cio", 0, 2)] == 4
+    assert P.decide(plan, obs, SITE, 20, {}, {}, True, half_rule="legacy")["decisions"] == [("modify", 0.5)] * 2
+
+
+def test_arbiter_threads_half_state_and_rollouts_copy_it():
+    seen = []
+
+    class HalfWM(FakeWM):
+        def score(self, ctx, plans):
+            seen.append(ctx.half_state)
+            return super().score(ctx, plans)
+
+    env = _env()
+    arb = make_arbiter(env, HalfWM(lambda p: -sum(m == "half" for rp in p.values() for m in rp["mode"].values())),
+                       0.0, 0.0, D=10)
+    run_episode(env, arb)
+    assert arb.half_state and seen and all(h is not arb.half_state for h in seen)
+
+
 def test_restrict_forces_accept_outside_allowed_pairs():
     plan = {0: P.uniform("lock", rb=1), 1: P.uniform("half", rb=1)}
     out = P.restrict(plan, {("TS", 0)})
