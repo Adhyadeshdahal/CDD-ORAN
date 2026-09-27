@@ -9,7 +9,11 @@ and the split-conformal quantile q gives LB = predicted_improvement - q with
     P(realized >= LB) >= 1 - alpha                                ("pooled": new decision exchangeable with calib.)
     P(all decisions of a new episode covered) >= 1 - alpha        ("episode_max": score = per-episode max; rigorous
                                                                    under episode exchangeability, conservative)
-Per-stratum quantiles (e.g. scenario x load x support bin) fall back to the pooled one below ``min_units``.
+Default method = "episode_max" (SOL_BUILD_REVIEW.md item 4): epochs of one episode are dependent, so the
+calibration unit is the EPISODE; calibration and final-evaluation episodes come from disjoint registered seed ranges
+(docs/benchmark/E6_COLLECTION_CONTRACT.md). "pooled" (decisions exchangeable) stays selectable for diagnostics only.
+Per-stratum quantiles (e.g. scenario x load x support bin) fall back to the pooled one below ``min_units`` units
+(episodes under episode_max): with 30 calibration episodes pooled over the six strata the claim is POOLED.
 Outside the training support (``SupportDetector``) or with a stale context the score carries ``ood=True`` and the
 gate refuses (the arbiter then keeps accept-all). Guardrails are NOT covered by this bound: bound per-component
 effects separately (``PolicyEffectModel`` exposes them).
@@ -58,7 +62,7 @@ class ConformalGate:
     """Calibrated paired-difference gate. ``member_agree`` (optional) additionally requires that at least that
     fraction of ensemble members predicts an improvement (paired member-wise vs the reference score)."""
 
-    def __init__(self, alpha: float = 0.1, method: str = "pooled", min_units: int = 30,
+    def __init__(self, alpha: float = 0.1, method: str = "episode_max", min_units: int = 30,
                  member_agree: float | None = None):
         if method not in ("pooled", "episode_max"):
             raise ValueError("method must be 'pooled' or 'episode_max'")

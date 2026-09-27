@@ -204,6 +204,8 @@ def episode_from_trace(trace: Trace, H: int, future: bool | str = "auto") -> dic
            "prop": a["pol_prop"][valid], "prop_eff": a["pol_prop_eff"][valid], "y": Y[valid],
            "t": a["pol_t"][valid], "active": tuple(col["active_xapps"]), "H": int(H),
            "version": int(col.get("version", 1)), "D": int(col.get("D", 20))}
+    if int(col.get("version", 1)) == 3 and int(H) > int(col["slot_s"]):
+        raise ValueError(f"v3 data: H={H} > slot_s={col['slot_s']} would put the next slot inside the label window")
     has_fut = "pol_fut_code" in a
     if future is True and not has_fut:
         raise ValueError("future=True needs v2 collector data (pol_fut_code)")
@@ -371,8 +373,8 @@ class PolicyEffectModel:
             raise ValueError("use_future=True needs episodes with fut (v2 collector data)")
         self.future_on = "fut" in d and self.use_future in (True, "auto")
         self.D = int(episodes[0].get("D", 20))
-        v2 = all(int(e.get("version", 1)) == 2 for e in episodes)
-        self.weighting_used = ("none" if v2 else "ipw") if self.weighting == "auto" else self.weighting
+        by_design = all(int(e.get("version", 1)) in (2, 3) for e in episodes)   # context-free propensities
+        self.weighting_used = ("none" if by_design else "ipw") if self.weighting == "auto" else self.weighting
         self.W = self.selector.matrix(R)
         own_flat = d["own"].reshape(M * R, -1)
         self._init_basis(own_flat)
@@ -498,11 +500,114 @@ def clustered_mean(psi, ep, mask=None) -> tuple[np.ndarray, np.ndarray]:
 
 
 # ------------------------------------------------------------------------------------------------ WM adapter
+# ------------------------------------------------------------------------------------------------ first-stage support
+SUPPORT_MODES = ("reject", "half", "lock")
+SUPPORT_VERSION = "e6-support/1"
+
+
+def support_counts(traces: Sequence[Trace], H: int = 90) -> dict:
+    """Predeclared first-stage support counts (contract docs/benchmark/E6_COLLECTION_CONTRACT.md, "Support") over
+    v2/v3 collector traces, LABELLED rows only (t_e + H <= end). Key (scenario, load, xapp, mode) with xapp in
+    plans.XAPPS and mode in SUPPORT_MODES, plus (scenario, load, "RB", "rb"). Per key:
+      treated / control = eligible rows assigned that mode / eligible rows whose region plan is accept-all (code 0);
+        eligible = the xApp offered >= 1 request on the region's knobs during the treatment window [t_e, t_e + D)
+        (pol_x_elig); for RB: treated = rb flag with >= 1 rollback requested, control = code 0;
+      treated_start / control_start = the same with eligibility AT the epoch start (requests offered at t_e);
+      ep_treated / ep_control = independent episodes contributing >= 1 such row;
+      ack = ACKed requests in treated rows; moved = treated rows with >= 1 realised change (rollback applied for RB);
+      real_frac = mean realised / requested delta over treated rows (NaN if none)."""
+    out = {}
+    for tr in traces:
+        a, m = tr.arrays, tr.meta
+        if "pol_x_elig" not in a:
+            raise ValueError("support counting needs v2/v3 collector traces (pol_x_elig)")
+        cfg = m["cfg"]
+        stratum = (cfg.get("scenario", "base"), cfg["load"])
+        valid = a["pol_t"] + H <= a["t"][-1]
+        code, modes = a["pol_code"][valid], a["pol_modes"][valid]
+        elig = a["pol_x_elig"][valid]
+        acc = code == 0
+        E, R = code.shape
+        site = np.asarray(m["cell_region"])
+        regions = [int(g) for g in a["pol_region_ids"]]
+        kreg = np.searchsorted(regions, [int(site[k[1]]) for k in m["knobs"]])
+        start = np.zeros((E, R, len(P.XAPPS)), bool)
+        tv = a["pol_t"][valid]
+        for i, t0 in enumerate(tv):
+            q = a["rq_t"] == t0
+            for k, x in zip(a["rq_knob"][q], a["rq_xapp"][q], strict=True):
+                start[i, kreg[k], P.XAPPS.index(m["xapps"][x])] = True
+        rows = []
+        for j, x in enumerate(P.XAPPS):
+            for mode in SUPPORT_MODES:
+                t = elig[..., j] & (modes[..., j] == P.MODES.index(mode))
+                rows.append((x, mode, t, elig[..., j] & acc, start[..., j] & (modes[..., j] == P.MODES.index(mode)),
+                             start[..., j] & acc, a["pol_x_n_ack"][valid][..., j], a["pol_x_n_changed"][valid][..., j],
+                             a["pol_x_real_frac"][valid][..., j]))
+        rbq = a["pol_rb_req"][valid] > 0
+        rows.append(("RB", "rb", (a["pol_rb"][valid] == 1) & rbq, acc, (a["pol_rb"][valid] == 1) & rbq, acc,
+                     a["pol_rb_applied"][valid], a["pol_rb_applied"][valid], np.full((E, R), np.nan)))
+        for x, mode, t, c, ts, cs, ack, moved, rf in rows:
+            d = out.setdefault(stratum + (x, mode), {"treated": 0, "control": 0, "treated_start": 0,
+                                                     "control_start": 0, "ep_treated": 0, "ep_control": 0,
+                                                     "ack": 0, "moved": 0, "_rf": []})
+            d["treated"] += int(t.sum())
+            d["control"] += int(c.sum())
+            d["treated_start"] += int(ts.sum())
+            d["control_start"] += int(cs.sum())
+            d["ep_treated"] += int(t.any())
+            d["ep_control"] += int(c.any())
+            d["ack"] += int(ack[t].sum())
+            d["moved"] += int((moved[t] > 0).sum())
+            d["_rf"] += [float(v) for v in rf[t] if np.isfinite(v)]
+    for d in out.values():
+        rf = d.pop("_rf")
+        d["real_frac"] = float(np.mean(rf)) if rf else float("nan")
+    return out
+
+
+@dataclass(frozen=True)
+class SupportRule:
+    """Predeclared minimum-support rule (SOL_BUILD_REVIEW.md, MRO/ES support): an (xapp, mode) policy effect is
+    IDENTIFIED in a stratum iff treated >= min_treated AND control >= min_control, each from >= min_episodes
+    independent episodes. Otherwise "unidentified": excluded from learned candidate scoring (EffectWM)."""
+    min_treated: int = 20
+    min_control: int = 20
+    min_episodes: int = 10
+
+    def status(self, counts: Mapping) -> dict:
+        """counts (``support_counts``) -> {(scenario, load): {(xapp, mode): "identified" | "unidentified"}}."""
+        out = {}
+        for (scn, load, x, mode), d in counts.items():
+            ok = (d["treated"] >= self.min_treated and d["control"] >= self.min_control
+                  and d["ep_treated"] >= self.min_episodes and d["ep_control"] >= self.min_episodes)
+            out.setdefault((scn, load), {})[(x, mode)] = "identified" if ok else "unidentified"
+        return out
+
+    def identified(self, counts: Mapping, stratum) -> dict:
+        """{(xapp, mode): bool} for one deployment stratum (scenario, load); for ``EffectWM(support=...)``."""
+        st = self.status(counts).get(tuple(stratum), {})
+        return {k: v == "identified" for k, v in st.items()}
+
+
+def unidentified_parts(plan: P.Plan, support: Mapping) -> tuple:
+    """(xapp, mode) pairs (and ("RB", "rb")) that ``plan`` uses in some region but ``support`` does not identify."""
+    bad = set()
+    for rp in plan.values():
+        for x, mode in rp["mode"].items():
+            if mode != "accept" and not support.get((x, mode), False):
+                bad.add((x, mode))
+        if rp["rb"] and not support.get(("RB", "rb"), False):
+            bad.add(("RB", "rb"))
+    return tuple(sorted(bad))
+
+
 @dataclass(frozen=True)
 class EffectScore(Score):
     members: tuple = ()
     ood: bool = False
     stratum: object = None
+    unidentified: tuple = ()
 
 
 class EffectWM:
@@ -511,14 +616,18 @@ class EffectWM:
     (``run_episode``). A plan is ``ood`` if it deviates from accept-all in a region whose context is outside the
     training support, or if the tracked context is stale. ``stratifier(own, glob) -> hashable`` tags scores with a
     calibration stratum for the gate. ``continuation`` = what the future-assignment features are set to
-    (module docstring): "accept_all" (default; the arbiter's declared default continuation) or "hold"."""
+    (module docstring): "accept_all" (default; the arbiter's declared default continuation) or "hold".
+    ``support`` = {(xapp, mode): identified} for the deployment stratum (``SupportRule.identified``); a plan using an
+    unidentified (xapp, mode) or rollback is EXCLUDED from learned scoring: mean = +inf (never selected), ood = True
+    (the gate refuses), ``unidentified`` lists the parts. None = no support gating (every part allowed)."""
     privileged = False
 
     def __init__(self, model: PolicyEffectModel, site, w_rlf: float = 0.0, w_churn: float = 0.0,
-                 stratifier: Callable | None = None, check_support: bool = True, continuation: str = "accept_all"):
+                 stratifier: Callable | None = None, check_support: bool = True, continuation: str = "accept_all",
+                 support: Mapping | None = None):
         if continuation not in ("accept_all", "hold"):
             raise ValueError("continuation in {accept_all, hold}")
-        self.continuation = continuation
+        self.continuation, self.first_stage = continuation, support
         self.model, self.site = model, np.asarray(site)
         self.regions = sorted({int(x) for x in self.site})
         self.w_rlf, self.w_churn, self.stratifier, self.check_support = w_rlf, w_churn, stratifier, check_support
@@ -547,8 +656,11 @@ class EffectWM:
         ood = stale | ((codes != 0) & bad_region[None, :]).any(1)
         ood &= (codes != 0).any(1)                                                  # accept-all is never ood
         st = self.stratifier(own, glob) if self.stratifier is not None else None
+        unid = [unidentified_parts(p, self.first_stage) if self.first_stage is not None else () for p in plans]
+        ood |= np.array([bool(u) for u in unid])
         self.last, self.n_score = (plans, mem, ood), self.n_score + len(plans)
-        return [EffectScore(float(mem[:, j].mean()), float(mem[:, j].std()), tuple(map(float, mem[:, j])),
+        return [EffectScore(float("inf"), 0.0, (), True, st, unid[j]) if unid[j] else
+                EffectScore(float(mem[:, j].mean()), float(mem[:, j].std()), tuple(map(float, mem[:, j])),
                             bool(ood[j]), st) for j in range(len(plans))]
 
 

@@ -312,3 +312,53 @@ def test_v2_propensity_columns_and_effect_model_input(step_v2, tmp_path):
     ep = episode_from_trace(back, 90)
     assert ep["code"].shape[1] == 10 and len(ep["code"]) == (a["pol_t"] + 90 <= a["t"][-1]).sum() > 0
     assert np.allclose(ep["prop"], a["pol_prop"][: len(ep["code"])])
+
+
+# ------------------------------------------------------------------------------------------------ v3 spaced slots
+def _cfg3(seed=16, load="medium"):
+    return E6Config(seed=seed, load=load, mobility="mixed", mix="M4", warmup_s=30, scored_s=240)
+
+
+@pytest.fixture(scope="module")
+def slots_v3():
+    return CO.collect_episode_v3(_cfg3())
+
+
+def test_v3_spaced_slots_schedule_washout_and_audit(slots_v3):
+    a, col = slots_v3.arrays, slots_v3.meta["collector"]
+    E, R = a["pol_code"].shape
+    assert col["version"] == 3 and col["key"] == CO.KEY_V3 and col["contract"] == CO.COLLECT_VERSION
+    assert np.array_equal(a["pol_t"], 30 + 90 * np.arange(E)) and np.all(a["pol_len"] <= 20)
+    s = CO.step_schedule(16, E, [int(g) for g in a["pol_region_ids"]], CO.DEFAULT_STEP_MIXTURE, key=CO.KEY_V3)
+    assert np.array_equal(a["pol_code"], s["code"]) and not any(k.startswith("pol_fut_") for k in a)
+    au = CO.audit_episode(slots_v3)
+    assert all(v for k, v in au.items() if isinstance(v, bool)), au
+    assert au["labelled_rows"] == R * (a["pol_t"] + 90 <= a["t"][-1]).sum() > 0
+    with pytest.raises(ValueError):
+        CO.SpacedSlotPolicy(E6Env(_cfg3(), log=False, wg3=True), slot_s=80)          # washout < 70 s
+    with pytest.raises(ValueError):
+        CO.SpacedSlotPolicy(E6Env(_cfg3(), log=False, wg3=True), CO.StepMixture(quiet_epochs=2))
+
+
+def test_v3_continuation_equals_true_sim_accept_all():
+    cc = CO.continuation_check(_cfg3(seed=17), n_slots=2)
+    assert len(cc) == 2 and all(o == r for _, o, r in cc)
+
+
+def test_v3_support_counts(slots_v3):
+    from cdd_oran.decision import effect_model as EM
+    c = EM.support_counts([slots_v3, slots_v3], H=90)
+    a = slots_v3.arrays
+    v = a["pol_t"] + 90 <= a["t"][-1]
+    j = CO.P.XAPPS.index("TS")
+    d = c[("base", "medium", "TS", "reject")]
+    t = a["pol_x_elig"][v][..., j] & (a["pol_modes"][v][..., j] == CO.P.MODES.index("reject"))
+    assert d["treated"] == 2 * t.sum() and d["control"] == 2 * (a["pol_x_elig"][v][..., j] & (a["pol_code"][v] == 0)).sum()
+    assert d["ep_treated"] == 2 * int(t.any()) and d["ack"] == 0            # rejected requests are never ACKed
+    assert len(c) == len(CO.P.XAPPS) * 3 + 1
+    st = EM.SupportRule().status(c)[("base", "medium")]
+    assert set(st.values()) == {"unidentified"}                                # two (dependent) episodes: nothing
+    loose = EM.SupportRule(1, 1, 1).identified(c, ("base", "medium"))
+    assert loose[("TS", "reject")] == bool(t.any() and d["control"] > 0)
+    with pytest.raises(ValueError):
+        EM.episode_from_trace(slots_v3, H=120)                                  # label window beyond the slot

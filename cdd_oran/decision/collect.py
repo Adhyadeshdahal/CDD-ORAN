@@ -42,7 +42,7 @@ import numpy as np
 from cdd_oran.envs.e6.env import E6Env
 
 from . import plans as P
-from .trace import OUT, OUT_CODES, RB_CODES, Trace, region_labels
+from .trace import DEC_CODES, OUT, OUT_CODES, RB_CODES, WR_CODES, Trace, region_labels
 
 KEY = 7707                              # RNG stream tag of the collector (not an env seed)
 N_CODES = len(P.MODES) ** len(P.XAPPS) * 2
@@ -349,9 +349,10 @@ DEFAULT_STEP_MIXTURE = StepMixture()
 ACCEPT_ALL_MIXTURE = StepMixture(1.0, 0.0, 0.0, 0.0)          # paired accept-all reference episodes
 
 
-def draw_step(seed: int, epoch: int, region: int, mix: StepMixture) -> tuple[int, int]:
-    """-> (code, branch index into STEP_BRANCHES) for one (seed, epoch, region), before quiet-epoch overrides."""
-    r = np.random.default_rng([int(seed), KEY_V2, int(epoch), int(region)])
+def draw_step(seed: int, epoch: int, region: int, mix: StepMixture, key: int = KEY_V2) -> tuple[int, int]:
+    """-> (code, branch index into STEP_BRANCHES) for one (seed, epoch, region), before quiet-epoch overrides.
+    ``key`` = regime tag (KEY_V2 = 7708 for v2 epochs, KEY_V3 = 7709 for v3 slots)."""
+    r = np.random.default_rng([int(seed), int(key), int(epoch), int(region)])
     u = r.uniform()
     if u < mix.p_accept:
         return 0, 0
@@ -364,7 +365,7 @@ def draw_step(seed: int, epoch: int, region: int, mix: StepMixture) -> tuple[int
     return encode(P.uniform("accept", rb=1)), 3
 
 
-def step_schedule(seed: int, n_epochs: int, regions, mix: StepMixture) -> dict:
+def step_schedule(seed: int, n_epochs: int, regions, mix: StepMixture, key: int = KEY_V2) -> dict:
     """Full assignment schedule, fixed before any outcome: code, branch (n_epochs, R) and prop = exact
     P(code | the region's earlier assignments) (1 in quiet epochs)."""
     pv = mix.code_probs()
@@ -376,7 +377,7 @@ def step_schedule(seed: int, n_epochs: int, regions, mix: StepMixture) -> dict:
     for j, g in enumerate(regions):
         left = 0
         for e in range(n_epochs):
-            c, b = draw_step(seed, e, g, mix)
+            c, b = draw_step(seed, e, g, mix, key)
             if left > 0:
                 c, b, p, left = 0, quiet, 1.0, left - 1
             else:
@@ -550,14 +551,19 @@ def collect_episode_v2(cfg, mixture: StepMixture = DEFAULT_STEP_MIXTURE, D: int 
 
 
 # ================================================================================================= E6 DEV seed map
-# Registered in docs/benchmark/SEED_REGISTRY.json (E6 "dev_reserved"; SOL_DATA_DESIGN.md (c)): 30 independent seeds
+# Registered in docs/benchmark/SEED_REGISTRY.json (E6 "dev_reserved"; SOL_DATA_DESIGN.md (c)); kinds policy (v3,
+# formerly v2), probe, calib, eval. 30 independent seeds
 # per stratum (scenario x load, 6 strata), seed = base + 30 * stratum + j, stratum = 2 * SCENARIOS.index(scenario)
 # + LOADS.index(load), j = 0..29; j < 20 -> "fit", j >= 20 -> "diag" (untouched diagnostics). Paired accept-all /
 # no-probe references reuse the episode's own seed (same plant tape). Never TEST (>= 960000), never DEV 0-30.
 DEV_SCENARIOS = ("base", "surge", "mistune")
 DEV_LOADS = ("medium", "high")
 DEV_PER_STRATUM, DEV_FIT = 30, 20
-DEV_SEED_BASE = {"policy": 100000, "probe": 110000}
+DEV_SEED_BASE = {"policy": 100000, "probe": 110000, "calib": 120000, "eval": 130000}
+# calib / eval: gate calibration and final-evaluation EPISODES (disjoint; E6_COLLECTION_CONTRACT.md "Gate split").
+# The pooled design uses j < CALIB_POOLED_PER_STRATUM in every stratum (6 x 5 = 30 episodes = min_units, pooled
+# claim); the per-stratum alternative uses all j < 30 (180 + 180 episodes).
+CALIB_POOLED_PER_STRATUM = 5
 
 
 def dev_seed(kind: str, scenario: str, load: str, j: int) -> int:
@@ -573,6 +579,177 @@ def dev_stratum(seed: int) -> dict:
         o = int(seed) - b
         if 0 <= o < DEV_PER_STRATUM * len(DEV_SCENARIOS) * len(DEV_LOADS):
             k, j = divmod(o, DEV_PER_STRATUM)
+            split = ("fit" if j < DEV_FIT else "diag") if kind in ("policy", "probe") else                 ("pooled" if j < CALIB_POOLED_PER_STRATUM else "per_stratum_ext")
             return {"kind": kind, "scenario": DEV_SCENARIOS[k // 2], "load": DEV_LOADS[k % 2], "j": j,
-                    "split": "fit" if j < DEV_FIT else "diag"}
-    raise ValueError(f"seed {seed} is not an E6 DEV policy/probe seed")
+                    "split": split}
+    raise ValueError(f"seed {seed} is not a registered E6 DEV policy/probe/calib/eval seed")
+
+
+
+# ================================================================================================= v3 (spaced slots)
+V3_DOC = """v3 spaced-slot collector (SOL_BUILD_REVIEW.md item 1; contract docs/benchmark/E6_COLLECTION_CONTRACT.md,
+version COLLECT_VERSION). Target estimand = the arbiter's declared one: a joint WG3 plan held for D s, then accept-all
+(``TrueSimWM(continuation="accept_all")`` and ``EffectWM(continuation="accept_all")``).
+
+Schedule (fixed before any outcome, from the seed only): slot k starts at t_k = start_s + k * slot_s (start_s = end
+of warm-up). At t_k EVERY region draws its region plan from the v2 ``StepMixture`` with
+default_rng([cfg.seed, KEY_V3, k, region]) (``draw_step(..., key=KEY_V3)``; quiet epochs are not used: quiet_epochs
+must be 0) and holds it for the TREATMENT window [t_k, t_k + D); then the whole network (every region, hence every
+region's interference neighbourhood) is accept-all for the WASHOUT [t_k + D, t_{k+1}), slot_s - D >= MIN_WASHOUT_S.
+Rollbacks happen only at t_k. Locks set during the treatment last D s from the request (plans.decide) and may
+therefore reach up to D s into the washout: this is part of the plan's effect and identical in
+TrueSimWM(continuation="accept_all"), so the continuation semantics match exactly (``continuation_check``).
+Labels: only slot starts are training rows; the H-s label window (t_k, t_k + H] needs H <= slot_s, so it contains
+no later assignment of ANY region (the "logging-policy continuation" contamination of v2 is gone by design).
+Neighbouring regions' assignments in the same slot are concurrent, randomized and logged (pol_nbr_*): they are
+covariates of the joint-plan contrast, as in the arbiter's joint candidates.
+Table: the v2 table with one epoch per slot (pol_t = t_k, pol_len = D) + pol_slot_end (E,), minus pol_fut_* (no
+future assignment inside a label window).
+"""
+
+KEY_V3 = 7709                             # RNG stream tag of the v3 slot draws (regime tag; not an env seed)
+MIN_WASHOUT_S = 70
+COLLECT_VERSION = "e6-collect-v3"
+
+
+class SpacedSlotPolicy(RandomizedStepPolicy):
+    """v3 collector arbiter (``V3_DOC``)."""
+
+    def __init__(self, env: E6Env, mixture: StepMixture = DEFAULT_STEP_MIXTURE, D: int = 20, slot_s: int = 90,
+                 H: int = 90, epoch_churn_cap: int | None = None, start_s: float | None = None):
+        if mixture.quiet_epochs:
+            raise ValueError("v3 does not use quiet epochs (the washout replaces them)")
+        if slot_s - D < MIN_WASHOUT_S or H > slot_s:
+            raise ValueError(f"need slot_s - D >= {MIN_WASHOUT_S} and H <= slot_s")
+        super().__init__(env, mixture, D=D, label_H=H, epoch_churn_cap=epoch_churn_cap, start_s=start_s)
+        self.slot_s, self.H = int(slot_s), int(H)
+        n_max = int(np.ceil(env.total_s / self.slot_s)) + 2
+        self.sched = step_schedule(env.cfg.seed, n_max, self.regions, mixture, key=KEY_V3)
+        self.next_slot = self.start_s
+        self.washout = P.accept_all(self.regions)
+
+    def act(self, obs: dict) -> dict:
+        for rep in obs["new_reports"]:
+            if rep["gran"] == "fast" and (self.fast is None or rep["t1"] >= self.fast["t1"]):
+                self.fast = rep
+        first = False
+        if obs["t"] >= self.start_s and obs["t"] >= self.next_slot:
+            self.epoch += 1
+            if self.epoch_churn_cap is not None:
+                self.env.churn_cap = int(self.env.stats["changes"]) + int(self.epoch_churn_cap)
+            ctx = self._context(obs)
+            codes, defaults = self._draw_epoch(self.epoch)
+            self.plan = {g: decode(c) for g, c in zip(self.regions, codes, strict=True)}
+            self.rows.append((obs["t"], codes, defaults, ctx))
+            self.until, self.next_slot, first = obs["t"] + self.D, obs["t"] + self.slot_s, True
+        elif obs["t"] >= self.until:
+            self.plan = self.washout
+        return P.decide(self.plan, obs, self.site, self.D, self.env.last_change, self.rb_at, first,
+                        self.half_state, self.half_rule)
+
+    def table(self, trace: Trace) -> dict:
+        out = super().table(trace)
+        for k in [k for k in out if k.startswith("pol_fut_")]:
+            del out[k]
+        out["pol_slot_end"] = (out["pol_t"].astype(np.int32) + self.slot_s).astype(np.int32)
+        return out
+
+
+def _v3_meta(col: SpacedSlotPolicy, env: E6Env, mixture: StepMixture, epoch_churn_cap, churn_cap) -> dict:
+    score = {k: (float(v) if isinstance(v, (int, float, np.floating, np.integer)) else v)
+             for k, v in env.score().items()}
+    return {"kind": "spaced_slot_policy", "version": 3, "contract": COLLECT_VERSION, "mixture": mixture.as_dict(),
+            "branches": list(STEP_BRANCHES), "fractions": list(FRACTIONS), "D": col.D, "slot_s": col.slot_s,
+            "H": col.H, "label_H": col.H, "min_washout_s": MIN_WASHOUT_S, "key": KEY_V3, "eps": col.eps,
+            "epoch_churn_cap": epoch_churn_cap, "churn_cap": churn_cap, "n_codes": N_CODES,
+            "xapps_order": list(P.XAPPS), "modes": list(P.MODES), "active_xapps": sorted(col.active),
+            "rb_window_s": P.RB_WINDOW, "half_rule": col.half_rule, "score": score}
+
+
+def collect_episode_v3(cfg, mixture: StepMixture = DEFAULT_STEP_MIXTURE, D: int = 20, slot_s: int = 90,
+                       H: int = 90, epoch_churn_cap: int | None = None, churn_cap: int | None = None,
+                       snapshot_s: int = 60) -> Trace:
+    """One v3 spaced-slot episode under ``wg3=True`` (``V3_DOC``). ``mixture=ACCEPT_ALL_MIXTURE`` = the paired
+    accept-all reference (identical to no arbiter)."""
+    env = E6Env(cfg, log=False, wg3=True, churn_cap=churn_cap, trace=True, trace_snapshot_s=snapshot_s)
+    col = SpacedSlotPolicy(env, mixture, D=D, slot_s=slot_s, H=H, epoch_churn_cap=epoch_churn_cap)
+    while env.sec < env.total_s:
+        obs = env.step_propose()
+        dec = col.act(obs)
+        env.step_apply(dec)
+        col.record(dec)
+    tr = env.get_trace()
+    tr.arrays.update(col.table(tr))
+    tr.meta["collector"] = _v3_meta(col, env, mixture, epoch_churn_cap, churn_cap)
+    return tr
+
+
+def continuation_check(cfg, n_slots: int = 2, mixture: StepMixture = DEFAULT_STEP_MIXTURE, D: int = 20,
+                       slot_s: int = 90, H: int = 90, lam_e: float = 1.0, w_ll: float = 1.0) -> list:
+    """PRIVILEGED pilot check of the continuation semantics: at the first ``n_slots`` slot starts, the objective of
+    ``TrueSimWM(continuation="accept_all")`` scoring the drawn plan on ``env.copy()`` must EQUAL the objective the
+    collector realises over the same H s. -> [(t_k, oracle J, realised J)]."""
+    from .world_model import DecisionContext, TrueSimWM, objective
+    env = E6Env(cfg, log=False, wg3=True)
+    col = SpacedSlotPolicy(env, mixture, D=D, slot_s=slot_s, H=H)
+    wm, out, pend = TrueSimWM("accept_all"), [], None
+    while env.sec < env.total_s and len(out) < n_slots:
+        obs = env.step_propose()
+        hs0, n0 = dict(col.half_state), len(col.rows)
+        dec = col.act(obs)
+        if len(col.rows) > n0 and pend is None and obs["t"] + H - 1 <= env.total_s:
+            ctx = DecisionContext(obs, col.site, col.regions, H, float(D), lam_e, w_ll, dict(env.last_change),
+                                  dict(col.rb_at), env, hs0)
+            pend = (obs["t"], wm.score(ctx, [col.plan])[0].mean, dict(env.plant.sla))
+        env.step_apply(dec)
+        col.record(dec)
+        if pend is not None and env.sec >= pend[0] + H - 1:
+            out.append((pend[0], pend[1], objective(pend[2], env.plant.sla, lam_e, w_ll)))
+            pend = None
+    return out
+
+
+def audit_episode(tr: Trace) -> dict:
+    """Pilot audit of one v2/v3 collector trace (contract section "Pilot"): trace reconstruction, logged vs declared
+    propensities, washout discipline (v3), churn-cap accounting. Every entry is a bool (True = pass) or a count."""
+    a, m = tr.arrays, tr.meta
+    col = m["collector"]
+    st = dict(zip(m["stats"], a["stats"][-1], strict=True))
+    OC = OUT
+    ok, sc = a["rq_out"] == OC["ok"], a["scored"]
+    rb_app = a["rb_out"] == RB_CODES.index("applied")
+    S = col["score"]
+    ue_h = a["lab_ue"][sc].astype(float).sum() / 3600.0
+    res = {
+        "labels_match_score": bool(np.isclose(a["lab_viol"][sc].astype(float).sum() / max(ue_h, 1e-9), S["svr"],
+                                              rtol=1e-6)
+                                   and np.isclose(a["lab_energy_j"][sc].astype(float).sum() / 3.6e6,
+                                                  S["energy_kwh"], rtol=1e-5)
+                                   and int(a["lab_severe"].sum()) == int(S["severe"])),
+        "changes_match": bool(st["changes"] == ok.sum() + rb_app.sum() == a["changes"][-1]),
+        "requests_match": bool(st["req"] == len(a["rq_out"])),
+        "policy_requests_match": bool(a["pol_n_req"].sum() == a["pol_out"].sum()),
+    }
+    chk = [bool(np.isclose(tr.config_at(int(t) + 1)[k], v)) for t, k, v in
+           zip(a["rq_t"][ok][:300], a["rq_knob"][ok][:300], a["rq_applied"][ok][:300], strict=True)
+           if t < a["t"][-1]]
+    res["config_rebuild_share"] = float(np.mean(chk)) if chk else 1.0      # OAM writes may legitimately differ
+    res["config_rebuild"] = res["config_rebuild_share"] >= 0.99
+    mix = StepMixture(**col["mixture"]) if "mixture" in col else None
+    if mix is not None:
+        pv = mix.code_probs()
+        nq = ~a["pol_quiet"] if "pol_quiet" in a else np.ones(a["pol_code"].shape, bool)
+        res["propensity_exact"] = bool(np.allclose(a["pol_prop"][nq], pv[a["pol_code"][nq]], rtol=0, atol=1e-12))
+    capped = a["churn_cap"] >= 0
+    res["cap_respected"] = bool(np.all(a["changes"][capped] <= a["churn_cap"][capped]))
+    res["churn_blocked_accounted"] = bool(st["churn_blocked"] == (a["rq_out"] == OC["churn"]).sum()
+                                          + (a["rb_out"] == RB_CODES.index("churn")).sum()
+                                          + (a["wr_out"] == WR_CODES.index("churn")).sum())
+    if col.get("version") == 3:
+        t0, D = a["pol_t"].astype(int), int(col["D"])
+        e = np.searchsorted(t0, a["rq_t"], side="right") - 1
+        in_wash = (e >= 0) & (a["rq_t"] >= t0[np.maximum(e, 0)] + D)
+        res["washout_accept_only"] = bool(np.all(a["rq_dec"][in_wash] == DEC_CODES.index("accept")))
+        res["rollback_only_at_slot_start"] = bool(np.all(np.isin(a["rb_t"], t0)))
+        res["labelled_rows"] = int((t0 + int(col["H"]) <= a["t"][-1]).sum() * a["pol_code"].shape[1])
+    return res

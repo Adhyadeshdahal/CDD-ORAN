@@ -197,11 +197,11 @@ def test_selection_aware_gate_calibrates_coverage():
     pc, rc, ec, rpc, rrc = _pipeline(150, rng, 1.0)
     pt, rt, et, _, _ = _pipeline(300, rng, 1.0)
     alpha = 0.1
-    gate = ConformalGate(alpha).calibrate(pc, rc, ec)
+    gate = ConformalGate(alpha, method="pooled").calibrate(pc, rc, ec)
     rep = gate_report(gate, pt, rt, et)
     assert rep["coverage"] >= 1 - alpha - 0.03
     # calibrating single-candidate errors (not the argmax pipeline) under-covers the selected plan
-    naive = ConformalGate(alpha).calibrate(rpc, rrc, ec)
+    naive = ConformalGate(alpha, method="pooled").calibrate(rpc, rrc, ec)
     assert coverage(naive.lower_bound(pt), rt) < 1 - alpha - 0.05
     ep_gate = ConformalGate(alpha, method="episode_max").calibrate(pc, rc, ec)
     assert gate_report(ep_gate, pt, rt, et)["episode_all_covered"] >= 1 - alpha - 0.05
@@ -216,7 +216,7 @@ def test_stratified_gate_covers_each_stratum():
     pc, rc = np.concatenate([cal[sd][0] for sd in cal]), np.concatenate([cal[sd][1] for sd in cal])
     ec = np.concatenate([cal[sd][2] + 1000 * i for i, sd in enumerate(cal)])
     st = np.concatenate([[f"sd{sd}"] * len(cal[sd][0]) for sd in cal])
-    gate = ConformalGate(0.1, min_units=50).calibrate(pc, rc, ec, stratum=st)
+    gate = ConformalGate(0.1, method="pooled", min_units=50).calibrate(pc, rc, ec, stratum=st)
     for sd in cal:
         p, r = _pipeline(200, rng, sd)[:2]
         assert coverage(gate.lower_bound(p, f"sd{sd}"), r) >= 0.87
@@ -311,6 +311,37 @@ def test_v2_episodes_carry_future_features_and_serve_with_declared_continuation(
     plans = [P.accept_all(wms[0].regions), P.network(wms[0].regions, P.uniform("reject"))]
     sa, sh = (wm.score(ctx, plans) for wm in wms)
     assert sa[0].mean == 0.0 == sh[0].mean and sa[1].mean != sh[1].mean
+
+
+def test_v3_fit_and_support_gate_excludes_unidentified_parts():
+    cfg = [E6Config(seed=s, load="medium", mobility="mixed", mix="M4", warmup_s=60, scored_s=120) for s in (17, 18)]
+    trs = [CO.collect_episode_v3(c, H=40) for c in cfg]
+    eps = [EM.episode_from_trace(t, H=40) for t in trs]
+    assert all(e["version"] == 3 and "fut" not in e for e in eps)
+    m = EM.PolicyEffectModel(40, n_members=2).fit(eps)
+    assert m.weighting_used == "none" and not m.future_on
+    support = {("TS", "reject"): True, ("SLICE", "half"): True}
+    env = E6Env(_cfg(16), log=False, wg3=True)
+    wm = EM.EffectWM(m, env.plant.lay.cell_site, support=support)
+    while env.sec < 61:
+        obs = env.step_propose()
+        wm.observe(obs)
+        env.step_apply({"decisions": ["accept"] * len(obs["requests"]), "writes": [], "rollback": []})
+    ctx = DecisionContext(env.step_propose(), wm.site, wm.regions, 40, 20.0, 1.0, 1.0)
+    ts = {"mode": {"MRO": "accept", "TS": "reject", "ES": "accept", "SLICE": "half"}, "rb": 0}
+    mro = {"mode": {"MRO": "half", "TS": "reject", "ES": "accept", "SLICE": "accept"}, "rb": 1}
+    plans = [P.accept_all(wm.regions), P.network(wm.regions, ts), P.network(wm.regions, mro)]
+    s0, s1, s2 = wm.score(ctx, plans)
+    assert s0.mean == 0.0 and np.isfinite(s1.mean) and not s1.unidentified
+    assert s2.mean == float("inf") and s2.ood and s2.unidentified == (("MRO", "half"), ("RB", "rb"))
+    assert EM.unidentified_parts(P.accept_all(wm.regions), {}) == ()
+
+
+def test_gate_default_is_episode_max():
+    g = ConformalGate(0.1)
+    assert g.method == "episode_max"
+    g.calibrate(np.arange(60.0), np.zeros(60), np.repeat(np.arange(30), 2))
+    assert g.n_units[None] == 30 and np.isfinite(g.q_pooled)                  # 30 episode units, not 60 decisions
 
 
 def test_uncalibrated_gate_reproduces_accept_all_and_oracle_record_runs(e6_model):

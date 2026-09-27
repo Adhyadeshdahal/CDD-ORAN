@@ -149,9 +149,17 @@
       [
         110000,
         110179
+      ],
+      [
+        120000,
+        120179
+      ],
+      [
+        130000,
+        130179
       ]
     ],
-    "note": "E6 DEV (2026-09-27): seeds 0-30 reserved for development (11-15 used by subset sweeps, baselines, headroom oracles, gate A/B). TEST seeds must be drawn from >= 960000 and registered here when the E6 protocol is frozen; none used yet. 2026-09-28: DEV policy 100000-100179 and probe 110000-110179 reserved (see dev_reserved).",
+    "note": "E6 DEV (2026-09-27): seeds 0-30 reserved for development (11-15 used by subset sweeps, baselines, headroom oracles, gate A/B). TEST seeds must be drawn from >= 960000 and registered here when the E6 protocol is frozen; none used yet. 2026-09-28: DEV policy 100000-100179 and probe 110000-110179 reserved (see dev_reserved). 2026-09-28 (b): gate calibration 120000-120179 and final-evaluation 130000-130179 episode seeds reserved (disjoint); policy seeds now for collector v3.",
     "dev_reserved": {
       "policy_episodes": [
         [
@@ -165,12 +173,29 @@
           110179
         ]
       ],
-      "mapping": "seed = base + 30*stratum + j; base = 100000 (policy, collector v2) | 110000 (probe); stratum = 2*scenario_idx + load_idx with scenarios (base, surge, mistune) and loads (medium, high) -> 0 base-medium, 1 base-high, 2 surge-medium, 3 surge-high, 4 mistune-medium, 5 mistune-high; j = 0..29, j < 20 fit, j >= 20 untouched diagnostics. Implemented as cdd_oran.decision.collect.dev_seed / dev_stratum. Paired accept-all / no-probe reference episodes reuse the episode seed (same plant tape).",
+      "mapping": "seed = base + 30*stratum + j; base = 100000 (policy: collector v3 spaced slots, contract e6-collect-v3; v2 kept for reproducibility) | 110000 (probe) | 120000 (gate calibration episodes) | 130000 (gate final-evaluation episodes); stratum = 2*scenario_idx + load_idx with scenarios (base, surge, mistune) and loads (medium, high) -> 0 base-medium, 1 base-high, 2 surge-medium, 3 surge-high, 4 mistune-medium, 5 mistune-high; j = 0..29, j < 20 fit, j >= 20 untouched diagnostics. Implemented as cdd_oran.decision.collect.dev_seed / dev_stratum. Paired accept-all / no-probe reference episodes reuse the episode seed (same plant tape). calib/eval: j < 5 in every stratum = the POOLED design (30 + 30 episodes, min_units = 30 episode units, pooled claim); j = 5..29 reserved for the per-stratum alternative (30 + 30 per stratum = 180 + 180), not used unless predeclared.",
       "rng_stream_tags": {
         "7707": "decision.collect v1 collector draws default_rng([seed, 7707, epoch, region])",
-        "7708": "decision.collect v2 step collector draws default_rng([seed, 7708, epoch, region])"
+        "7708": "decision.collect v2 step collector draws default_rng([seed, 7708, epoch, region])",
+        "7709": "decision.collect v3 slot draws default_rng([seed, 7709, slot, region])",
+        "8808": "decision.probe schedule/arm draws (Worker K)",
+        "5151": "decision.crt resampling draws (Worker K)",
+        "6262": "decision.crt injected-effect calibration draws (Worker K)"
       },
-      "note": "Reserved 2026-09-28 per SOL_DATA_DESIGN.md (c): 180 policy + 180 independently seeded probe episodes (30 per load x scenario stratum). DEV only; probes never in TEST. Numeric overlap with E2 ranges is irrelevant (registry is per world)."
+      "note": "Reserved 2026-09-28 per SOL_DATA_DESIGN.md (c): 180 policy + 180 independently seeded probe episodes (30 per load x scenario stratum). DEV only; probes never in TEST. Numeric overlap with E2 ranges is irrelevant (registry is per world).",
+      "gate_calibration_episodes": [
+        [
+          120000,
+          120179
+        ]
+      ],
+      "gate_evaluation_episodes": [
+        [
+          130000,
+          130179
+        ]
+      ],
+      "contract": "docs/benchmark/E6_COLLECTION_CONTRACT.md (e6-collect-v3)"
     }
   }
 }
