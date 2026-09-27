@@ -49,12 +49,11 @@ Design (predeclared before the episode, from the seed only; nothing depends on c
     pre-probe value (retried until ``obs_end + restore_grace_s``, then logged failed); a knob an xApp changed since
     is "superseded" and left alone.
   * abort-and-restore (predeclared, observable delivered KPM of the unit's cells, reports whose window starts at or
-    after t0; evaluated identically for sham blocks, which have nothing to restore):
-      LL   max LL p95 > max(abort_ll_abs_s, abort_ll_rel x pre-block mean) for abort_ll_consec fast reports;
-      eMBB mean eMBB p5 < min(abort_embb_abs_bps, abort_embb_rel x pre-block mean) for abort_embb_consec reports;
-      RLF  RLF count in a mob report > max(abort_rlf_abs, abort_rlf_rel x pre-block mean);
-      ES   unit energy in an energy report > (1 + abort_energy_frac) x the last pre-block report.
-    A breach restores immediately and is logged (block, time, reason).
+    after t0; evaluated identically for sham blocks, which have nothing to restore). e6-probe/3: per-report scores
+    (LL p95 ratio, eMBB p5 drop ratio, RLF excess count, energy ratio, each gated on actual harm vs the SLA target)
+    must exceed a threshold frozen from NO-PROBE REFERENCE variability (q99.5 per stratum x slot type) for a declared
+    number of consecutive reports; see ``ABORT_RULES`` / ``derive_abort_thresholds``. (e6-probe/2's fixed relative
+    rules fired on 33 % of sham blocks.) A breach restores immediately and is logged (block, time, reason).
   * a runtime guard refuses probe WRITES (never restores) once the probe's applied changes reach the cap.
 
 Outputs (``run_probe_episode``): the episode ``Trace`` (``trace.py`` schema; probe writes appear in ``wr_*``) plus
@@ -83,7 +82,7 @@ from cdd_oran.envs.e6.ric import feasible, knob_get
 from .features import neighbours_from_knobs
 from .trace import Trace
 
-PROBE_VERSION = "e6-probe/2"                        # /2: washout-justified slots, restore deadline, episode mode
+PROBE_VERSION = "e6-probe/3"  # /2: washout-justified slots, restore deadline, episode mode; /3: reference-quantile aborts
 PROBE_KEY = 8808                                   # RNG stream tag of the probe campaign (not an env seed)
 FAMILIES = ("cio", "hys", "ttt", "ll_ratio", "carrier")
 ARMS = FAMILIES + ("sham",)
@@ -126,15 +125,7 @@ class ProbeConfig:
             raise ValueError("carrier observation must exceed the carrier dwell + retry window")
         if self.randomization not in ("block", "episode"):
             raise ValueError("randomization must be 'block' or 'episode'")
-    abort_ll_abs_s: float = 0.25
-    abort_ll_rel: float = 2.0
-    abort_ll_consec: int = 3
-    abort_embb_abs_bps: float = 0.5e6
-    abort_embb_rel: float = 0.5
-    abort_embb_consec: int = 2
-    abort_rlf_abs: float = 6.0
-    abort_rlf_rel: float = 3.0
-    abort_energy_frac: float = 0.25
+    abort_table: str = "v3-ref-audit-fit-j0-4"   # ABORT_TABLE_ID; "off" disables aborts (tests: "force")
     write_budget: float = 1e7      # env write budget (per scored hour): never binding, the cap is the probe's own
 
 
@@ -210,6 +201,224 @@ def region_units(knobs, cell_region) -> tuple[list, dict, dict]:
 def family_knobs(knobs, cell_region, region: int, family: str) -> list:
     reg = np.asarray(cell_region, int)
     return [tuple(k) for k in knobs if k[0] == family and int(reg[int(k[1])]) == region]
+
+
+# ------------------------------------------------------------------------------------------------ abort rules (v3)
+# e6-probe/3 abort-and-restore: a rule fires when its per-report SCORE exceeds the frozen threshold theta for k
+# CONSECUTIVE delivered reports of the unit (treated region + neighbourhood) whose window starts at or after t0.
+#   rule    report  k  unit value v                  gate (harm)                 score
+#   ll      fast    5  max LL p95 over unit cells    v > LL target 0.10 s        v / max(baseline, 0.01 s)
+#   embb    thp     3  mean eMBB p5 over unit cells  v < eMBB target 2 Mb/s      max(baseline, 2 Mb/s) / max(v, 1)
+#   rlf     mob     1  RLF count (30 s report)       v >= 1                      v - baseline (mean count)
+#   energy  energy  1  unit energy (60 s report)     none                        v / last pre-block report
+# Baselines = delivered reports of the pre window (as before). Persistence k: LL 5 s, eMBB 15 s, RLF one 30 s report,
+# energy one 60 s report (a report already aggregates its period). A score where the gate fails, or NaN, resets.
+# theta[stratum][slot type][rule] = max(FLOOR[rule], q99.5 over NO-PROBE REFERENCE windows) of the window statistic
+# W = max over runs of k consecutive reports of min(score), computed on the paired accept-all references of the audit
+# fit seeds (j < 5, 5 episodes per scenario x load stratum) for every region-unit and every t0 on a 30 s grid, with the
+# slot type's observation length (A 60 s, B 210 s; B = macro regions only). Probe-arm outcomes are never used.
+# In-sample the per-rule firing rate is <= 0.5 % per window, so <= 2 % for the union of the 4 rules. Strata missing
+# from the table (e.g. HOLDOUT variants) use the pooled "*|*" row. ``derive_abort_thresholds`` reproduces the table.
+ABORT_RULES = {"ll": ("fast", 5), "embb": ("thp", 3), "rlf": ("mob", 1), "energy": ("energy", 1)}
+ABORT_Q = 0.995
+ABORT_FLOOR = {"ll": 2.0, "embb": 2.0, "rlf": 2.0, "energy": 1.25}
+ABORT_TABLE_ID = "v3-ref-audit-fit-j0-4"
+_FIELD = {"ll": "ll_delay_p95", "embb": "embb_thp_p5", "rlf": "rlf", "energy": "energy_j"}
+ABORT_THETA: dict = {       # frozen 2026-09-28 from 30 no-probe references (audit fit seeds j < 5), q99.5
+    "base|high|0": {"ll": 22.27, "embb": 2.317, "rlf": 8, "energy": 1.25},
+    "base|high|1": {"ll": 36.56, "embb": 3.679, "rlf": 11.33, "energy": 1.377},
+    "base|medium|0": {"ll": 16.7, "embb": 2, "rlf": 5.333, "energy": 1.25},
+    "base|medium|1": {"ll": 43.88, "embb": 2.89, "rlf": 8.333, "energy": 1.37},
+    "mistune|high|0": {"ll": 12.5, "embb": 2.791, "rlf": 18, "energy": 1.25},
+    "mistune|high|1": {"ll": 37.67, "embb": 3.195, "rlf": 38.33, "energy": 1.308},
+    "mistune|medium|0": {"ll": 9.663, "embb": 2.4, "rlf": 10.67, "energy": 1.25},
+    "mistune|medium|1": {"ll": 15.09, "embb": 2.999, "rlf": 14.33, "energy": 1.38},
+    "surge|high|0": {"ll": 23.12, "embb": 3.034, "rlf": 8, "energy": 1.25},
+    "surge|high|1": {"ll": 59.33, "embb": 3.555, "rlf": 10.33, "energy": 1.455},
+    "surge|medium|0": {"ll": 21.22, "embb": 2.2, "rlf": 6.333, "energy": 1.25},
+    "surge|medium|1": {"ll": 27.66, "embb": 3.011, "rlf": 8, "energy": 1.489},
+    "*|*|0": {"ll": 18.83, "embb": 2.569, "rlf": 10.67, "energy": 1.25},
+    "*|*|1": {"ll": 38.04, "embb": 3.238, "rlf": 21, "energy": 1.421},
+}
+
+
+def unit_value(rule: str, rep: dict, cells) -> float:
+    x = np.asarray(rep[_FIELD[rule]], float)[cells]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        if rule == "ll":
+            return float(np.nanmax(x)) if np.isfinite(x).any() else np.nan
+        if rule == "embb":
+            return float(np.nanmean(x)) if np.isfinite(x).any() else np.nan
+    return float(np.sum(x))
+
+
+def unit_baseline(hist: dict, cells, t0: float, pre_s: float) -> dict:
+    """Pre-block baseline from the reports delivered so far (``hist`` gran -> reports in delivery order)."""
+    lo = t0 - pre_s
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        f = [unit_value("ll", r, cells) for r in hist["fast"] if lo <= r["t0"] and r["t1"] <= t0]
+        e = [unit_value("embb", r, cells) for r in hist["thp"] if lo <= r["t0"] and r["t1"] <= t0]
+        m = [unit_value("rlf", r, cells) for r in hist["mob"] if lo - 60 <= r["t0"] and r["t1"] <= t0]
+        en = [unit_value("energy", r, cells) for r in hist["energy"] if r["t1"] <= t0]
+        return {"ll": float(np.nanmean(f)) if f and np.isfinite(f).any() else np.nan,
+                "embb": float(np.nanmean(e)) if e and np.isfinite(e).any() else np.nan,
+                "rlf": float(np.mean(m)) if m else np.nan, "energy": en[-1] if en else np.nan}
+
+
+def report_score(rule: str, rep: dict, cells, base: dict) -> float:
+    """Per-report abort score (-inf when the harm gate fails or the value is missing)."""
+    v = unit_value(rule, rep, cells)
+    if not np.isfinite(v):
+        return -np.inf
+    b = base[rule]
+    if rule == "ll":
+        return v / max(b if np.isfinite(b) else 0.0, 0.01) if v > C.LL_DELAY_TARGET_S else -np.inf
+    if rule == "embb":
+        return max(b if np.isfinite(b) else 0.0, C.EMBB_THP_TARGET_BPS) / max(v, 1.0) \
+            if v < C.EMBB_THP_TARGET_BPS else -np.inf
+    if rule == "rlf":
+        return v - (b if np.isfinite(b) else 0.0) if v >= 1 else -np.inf
+    return v / b if np.isfinite(b) and b > 0 else -np.inf
+
+
+def abort_thresholds(scenario: str, load: str, slot_type: int) -> dict:
+    key = f"{scenario}|{load}|{int(slot_type)}"
+    return ABORT_THETA.get(key) or ABORT_THETA[f"*|*|{int(slot_type)}"]
+
+
+def trace_reports(trace: Trace) -> dict:
+    """Delivered KPM reports of a trace, per granularity in delivery order: dicts with rx, t0, t1 and the fields."""
+    a = trace.arrays
+    out = {}
+    for g in ("fast", "thp", "mob", "energy"):
+        if f"kpm_{g}_rx" not in a:
+            out[g] = []
+            continue
+        fields = [k[len(f"kpm_{g}_"):] for k in a if k.startswith(f"kpm_{g}_")]
+        n = len(a[f"kpm_{g}_rx"])
+        out[g] = [{**{f: a[f"kpm_{g}_{f}"][i] for f in fields}, "gran": g} for i in range(n)]
+    return out
+
+
+def unit_series(reps: dict, cells) -> dict:
+    """Per granularity arrays (rx, t0, t1, v) of the unit value of that granularity's rule (delivery order)."""
+    out = {}
+    for rule, (gran, _) in ABORT_RULES.items():
+        rs = reps[gran]
+        out[rule] = {"rx": np.array([float(r["rx"]) for r in rs]), "t0": np.array([float(r["t0"]) for r in rs]),
+                     "t1": np.array([float(r["t1"]) for r in rs]),
+                     "v": np.array([unit_value(rule, r, cells) for r in rs], float)}
+    return out
+
+
+def _score_vec(rule: str, v: np.ndarray, b: float) -> np.ndarray:
+    with np.errstate(all="ignore"):
+        if rule == "ll":
+            s = np.where(v > C.LL_DELAY_TARGET_S, v / max(b if np.isfinite(b) else 0.0, 0.01), -np.inf)
+        elif rule == "embb":
+            s = np.where(v < C.EMBB_THP_TARGET_BPS,
+                         max(b if np.isfinite(b) else 0.0, C.EMBB_THP_TARGET_BPS) / np.maximum(v, 1.0), -np.inf)
+        elif rule == "rlf":
+            s = np.where(v >= 1, v - (b if np.isfinite(b) else 0.0), -np.inf)
+        else:
+            s = v / b if np.isfinite(b) and b > 0 else np.full(len(v), -np.inf)
+    return np.where(np.isfinite(v), s, -np.inf)
+
+
+def block_scores(series: dict, t0: float, obs_end: float, pre_s: float) -> dict:
+    """Offline replay of the online monitor on ``unit_series``: rule -> list of (rx, score) for the reports the
+    runner scores (window starting at or after t0, delivered by obs_end); baseline from reports delivered by t0
+    (identical to ``unit_baseline`` + ``report_score``)."""
+    lo = t0 - pre_s
+    base = {}
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        for rule in ABORT_RULES:
+            s = series[rule]
+            dl = s["rx"] <= t0
+            if rule in ("ll", "embb"):
+                x = s["v"][dl & (s["t0"] >= lo) & (s["t1"] <= t0)]
+                base[rule] = float(np.nanmean(x)) if np.isfinite(x).any() else np.nan
+            elif rule == "rlf":
+                x = s["v"][dl & (s["t0"] >= lo - 60) & (s["t1"] <= t0)]
+                base[rule] = float(np.mean(x)) if len(x) else np.nan
+            else:
+                x = s["v"][dl & (s["t1"] <= t0)]
+                base[rule] = float(x[-1]) if len(x) else np.nan
+    out = {}
+    for rule in ABORT_RULES:
+        s = series[rule]
+        m = (s["t0"] >= t0) & (s["rx"] <= obs_end)
+        out[rule] = list(zip(s["rx"][m].tolist(), _score_vec(rule, s["v"][m], base[rule]).tolist(), strict=True))
+    return out, base
+
+
+def fire_time(scores: list, theta: float, k: int):
+    """First delivery second at which k consecutive scores exceed theta (None if never)."""
+    c = 0
+    for rx, s in scores:
+        c = c + 1 if s > theta else 0
+        if c >= k:
+            return rx
+    return None
+
+
+def window_stat(scores: list, k: int) -> float:
+    """max over runs of k consecutive reports of min(score) (-inf if none): fires iff this > theta."""
+    s = np.array([x for _, x in scores], float)
+    if len(s) < k:
+        return -np.inf
+    if k == 1:
+        return float(s.max())
+    return float(np.max([s[i:i + k].min() for i in range(len(s) - k + 1)]))
+
+
+def reference_window_stats(ref: Trace, pcfg: ProbeConfig, step_s: int = 30) -> dict:
+    """Window statistics of the no-probe reference: slot type -> rule -> array over (region-unit, t0) windows."""
+    reps = trace_reports(ref)
+    knobs = [tuple(k) for k in ref.meta["knobs"]]
+    creg = np.asarray(ref.meta["cell_region"], int)
+    regions, nbhd, cells = region_units(knobs, creg)
+    macro = {int(creg[k[1]]) for k in knobs if k[0] == "carrier"}
+    cfg = ref.meta["cfg"]
+    start, end = float(cfg["warmup_s"]), float(cfg["warmup_s"] + cfg["scored_s"])
+    out = {0: {r: [] for r in ABORT_RULES}, 1: {r: [] for r in ABORT_RULES}}
+    for typ, obs in ((0, pcfg.obs_a_s), (1, pcfg.obs_b_s)):
+        for g in regions:
+            if typ == 1 and g not in macro:
+                continue
+            uc = np.array([c for h in sorted({g} | nbhd[g]) for c in cells[h]], int)
+            ser = unit_series(reps, uc)
+            for t0 in np.arange(start, end - obs + 1e-9, step_s):
+                sc, _ = block_scores(ser, float(t0), float(t0 + obs), pcfg.pre_s)
+                for rule, (_, k) in ABORT_RULES.items():
+                    out[typ][rule].append(window_stat(sc[rule], k))
+    return {t: {r: np.array(v) for r, v in d.items()} for t, d in out.items()}
+
+
+def derive_abort_thresholds(refs, pcfg: ProbeConfig | None = None, q: float = ABORT_Q) -> dict:
+    """theta table from NO-PROBE reference traces only (see the ABORT_RULES comment)."""
+    pcfg = pcfg or ProbeConfig()
+    stats = {}
+    for tr in refs:
+        c = tr.meta["cfg"]
+        key = f"{c.get('scenario', 'base')}|{c['load']}"
+        w = reference_window_stats(tr, pcfg)
+        for k2 in (key, "*|*"):
+            for typ in (0, 1):
+                for rule in ABORT_RULES:
+                    stats.setdefault(f"{k2}|{typ}", {}).setdefault(rule, []).append(w[typ][rule])
+    table = {}
+    for key, d in stats.items():
+        table[key] = {}
+        for rule, arrs in d.items():
+            v = np.concatenate(arrs)
+            qv = float(np.quantile(v, q, method="higher")) if len(v) else -np.inf
+            table[key][rule] = round(max(ABORT_FLOOR[rule], qv), 4)
+        table[key]["_n_windows"] = int(len(np.concatenate(d["ll"])))
+    return table
 
 
 # ------------------------------------------------------------------------------------------------ schedule
@@ -305,7 +514,7 @@ class ProbeRunner:
             ucells = [c for g in b["unit"] for c in self.cells[g]]
             b.update({"ucells": np.array(ucells, int), "state": "scheduled", "knobs": {}, "abort": False,
                       "abort_t": np.nan, "abort_reason": -1, "knob_s": 0, "cap_blocked": 0, "base": None,
-                      "cnt": {"ll": 0, "embb": 0}})
+                      "cnt": dict.fromkeys(ABORT_RULES, 0), "theta": self._theta(b["type"])})
         self.hist = {g: deque(maxlen=400) for g in ("fast", "thp", "mob", "energy")}
         self.pw = []                    # (blk, k, kind, t, pre, target, out)
         self.cap_total = self.pcfg.cap_changes_per_hour * max(self.end_s - self.start_s, 0.0) / 3600.0
@@ -313,6 +522,16 @@ class ProbeRunner:
         self._attempt = []              # (block, knob, kind, target, value before) attempted this second
 
     # -------------------------------------------------------------------------------------------- helpers
+    def _theta(self, typ):
+        tab = self.pcfg.abort_table
+        if tab == "off":
+            return dict.fromkeys(ABORT_RULES, np.inf)
+        if tab == "force":                              # tests: any gated report breaches
+            return dict.fromkeys(ABORT_RULES, -1e300)
+        if tab != ABORT_TABLE_ID:
+            raise ValueError(f"unknown abort table {tab!r} (frozen: {ABORT_TABLE_ID})")
+        return abort_thresholds(self.env.cfg.scenario, self.env.cfg.load, typ)
+
     def _target(self, k, fam, level, cur):
         if fam == "ttt":
             i = C.TTT_SET_MS.index(int(cur))
@@ -323,46 +542,19 @@ class ProbeRunner:
         return v
 
     def _baseline(self, b, now):
-        """Pre-block baseline of the unit (delivered reports whose window lies in (t0 - pre_s, t0])."""
-        cells, t0, lo = b["ucells"], b["t0"], b["t0"] - self.pcfg.pre_s
-        out = {}
-        with np.errstate(all="ignore"):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                f = [np.nanmax(r["ll_delay_p95"][cells]) for r in self.hist["fast"] if lo <= r["t0"] and r["t1"] <= t0]
-                out["ll"] = float(np.nanmean(f)) if f and np.isfinite(f).any() else np.nan
-                e = [np.nanmean(r["embb_thp_p5"][cells]) for r in self.hist["thp"] if lo <= r["t0"] and r["t1"] <= t0]
-                out["embb"] = float(np.nanmean(e)) if e and np.isfinite(e).any() else np.nan
-                m = [float(np.sum(r["rlf"][cells])) for r in self.hist["mob"] if lo - 60 <= r["t0"] and r["t1"] <= t0]
-                out["rlf"] = float(np.mean(m)) if m else np.nan
-                en = [float(np.sum(r["energy_j"][cells])) for r in self.hist["energy"] if r["t1"] <= t0]
-                out["energy"] = en[-1] if en else np.nan
-        return out
+        return unit_baseline(self.hist, b["ucells"], b["t0"], self.pcfg.pre_s)
 
     def _breach(self, b, rep):
-        """Abort reason index if ``rep`` (a report of the block's post-assignment window) breaches, else -1."""
-        p, base, cells = self.pcfg, b["base"], b["ucells"]
-        g = rep["gran"]
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            if g == "fast":
-                v = np.nanmax(rep["ll_delay_p95"][cells])
-                thr = max(p.abort_ll_abs_s, p.abort_ll_rel * base["ll"]) if np.isfinite(base["ll"]) else \
-                    p.abort_ll_abs_s
-                b["cnt"]["ll"] = b["cnt"]["ll"] + 1 if np.isfinite(v) and v > thr else 0
-                return 0 if b["cnt"]["ll"] >= p.abort_ll_consec else -1
-            if g == "thp":
-                v = np.nanmean(rep["embb_thp_p5"][cells])
-                thr = min(p.abort_embb_abs_bps, p.abort_embb_rel * base["embb"]) if np.isfinite(base["embb"]) \
-                    else p.abort_embb_abs_bps
-                b["cnt"]["embb"] = b["cnt"]["embb"] + 1 if np.isfinite(v) and v < thr else 0
-                return 1 if b["cnt"]["embb"] >= p.abort_embb_consec else -1
-        if g == "mob":
-            v = float(np.sum(rep["rlf"][cells]))
-            thr = max(p.abort_rlf_abs, p.abort_rlf_rel * base["rlf"]) if np.isfinite(base["rlf"]) else p.abort_rlf_abs
-            return 2 if v > thr else -1
-        if g == "energy" and np.isfinite(base["energy"]):
-            return 3 if float(np.sum(rep["energy_j"][cells])) > (1 + p.abort_energy_frac) * base["energy"] else -1
+        """Abort reason index once a rule has ``ABORT_RULES[rule][1]`` consecutive breaching reports, else -1."""
+        for j, (rule, (gran, k)) in enumerate(ABORT_RULES.items()):
+            if rep["gran"] != gran:
+                continue
+            if self.pcfg.abort_table == "force":         # tests only: the first scored report with a value
+                return j if np.isfinite(unit_value(rule, rep, b["ucells"])) else -1
+            s = report_score(rule, rep, b["ucells"], b["base"])
+            b["cnt"][rule] = b["cnt"][rule] + 1 if s > b["theta"][rule] else 0
+            if b["cnt"][rule] >= k:
+                return j
         return -1
 
     # -------------------------------------------------------------------------------------------- phases

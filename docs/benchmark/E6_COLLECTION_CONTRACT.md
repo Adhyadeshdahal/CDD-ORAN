@@ -267,3 +267,15 @@ e6-collect-v3 policy collection FROZEN at commit 78c7c53 after the fit-seed pilo
 treatment window) is an operational support gate only, report both eligibility definitions; never select fitting
 rows by eligibility. Probe grid e6-probe/2: NO-GO until its 30-job audit is reported and its contract frozen; claims
 limited to the whole-trajectory sharp null (block randomization retained); 1800 s scored approved.
+
+## Probe campaign v3 — e6-probe/3 (supersedes e6-probe/2 abort rules; 2026-09-28; pending sol sign-off)
+Audit (scratchpad/decision_stack/PROBE_AUDIT_RESULT.md): e6-probe/2 abort rules fired on 33 % of sham blocks.
+v3 abort-and-restore: rules ll/embb/rlf/energy on delivered unit KPM, harm-gated at SLA targets (LL 0.1 s, eMBB
+2 Mb/s, RLF ≥ 1), persistence k = 5/3/1/1 reports; thresholds ABORT_THETA table `v3-ref-audit-fit-j0-4` = q99.5 of
+the window statistic over NO-PROBE reference windows only (audit fit seeds j < 5, all region units, 30 s grid), per
+scenario|load|slot type, floored 2/2/2/1.25, pooled fallback; expected sham abort ≤ 2 %/window by construction.
+Offline recompute (147/174 blocks exact): sham 0/46 (1/46 leave-seed-out), carrier 0/23. Local re-audit (6 fresh
+fit seeds j=5): actuation .94–1.0, sham abort 1/9, treated 1/27 (both RLF rule), placebo 752 tests .031/.044,
+lag-1 none. Watch the RLF rule (k=1) on the grid; changing k requires predeclaration before the grid.
+All other e6-probe/2 settings unchanged (slots, arms, levels, units, cap, seeds, RNG tags, mscr-crt-v1 inference,
+whole-trajectory sharp-null claim only).

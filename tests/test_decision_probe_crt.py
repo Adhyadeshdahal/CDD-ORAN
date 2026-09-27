@@ -124,13 +124,12 @@ def test_crt_valid_on_null_and_powered_on_effect():
 def forced_breach_trace():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        return P.run_probe_episode(_cfg(110007), P.ProbeConfig(abort_ll_abs_s=-1.0, abort_ll_rel=0.0))
+        return P.run_probe_episode(_cfg(110007), P.ProbeConfig(abort_table="force"))
 
 
 def test_abort_restore_fires_on_forced_breach(forced_breach_trace):
     a = forced_breach_trace.arrays
     assert len(a["blk_arm"]) >= 1 and a["blk_abort"].all()
-    assert (a["blk_abort_reason"] == P.ABORT_REASONS.index("ll")).all()
     assert (a["blk_abort_t"] < a["blk_obs_end"]).all()
     treated = a["blk_arm"] != P.ARMS.index("sham")
     assert treated.any() and (a["blk_n_applied"][treated] > 0).all()
@@ -169,6 +168,35 @@ def test_end_to_end_tiny_real_probe_episode():
     assert all("unknown" in r["claim"] and "absent" in r["claim"] for r in default["results"])
     fs = P.first_stage([tr])
     assert fs["by_arm"][P.ARMS[int(a["blk_arm"][0])]]["blocks"] >= 1
+
+
+def test_online_abort_matches_offline_recompute(monkeypatch):
+    """The runner's abort monitor and the offline replay (block_scores + fire_time) agree on logged KPM."""
+    theta = {"ll": np.inf, "embb": np.inf, "rlf": -100.0, "energy": np.inf}  # fire on the first mob report w/ RLF
+    monkeypatch.setattr(P, "ABORT_THETA", {"*|*|0": theta, "*|*|1": theta})
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        tr = P.run_probe_episode(_cfg(110003, scored_s=240, load="high"))
+    a, pm = tr.arrays, tr.meta["probe"]
+    reps = P.trace_reports(tr)
+    creg = np.asarray(tr.meta["cell_region"], int)
+    i = 0                                                          # first block: trajectory identical up to it
+    cells = np.nonzero(np.isin(creg, pm["units"][str(int(a["blk_region"][i]))]))[0]
+    sc, _ = P.block_scores(P.unit_series(reps, cells), float(a["blk_t0"][i]), float(a["blk_obs_end"][i]), 60)
+    ft = P.fire_time(sc["rlf"], theta["rlf"], P.ABORT_RULES["rlf"][1])
+    assert (ft is None) == (not a["blk_abort"][i])
+    if ft is not None:
+        assert ft == a["blk_abort_t"][i] and a["blk_abort_reason"][i] == P.ABORT_REASONS.index("rlf")
+
+
+def test_abort_table_is_reference_quantile():
+    for row in P.ABORT_THETA.values():
+        assert set(row) == set(P.ABORT_RULES)
+        assert all(row[r] >= P.ABORT_FLOOR[r] for r in row)
+    assert P.abort_thresholds("surge", "high", 1) == P.ABORT_THETA["surge|high|1"]
+    assert P.abort_thresholds("base", "low", 0) == P.ABORT_THETA["*|*|0"]
+    s = [(1.0, 5.0), (2.0, 6.0), (3.0, 1.0), (4.0, 7.0), (5.0, 8.0)]
+    assert P.window_stat(s, 2) == 7.0 and P.fire_time(s, 6.5, 2) == 5.0 and P.fire_time(s, 8.0, 1) is None
 
 
 def test_timing_contract_and_one_sided_levels():

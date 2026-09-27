@@ -98,7 +98,8 @@ def build_block_data(traces, schedule_from=None) -> BlockData:
         a, pm = src.arrays, src.meta["probe"]
         if pm.get("replay") or tr.meta.get("probe", {}).get("replay"):
             raise ValueError("audit replay traces (schedule overrides) never enter inference")
-        pc = ProbeConfig(**{k: tuple(v) if isinstance(v, list) else v for k, v in pm["config"].items()})
+        fields = {f.name for f in dataclasses.fields(ProbeConfig)}      # older probe versions: drop retired keys
+        pc = ProbeConfig(**{k: tuple(v) if isinstance(v, list) else v for k, v in pm["config"].items() if k in fields})
         if pcfg is not None and pc != pcfg:
             raise ValueError("episodes with different probe configurations cannot be pooled")
         pcfg = pc
