@@ -127,3 +127,54 @@ def test_legacy_get_env_mean_std_reexports_still_work():
     assert legacy.ORANEnvironment1 is DirectEnv1
     assert legacy.get_env_i_mean_std is direct_mean_std
     assert legacy.get_env_iii_mean_std.__name__ == "get_env_iii_mean_std"
+
+
+def _loaded_modules_matching(import_target: str, prefixes: tuple[str, ...]) -> list[str]:
+    """Import ``import_target`` in a fresh interpreter; return loaded modules under ``prefixes``."""
+    code = (
+        f"import {import_target}\n"
+        "import sys, json\n"
+        f"p = {prefixes!r}\n"
+        "print(json.dumps(sorted(m for m in sys.modules"
+        " if any(m == x or m.startswith(x + '.') for x in p))))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=str(_REPO_ROOT),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    import json
+
+    return json.loads(result.stdout.strip().splitlines()[-1])
+
+
+@pytest.mark.parametrize("live_module", [
+    "cdd_oran.planners.sequence",
+    "cdd_oran.benchmark.learned_world_model",
+    "cdd_oran.benchmark.rollout",
+    "cdd_oran.decision.arbiter",
+])
+def test_live_v2_path_loads_no_legacy_package(live_module: str):
+    # Plan 012 step 1: the live V2/E-series decision path must not load ANY module of the retired
+    # legacy package. cdd_oran.planners/__init__ is lazy, so importing the sequence planner no
+    # longer drags in the legacy planners (cost.py -> cdd_oran.envs.legacy).
+    assert _loaded_modules_matching(live_module, ("cdd_oran.envs.legacy",)) == []
+
+
+def test_decision_arbiter_is_torch_free():
+    assert _loaded_modules_matching("cdd_oran.decision.arbiter", ("torch",)) == []
+
+
+def test_planners_package_lazy_names_still_resolve():
+    # Behavior-neutral: the lazy PEP 562 __getattr__ serves the same objects as direct imports.
+    import cdd_oran.planners as planners
+    from cdd_oran.planners.ensemble import EnsembleAggregator
+    from cdd_oran.planners.qacm import QACM
+
+    assert planners.QACM is QACM
+    assert planners.EnsembleAggregator is EnsembleAggregator
+    assert callable(planners.get_planners) and callable(planners.build_aggregator)
+    with pytest.raises(AttributeError):
+        _ = planners.NoSuchPlanner
