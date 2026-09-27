@@ -62,6 +62,8 @@ class E6Env:
             self.knobs += [("ll_ratio", c) for c in range(lay.n_cells)]
         self.knobs += [("sleep", c) for c in range(lay.n_cells) if not lay.is_macro[c]]
         self.knobs += [("carrier", c) for c in range(lay.n_cells) if lay.is_macro[c]]
+        fwd = {(s, n) for s in range(lay.n_cells) for n in lay.neighbours[s]}  # TS/ES also write the reverse CIO
+        self.knobs += [("cio", n, s) for s in range(lay.n_cells) for n in lay.neighbours[s] if (n, s) not in fwd]
         r = _rng(cfg.seed, "xapp", 999)
         total_s = cfg.warmup_s + cfg.scored_s
         self.update_at = (cfg.warmup_s + r.uniform(0.15, 0.6) * cfg.scored_s) if cfg.update and self.xapps else None
@@ -201,7 +203,8 @@ class E6Env:
                 self.writes_used += 1
                 self.stats["writes"] += 1
         if self.log_on:
-            self.log.append({"t": now, "config": self.config(), "reports": new, "n_req": len(reqs)})
+            self.log.append({"t": now, "config": self.config(), "reports": new, "n_req": len(reqs), "requests": reqs,
+                             "decisions": list(dec["decisions"]), "rollback": list(dec.get("rollback", ()))})
 
     def score(self):
         S = self.plant.sla
