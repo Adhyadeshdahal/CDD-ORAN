@@ -12,6 +12,8 @@ One coherent clock: every tick (TICK_S = 40 ms) executes, in this order:
   5. queues, SLA bookkeeping (per UE-second), energy, KPM counters.
 Configuration changes applied by the RIC take effect at the start of the next tick.
 Exogenous randomness is keyed by (seed, stream, tick) so arms with different actions see the same tape.
+Stress scenarios (cfg.scenario = "surge" | "mistune", see docs/benchmark/E6_STRESS_SCENARIOS.md) are drawn once from
+the (seed, "scenario") stream and are otherwise deterministic in time; "base" builds no scenario object at all.
 """
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ import numpy as np
 from . import config as C
 from .geometry import GainMaps, Layout
 
-STREAMS = {"layout": 1, "ue": 2, "mob": 3, "traffic": 4, "meas": 5, "load": 6, "kpm": 7, "xapp": 8}
+STREAMS = {"layout": 1, "ue": 2, "mob": 3, "traffic": 4, "meas": 5, "load": 6, "kpm": 7, "xapp": 8, "scenario": 9}
 LL, EMBB, BE = 0, 1, 2
 A_L3 = 0.5 ** (C.L3_K / 4.0)
 NOISE_W = 10 ** ((C.NOISE_DBM_HZ + 10 * np.log10(C.BW_HZ) + C.UE_NF_DB) / 10) / 1000.0
@@ -59,6 +61,9 @@ class Plant:
         u = ru.uniform(size=n)
         self.sl = np.where(u < cfg.frac_ll, LL, np.where(u < cfg.frac_ll + cfg.frac_embb, EMBB, BE))
         self.ll_pps = ru.uniform(*C.LL_RATE_PPS, n) * cfg.lf()
+        # stress scenario (S1 surge / S2 mistune); None for the calm base plant (bit-identical to pre-scenario E6)
+        self.oam_hook = None          # set by the RIC layer: called (knob, value, now) on every OAM/SMO write
+        self.scn = None if cfg.scenario == "base" else make_scenario(cfg, self)
         # ---------------------------------------------------------------- configuration (RIC-controlled knobs)
         self.cio = np.zeros((nc, nc))                                 # CIO[s, n] dB (A3 offset for s -> n)
         self.hys = np.full(nc, 2.0)
@@ -133,6 +138,8 @@ class Plant:
         a = np.exp(-dt / cfg.m_tau_s)
         logm = np.log(self.m) * a + cfg.m_sigma * np.sqrt(1 - a * a) * rl.normal(size=7)
         self.m = np.exp(logm)
+        if self.scn is not None:
+            self.scn.on_tick(self, now)
         rm = _rng(cfg.seed, "mob", t)
         turn = rm.uniform(size=n) < dt / 20.0                          # [A] new heading every ~20 s
         self.heading = np.where(turn, rm.uniform(0, 2 * np.pi, n), self.heading)
@@ -141,6 +148,8 @@ class Plant:
             step = self.speed[mv] * dt
             self.pos[mv] = self.lay.wrap_near(self.pos[mv] + step[:, None] * np.c_[np.cos(self.heading[mv]),
                                                                                     np.sin(self.heading[mv])])
+        if self.scn is not None:
+            self.scn.move(self, dt)
         rt = _rng(cfg.seed, "traffic", t)
         site = self.site_of[self.serv]
         total = cfg.warmup_s + cfg.scored_s
@@ -150,6 +159,8 @@ class Plant:
         arr = np.zeros(n)
         arr[ll] = rt.poisson(self.ll_pps[ll] * dt * ramp) * C.LL_PKT_BYTES * 8
         rate = np.where(self.sl == EMBB, cfg.embb_files_per_s, cfg.be_files_per_s) * mult
+        if self.scn is not None:
+            rate = rate * self.scn.traffic_mult(now, self.pos)
         files = rt.poisson(np.where(ll, 0.0, rate * dt))
         arr[~ll] = files[~ll] * C.EMBB_FILE_BYTES * 8
         self.q += arr
@@ -324,6 +335,9 @@ class Plant:
                 run = np.where(frac > 0.2, self.cell_viol_run[:, s_] + 1, 0)
                 S["severe"] += int(((run == 10)).sum())
                 self.cell_viol_run[:, s_] = run
+        # last closed second's per-UE violation flags (read by the optional trace recorder; privileged labels)
+        self.sec_viol_ll, self.sec_viol_embb, self.sec_viol_be = ll_v, em_v, be_v
+        self.sec_out, self.sec_scored = self.sec_outage.copy(), scored
         cell = self.serv
         for u in np.nonzero(sl == LL)[0]:                     # every LL UE-second is a sample (zeros included)
             if not self.sec_outage[u]:
@@ -334,3 +348,160 @@ class Plant:
         self.sec_bits[:] = 0
         self.sec_maxdelay[:] = 0
         self.sec_outage[:] = False
+
+
+# ==================================================================================================== stress scenarios
+# Mechanics of the pre-declared stress scenarios (docs/benchmark/E6_STRESS_SCENARIOS.md). Everything is drawn once from
+# the (seed, "scenario", k) stream at construction and is otherwise a deterministic function of time, so every arbiter
+# arm sees the identical scenario tape. Scenarios never read the RIC-controlled configuration.
+def wrap_dist(lay, pos, centre):
+    """Wrap-around (minimum-image) distance of each point in ``pos`` (n, 2) to ``centre`` (2,)."""
+    c = np.asarray(centre)[None, :] + lay._cands()                                    # (25, 2) images
+    return np.linalg.norm(np.atleast_2d(pos)[:, None, :] - c[None], axis=-1).min(1)
+
+
+class _Scenario:
+    def __init__(self, cfg: C.E6Config, plant: Plant):
+        self.cfg, self.lay = cfg, plant.lay
+
+    def at(self, frac):
+        """Absolute episode time (s) of a fraction of the scored window."""
+        return self.cfg.warmup_s + frac * self.cfg.scored_s
+
+    def on_tick(self, plant, now):
+        pass
+
+    def move(self, plant, dt):
+        pass
+
+    def traffic_mult(self, now, pos):
+        return 1.0
+
+    def _dist(self, pos, centre):
+        return wrap_dist(self.lay, pos, centre)
+
+    def _anchor(self, r, mode):
+        """Scenario anchor point: 'band' 150-250 m from a random macro site (the E6 hotspot rule), 'edge' midway
+        between two adjacent macro sites, 'vertex' a 3-site corner (ISD / sqrt 3 from a site)."""
+        d = C.ISD_M
+        site = self.lay.sites[int(r.integers(7))]
+        if mode == "band":
+            rad, ang = r.uniform(150, 250), r.uniform(0, 2 * np.pi)
+        elif mode == "edge":
+            rad, ang = d / 2.0, np.pi / 3.0 * int(r.integers(6))
+        elif mode == "vertex":
+            rad, ang = d / np.sqrt(3.0), np.pi / 6.0 + np.pi / 3.0 * int(r.integers(6))
+        else:
+            raise ValueError(f"unknown scenario location {mode!r}")
+        return self.lay.wrap(site + rad * np.array([np.cos(ang), np.sin(ang)]))[0]
+
+
+class SurgeScenario(_Scenario):
+    """S1: event / moving-hotspot surge. eMBB/BE offered traffic of every UE inside a disk is multiplied by
+    1 + (surge_mult - 1) * envelope(t); envelope = trapezoid (onset, ramp up, hold, ramp down)."""
+
+    def __init__(self, cfg, plant):
+        super().__init__(cfg, plant)
+        r = _rng(cfg.seed, "scenario", 1)
+        self.c0 = self._anchor(r, cfg.surge_loc)
+        a = r.uniform(0, 2 * np.pi)                                                     # drift bearing (if moving)
+        self.vel = cfg.surge_speed_mps * np.array([np.cos(a), np.sin(a)])
+        self.t0 = self.at(cfg.surge_onset_frac)
+        self.ramp = cfg.surge_ramp_frac * cfg.scored_s
+        self.t_end = self.t0 + 2 * self.ramp + cfg.surge_hold_frac * cfg.scored_s
+
+    def envelope(self, now):
+        if now < self.t0 or now > self.t_end:
+            return 0.0
+        if self.ramp <= 0:
+            return 1.0
+        return float(min(1.0, (now - self.t0) / self.ramp, (self.t_end - now) / self.ramp))
+
+    def centre(self, now):
+        el = min(max(now, self.t0), self.t_end) - self.t0
+        return self.lay.wrap(self.c0 + self.vel * el)[0]
+
+    def inside(self, now, pos):
+        return self._dist(pos, self.centre(now)) <= self.cfg.surge_radius_m
+
+    def traffic_mult(self, now, pos):
+        e = self.envelope(now)
+        if e <= 0.0:
+            return 1.0
+        return 1.0 + (self.cfg.surge_mult - 1.0) * e * self.inside(now, pos)
+
+
+class MistuneScenario(_Scenario):
+    """S2 (too-late-HO hypothesis): high-speed road corridor (present from t = 0) crossing a cluster whose Hys/TTT are
+    overwritten by an OAM parameter rollout at mis_onset_frac. Corridor UEs drive the section at corr_speed_kmh with a
+    U-turn at each end (recurrent-road stress [A]); the mis-set cluster = every cell that is the strongest (outdoor,
+    all cells on) anywhere on the section [A].
+
+    OAM writes (the rollout, and an SMO restore via ``oam_set``) bypass the RIC: no request, no NACK, no churn, no
+    actuator dwell. Each written knob is reported to ``plant.oam_hook`` (the env records it as the knob's
+    last-known-good), so a RIC rollback cannot undo an OAM write and the next RIC change records it as its prior."""
+
+    def __init__(self, cfg, plant):
+        super().__init__(cfg, plant)
+        r = _rng(cfg.seed, "scenario", 2)
+        self.centre = self._anchor(r, cfg.corr_loc)
+        a = r.uniform(0, np.pi)
+        self.u = np.array([np.cos(a), np.sin(a)])
+        self.half = cfg.corr_len_m / 2.0
+        n = plant.n
+        k = int(round(cfg.corr_frac_ue * n))
+        self.idx = np.sort(r.choice(n, k, replace=False))
+        self.s = r.uniform(-self.half, self.half, k)                                    # position along the road
+        self.dir = np.where(r.uniform(size=k) < 0.5, 1.0, -1.0)
+        self.v = cfg.corr_speed_kmh / 3.6
+        plant.indoor[self.idx] = False
+        plant.speed[self.idx] = self.v
+        self._place(plant)
+        plant.mobile_idx = np.setdiff1d(plant.mobile_idx, self.idx)                     # moved here, not by the walk
+        pts = self.lay.wrap(self.centre + np.arange(-self.half, self.half + 1e-9, C.GRID_M)[:, None] * self.u)
+        self.cluster = np.unique(np.argmax(plant.gm.lookup(pts), 1))
+        self.t_mis = self.at(cfg.mis_onset_frac)
+        self.applied = False
+        self.push_t = None                  # time the rollout was applied
+        self.pre_hys = self.pre_ttt = None  # cluster values in force just before the rollout (known to the SMO)
+        self.oam_log = []                   # (t, "push" | "restore")
+
+    def _place(self, plant):
+        plant.pos[self.idx] = self.lay.wrap(self.centre + self.s[:, None] * self.u)
+        plant.heading[self.idx] = np.arctan2(self.u[1], self.u[0]) + np.where(self.dir > 0, 0.0, np.pi)
+
+    def oam_set(self, plant, hys, ttt, now, tag):
+        """OAM/SMO write of per-cluster-cell Hys (dB) and TTT (ms) outside the RIC."""
+        hys = np.broadcast_to(np.asarray(hys, float), self.cluster.shape)
+        ttt = np.broadcast_to(np.asarray(ttt, int), self.cluster.shape)
+        plant.hys[self.cluster] = hys
+        plant.ttt[self.cluster] = ttt
+        if plant.oam_hook is not None:
+            for c, h, m in zip(self.cluster, hys, ttt, strict=True):
+                plant.oam_hook(("hys", int(c)), float(h), now)
+                plant.oam_hook(("ttt", int(c)), float(m), now)
+        self.oam_log.append((now, tag))
+
+    def on_tick(self, plant, now):
+        if not self.applied and now >= self.t_mis:                                      # one-time OAM rollout
+            self.pre_hys, self.pre_ttt = plant.hys[self.cluster].copy(), plant.ttt[self.cluster].copy()
+            self.oam_set(plant, self.cfg.mis_hys_db, int(self.cfg.mis_ttt_ms), now, "push")
+            self.applied, self.push_t = True, now
+
+    def move(self, plant, dt):
+        s = self.s + self.dir * self.v * dt
+        hi, lo = s > self.half, s < -self.half
+        s = np.where(hi, 2 * self.half - s, np.where(lo, -2 * self.half - s, s))       # reflect (U-turn)
+        self.dir = np.where(hi, -1.0, np.where(lo, 1.0, self.dir))
+        self.s = s
+        self._place(plant)
+
+
+SCENARIOS = {"surge": SurgeScenario, "mistune": MistuneScenario}
+
+
+def make_scenario(cfg, plant):
+    cfg.validate_scenario()
+    if cfg.scenario not in SCENARIOS:
+        raise ValueError(f"unknown E6 scenario {cfg.scenario!r}")
+    return SCENARIOS[cfg.scenario](cfg, plant)

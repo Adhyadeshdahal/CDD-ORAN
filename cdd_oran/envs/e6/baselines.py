@@ -184,3 +184,48 @@ def tuned_static(evaluate, grid=None, max_passes=2):
         if not improved:
             break
     return {"best": best, "best_val": best_val, "path": path, "n_eval": len(cache)}
+
+
+# ------------------------------------------------------------------------------ SMO restore (stress scenario S2)
+# Declared a priori (E6_STRESS_SCENARIOS.md sec. 4.1), not tuned: the SMO uses the MRO function's own nominal too-late
+# target (xapps.MRO: 2 % of HO attempts + too-late) aggregated over the rollout cluster, sustained over MRO's 60 s window
+# (2 consecutive 30 s mobility reports), with MRO's minimum-evidence rule (>= 2 too-late and >= 3 events).
+SMO_TL_RATIO = 0.02
+SMO_N_REPORTS = 2
+SMO_MIN_TL, SMO_MIN_EVENTS = 2, 3
+
+
+class SMORestore:
+    """Alarm-triggered SMO restore: a reference OUTSIDE the near-RT RIC (post-rollout verification with fallback).
+
+    Wraps an arbiter ``inner`` (None = accept all) and passes its decisions through unchanged. After the S2 rollout
+    it watches the delivered mobility KPM reports whose window starts at/after the push; when the cluster too-late
+    ratio tl / (ho_att + tl) exceeds ``ratio`` on ``n_reports`` consecutive reports (with the minimum evidence), it
+    restores the pre-rollout Hys/TTT on the whole cluster once, as an OAM write (no RIC request, no churn; recorded
+    as the knobs' last-known-good). Privileged only in what the SMO itself knows: which cells it pushed and their
+    previous values. No-op outside ``scenario="mistune"``."""
+
+    def __init__(self, env, inner=None, ratio=SMO_TL_RATIO, n_reports=SMO_N_REPORTS):
+        self.env, self.inner, self.ratio, self.n_reports = env, inner, ratio, n_reports
+        self.streak, self.fired_t = 0, None
+
+    def alarm(self, rep, scn):
+        """Update the streak with one mobility report; returns True when the restore should fire."""
+        cl = scn.cluster
+        tl = float(rep["too_late"][cl].sum())
+        den = float(rep["ho_att"][cl].sum()) + tl
+        bad = tl >= SMO_MIN_TL and den >= SMO_MIN_EVENTS and tl / den > self.ratio
+        self.streak = self.streak + 1 if bad else 0
+        return self.streak >= self.n_reports
+
+    def __call__(self, obs):
+        dec = self.inner(obs) if self.inner is not None else             {"decisions": ["accept"] * len(obs["requests"]), "writes": []}
+        p = self.env.plant
+        scn = p.scn
+        if self.fired_t is None and getattr(scn, "push_t", None) is not None:
+            for rep in obs["new_reports"]:
+                if rep["gran"] == "mob" and rep["t0"] >= scn.push_t - 1e-9 and self.alarm(rep, scn):
+                    scn.oam_set(p, scn.pre_hys, scn.pre_ttt, obs["t"], "restore")
+                    self.fired_t = obs["t"]
+                    break
+        return dec

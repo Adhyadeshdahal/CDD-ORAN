@@ -25,6 +25,8 @@ Churn: every APPLIED knob change (accepted, modified, rolled back, written) coun
   episode, warm-up included). With ``churn_cap`` set, once changes >= cap every further change is refused:
   accept/modify -> NACK (counted rej + "churn_blocked"); rollback/write skipped (+ "churn_blocked").
   No-op accepts (value already in force) are not changes and are never blocked.
+Trace: ``trace=True`` attaches a ``cdd_oran.decision.trace.TraceRecorder`` (per-second propose/apply/outcome rows +
+  privileged per-cell labels); ``env.get_trace()`` returns it. Off by default: no recording, no extra work.
 Arbiters get ONLY ``obs``.
 obs = {"t", "new_reports", "config" (knob -> value), "requests", "locked" (knob -> until, active only),
        "changes", "churn_cap", "static": {cells, neighbours, is_macro, knobs, xapps (declared knobs only)}}.
@@ -41,13 +43,14 @@ from .xapps import MIXES
 
 class E6Env:
     def __init__(self, cfg: C.E6Config, write_budget: float = 300.0, log: bool = True, wg3: bool = False,
-                 churn_cap: int | None = None):
+                 churn_cap: int | None = None, trace: bool = False, trace_snapshot_s: int = 60):
         self.cfg = cfg
         self.plant = Plant(cfg)
         self.kpm = KPM(cfg, self.plant)
         self.xapps = [cls(self, i) for i, cls in enumerate(MIXES[cfg.mix])]
         self.last_change = {}
         self.prev_val = {}                # knob -> value in force before its most recent change (last-known-good)
+        self.plant.oam_hook = self._on_oam  # OAM/SMO writes outside the RIC (stress scenario S2)
         self.lock_until = {}              # knob -> time the WG3 lock expires
         self.deferred = []
         self.write_budget = write_budget
@@ -74,6 +77,10 @@ class E6Env:
         self.sec = 0
         self._static = None
         self._pending = None              # (now, new_reports, requests) between step_propose and step_apply
+        self._tr = None                   # optional trace recorder (cdd_oran.decision.trace); never copied
+        if trace:
+            from cdd_oran.decision.trace import TraceRecorder
+            self._tr = TraceRecorder(self, trace_snapshot_s)
 
     def static(self):
         lay = self.plant.lay
@@ -100,6 +107,12 @@ class E6Env:
             self.stats["changes"] += 1
         return "ok", v2
 
+    def _on_oam(self, k, v, now):
+        """OAM/SMO write outside the RIC (scenario S2 rollout / SMO restore): it becomes the knob's last-known-good,
+        so a RIC rollback cannot undo it and the next RIC change records it as its prior. Not a RIC change: no
+        dwell (``last_change``), no churn."""
+        self.prev_val[k] = float(v)
+
     def locked(self, k, now):
         return now < self.lock_until.get(k, -1e9)
 
@@ -112,7 +125,15 @@ class E6Env:
         """Independent copy for lookahead rollouts (shares only the immutable layout and gain maps). Taken between
         step_propose and step_apply it carries the pending requests (replayed identically by step_apply)."""
         memo = {id(self.plant.gm): self.plant.gm, id(self.plant.lay): self.plant.lay}
+        if self._tr is not None:
+            memo[id(self._tr)] = None     # copies are untraced (lookahead rollouts must not write the trace)
         return copy.deepcopy(self, memo)
+
+    def get_trace(self):
+        """The episode's ``decision.trace.Trace`` (requires ``trace=True``)."""
+        if self._tr is None:
+            raise RuntimeError("E6Env was built with trace=False")
+        return self._tr.finish()
 
     def step(self, arbiter=None):
         """Advance one control second (plant ticks, KPM, xApps, arbiter, RIC apply)."""
@@ -135,6 +156,8 @@ class E6Env:
             self._static = self.static()
         for _ in range(C.TICKS_PER_CONTROL):
             p.tick()
+        if self._tr is not None:
+            self._tr.plant_second()
         self.sec += 1
         now = float(self.sec)
         self.kpm.second(self.sec)
@@ -163,48 +186,72 @@ class E6Env:
         now, new, reqs = self._pending
         self._pending = None
         p = self.plant
+        tr = self._tr
+        if tr is not None:
+            tr.begin(now, new, reqs)
         for k in dec.get("rollback", ()):
-            if k in self.prev_val and abs(self.prev_val[k] - knob_get(p, k)) > 1e-9 \
-                    and self._apply(k, self.prev_val[k], now)[0] == "ok":
-                self.stats["rollbacks"] += 1
+            st = "noop"
+            if k in self.prev_val and abs(self.prev_val[k] - knob_get(p, k)) > 1e-9:
+                st = self._apply(k, self.prev_val[k], now)[0]
+                if st == "ok":
+                    self.stats["rollbacks"] += 1
+            if tr is not None:
+                tr.rollback(now, k, {"ok": "applied", "nack": "actuator"}.get(st, st))
         old_def = {id(d["req"]): d["age"] for d in self.deferred}
         self.deferred = []
         for r, d in zip(reqs, dec["decisions"], strict=True):
             self.stats["req"] += 1
             x = next(a for a in self.xapps if a.name == r["xapp"])
+            d0, why = d, "reject"
             if self.locked(r["knob"], now):            # WG3 lock: force-reject whatever the decision
-                d = "reject"
+                d, why = "reject", "locked"
                 self.stats["lock_blocked"] += 1
             elif isinstance(d, tuple) and d[0] == "lock":
                 self.lock_until[r["knob"]] = now + float(d[1])
                 self.stats["locks"] += 1
-                d = "reject"
+                d, why = "reject", "lock_set"
+                if tr is not None:
+                    tr.lock(now, r["knob"], self.lock_until[r["knob"]])
             if d == "defer":
                 age = old_def.get(id(r), 0) + 1
                 if age <= 10:
                     self.deferred.append({"req": r, "age": age})
                     self.stats["def"] += 1
+                    if tr is not None:
+                        tr.request(now, r, d0, "deferred", knob_get(p, r["knob"]), age - 1)
                     continue
-                d = "reject"
+                d, why = "reject", "expired"
             if d == "reject":
                 self.stats["rej"] += 1
                 x.result(r, False, knob_get(p, r["knob"]), now)
+                if tr is not None:
+                    tr.request(now, r, d0, why, knob_get(p, r["knob"]), old_def.get(id(r), 0))
                 continue
             v = r["prop"] if d == "accept" else float(d[1])
+            n_ch = self.stats["changes"]
             st, applied = self._apply(r["knob"], v, now)
             ok = st == "ok"
             self.stats["acc" if d == "accept" else "mod"] += int(ok)
             self.stats["rej"] += int(st == "churn")    # churn-cap NACK counts as a rejection
             x.result(r, ok, applied, now)
+            if tr is not None:
+                why = ("ok" if self.stats["changes"] > n_ch else "noop") if ok else \
+                    ("churn" if st == "churn" else "actuator")
+                tr.request(now, r, d0, why, applied, old_def.get(id(r), 0))
         for k, v in dec.get("writes", []):
             if self.writes_used >= self.write_budget * max(self.cfg.scored_s, 1) / 3600 + 1e-9:
                 break
-            if self._apply(k, v, now)[0] == "ok":
+            st = self._apply(k, v, now)[0]
+            if st == "ok":
                 self.writes_used += 1
                 self.stats["writes"] += 1
+            if tr is not None:
+                tr.write(now, k, v, {"nack": "actuator"}.get(st, st))
         if self.log_on:
             self.log.append({"t": now, "config": self.config(), "reports": new, "n_req": len(reqs), "requests": reqs,
                              "decisions": list(dec["decisions"]), "rollback": list(dec.get("rollback", ()))})
+        if tr is not None:
+            tr.end(now)
 
     def score(self):
         S = self.plant.sla

@@ -1,0 +1,248 @@
+{
+  "scenario_version": "E6-scn-v1",
+  "frozen_on": "2026-09-28",
+  "spec": "docs/benchmark/E6_STRESS_SCENARIOS.md",
+  "status": "FROZEN before any arbitration / xApp SLA outcome in S1/S2 was run or inspected. Any change to scenario mechanics, parameters, seeds or this matrix = new scenario_version + new holdout contract.",
+  "scenarios": [
+    "surge",
+    "mistune"
+  ],
+  "dev_parameters": {
+    "surge_mult": 3.0,
+    "surge_radius_m": 250.0,
+    "surge_loc": "band",
+    "surge_onset_frac": 0.2,
+    "surge_ramp_frac": 0.1,
+    "surge_hold_frac": 0.3,
+    "surge_speed_mps": 0.0,
+    "corr_frac_ue": 0.1,
+    "corr_speed_kmh": 120.0,
+    "corr_len_m": 1000.0,
+    "corr_loc": "edge",
+    "mis_onset_frac": 0.1,
+    "mis_hys_db": 3.0,
+    "mis_ttt_ms": 480
+  },
+  "holdout_variants": {
+    "surge": {
+      "H-time": {
+        "surge_onset_frac": 0.45,
+        "surge_ramp_frac": 0.05
+      },
+      "H-loc": {
+        "surge_loc": "vertex"
+      },
+      "H-int": {
+        "surge_mult": 4.0
+      },
+      "H-move": {
+        "surge_speed_mps": 0.8333333333333333
+      }
+    },
+    "mistune": {
+      "H-time": {
+        "mis_onset_frac": 0.35
+      },
+      "H-loc": {
+        "corr_loc": "vertex"
+      },
+      "H-int": {
+        "mis_hys_db": 5.0,
+        "mis_ttt_ms": 640
+      },
+      "H-dir": {
+        "mis_hys_db": 0.0,
+        "mis_ttt_ms": 40
+      }
+    }
+  },
+  "holdout_rule": "HOLDOUT variants are never run during development (not even for mechanics); they are run only on TEST seeds after the method and every baseline are frozen.",
+  "seeds": {
+    "dev_gate": [
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "dev_data_collection": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "test": {
+      "range_min": 960000,
+      "status": "untouched; drawn and registered in docs/benchmark/SEED_REGISTRY.json (E6 entry) when the TEST protocol is frozen; none used"
+    },
+    "registry": "docs/benchmark/SEED_REGISTRY.json#E6"
+  },
+  "configuration_matrix": {
+    "dev_gates": {
+      "mix": "M4",
+      "mobility": "mixed",
+      "kpm": "nominal",
+      "update": false,
+      "load": [
+        "medium",
+        "high"
+      ],
+      "warmup_s": 120,
+      "scored_s": 600,
+      "scenario": [
+        "base",
+        "surge",
+        "mistune"
+      ]
+    },
+    "test": {
+      "mix": "M4",
+      "mobility": "mixed",
+      "kpm": "nominal",
+      "update": false,
+      "load": [
+        "medium",
+        "high"
+      ],
+      "episode_length": "TBD (fixed in this contract before any TEST run; default E6Config is 300 + 1800 s)"
+    }
+  },
+  "required_references": {
+    "all": [
+      "noarb",
+      "freeze",
+      "tuned_static (hindsight)",
+      "subset M_TS_MRO"
+    ],
+    "mistune": [
+      "SMORestore (alone = accept-all + SMO, and wrapped around each method)"
+    ],
+    "claim_scope_rule": "S2 claims must beat freeze, tuned-static and SMO restore, or be stated as holding only for a WG3-only RIC without SMO fallback."
+  },
+  "reporting_rule": "Report every seed, load, scenario and arm in the matrix, including failures, crashes (count as noarb) and negative gate results. No seed, location or draw is filtered, selected or re-drawn. A failed gate is kept as a result; it is not rescued by retuning.",
+  "base_pinned_reference": {
+    "config": {
+      "seed": 11,
+      "mix": "M4",
+      "mobility": "mixed",
+      "kpm": "nominal",
+      "update": false,
+      "warmup_s": 120,
+      "scored_s": 600,
+      "scenario": "base",
+      "env": "E6Env(cfg, log=False).run(arbiter)"
+    },
+    "note": "full score dicts; noarb = arbiter None, freeze = baselines.freeze. medium noarb 199.1 equals the pre-scenario value.",
+    "scores": {
+      "medium/noarb": {
+        "svr": 199.1,
+        "viol_frac": 0.05530555555555555,
+        "ll_viol": 399.0,
+        "embb_viol": 9371.0,
+        "outage_viol": 1744.0,
+        "severe": 37,
+        "energy_kwh": 1.1987591570559446,
+        "rlf_per_ue_h": 1.36,
+        "ho_per_ue_h": 69.28,
+        "pingpong": 201,
+        "req": 2724,
+        "acc": 2707,
+        "rej": 0,
+        "mod": 0,
+        "def": 0,
+        "writes": 0,
+        "changes": 2707,
+        "churn_blocked": 0,
+        "lock_blocked": 0,
+        "locks": 0,
+        "rollbacks": 0
+      },
+      "medium/freeze": {
+        "svr": 190.48,
+        "viol_frac": 0.05291111111111111,
+        "ll_viol": 419.0,
+        "embb_viol": 8916.0,
+        "outage_viol": 1701.0,
+        "severe": 27,
+        "energy_kwh": 1.2434618646089388,
+        "rlf_per_ue_h": 1.2,
+        "ho_per_ue_h": 68.4,
+        "pingpong": 203,
+        "req": 2902,
+        "acc": 0,
+        "rej": 2902,
+        "mod": 0,
+        "def": 0,
+        "writes": 0,
+        "changes": 0,
+        "churn_blocked": 0,
+        "lock_blocked": 0,
+        "locks": 0,
+        "rollbacks": 0
+      },
+      "high/noarb": {
+        "svr": 611.6,
+        "viol_frac": 0.1698888888888889,
+        "ll_viol": 550.0,
+        "embb_viol": 29828.0,
+        "outage_viol": 2016.0,
+        "severe": 74,
+        "energy_kwh": 1.3969501098420212,
+        "rlf_per_ue_h": 2.42,
+        "ho_per_ue_h": 68.58,
+        "pingpong": 198,
+        "req": 3066,
+        "acc": 3052,
+        "rej": 0,
+        "mod": 0,
+        "def": 0,
+        "writes": 0,
+        "changes": 3052,
+        "churn_blocked": 0,
+        "lock_blocked": 0,
+        "locks": 0,
+        "rollbacks": 0
+      },
+      "high/freeze": {
+        "svr": 576.62,
+        "viol_frac": 0.16017222222222222,
+        "ll_viol": 671.0,
+        "embb_viol": 27963.0,
+        "outage_viol": 1972.0,
+        "severe": 67,
+        "energy_kwh": 1.3933396785712524,
+        "rlf_per_ue_h": 2.12,
+        "ho_per_ue_h": 67.96,
+        "pingpong": 201,
+        "req": 3732,
+        "acc": 0,
+        "rej": 3732,
+        "mod": 0,
+        "def": 0,
+        "writes": 0,
+        "changes": 0,
+        "churn_blocked": 0,
+        "lock_blocked": 0,
+        "locks": 0,
+        "rollbacks": 0
+      }
+    }
+  },
+  "file_hashes": {
+    "method": "sha256 of file bytes with CRLF normalised to LF",
+    "cdd_oran/envs/e6/config.py": "d7cbc1da9e96d50df1636d55289e8a21b3f6135deeef5ee5fcd21e28a5559837",
+    "cdd_oran/envs/e6/sim.py": "487125e6c495c104924303dbc33a1ba4e7ed2320e301bd7b5d509deb7de6bcf0",
+    "docs/benchmark/E6_STRESS_SCENARIOS.md": "506493b95945be0b812b1c6cccfd58bc3236ccb274dc1526737da13bf88c769b"
+  }
+}
