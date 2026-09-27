@@ -158,6 +158,10 @@
       [
         130000,
         130179
+      ],
+      [
+        140000,
+        140059
       ]
     ],
     "note": "E6 DEV (2026-09-27): seeds 0-30 reserved for development (11-15 used by subset sweeps, baselines, headroom oracles, gate A/B). TEST seeds must be drawn from >= 960000 and registered here when the E6 protocol is frozen; none used yet. 2026-09-28: DEV policy 100000-100179 and probe 110000-110179 reserved (see dev_reserved). 2026-09-28 (b): gate calibration 120000-120179 and final-evaluation 130000-130179 episode seeds reserved (disjoint); policy seeds now for collector v3.",
@@ -196,7 +200,14 @@
           130179
         ]
       ],
-      "contract": "docs/benchmark/E6_COLLECTION_CONTRACT.md (e6-collect-v3)"
+      "contract": "docs/benchmark/E6_COLLECTION_CONTRACT.md (e6-collect-v3)",
+      "v1_diagnostic_episodes": [
+        [
+          140000,
+          140059
+        ]
+      ],
+      "v1_diagnostic_note": "Reserved 2026-09-28 for EXPLORATORY post-Gate-A diagnostics of the frozen E6-scn-v1 xApp stack (docs/benchmark/E6_V1_DIAGNOSTICS.md, scratchpad/e6_dev/v1_diag.py). seed = 140000 + 10*stratum + j, stratum as in 'mapping', j = 0..9. Diagnostic/development evidence only: never for Gate A/B, v2 confirmation or TEST."
     }
   }
 }
