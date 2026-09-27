@@ -64,6 +64,9 @@ class WG3Arbiter:
 
     def act(self, obs: dict, last_change: dict, env=None) -> dict:
         """Decision dict for this second; re-plans at decision epochs. ``env`` only for privileged world models."""
+        observe = getattr(self.wm, "observe", None)       # learned models track reports every second (serve parity)
+        if observe is not None:
+            observe(obs)
         first = False
         if obs["t"] >= self.start_s and obs["t"] >= self.until:
             ctx = DecisionContext(obs, self.site, self.regions, self.H, float(self.D), self.lam_e, self.w_ll,

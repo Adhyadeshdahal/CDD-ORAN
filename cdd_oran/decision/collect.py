@@ -74,6 +74,32 @@ def draw(seed: int, epoch: int, region: int, eps: float) -> tuple[int, bool]:
     return int(r.integers(N_CODES)), False
 
 
+def region_context(obs, fast, site, regions):
+    """Observable per-region context at a decision epoch (shared by the collector and serve-time models: no
+    train/serve skew). ``fast`` = latest delivered fast KPM report; churn_left uses the cap in force in ``obs``."""
+    nr = len(regions)
+    rix = {g: i for i, g in enumerate(regions)}
+    c = {"prb_util": np.full(nr, np.nan), "act_ue": np.full((nr, 3), np.nan), "ll_p95": np.full(nr, np.nan),
+         "report_age": np.nan, "nreq": np.zeros(nr, int), "locked": np.zeros(nr, int)}
+    f = fast
+    if f is not None:
+        c["report_age"] = obs["t"] - f["t1"]
+        for i, g in enumerate(regions):
+            m = site == g
+            c["prb_util"][i] = float(np.mean(f["prb_util"][m]))
+            c["act_ue"][i] = f["act_ue"][m].sum(0)
+            d = f["ll_delay_p95"][m]
+            c["ll_p95"][i] = float(np.nanmax(d)) if np.isfinite(d).any() else np.nan
+    for r in obs["requests"]:
+        c["nreq"][rix[int(site[r["knob"][1]])]] += 1
+    for k in obs["locked"]:
+        c["locked"][rix[int(site[k[1]])]] += 1
+    c["changes"] = obs["changes"]
+    cap = obs.get("churn_cap")
+    c["churn_left"] = -1 if cap is None else int(cap) - int(obs["changes"])
+    return c
+
+
 class RandomizedJointPolicy:
     """Collector arbiter. Use with the two-phase loop: dec = act(obs); env.step_apply(dec); record(dec)."""
 
@@ -93,27 +119,7 @@ class RandomizedJointPolicy:
         self.rows = []                    # per epoch: (t, codes, defaults, ctx dict)
 
     def _context(self, obs):
-        env, nr = self.env, len(self.regions)
-        rix = {g: i for i, g in enumerate(self.regions)}
-        c = {"prb_util": np.full(nr, np.nan), "act_ue": np.full((nr, 3), np.nan), "ll_p95": np.full(nr, np.nan),
-             "report_age": np.nan, "nreq": np.zeros(nr, int), "locked": np.zeros(nr, int)}
-        f = self.fast
-        if f is not None:
-            c["report_age"] = obs["t"] - f["t1"]
-            for i, g in enumerate(self.regions):
-                m = self.site == g
-                c["prb_util"][i] = float(np.mean(f["prb_util"][m]))
-                c["act_ue"][i] = f["act_ue"][m].sum(0)
-                d = f["ll_delay_p95"][m]
-                c["ll_p95"][i] = float(np.nanmax(d)) if np.isfinite(d).any() else np.nan
-        for r in obs["requests"]:
-            c["nreq"][rix[int(self.site[r["knob"][1]])]] += 1
-        for k in obs["locked"]:
-            c["locked"][rix[int(self.site[k[1]])]] += 1
-        c["changes"] = obs["changes"]
-        cap = env.churn_cap
-        c["churn_left"] = -1 if cap is None else int(cap) - int(obs["changes"])
-        return c
+        return region_context(obs, self.fast, self.site, self.regions)
 
     def act(self, obs: dict) -> dict:
         for rep in obs["new_reports"]:

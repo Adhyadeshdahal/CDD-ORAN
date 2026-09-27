@@ -31,7 +31,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from types import SimpleNamespace
 
 import numpy as np
 
@@ -124,9 +123,7 @@ def nreq_by_xapp(requests, site, regions) -> np.ndarray:
 def serve_features(obs: Mapping, tracker: ReportTracker, site, regions) -> tuple[np.ndarray, np.ndarray]:
     """Decision-time features from obs + the tracker, through the collector's own context code."""
     site = np.asarray(site)
-    shim = SimpleNamespace(env=SimpleNamespace(churn_cap=obs.get("churn_cap")), fast=tracker.latest.get("fast"),
-                           site=site, regions=list(regions))
-    c = CO.RandomizedJointPolicy._context(shim, obs)
+    c = CO.region_context(obs, tracker.latest.get("fast"), site, list(regions))
     return assemble_features(c, nreq_by_xapp(obs["requests"], site, regions))
 
 
