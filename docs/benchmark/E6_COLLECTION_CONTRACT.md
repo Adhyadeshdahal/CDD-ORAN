@@ -233,3 +233,29 @@ observed at about 3.5 treated rows per episode). The following are expected to s
 The rows per episode (60) are 4.3× fewer than v2's roughly 260, but they are uncontaminated. REPORT_G's "about 6
 v2 episodes to detect a 5 UE-s mean eMBB effect" scales to about 26 v3 episodes per stratum, before any gain from
 the lower dependence between rows. Any expansion follows section 4.
+
+## Probe campaign (graph data) — e6-probe/2 (Worker K, 2026-09-28; pending sol sign-off)
+- Operator DEV experiment (`cdd_oran/decision/probe.py`), `wg3=False`, xApps accept-all; never a WG3 policy, never
+  TEST. mix M4, mobility mixed, warm-up 120 s, scored **1800 s** (assumption; policy grid uses 600 s — needs sign-off).
+- Frozen `ProbeConfig()`: slots A 240 s / 60 s observe, B 420 s / 210 s observe, P(B) 0.3; restore grace 12 s; retry
+  12 s (carrier 90 s); pre-window 60 s; settle A 90 s (MRO 60 s window + 30 s cadence; ES EWMA/low spell; mob KPM
+  30 s), settle B 125 s (120 s dwell re-armed by restore + KPM delay); `check()` enforces slot − obs − grace ≥ settle +
+  pre-window. Arms A {cio, hys, ttt, ll_ratio, sham} 0.2 each; B {carrier, sham} 0.5 each; levels ±1 step (cio/hys/
+  ttt), +1 ll_ratio (one-sided: 67–100 % of cells sit at 0 — decided from configuration state only), carrier toggle.
+  Units strict-disjoint (region + CIO neighbourhood), ≤ 2 per slot; cap 1200 changes/h (worst case at schedule time).
+- Carryover audit (4 local replay pairs): hys/ll_ratio wash out exactly; CIO (|Δutil| ≤ .02 for 300 s, next block's
+  baseline eMBB Δ 2.5× the block effect) and carrier (|Δutil| ≈ .03, no decay, 27 % knobs diverge) PERSIST.
+  ⇒ randomization "episode" (one arm per episode per slot type, CRT re-draws groups) for families with carryover,
+  or block design with ONLY the whole-trajectory sharp-null claim.
+- Seeds: main 110000 + 30·stratum + j (j < 20 fit, ≥ 20 diag); conditional tranche 110180 + 30·stratum + j only if
+  `probe.tranche_decision` triggers on blinded first stage (< 150 effective blocks/family) or simulated power < .8 at
+  0.5 SD (refuses p-value/sign inputs); audit replays fit j < 5, never in inference; paired no-probe ref = same seed.
+- RNG: 8808 ([seed,8808,0] skeleton, [seed,8808,1,blk] arm/level, [seed,8808,2,type] episode arm), 5151 CRT draws,
+  6262 synthetic calibration, 7373 placebo re-draws.
+- Inference `mscr-crt-v1`: sharp null of no assigned-probe effect over the whole trajectory, re-drawn from the logged
+  mechanism conditional on {f, sham}; BY across hypotheses; no MSCR FDR claim; statuses declared / not_detected
+  ("NOT evidence of absence") / undetermined; row-permutation p-values never substituted.
+- Per job report: first stage (actuation, restoration, superseded, abort, effective blocks by arm × slot type) and
+  paired collection cost (excess SVR, per-slice, RLF, severe, energy, churn, tails, changed-knob-seconds, aborts).
+- Synthetic calibration: block hys type-I .060/.042, power .40/.42 @0.5 SD, .91/.82 @1 SD; episode mode type-I .050,
+  power .93 @1 SD. Sham placebo on real refs (9 blocks): 0.00/0.02 (plumbing only).

@@ -139,18 +139,20 @@ def test_abort_restore_fires_on_forced_breach(forced_breach_trace):
     rest = (a["pw_kind"] == 1) & (a["pw_out"] == P.PW_OUT.index("applied"))
     for i in np.nonzero(treated)[0]:
         t_r = a["pw_t"][rest & (a["pw_blk"] == i)]
-        assert len(t_r) and t_r.min() >= a["blk_abort_t"][i] and t_r.max() <= a["blk_slot_end"][i]
+        assert len(t_r) and t_r.min() >= a["blk_abort_t"][i]
+        assert t_r.max() <= a["blk_obs_end"][i] + P.ProbeConfig().restore_grace_s
     assert forced_breach_trace.meta["probe"]["not_a_wg3_policy"] and not forced_breach_trace.meta["wg3"]
 
 
 def test_end_to_end_tiny_real_probe_episode():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        cfg = _cfg(110009)
+        cfg = _cfg(110009, scored_s=540)
         tr = P.run_probe_episode(cfg)
         ref = P.run_reference(cfg)
     a = tr.arrays
-    assert len(a["blk_t0"]) >= 2 and len(a["wr_t"]) == int(tr.meta["probe"]["probe_changes"])
+    assert len(a["blk_t0"]) >= 2
+    assert int((a["wr_out"] == 0).sum()) == int(tr.meta["probe"]["probe_changes"])
     cost = P.collection_cost(tr, ref)
     assert cost["blocks"] == len(a["blk_t0"]) and cost["probe_changes"] > 0
     assert np.isfinite(cost["excess_svr"]) and cost["changed_knob_s"] > 0
@@ -164,3 +166,74 @@ def test_end_to_end_tiny_real_probe_episode():
     assert placebo.n == len(a["blk_t0"]) and np.array_equal(placebo.arm, a["blk_arm"])
     default = crt.run_crt(crt.build_block_data([tr]))       # one episode: nothing is supported
     assert all(r["status"] == "undetermined" for r in default["results"])
+    assert all("unknown" in r["claim"] and "absent" in r["claim"] for r in default["results"])
+    fs = P.first_stage([tr])
+    assert fs["by_arm"][P.ARMS[int(a["blk_arm"][0])]]["blocks"] >= 1
+
+
+def test_timing_contract_and_one_sided_levels():
+    pc = P.ProbeConfig()
+    pc.check()
+    for p in (pc.slot_a_s, pc.slot_b_s):
+        assert p % 60 == 0
+    assert pc.slot_b_s - pc.obs_b_s - pc.restore_grace_s >= P.SETTLE_S[1] + pc.pre_s
+    assert pc.obs_b_s >= LIMITS["carrier"][3] + pc.retry_carrier_s
+    with pytest.raises(ValueError):
+        P.ProbeConfig(slot_b_s=240, obs_b_s=180).check()          # the old e6-probe/1 carrier slot
+    assert P.AssignmentMechanism.levels("ll_ratio") == (1.0,)
+
+
+def test_episode_randomization_schedule_and_redraw(layout):
+    knobs, site = layout
+    pc = P.ProbeConfig(randomization="episode")
+    mech = P.AssignmentMechanism(pc)
+    for s in list(SEEDS)[:10]:
+        bl = P.make_schedule(s, knobs, site, 300.0, 2100.0, pc)
+        for typ in (0, 1):
+            assert len({b["arm"] for b in bl if b["type"] == typ}) <= 1
+    st = np.array([0, 0, 0, 1, 0, 0])
+    el = np.tile(np.array([True] * 6), (6, 1))
+    groups = np.array([0, 0, 0, 1, 2, 2])
+    X = mech.conditional_draws(np.random.default_rng(1), st, el, "hys", 200, groups=groups)
+    on = X != 0
+    assert (on[:, 0] == on[:, 1]).all() and (on[:, 1] == on[:, 2]).all() and (on[:, 4] == on[:, 5]).all()
+    assert (on[:, 0] != on[:, 4]).any()
+
+
+def test_episode_mode_and_lag_crt_on_synthetic():
+    cfg = crt.CRTConfig(B=199, min_f=5, min_sham=5, min_episodes=3)
+    pc = P.ProbeConfig(randomization="episode")
+    rej = [crt.crt_test(crt.synthetic_block_data(np.random.default_rng([4, i]), n_ep=60, pcfg=pc), "hys", "y0",
+                        cfg, seed=i)["p_mscr"] <= 0.05 for i in range(100)]
+    assert np.mean(rej) <= 0.13                                   # binomial(100, .05) 99.9 % band
+    lag0 = [crt.crt_test(crt.synthetic_block_data(np.random.default_rng([5, i]), n_ep=60), "hys", "y0", cfg,
+                         seed=i, lag=1)["p_mscr"] <= 0.05 for i in range(100)]
+    lag1 = [crt.crt_test(crt.synthetic_block_data(np.random.default_rng([6, i]), n_ep=60, carry=1.0), "hys", "y0",
+                         cfg, seed=i, lag=1)["p_mscr"] <= 0.05 for i in range(60)]
+    assert np.mean(lag0) <= 0.13 and np.mean(lag1) >= 0.6
+
+
+def test_tranche_decision_is_blinded():
+    fs = {"by_arm": {a: {"effective_blocks": 200} for a in P.ARMS}, "sham_effective_by_type": {0: 200, 1: 200}}
+    assert not P.tranche_decision(fs)["trigger"]
+    fs["by_arm"]["hys"]["effective_blocks"] = 90
+    d = P.tranche_decision(fs, sim_power={"cio": 0.7})
+    assert d["trigger"] and len(d["reasons"]) == 2
+    with pytest.raises(ValueError):
+        P.tranche_decision(fs, sim_power={"p_mscr": 0.01})
+
+
+def test_schedule_replay_is_exact_before_the_flip():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        cfg = _cfg(110009, scored_s=240)
+        base = P.run_probe_episode(cfg)
+        rep = P.run_probe_episode(cfg, override={0: ("sham", 0.0)})
+    t0 = int(base.arrays["blk_t0"][0])
+    assert base.arrays["blk_arm"][0] != P.ARMS.index("sham") and rep.arrays["blk_arm"][0] == P.ARMS.index("sham")
+    assert np.array_equal(base.config_at(t0), rep.config_at(t0))
+    m = base.arrays["t"] <= t0
+    assert np.array_equal(base.arrays["lab_viol"][m], rep.arrays["lab_viol"][m])
+    assert rep.meta["probe"]["replay"] and not base.meta["probe"]["replay"]
+    with pytest.raises(ValueError):
+        crt.build_block_data([rep])

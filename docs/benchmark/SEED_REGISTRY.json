@@ -131,7 +131,8 @@
     5151,
     6262,
     7707,
-    7708
+    7708,
+    7373
   ],
   "rng_stream_notes": {
     "E5_NOISE_DETECT observation noise": "default_rng([seed, 5, int(round(1000*kappa))]), kappa in {0.1, 0.3} -> tags (5, 100) and (5, 300)"

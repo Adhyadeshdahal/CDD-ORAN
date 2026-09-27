@@ -8,6 +8,23 @@ Design (predeclared before the episode, from the seed only; nothing depends on c
   * skeleton: the scored window is cut into consecutive SLOTS. Slot type A (``slot_a_s``, observation ``obs_a_s``)
     carries the fast families {cio, hys, ttt, ll_ratio} + sham; slot type B (``slot_b_s``, ``obs_b_s`` > the 120 s
     carrier dwell) carries {carrier} + sham and only macro regions. Type drawn per slot with P(B) = ``p_slot_b``.
+    Slot timeline: [t0, t0 + obs] observation -> restore deadline obs + ``restore_grace_s`` -> settle (washout,
+    >= SETTLE_S[type]) -> the NEXT block's pre window (``pre_s``) -> next t0. ``ProbeConfig.check`` enforces
+    slot - obs - restore_grace >= settle + pre_s, so the next block's baseline starts after the washout.
+  * washout justification (mechanism timescales of E6; the carryover AUDIT measures what remains):
+      queues        LL target 0.1 s, eMBB 0.5 MB files at >= 2 Mb/s -> drain in seconds (<= 10 s)
+      mobility      TTT <= 0.64 s, HO exec 0.05 s, ping-pong / too-early windows 1 s, T310 1 s + 1 s outage (<= 5 s);
+                    NOT bounded: association hysteresis of static UEs pushed across a boundary (audit)
+      KPM           mob reports every 30 s, energy every 60 s, delivery delay <= 0.5 s nominal (5 s degraded)
+      xApp memory   MRO 60 s mob window + 30 s cadence = 90 s; ES ~20 s EWMA + 60 s low spell + 10 s cadence
+                    = 90 s; TS 10 s cadence; SLICE 5 s window + 1 s cadence
+      actuator      restore write re-arms the min interval: cio 5 s, hys/ttt 10 s, carrier 120 s dwell
+    -> SETTLE_S A = max(90 xApp, 35 mob KPM, 10 actuator) = 90 s; B = max(90 xApp, 120 dwell + 5 KPM delay,
+    65 energy KPM) = 125 s. Defaults: A 240 s (obs 60) -> 240-60-12 = 168 >= 90+60; B 420 s (obs 210) -> 198 >= 185.
+    Slot lengths are multiples of 60 s so observation windows align with the 30/60 s KPM report periods.
+  * randomization unit (``randomization``): "block" (default: arm per block) or "episode" (one arm per slot type per
+    EPISODE for every block of that type, levels per block; use when the audit finds carryover: inference then
+    re-samples whole-episode arms and its sample size is independent episodes).
   * unit = region (site) + its interference neighbourhood (regions linked by any CIO relation, both directions). Per
     slot up to ``max_treated`` units are drawn at random with pairwise-DISJOINT unit sets (so every treated region's
     neighbourhood is untreated and no cell's outcome belongs to two blocks). The rest of the slot after the observation
@@ -18,15 +35,19 @@ Design (predeclared before the episode, from the seed only; nothing depends on c
     skeleton does not depend on the drawn arm, so the arm can be re-sampled with the skeleton held fixed.
   * arm per block (the ASSIGNMENT MECHANISM, ``AssignmentMechanism``): arm ~ the slot type's arm distribution
     renormalised over the eligible arms; level | arm: sign +-1 (one actuator step: cio 2 dB, hys 0.5 dB, ttt one
-    TS 38.331 index, ll_ratio 0.10), carrier = toggle (+1: switch one carrier off if all are on, else on), sham = 0.
+    TS 38.331 index), ll_ratio +0.10 only (one-sided: in DEV no-probe references 67-100 % of cells sit at the 0 lower
+    bound, so -1 would be a structural no-op; decided from configuration state only, no outcomes), carrier = toggle
+    (+1: switch one carrier off if all are on, else on), sham = 0.
     Drawn from ``default_rng([seed, PROBE_KEY, 1, block])``; skeleton from ``default_rng([seed, PROBE_KEY, 0])``.
     The logged propensity is P(arm, level | slot type, eligibility); ``AssignmentMechanism`` re-samples it exactly.
   * writes: every knob of the family owned by the region's cells moves by level x step (``ric.feasible`` clips;
     a value already at its limit is a logged no-op). A write is not attempted in a second where an xApp requests the
-    same knob, nor when ``feasible`` refuses it (dwell / min interval); it is retried for ``retry_s`` s, then logged
+    same knob, nor when ``feasible`` refuses it (dwell / min interval); it is retried for ``retry_s`` s (carrier:
+    ``retry_carrier_s`` = 90 s, so >= 120 s of the 210 s observation follow the latest write), then logged
     as not applied. Inference is intention-to-treat on the ASSIGNMENT (never condition on actuation).
   * restore at ``t0 + obs`` (or on abort): each applied knob still at the probe value is written back to its
-    pre-probe value (retried until the slot ends); a knob an xApp changed since is "superseded" and left alone.
+    pre-probe value (retried until ``obs_end + restore_grace_s``, then logged failed); a knob an xApp changed since
+    is "superseded" and left alone.
   * abort-and-restore (predeclared, observable delivered KPM of the unit's cells, reports whose window starts at or
     after t0; evaluated identically for sham blocks, which have nothing to restore):
       LL   max LL p95 > max(abort_ll_abs_s, abort_ll_rel x pre-block mean) for abort_ll_consec fast reports;
@@ -62,30 +83,49 @@ from cdd_oran.envs.e6.ric import feasible, knob_get
 from .features import neighbours_from_knobs
 from .trace import Trace
 
-PROBE_VERSION = "e6-probe/1"
+PROBE_VERSION = "e6-probe/2"                        # /2: washout-justified slots, restore deadline, episode mode
 PROBE_KEY = 8808                                   # RNG stream tag of the probe campaign (not an env seed)
 FAMILIES = ("cio", "hys", "ttt", "ll_ratio", "carrier")
 ARMS = FAMILIES + ("sham",)
 STEP = {"cio": 2.0, "hys": 0.5, "ttt": 1.0, "ll_ratio": 0.10, "carrier": 1.0}   # one actuator step (ric.LIMITS)
 ABORT_REASONS = ("ll", "embb", "rlf", "energy")
 PW_OUT = ("applied", "noop", "failed", "cap_blocked", "superseded")
+ONE_SIDED = ("carrier", "ll_ratio")                # carrier = toggle; ll_ratio sits at its 0 bound (see docstring)
+SETTLE_S = {0: 90, 1: 125}                         # minimum washout per slot type (see module docstring)
+PROBE_SCORED_S = 1800.0                            # predeclared probe-episode scored window (E6 default length)
 
 
 @dataclasses.dataclass(frozen=True)
 class ProbeConfig:
-    slot_a_s: int = 120            # type-A slot (fast families): observation + washout
-    obs_a_s: int = 90
-    slot_b_s: int = 240            # type-B slot (carrier): observation > 120 s dwell, then washout
-    obs_b_s: int = 180
+    slot_a_s: int = 240            # type-A slot (fast families): obs + restore grace + settle + next pre window
+    obs_a_s: int = 60
+    slot_b_s: int = 420            # type-B slot (carrier): obs > 120 s dwell, then grace + settle + pre
+    obs_b_s: int = 210
     p_slot_b: float = 0.3
     arms_a: tuple = ("cio", "hys", "ttt", "ll_ratio", "sham")
     probs_a: tuple = (0.2, 0.2, 0.2, 0.2, 0.2)
     arms_b: tuple = ("carrier", "sham")
     probs_b: tuple = (0.5, 0.5)
-    max_treated: int = 2           # simultaneously treated units per slot
-    cap_changes_per_hour: float = 3600.0   # probe knob changes (writes + restores), worst case at schedule time
+    max_treated: int = 2           # simultaneously treated units per slot (strict disjoint units: 1 in E6's layout)
+    cap_changes_per_hour: float = 1200.0   # probe knob changes (writes + restores), worst case at schedule time
     retry_s: int = 12              # probe-write retry window (covers the 10 s hys/ttt min interval)
+    retry_carrier_s: int = 90      # carrier writes: an ES change < 120 s earlier blocks them (dwell)
+    restore_grace_s: int = 12      # restore retry window after obs_end (covers the 10 s min interval)
     pre_s: int = 60                # pre-block baseline window (abort rules, conditioners)
+    randomization: str = "block"   # "block" | "episode"
+
+    def check(self) -> None:
+        """Timing contract: each slot leaves >= SETTLE_S + pre_s after the restore deadline; carrier observation
+        exceeds the 120 s dwell plus the write retry window (so its restore is feasible by obs_end)."""
+        from cdd_oran.envs.e6.ric import LIMITS
+        for typ, slot, obs in ((0, self.slot_a_s, self.obs_a_s), (1, self.slot_b_s, self.obs_b_s)):
+            if slot - obs - self.restore_grace_s < SETTLE_S[typ] + self.pre_s:
+                raise ValueError(f"slot type {typ}: {slot}-{obs}-{self.restore_grace_s} s leaves less than settle "
+                                 f"{SETTLE_S[typ]} + pre {self.pre_s} s")
+        if self.obs_b_s < LIMITS["carrier"][3] + self.retry_carrier_s:
+            raise ValueError("carrier observation must exceed the carrier dwell + retry window")
+        if self.randomization not in ("block", "episode"):
+            raise ValueError("randomization must be 'block' or 'episode'")
     abort_ll_abs_s: float = 0.25
     abort_ll_rel: float = 2.0
     abort_ll_consec: int = 3
@@ -120,7 +160,7 @@ class AssignmentMechanism:
 
     @staticmethod
     def levels(arm: str) -> tuple:
-        return (0.0,) if arm == "sham" else (1.0,) if arm == "carrier" else (-1.0, 1.0)
+        return (0.0,) if arm == "sham" else (1.0,) if arm in ONE_SIDED else (-1.0, 1.0)
 
     def prob(self, slot_type: int, elig, arm: str, level: float) -> float:
         lv = self.levels(arm)
@@ -134,18 +174,23 @@ class AssignmentMechanism:
         lv = self.levels(arm)
         return arm, float(lv[int(rng.integers(len(lv)))]) if len(lv) > 1 else lv[0]
 
-    def conditional_draws(self, rng: np.random.Generator, slot_type, elig, family: str, n_draws: int) -> np.ndarray:
-        """(n_draws, n) candidate values x = level if arm == family else 0, re-sampled row-wise from the mechanism
-        CONDITIONAL on arm in {family, sham} (all other blocks' assignments held fixed)."""
+    def conditional_draws(self, rng: np.random.Generator, slot_type, elig, family: str, n_draws: int,
+                          groups=None) -> np.ndarray:
+        """(n_draws, n) candidate values x = level if arm == family else 0, re-sampled from the mechanism
+        CONDITIONAL on arm in {family, sham} (all other blocks' assignments held fixed). ``groups`` (n,) = blocks
+        sharing one arm draw (episode randomization: (episode, slot type)); None = one draw per block. Levels are
+        always per block."""
         st = np.asarray(slot_type)
         el = np.asarray(elig, bool)
         n = len(st)
-        pf = np.empty(n)
         fi, si = ARMS.index(family), ARMS.index("sham")
-        for i in range(n):
+        gid = np.arange(n) if groups is None else np.unique(np.asarray(groups), return_inverse=True)[1]
+        first = np.unique(gid, return_index=True)[1]
+        pf = np.empty(len(first))
+        for j, i in enumerate(first):
             p = self.arm_probs(st[i], el[i])
-            pf[i] = p[fi] / (p[fi] + p[si])
-        is_f = rng.random((n_draws, n)) < pf[None, :]
+            pf[j] = p[fi] / (p[fi] + p[si])
+        is_f = (rng.random((n_draws, len(first))) < pf[None, :])[:, gid]
         lv = np.asarray(self.levels(family))
         lev = lv[rng.integers(len(lv), size=(n_draws, n))] if len(lv) > 1 else np.full((n_draws, n), lv[0])
         return np.where(is_f, lev, 0.0)
@@ -168,8 +213,12 @@ def family_knobs(knobs, cell_region, region: int, family: str) -> list:
 
 
 # ------------------------------------------------------------------------------------------------ schedule
-def make_schedule(seed: int, knobs, cell_region, start_s: float, end_s: float, pcfg: ProbeConfig) -> list:
-    """Predeclared block list (dicts) for one episode; depends on the seed, layout and ``pcfg`` only."""
+def make_schedule(seed: int, knobs, cell_region, start_s: float, end_s: float, pcfg: ProbeConfig,
+                  override: dict | None = None) -> list:
+    """Predeclared block list (dicts) for one episode; depends on the seed, layout and ``pcfg`` only.
+    ``override`` {block index: (arm, level)} = AUDIT schedule replay (same skeleton, one arm changed; the block is
+    flagged ``override`` and such episodes never enter inference)."""
+    pcfg.check()
     mech = AssignmentMechanism(pcfg)
     regions, nbhd, _ = region_units(knobs, cell_region)
     unit = {g: {g} | nbhd[g] for g in regions}
@@ -178,6 +227,16 @@ def make_schedule(seed: int, knobs, cell_region, start_s: float, end_s: float, p
     rng = np.random.default_rng([int(seed), PROBE_KEY, 0])
     cap_total = pcfg.cap_changes_per_hour * max(end_s - start_s, 0.0) / 3600.0
     used, blocks, t, slot = 0.0, [], float(start_s), 0
+
+    def elig_of(g, typ):
+        return np.array([(a == "sham" or len(fk[(g, a)]) > 0) and a in elig_arms[typ] for a in ARMS])
+
+    common = {}                                   # episode mode: arms eligible in EVERY region eligible for the type
+    for typ in (0, 1):
+        es = [elig_of(g, typ) for g in regions if elig_of(g, typ)[:len(FAMILIES)].any()]
+        common[typ] = np.logical_and.reduce(es) if es else np.zeros(len(ARMS), bool)
+    ep_arm = {typ: mech.sample(np.random.default_rng([int(seed), PROBE_KEY, 2, typ]), typ, common[typ])[0]
+              for typ in (0, 1) if common[typ][:len(FAMILIES)].any()}
     while True:
         typ = int(rng.uniform() < pcfg.p_slot_b)
         length = pcfg.slot_b_s if typ else pcfg.slot_a_s
@@ -190,9 +249,11 @@ def make_schedule(seed: int, knobs, cell_region, start_s: float, end_s: float, p
         chosen = []
         for g in rng.permutation(regions):
             g = int(g)
-            elig = np.array([(a == "sham" or len(fk[(g, a)]) > 0) and a in elig_arms[typ] for a in ARMS])
+            elig = elig_of(g, typ)
             if not elig[:len(FAMILIES)].any():
                 continue
+            if pcfg.randomization == "episode":
+                elig = common[typ].copy()
             if any(unit[g] & unit[h] for h, _ in chosen):
                 continue
             worst = 2.0 * max(len(fk[(g, f)]) for f in FAMILIES if elig[ARMS.index(f)])
@@ -204,10 +265,19 @@ def make_schedule(seed: int, knobs, cell_region, start_s: float, end_s: float, p
                 break
         for g, elig in chosen:
             b = len(blocks)
-            arm, level = mech.sample(np.random.default_rng([int(seed), PROBE_KEY, 1, b]), typ, elig)
+            r = np.random.default_rng([int(seed), PROBE_KEY, 1, b])
+            if pcfg.randomization == "episode":           # episode arm; level still per block
+                arm = ep_arm[typ]
+                lv = mech.levels(arm)
+                level = float(lv[int(r.integers(len(lv)))]) if len(lv) > 1 else lv[0]
+            else:
+                arm, level = mech.sample(r, typ, elig)
+            ov = override is not None and b in override
+            if ov:
+                arm, level = override[b][0], float(override[b][1])
             blocks.append({"blk": b, "slot": slot, "type": typ, "t0": t, "obs_end": t + obs, "slot_end": t + length,
                            "region": g, "unit": sorted(unit[g]), "elig": elig, "arm": arm, "level": level,
-                           "prop": mech.prob(typ, elig, arm, level)})
+                           "prop": mech.prob(typ, elig, arm, level), "override": ov})
         t += length
         slot += 1
     return blocks
@@ -219,7 +289,7 @@ class ProbeRunner:
     ``dec = r.act(obs); env.step_apply(dec); r.after()``."""
 
     def __init__(self, env: E6Env, pcfg: ProbeConfig | None = None, start_s: float | None = None,
-                 end_s: float | None = None):
+                 end_s: float | None = None, override: dict | None = None):
         if env.wg3:
             raise ValueError("the probe campaign writes knobs directly: build the env with wg3=False")
         self.env, self.pcfg = env, pcfg or ProbeConfig()
@@ -228,7 +298,8 @@ class ProbeRunner:
         self.end_s = float(cfg.warmup_s + cfg.scored_s if end_s is None else end_s)
         self.cell_region = np.asarray(env.plant.lay.cell_site, int)
         self.knob_idx = {k: i for i, k in enumerate(env.knobs)}
-        self.blocks = make_schedule(cfg.seed, env.knobs, self.cell_region, self.start_s, self.end_s, self.pcfg)
+        self.blocks = make_schedule(cfg.seed, env.knobs, self.cell_region, self.start_s, self.end_s, self.pcfg,
+                                    override)
         self.regions, self.nbhd, self.cells = region_units(env.knobs, self.cell_region)
         for b in self.blocks:
             ucells = [c for g in b["unit"] for c in self.cells[g]]
@@ -324,7 +395,7 @@ class ProbeRunner:
                 for k, s in b["knobs"].items():
                     if s["state"] != "pending":
                         continue
-                    if now > b["t0"] + self.pcfg.retry_s:
+                    if now > b["t0"] + (self.pcfg.retry_carrier_s if b["arm"] == "carrier" else self.pcfg.retry_s):
                         s["state"] = "failed"
                         self.pw.append((b["blk"], self.knob_idx[k], 0, now, s["pre"], s["target"],
                                         PW_OUT.index("failed")))
@@ -339,7 +410,7 @@ class ProbeRunner:
                         continue
                     writes.append((k, s["target"]))
                     self._attempt.append((b, k, 0, s["target"], knob_get(plant, k)))
-            if b["state"] == "restoring":        # restores (until the slot ends)
+            if b["state"] == "restoring":        # restores (until obs_end + restore_grace_s)
                 done = True
                 for k, s in b["knobs"].items():
                     if s["state"] == "pending":
@@ -355,7 +426,7 @@ class ProbeRunner:
                                         PW_OUT.index("superseded")))
                         continue
                     done = False
-                    if now >= b["slot_end"]:
+                    if now > b["obs_end"] + self.pcfg.restore_grace_s:
                         s["state"] = "restore_failed"
                         self.pw.append((b["blk"], self.knob_idx[k], 1, now, cur, s["pre"], PW_OUT.index("failed")))
                         continue
@@ -363,7 +434,7 @@ class ProbeRunner:
                         continue
                     writes.append((k, s["pre"]))
                     self._attempt.append((b, k, 1, s["pre"], cur))
-                if done or now >= b["slot_end"]:
+                if done or now > b["obs_end"] + self.pcfg.restore_grace_s:
                     b["state"] = "done"
         return {"decisions": ["accept"] * len(obs["requests"]), "writes": writes, "rollback": []}
 
@@ -411,6 +482,8 @@ class ProbeRunner:
                "blk_n_failed": arr(None, np.int16, count("failed")),
                "blk_n_restored": arr(None, np.int16, count("restored")),
                "blk_n_superseded": arr(None, np.int16, count("superseded")),
+               "blk_n_restore_failed": arr(None, np.int16, count("restore_failed")),
+               "blk_override": arr("override", bool),
                "blk_abort": arr("abort", bool), "blk_abort_t": arr("abort_t", float),
                "blk_abort_reason": arr("abort_reason", np.int8), "blk_knob_s": arr("knob_s", np.int32),
                "blk_cap_blocked": arr("cap_blocked", np.int16)}
@@ -426,7 +499,9 @@ class ProbeRunner:
                 "pw_out": list(PW_OUT), "regions": self.regions,
                 "units": {str(g): sorted({g} | self.nbhd[g]) for g in self.regions},
                 "start_s": self.start_s, "end_s": self.end_s, "probe_changes": self.changes,
-                "cap_total": self.cap_total, "not_a_wg3_policy": True}
+                "cap_total": self.cap_total, "not_a_wg3_policy": True,
+                "settle_s": {str(k): v for k, v in SETTLE_S.items()},
+                "replay": any(b["override"] for b in self.blocks)}
 
 
 def _score(env):
@@ -434,11 +509,13 @@ def _score(env):
             for k, v in env.score().items()}
 
 
-def run_probe_episode(cfg: C.E6Config, pcfg: ProbeConfig | None = None, snapshot_s: int = 60) -> Trace:
-    """One operator DEV probe episode (``wg3=False``, accept-all xApps + probe writes); returns the trace."""
+def run_probe_episode(cfg: C.E6Config, pcfg: ProbeConfig | None = None, snapshot_s: int = 60,
+                      override: dict | None = None) -> Trace:
+    """One operator DEV probe episode (``wg3=False``, accept-all xApps + probe writes); returns the trace.
+    ``override`` = audit schedule replay (see ``make_schedule``); replay traces are flagged and excluded by crt."""
     pcfg = pcfg or ProbeConfig()
     env = E6Env(cfg, write_budget=pcfg.write_budget, log=False, wg3=False, trace=True, trace_snapshot_s=snapshot_s)
-    runner = ProbeRunner(env, pcfg)
+    runner = ProbeRunner(env, pcfg, override=override)
     while env.sec < env.total_s:
         obs = env.step_propose()
         dec = runner.act(obs)
@@ -564,3 +641,71 @@ def block_outcomes(trace: Trace, blocks: dict | None = None) -> dict:
                 for f, x in v.items():
                     dst.setdefault(f"{scope}_{f}", np.full(n, np.nan))[i] = x
     return {"post": post, "pre": pre}
+
+
+# ------------------------------------------------------------------------------------------------ blinded diagnostics
+TRANCHE_SEED_BASE = 110180                         # conditional probe-only tranche: 110180 + 30 * stratum + j
+TRANCHE_RULE = {"min_effective_blocks": 150, "min_sim_power": 0.8, "sim_effect_sd": 0.5}
+
+
+def first_stage(traces) -> dict:
+    """BLINDED first-stage / actuation diagnostics from design + actuation arrays only (blk_*; no KPI, no label).
+    Per arm and per (arm, slot type, slot index): blocks, episodes, actuated blocks (>= 1 knob applied), knob
+    actuation rate (applied / knobs), restoration rate (restored / applied), superseded / restore-failed shares,
+    abort rate, and EFFECTIVE blocks (treated: >= half of its knobs applied, not aborted before obs_end; sham: not
+    aborted)."""
+    rows = []
+    for e, tr in enumerate(traces):
+        a = tr.arrays
+        if tr.meta["probe"].get("replay"):
+            raise ValueError("replay (audit) traces are not first-stage data")
+        for i in range(len(a["blk_t0"])):
+            nk, na = int(a["blk_n_knobs"][i]), int(a["blk_n_applied"][i])
+            sham = int(a["blk_arm"][i]) == ARMS.index("sham")
+            rows.append({"ep": e, "arm": ARMS[int(a["blk_arm"][i])], "type": int(a["blk_type"][i]),
+                         "slot": int(a["blk_slot"][i]), "knobs": nk, "applied": na,
+                         "restored": int(a["blk_n_restored"][i]), "superseded": int(a["blk_n_superseded"][i]),
+                         "restore_failed": int(a["blk_n_restore_failed"][i]) if "blk_n_restore_failed" in a else 0,
+                         "abort": bool(a["blk_abort"][i]),
+                         "effective": (not a["blk_abort"][i]) and (sham or (nk > 0 and na >= 0.5 * nk))})
+
+    def summ(rs):
+        k = sum(r["knobs"] for r in rs)
+        ap = sum(r["applied"] for r in rs)
+        return {"blocks": len(rs), "episodes": len({r["ep"] for r in rs}),
+                "actuated_blocks": sum(r["applied"] > 0 for r in rs), "knob_actuation": ap / k if k else np.nan,
+                "restoration": sum(r["restored"] for r in rs) / ap if ap else np.nan,
+                "superseded": sum(r["superseded"] for r in rs) / ap if ap else np.nan,
+                "restore_failed": sum(r["restore_failed"] for r in rs) / ap if ap else np.nan,
+                "abort_rate": float(np.mean([r["abort"] for r in rs])) if rs else np.nan,
+                "effective_blocks": sum(r["effective"] for r in rs)}
+
+    by_arm = {arm: summ([r for r in rows if r["arm"] == arm]) for arm in ARMS}
+    by_slot = {f"{arm}|{typ}|{slot}": summ(rs) for arm in ARMS for typ in (0, 1)
+               for slot in sorted({r["slot"] for r in rows})
+               if (rs := [r for r in rows if r["arm"] == arm and r["type"] == typ and r["slot"] == slot])}
+    sham_t = {typ: sum(r["effective"] for r in rows if r["arm"] == "sham" and r["type"] == typ) for typ in (0, 1)}
+    return {"by_arm": by_arm, "by_arm_type_slot": by_slot, "sham_effective_by_type": sham_t,
+            "episodes": len(traces)}
+
+
+def tranche_decision(fs: dict, sim_power: dict | None = None, rule: dict | None = None) -> dict:
+    """PREDECLARED trigger of the conditional probe-only tranche (+30 seeds per stratum, ``TRANCHE_SEED_BASE``).
+    Inputs are BLINDED only: ``first_stage`` output and, optionally, SIMULATED power per family at
+    ``sim_effect_sd`` (``crt.calibrate`` on synthetic data sized to the observed effective blocks). Observed
+    p-values, signs or effect sizes must never be passed (enforced: any key containing p/sign/effect is refused)."""
+    rule = rule or TRANCHE_RULE
+    bad = [k for k in (sim_power or {}) if any(x in str(k).lower() for x in ("p_", "pval", "sign", "effect_obs"))]
+    if bad:
+        raise ValueError(f"tranche decision takes blinded diagnostics only, got {bad}")
+    reasons = []
+    for f in FAMILIES:
+        eff = fs["by_arm"][f]["effective_blocks"]
+        sham_eff = fs["sham_effective_by_type"][1 if f == "carrier" else 0]
+        if min(eff, sham_eff) < rule["min_effective_blocks"]:
+            reasons.append(f"{f}: effective blocks {eff} (sham {sham_eff}) < {rule['min_effective_blocks']}")
+        if sim_power is not None and f in sim_power and sim_power[f] < rule["min_sim_power"]:
+            reasons.append(f"{f}: simulated power {sim_power[f]:.2f} at {rule['sim_effect_sd']} SD "
+                           f"< {rule['min_sim_power']}")
+    return {"trigger": bool(reasons), "reasons": reasons, "rule": dict(rule),
+            "tranche_seeds": "110180 + 30*stratum + j, j = 0..29 (probe-only; charged as probe cost)"}
