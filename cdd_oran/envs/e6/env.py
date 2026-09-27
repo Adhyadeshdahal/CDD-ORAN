@@ -6,12 +6,28 @@ Per control second (after the plant's 25 ticks):
   3. the ARBITER sees ``obs`` and returns decisions (default: no arbiter = accept everything, last writer wins);
   4. the RIC applies accepted/modified values through the hard actuator limits; xApps get ACK/NACK.
 
-Arbiter contract: ``arbiter(obs) -> {"decisions": [...], "writes": [(knob, value), ...]}``
-  decisions[i] for obs["requests"][i]: "accept" | "reject" | ("modify", value) | "defer" (re-offered next second,
-  auto-reject after 10 s). ``writes`` are arbiter-originated settings (bounded joint actions / probes), limited by the
-  same actuator limits and a write budget (``write_budget`` per scored hour). Arbiters get ONLY ``obs``.
-obs = {"t", "new_reports", "config" (knob -> value), "requests", "static": {cells, neighbours, is_macro, knobs,
-       xapps (declared knobs only)}}.
+Two-phase API: ``obs = env.step_propose()`` runs 1-2 and parks the requests on the env; ``env.step_apply(dec)`` runs 4.
+``step(arbiter)`` = propose -> arbiter(obs) (None = accept all) -> apply. ``env.copy()`` taken between the phases
+carries the pending requests, so ``c = env.copy(); c.step_apply(dec)`` replays exactly what ``env.step_apply(dec)`` does.
+
+Arbiter contract: ``arbiter(obs) -> {"decisions": [...], "writes": [(knob, value), ...], "rollback": [knob, ...]}``
+  decisions[i] for obs["requests"][i] (O-RAN WG3 conflict-mitigation actions):
+    "accept" | "reject" | ("modify", value) | "defer" (re-offered next second, auto-reject after 10 s) |
+    ("lock", secs): reject it AND lock its knob for ``secs`` s (locked while t < t_lock + secs). Requests on a
+    locked knob still appear in obs (the arbiter sees the demand) but are force-rejected with NACK whatever the
+    decision (counted rej + "lock_blocked").
+  rollback: restore each knob to its last-known-good value = the value in force before its most recent change
+    (no-op if never changed; a second rollback undoes the first). Applied BEFORE the decisions, through the same
+    actuator limits (the min interval can refuse it; a same-second xApp request on that knob then NACKs).
+  writes: arbiter-originated free settings, limited by the actuator limits and ``write_budget`` per scored hour.
+    With ``wg3=True`` writes are not a WG3 action: a non-empty list raises ValueError.
+Churn: every APPLIED knob change (accepted, modified, rolled back, written) counts in stats "changes" (whole
+  episode, warm-up included). With ``churn_cap`` set, once changes >= cap every further change is refused:
+  accept/modify -> NACK (counted rej + "churn_blocked"); rollback/write skipped (+ "churn_blocked").
+  No-op accepts (value already in force) are not changes and are never blocked.
+Arbiters get ONLY ``obs``.
+obs = {"t", "new_reports", "config" (knob -> value), "requests", "locked" (knob -> until, active only),
+       "changes", "churn_cap", "static": {cells, neighbours, is_macro, knobs, xapps (declared knobs only)}}.
 """
 from __future__ import annotations
 
@@ -24,15 +40,19 @@ from .xapps import MIXES
 
 
 class E6Env:
-    def __init__(self, cfg: C.E6Config, write_budget: float = 300.0, log: bool = True):
+    def __init__(self, cfg: C.E6Config, write_budget: float = 300.0, log: bool = True, wg3: bool = False,
+                 churn_cap: int | None = None):
         self.cfg = cfg
         self.plant = Plant(cfg)
         self.kpm = KPM(cfg, self.plant)
         self.xapps = [cls(self, i) for i, cls in enumerate(MIXES[cfg.mix])]
         self.last_change = {}
+        self.prev_val = {}                # knob -> value in force before its most recent change (last-known-good)
+        self.lock_until = {}              # knob -> time the WG3 lock expires
         self.deferred = []
         self.write_budget = write_budget
         self.writes_used = 0
+        self.wg3, self.churn_cap = wg3, churn_cap
         self.log_on = log
         self.log = []
         lay = self.plant.lay
@@ -47,9 +67,11 @@ class E6Env:
         self.update_at = (cfg.warmup_s + r.uniform(0.15, 0.6) * cfg.scored_s) if cfg.update and self.xapps else None
         self.update_xapp = int(r.integers(max(len(self.xapps), 1)))
         self.total_s = int(total_s)
-        self.stats = {"req": 0, "acc": 0, "rej": 0, "mod": 0, "def": 0, "writes": 0}
+        self.stats = {"req": 0, "acc": 0, "rej": 0, "mod": 0, "def": 0, "writes": 0,
+                      "changes": 0, "churn_blocked": 0, "lock_blocked": 0, "locks": 0, "rollbacks": 0}
         self.sec = 0
         self._static = None
+        self._pending = None              # (now, new_reports, requests) between step_propose and step_apply
 
     def static(self):
         lay = self.plant.lay
@@ -61,13 +83,23 @@ class E6Env:
         return {k: knob_get(self.plant, k) for k in self.knobs}
 
     def _apply(self, k, v, now):
+        """-> (status, value): "ok" (applied or no-op) | "nack" (actuator limit) | "churn" (churn cap reached)."""
         v2, ok = feasible(self.plant, k, v, now, self.last_change)
+        cur = knob_get(self.plant, k)
         if not ok:
-            return False, knob_get(self.plant, k)
-        if abs(v2 - knob_get(self.plant, k)) > 1e-9:
+            return "nack", cur
+        if abs(v2 - cur) > 1e-9:
+            if self.churn_cap is not None and self.stats["changes"] >= self.churn_cap:
+                self.stats["churn_blocked"] += 1
+                return "churn", cur
             knob_set(self.plant, k, v2, now)
+            self.prev_val[k] = cur
             self.last_change[k] = now
-        return True, v2
+            self.stats["changes"] += 1
+        return "ok", v2
+
+    def locked(self, k, now):
+        return now < self.lock_until.get(k, -1e9)
 
     def run(self, arbiter=None):
         while self.sec < self.total_s:
@@ -75,22 +107,35 @@ class E6Env:
         return self.score()
 
     def copy(self):
-        """Independent copy for lookahead rollouts (shares only the immutable layout and gain maps)."""
+        """Independent copy for lookahead rollouts (shares only the immutable layout and gain maps). Taken between
+        step_propose and step_apply it carries the pending requests (replayed identically by step_apply)."""
         memo = {id(self.plant.gm): self.plant.gm, id(self.plant.lay): self.plant.lay}
         return copy.deepcopy(self, memo)
 
     def step(self, arbiter=None):
         """Advance one control second (plant ticks, KPM, xApps, arbiter, RIC apply)."""
+        obs = self._propose(arbiter is not None)
+        if arbiter is None:
+            self.step_apply({"decisions": ["accept"] * len(self._pending[2]), "writes": []})
+        else:
+            self.step_apply(arbiter(obs))
+
+    def step_propose(self):
+        """Phase 1: plant ticks, KPM close/deliver, hidden xApp update, xApps observe/propose. Returns obs; the
+        requests stay pending on the env until ``step_apply``."""
+        return self._propose(True)
+
+    def _propose(self, build_obs):
+        if self._pending is not None:
+            raise RuntimeError("step_propose called twice without step_apply")
         p = self.plant
         if self._static is None:
             self._static = self.static()
-        st = self._static
         for _ in range(C.TICKS_PER_CONTROL):
             p.tick()
         self.sec += 1
-        sec = self.sec
-        now = float(sec)
-        self.kpm.second(sec)
+        now = float(self.sec)
+        self.kpm.second(self.sec)
         new = self.kpm.deliver(now)
         if self.update_at is not None and now >= self.update_at:
             self.xapps[self.update_xapp].update_version()
@@ -100,15 +145,38 @@ class E6Env:
             x.observe(new)
             if x.due(now):
                 reqs.extend(x.propose(now))
-        dec = {"decisions": ["accept"] * len(reqs), "writes": []}
-        if arbiter is not None:
-            obs = {"t": now, "new_reports": new, "config": self.config(), "requests": reqs, "static": st}
-            dec = arbiter(obs)
+        self._pending = (now, new, reqs)
+        if not build_obs:
+            return None
+        return {"t": now, "new_reports": new, "config": self.config(), "requests": reqs, "static": self._static,
+                "locked": {k: u for k, u in self.lock_until.items() if now < u},
+                "changes": self.stats["changes"], "churn_cap": self.churn_cap}
+
+    def step_apply(self, dec):
+        """Phase 2: rollbacks, per-request decisions (ACK/NACK to xApps), writes, log -- for the pending second."""
+        if self._pending is None:
+            raise RuntimeError("step_apply called without a pending step_propose")
+        if self.wg3 and dec.get("writes"):
+            raise ValueError("wg3=True: free-form arbiter writes are not a WG3 action (use decisions/rollback)")
+        now, new, reqs = self._pending
+        self._pending = None
+        p = self.plant
+        for k in dec.get("rollback", ()):
+            if k in self.prev_val and abs(self.prev_val[k] - knob_get(p, k)) > 1e-9 \
+                    and self._apply(k, self.prev_val[k], now)[0] == "ok":
+                self.stats["rollbacks"] += 1
         old_def = {id(d["req"]): d["age"] for d in self.deferred}
         self.deferred = []
         for r, d in zip(reqs, dec["decisions"], strict=True):
             self.stats["req"] += 1
             x = next(a for a in self.xapps if a.name == r["xapp"])
+            if self.locked(r["knob"], now):            # WG3 lock: force-reject whatever the decision
+                d = "reject"
+                self.stats["lock_blocked"] += 1
+            elif isinstance(d, tuple) and d[0] == "lock":
+                self.lock_until[r["knob"]] = now + float(d[1])
+                self.stats["locks"] += 1
+                d = "reject"
             if d == "defer":
                 age = old_def.get(id(r), 0) + 1
                 if age <= 10:
@@ -121,14 +189,15 @@ class E6Env:
                 x.result(r, False, knob_get(p, r["knob"]), now)
                 continue
             v = r["prop"] if d == "accept" else float(d[1])
-            ok, applied = self._apply(r["knob"], v, now)
+            st, applied = self._apply(r["knob"], v, now)
+            ok = st == "ok"
             self.stats["acc" if d == "accept" else "mod"] += int(ok)
+            self.stats["rej"] += int(st == "churn")    # churn-cap NACK counts as a rejection
             x.result(r, ok, applied, now)
         for k, v in dec.get("writes", []):
             if self.writes_used >= self.write_budget * max(self.cfg.scored_s, 1) / 3600 + 1e-9:
                 break
-            ok, _ = self._apply(k, v, now)
-            if ok:
+            if self._apply(k, v, now)[0] == "ok":
                 self.writes_used += 1
                 self.stats["writes"] += 1
         if self.log_on:

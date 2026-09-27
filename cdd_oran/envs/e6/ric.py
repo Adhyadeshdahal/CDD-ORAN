@@ -1,5 +1,6 @@
 """E6 near-RT RIC layer: KPM reporting (granularity, delay, drops), knob registry with hard actuator limits, request
-plumbing (ACCEPT / REJECT / MODIFY / DEFER, NACK feedback), and last-writer-wins default.
+plumbing (ACCEPT / REJECT / MODIFY / DEFER, NACK feedback), and last-writer-wins default. The WG3 LOCK / ROLLBACK
+actions and the churn cap live in ``env.E6Env.step_apply``; every change still passes ``feasible`` here.
 
 Knob keys:  ("cio", s, n) dB | ("hys", c) dB | ("ttt", c) ms | ("ll_ratio", c) fraction | ("sleep", c) 0/1 |
             ("carrier", c) active macro carriers 1..MACRO_NTRX
