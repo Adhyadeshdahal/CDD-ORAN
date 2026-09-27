@@ -259,3 +259,11 @@ the lower dependence between rows. Any expansion follows section 4.
   paired collection cost (excess SVR, per-slice, RLF, severe, energy, churn, tails, changed-knob-seconds, aborts).
 - Synthetic calibration: block hys type-I .060/.042, power .40/.42 @0.5 SD, .91/.82 @1 SD; episode mode type-I .050,
   power .93 @1 SD. Sham placebo on real refs (9 blocks): 0.00/0.02 (plumbing only).
+
+## FREEZE (policy grid only) — 2026-09-28
+e6-collect-v3 policy collection FROZEN at commit 78c7c53 after the fit-seed pilot passed F1–F6 (F2: 840 draws, max
+|z| 1.22; F3: realised half fraction CIO .504 / LL .508; cost ≤ 1.2 % excess SVR). sol conditional GO
+(scratchpad/decision_stack/SOL_LAUNCH_SIGNOFF.md): fit intention-to-treat on ALL randomized slots; eligibility (20 s
+treatment window) is an operational support gate only, report both eligibility definitions; never select fitting
+rows by eligibility. Probe grid e6-probe/2: NO-GO until its 30-job audit is reported and its contract frozen; claims
+limited to the whole-trajectory sharp null (block randomization retained); 1800 s scored approved.
