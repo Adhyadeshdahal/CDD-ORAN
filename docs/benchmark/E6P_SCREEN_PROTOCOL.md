@@ -98,7 +98,7 @@ Oracle details (arm 10):
 ## 6. Mechanism preconditions (Stage 0b). ALL must pass before any screen seed is run
 | id | test | pass rule |
 |---|---|---|
-| M1 | **Power step moves SINR as predicted.** Seeds 150020-150023, snapshot at t = 120 s, occupancy frozen for one tick. For each macro c, apply ptx −3 dB and then +3 dB. | (a) Every UE's realised SINR change equals the analytic value from the gain maps and occupancies (`10·log10((I+N)/(I'+N))` plus the own-signal change when served by c) within 0.01 dB. (b) Mean change of neighbour-edge UEs (served by n ≠ c, RSRP from c within 6 dB of serving) is > 0 for −3 dB and < 0 for +3 dB, for ≥ 90 % of macros that have such UEs. (c) Measured L3 input of c shifts by exactly the offset. (d) Sector power change equals `car·Δp·ρ·P_max·(10^(o/10) − 1)` within 1e-9 W. |
+| M1 | **Power step moves SINR as predicted.** Seeds 150020-150023, snapshot at t = 120 s, occupancy frozen for one tick. For each macro c, apply ptx −3 dB and then +3 dB. | (a) Every UE's realised SINR change equals the analytic value from the gain maps and occupancies (`10·log10((I+N)/(I'+N))` plus the own-signal change when served by c) within 0.01 dB. (b) Mean change of neighbour-edge UEs (served by n ≠ c, RSRP from c within 6 dB of serving) is > 0 for −3 dB and < 0 for +3 dB, for ≥ 90 % of macros that have such UEs and non-zero occupancy on the snapshot tick (an idle macro radiates no interference, so its neighbours' change is exactly 0; that case is covered by (a)). (c) Measured L3 input of c shifts by exactly the offset. (d) Sector power change equals `car·Δp·ρ·P_max·(10^(o/10) − 1)` within 1e-9 W. |
 | M2 | **Quota is work-conserving.** Scheduler unit tests. | (a) Zero protected demand: allocation bit-identical to `prot_min = 0`. (b) Protected demand < m·cap: protected get their demand and the rest reach the shared pool (Σ alloc = min(Σ demand, cap − dedicated)). (c) Protected demand > m·cap with saturated others: protected alloc ≥ m·cap − 1e-9. (d) `prb_util` and `prb_rsv` unchanged by an idle min share. (e) min share ≤ cap − dedicated. |
 | M3 | **Carrier off halves capacity; sleep removes the pico.** | Macro `cap_prb` 106 → 53 on carrier 2 → 1, back to 106 only after `CARRIER_ON_S` = 2 s. Sector power matches the E6 EARTH formula. Pico sleep: cap 0, power `PICO_SLEEP_W`, wake after `PICO_WAKE_S`. |
 | M4 | **Each xApp alone improves its own KPI vs freeze.** Seeds per §3, paired. Own KPIs: ES and PowerES → scored energy; SliceGuarantee → PSVR; Coverage → share of UE-seconds with serving SINR < −6 dB. | In every stratum where the xApp made ≥ 1 accepted change per seed on average, the pooled own KPI improves and at least 3 of 4 seeds improve. An xApp that acts in fewer than 2 strata is *inert*. Pairs containing it are not screenable; this is reported, not fixed. |
@@ -156,6 +156,13 @@ whatever the verdict.
 
 The stages are gated sequentially because the criteria are conjunctive. Skipping the oracle where criterion 1 failed
 cannot change a verdict. Drivers use timeouts, and background processes are cleaned up after every stage.
+
+## 8a. Amendments before any protocol-seed run (2026-09-28)
+- M1(b) restricted to macros with non-zero occupancy on the snapshot tick. Reason: physics identity found on a DEV
+  smoke run (3/21 macros idle at the snapshot → 0 dB neighbour change); no protocol seed had been run.
+- QACM (arm 7) is fitted per (pair, stratum) on accept-all logs of E6 DEV seeds 20-23 (the protocol named none);
+  QoS thresholds from `sg_viol_hi` and `cov_sinr_low_db`.
+- Oracle "half" = slew rule with 1 dB / 0.05 quanta (legacy halving rounds carrier/sleep/prot_min to no-op or full step).
 
 ## 9. Frozen at doc commit
 All of `E6P_SPEC.md` §2-§5 (values, semantics, xApp rules, metric, X = 0.90, guardrail margin, screenability floor);

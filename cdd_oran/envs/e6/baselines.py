@@ -6,6 +6,10 @@
   knob_lock       : SON-coordination style lease: the first xApp to change a knob owns it for ``lease_s``; requests
                     by other xApps on an owned knob are rejected
   subset(keep)    : reject every request from xApps not in ``keep`` (= running only ``keep``, all xApps deployed)
+  cell_lock       : ``CellPriorityLock(order)``: a cell changed by a higher-priority xApp in the last 60 s rejects
+                    lower-priority requests on any knob of that cell (E6-P arm 6)
+  region subset   : ``region_subset(keep_by_region, site)``; ``region_hindsight`` = HINDSIGHT per-region static
+                    subset by one coordinate-descent pass (E6-P arm 9, not deployable)
   static config   : ``apply_static(env, spec)`` before the run + freeze; ``tuned_static`` = HINDSIGHT coordinate
                     descent over ``tuned_static_grid()`` (upper reference for static control, not deployable)
 """
@@ -51,7 +55,130 @@ class KnobLock:
         return {"decisions": dec, "writes": []}
 
 
+def knob_cells(k):
+    """Cells a knob acts on: per-cell knobs (carrier / ptx / prot_min / sleep / hys / ttt / ll_ratio) -> (c,),
+    CIO[s, n] -> (s, n)."""
+    return (k[1], k[2]) if k[0] == "cio" else (k[1],)
+
+
+class CellPriorityLock:
+    """Cell-priority lock (E6P_SCREEN_PROTOCOL sec. 5 arm 6; NIST ns3-oran ``SingleCommandPerNode``-like CMM): a cell
+    whose knob was CHANGED by an xApp of priority p in the last ``hold_s`` s rejects requests of every lower-priority
+    xApp on any knob of that cell. Same-second requests are processed in priority order, so a higher-priority change
+    in this second blocks lower-priority requests on its cells at once; same-rank requests never block each other.
+
+    "Changed" = an accepted request whose value actually took effect: an accepted request is provisional until the
+    next ``obs["config"]`` shows the knob moved away from the request's ``cur`` (an actuator NACK or a no-op leaves no
+    hold). Uses only ``obs``. ``order`` = xApp names, highest priority first (unknown xApps rank last)."""
+
+    def __init__(self, order, hold_s=60.0):
+        self.rank = {x: i for i, x in enumerate(order)}
+        self.hold_s = float(hold_s)
+        self.hold = {}                    # cell -> (rank of the holder, time of its latest effective change)
+        self.pending = []                 # (knob, cur, rank, t) accepted last second, unconfirmed
+
+    def _mark(self, cell, rk, t):
+        h = self.hold.get(cell)
+        if h is None or h[1] + self.hold_s <= t or rk <= h[0]:
+            self.hold[cell] = (rk, t)
+
+    def __call__(self, obs):
+        now, cfg = obs["t"], obs["config"]
+        for k, cur, rk, t in self.pending:                            # confirm last second's accepted changes
+            if abs(float(cfg.get(k, cur)) - cur) > 1e-9:
+                for c in knob_cells(k):
+                    self._mark(c, rk, t)
+        self.pending = []
+        reqs = obs["requests"]
+        dec = [None] * len(reqs)
+        now_hold = {}                                                 # cell -> best rank accepted this second
+        for i in sorted(range(len(reqs)), key=lambda j: self.rank.get(reqs[j]["xapp"], 99)):
+            r = reqs[i]
+            rk = self.rank.get(r["xapp"], 99)
+            blocked = False
+            for c in knob_cells(r["knob"]):
+                h = self.hold.get(c)
+                if h is not None and now - h[1] < self.hold_s and h[0] < rk:
+                    blocked = True
+                if c in now_hold and now_hold[c] < rk:
+                    blocked = True
+            if blocked:
+                dec[i] = "reject"
+                continue
+            dec[i] = "accept"
+            if abs(r["prop"] - r["cur"]) > 1e-9:
+                self.pending.append((r["knob"], float(r["cur"]), rk, now))
+                for c in knob_cells(r["knob"]):
+                    now_hold[c] = min(now_hold.get(c, 99), rk)
+        return {"decisions": dec, "writes": []}
+
+
 BASELINES = {"noarb": lambda: None, "freeze": lambda: freeze, "priority": lambda: priority, "lock": KnobLock}
+
+
+# ------------------------------------------------------------------------ per-region subset (E6-P arm 9)
+def region_subset(keep_by_region, site):
+    """Arbiter that accepts a request iff its xApp is in ``keep_by_region[region(knob)]`` (region = ``site`` of the
+    knob's own cell k[1], as ``decision.adapters.e6.knob_region``); rejects it otherwise. A fixed per-region xApp
+    subset held for the whole episode (all xApps stay deployed and proposing)."""
+    keep = {int(g): frozenset(v) for g, v in keep_by_region.items()}
+    site = np.asarray(site)
+
+    def arb(obs):
+        return {"decisions": ["accept" if r["xapp"] in keep[int(site[r["knob"][1]])] else "reject"
+                              for r in obs["requests"]], "writes": []}
+
+    arb.keep = keep
+    return arb
+
+
+def all_subsets(xapps):
+    """Every subset of ``xapps`` (tuples in ``xapps`` order), empty first, by size then lexicographic mask order."""
+    import itertools
+    out = [tuple(x for x, m in zip(xapps, mask, strict=True) if m)
+           for mask in itertools.product((0, 1), repeat=len(xapps))]
+    return sorted(out, key=len)
+
+
+def region_hindsight(evaluate, regions, xapps, all_regions=None):
+    """HINDSIGHT per-region static subset (E6P_SCREEN_PROTOCOL sec. 5 arm 9; privileged, not deployable).
+
+    Start from accept-all (every region keeps every xApp), then ONE pass of coordinate descent over ``regions`` in
+    index order: at region g every other subset of ``xapps`` is evaluated with the other regions held, and the region
+    moves to the best ADMISSIBLE candidate if it beats the incumbent. ``evaluate(keep_by_region) -> (value,
+    admissible)`` (e.g. PSVR of a full episode on the scored seed, admissible = energy-matched and guardrail-passing).
+    A candidate beats the incumbent iff it is admissible and (the incumbent is not, or its value is strictly lower);
+    ties keep the incumbent, ties among candidates keep the earlier one in ``all_subsets`` order. Evaluations are
+    cached. ``all_regions`` (default ``regions``) = every region of the plant (regions outside ``regions`` keep every
+    xApp). Returns {"best", "best_val", "best_ok", "path": [{"keep", "val", "ok"}], "n_eval"}."""
+    regions = [int(g) for g in sorted(regions)]
+    cache, path = {}, []
+
+    def ev(kb):
+        key = tuple(sorted((g, tuple(v)) for g, v in kb.items()))
+        if key not in cache:
+            val, ok = evaluate({g: tuple(v) for g, v in kb.items()})
+            cache[key] = (float(val), bool(ok))
+            path.append({"keep": {g: tuple(v) for g, v in kb.items()}, "val": cache[key][0], "ok": cache[key][1]})
+        return cache[key]
+
+    def better(a, b):
+        return a[1] and (not b[1] or a[0] < b[0])
+
+    full = tuple(xapps)
+    best = {int(g): full for g in (all_regions if all_regions is not None else regions)}
+    cur = ev(best)
+    for g in regions:
+        win, wv = None, cur
+        for s in all_subsets(xapps):
+            if s == best[g]:
+                continue
+            v = ev({**best, g: s})
+            if better(v, wv):
+                win, wv = s, v
+        if win is not None:
+            best, cur = {**best, g: win}, wv
+    return {"best": best, "best_val": cur[0], "best_ok": cur[1], "path": path, "n_eval": len(cache)}
 
 
 # ------------------------------------------------------------------------------------------ subset of the xApps

@@ -14,6 +14,11 @@ Spec, paper quotes, E6 mappings, settings chosen in each method's favour and fid
   two-tower     arXiv:2601.13213 (supervised two-tower + sparsemax)                                    -> INTERFACE ONLY
   GRAPHICA      Al Shami et al., arXiv:2503.03523 (GCN conflict classifier, no mitigation)            -> INTERFACE ONLY
 
+E6-P (``MANIFEST_P`` / ``QOS_P`` / ``KPIS_P``): QACM runs on the E6-P xApps ES (carrier + pico sleep), PowerES,
+Coverage and SliceGuarantee with the declared per-cell KPI mapping below; knob types ptx / prot_min / sleep use the
+plant's actuator grid (ric.LIMITS holds the E6PConfig() defaults = the frozen E6P_SPEC values). CMF, PACIFISTA and
+Djidjev are NOT mapped to E6-P (the E6-P screen protocol only calls for QACM, arm 8).
+
 Training-data contract (every learned piece): ``fit(episodes)`` where each episode is the ``env.log`` list of an
 ``E6Env(log=True)`` run (per second: {"t", "config", "reports", ...}). Collect DEV logs with ``run_logged``; never TEST.
 """
@@ -41,7 +46,24 @@ MANIFEST = {"MRO": {"icp": ("cio", "ttt", "hys"), "kpi": "ho_fail", "span_s": 30
 # energy has no SLA target -> None = always satisfied (in QACM's favour on the SVR endpoint).
 QOS = {"ll_delay": (C.LL_DELAY_TARGET_S, 1), "embb_thp": (C.EMBB_THP_TARGET_BPS, 0), "ho_fail": (0.02, 1),
        "energy": None}
-KPI_GRAN = {"ll_delay": "fast", "util": "fast", "embb_thp": "thp", "ho_fail": "mob", "energy": "energy"}
+KPI_GRAN = {"ll_delay": "fast", "util": "fast", "embb_thp": "thp", "ho_fail": "mob", "energy": "energy",
+            "prot_below": "fast", "edge_sinr": "fast"}
+
+# E6-P xApp descriptors (docs/benchmark/E6P_SPEC.md sec. 6 item 7: ES -> energy, PowerES -> energy, SliceGuarantee ->
+# PSVR, Coverage -> 5th-percentile edge SINR; knob types ptx / prot_min / sleep). Per-cell KPIs as the KPM delivers
+# them (ric.KPM._make_p): "prot_below" = share of evaluated protected UE-s below the floor (the per-cell PSVR the
+# arbiter can see [INFERRED]: PSVR itself is a network metric), "edge_sinr" = edge-SINR percentile (edge_pct = 5).
+# QoS thresholds [INFERRED from the spec's own trigger constants, not from outcomes]: prot_below violated above
+# sg_viol_hi = 0.05 (E6P_SPEC 4.4, the 95 % availability rule); edge_sinr violated below cov_sinr_low_db = Q_in -6 dB
+# (4.3); energy has no SLA target -> None (always met, in QACM's favour on the PSVR endpoint, as in E6).
+# ES keeps its v1 carrier ICP and gains the pico-sleep ICP (xapps_p.ESPico).
+_P0 = C.E6PConfig()
+MANIFEST_P = {"ES": {"icp": ("carrier", "sleep"), "kpi": "energy", "span_s": 10.0},
+              "PowerES": {"icp": ("ptx",), "kpi": "energy", "span_s": _P0.pes_cadence_s},
+              "Coverage": {"icp": ("ptx",), "kpi": "edge_sinr", "span_s": _P0.cov_cadence_s},
+              "SliceGuarantee": {"icp": ("prot_min",), "kpi": "prot_below", "span_s": _P0.sg_cadence_s}}
+QOS_P = dict(QOS, prot_below=(_P0.sg_viol_hi, 1), edge_sinr=(_P0.cov_sinr_low_db, 0))
+KPIS_P = ("energy", "prot_below", "edge_sinr")
 
 
 def kpi_of(rep, name):
@@ -54,6 +76,10 @@ def kpi_of(rep, name):
         return np.asarray(rep["embb_thp_p5"], float)
     if name == "energy":
         return np.asarray(rep["energy_j"], float)
+    if name == "prot_below":                                 # E6-P fast report (protected slice enabled)
+        return np.asarray(rep["prot_below_frac"], float)
+    if name == "edge_sinr":                                  # E6-P fast report (edge-SINR percentile per cell)
+        return np.asarray(rep["edge_sinr_p"], float)
     if name == "ho_fail":                                    # too-late share of HO attempts per serving cell
         tl = rep["too_late"].sum(1)
         den = rep["ho_att"].sum(1) + tl
@@ -110,7 +136,8 @@ def one_step_values(k, cur):
         return [float(v) for v in C.TTT_SET_MS[max(i - 1, 0):i + 2]]
     if typ == "sleep":
         return [0.0, 1.0]
-    grid = {"cio": 1.0, "hys": 0.5, "ll_ratio": 0.05, "carrier": 1.0}[typ]
+    grid = {"cio": 1.0, "hys": 0.5, "ll_ratio": 0.05, "carrier": 1.0,
+            "ptx": _P0.ptx_grid_db, "prot_min": _P0.prot_min_grid}[typ]         # E6-P grids = ric._quantise
     n = int(round(mstep / grid))
     vals = {_quantise(k, cur + j * grid) for j in range(-n, n + 1)}
     return sorted(v for v in vals if lo - 1e-9 <= v <= hi + 1e-9)
