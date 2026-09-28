@@ -27,6 +27,9 @@ Churn: every APPLIED knob change (accepted, modified, rolled back, written) coun
   No-op accepts (value already in force) are not changes and are never blocked.
 Trace: ``trace=True`` attaches a ``cdd_oran.decision.trace.TraceRecorder`` (per-second propose/apply/outcome rows +
   privileged per-cell labels); ``env.get_trace()`` returns it. Off by default: no recording, no extra work.
+E6-P (cfg.e6p, default off): ptx / prot_min knobs are appended AFTER the E6 knob list, E6-P xApps after the base mix
+  (their indices continue it, so base xApps keep their per-seed draws; the hidden version update still targets a base
+  xApp); ``copy(reseed=k)`` re-draws the future exogenous tape (see ``copy``).
 Arbiters get ONLY ``obs``.
 obs = {"t", "new_reports", "config" (knob -> value), "requests", "locked" (knob -> until, active only),
        "changes", "churn_cap", "static": {cells, neighbours, is_macro, knobs, xapps (declared knobs only)}}.
@@ -71,6 +74,18 @@ class E6Env:
         total_s = cfg.warmup_s + cfg.scored_s
         self.update_at = (cfg.warmup_s + r.uniform(0.15, 0.6) * cfg.scored_s) if cfg.update and self.xapps else None
         self.update_xapp = int(r.integers(max(len(self.xapps), 1)))
+        P = cfg.e6p                       # E6-P (default off): knobs appended AFTER the E6 list, xApps after the mix
+        if P.ptx_on:
+            self.knobs += [("ptx", c) for c in range(lay.n_cells) if self.plant.ptx_cells[c]]
+        if P.prot_on:
+            self.knobs += [("prot_min", c) for c in range(lay.n_cells)]
+        if P.enabled and P.es_pico:       # E6-P: the base mix's "ES" also sleeps / wakes picos (same index / draws)
+            from .xapps import ES
+            from .xapps_p import ESPico
+            self.xapps = [ESPico(self, i) if type(x) is ES else x for i, x in enumerate(self.xapps)]
+        if P.xapps:
+            from .xapps_p import build_p_xapps
+            self.xapps += build_p_xapps(self, P.xapps, start_idx=len(self.xapps))
         self.total_s = int(total_s)
         self.stats = {"req": 0, "acc": 0, "rej": 0, "mod": 0, "def": 0, "writes": 0,
                       "changes": 0, "churn_blocked": 0, "lock_blocked": 0, "locks": 0, "rollbacks": 0}
@@ -121,13 +136,23 @@ class E6Env:
             self.step(arbiter)
         return self.score()
 
-    def copy(self):
+    def copy(self, reseed: int | None = None):
         """Independent copy for lookahead rollouts (shares only the immutable layout and gain maps). Taken between
-        step_propose and step_apply it carries the pending requests (replayed identically by step_apply)."""
+        step_propose and step_apply it carries the pending requests (replayed identically by step_apply).
+
+        ``reseed=None`` (default): the copy continues the SAME exogenous tape (bit-identical replay). ``reseed=k``: the
+        copy is identical at the copy point but every FUTURE exogenous draw (plant load / mobility / traffic /
+        measurement noise per tick, KPM delay / drop per second) comes from an independent stream keyed by
+        (seed, stream, t, RESEED_TAG, k); the same k gives the same re-drawn future. Draws made at construction
+        (layout, UEs, scenario, xApp variants) are state and are kept. Not covered: the V2 stack's extra KPMV2
+        report draws (own key in xapps_v2)."""
         memo = {id(self.plant.gm): self.plant.gm, id(self.plant.lay): self.plant.lay}
         if self._tr is not None:
             memo[id(self._tr)] = None     # copies are untraced (lookahead rollouts must not write the trace)
-        return copy.deepcopy(self, memo)
+        c = copy.deepcopy(self, memo)
+        if reseed is not None:
+            c.plant.rng_salt = int(reseed)
+        return c
 
     def get_trace(self):
         """The episode's ``decision.trace.Trace`` (requires ``trace=True``)."""
@@ -260,7 +285,9 @@ class E6Env:
                 "viol_frac": S["viol_ue_s"] / max(S["ue_s"], 1),
                 "ll_viol": S["ll_viol"], "embb_viol": S["embb_viol"], "outage_viol": S["outage_viol"],
                 "severe": S["severe"], "energy_kwh": S["energy_j"] / 3.6e6, "rlf_per_ue_h": S["rlf"] / max(ue_h, 1e-9),
-                "ho_per_ue_h": S["ho"] / max(ue_h, 1e-9), "pingpong": S["pingpong"], **self.stats}
+                "ho_per_ue_h": S["ho"] / max(ue_h, 1e-9), "pingpong": S["pingpong"],
+                **({"prot_viol": S["prot_viol"], "prot_viol_frac": S["prot_viol"] / max(S["prot_ue_s"], 1)}
+                   if "prot_viol" in S else {}), **self.stats}
 
 
 def run_episode(cfg, arbiter=None, **kw):

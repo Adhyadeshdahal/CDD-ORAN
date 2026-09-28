@@ -95,6 +95,72 @@ SCENARIO_HOLDOUT = {
 
 
 @dataclass(frozen=True)
+class E6PConfig:
+    """E6-P: additive power / protected-slice extension (default OFF; with every flag False and no xApps the plant, RIC,
+    knob list and every RNG stream are bit-identical to E6-scn-v1). Values and provenance: docs/benchmark/E6P_SPEC.md
+    (section in brackets); the field names are that document's interface.
+
+    Tx power ("ptx", c): total-carrier Tx-power offset in dB on cell c's whole gain column (0 = nominal
+    MACRO/PICO_PTX_DBM), so serving RSRP, SINR, measured L3 (hence the A3 border) and the interference c causes all
+    follow. EARTH power per active carrier: P0 + DP * rho * PMAX * 10^(offset/10) (P0 does not scale; offset > 0 is an
+    extrapolation beyond EARTH's P_out <= PMAX, flagged not corrected).
+    Protected slice: a fraction of eMBB UEs carries a per-UE rate floor; ("prot_min", c) is a WORK-CONSERVING minimum
+    PRB share (TS 28.541 rRMPolicyMinRatio: guaranteed when protected UEs need it, borrowed otherwise).
+    Pico sleep (only when enabled): a sleeping pico hands its served UEs over to their best remaining cell
+    (``pico_sleep_ho``) and the v1 "ES" xApp gains a pico-sleep part (``es_pico``; xapps_p.ESPico) [spec 4.1, 6.1-6.2].
+    """
+    # ---- Tx-power knob [spec 2.1, 3]
+    ptx_on: bool = False
+    ptx_scope: str = "macro"              # [S->] macro sectors only (EARTH: pico load dependency negligible) | "all"
+    ptx_range_db: tuple = (-9.0, 3.0)     # [S] TR 38.864 Tab 6.4.1.2-1 -9 dB; Tab 5.1-1 Set 2 49 dBm = +3 dB
+    ptx_init_db: float = 0.0              # [I] E6 nominal 46 dBm
+    ptx_grid_db: float = 1.0              # [S] TS 38.331 integer-dB power parameters
+    ptx_max_step_db: float = 3.0          # [S->] one TR 38.864 evaluation step per write
+    ptx_min_interval_s: float = 10.0      # [A] = power xApps' cadence
+    # ---- protected slice (subset of eMBB UEs) + work-conserving min PRB share [spec 2.2-2.3, 3]
+    prot_on: bool = False
+    prot_frac: float = 0.2                # [A] share of eMBB UEs flagged protected (own RNG stream "e6p")
+    prot_floor_bps: float = 2e6           # [S]+[I] TR 26.925 720p lower end = E6 EMBB_THP_TARGET_BPS
+    prot_min_backlog_s: float = 0.2       # [I] E6 eMBB SLA activity gate
+    prot_min_range: tuple = (0.0, 0.5)    # [I] E6 ll_ratio actuator range
+    prot_min_init: float = 0.0            # [S] TS 28.541 rRMPolicyMinRatio defaultValue 0
+    prot_min_grid: float = 0.05           # [I] E6 ll_ratio quantum
+    prot_min_max_step: float = 0.10       # [I] E6 ll_ratio max step
+    prot_min_interval_s: float = 5.0      # [A] = SliceGuarantee cadence
+    edge_pct: float = 5.0                 # [S] ITU-R M.2410 5th-percentile (edge) user
+    # ---- pico sleep (effective only when the extension is enabled) [spec 4.1, 6.1-6.2]
+    pico_sleep_ho: bool = True            # a sleeping pico hands its UEs over (HO_EXEC_S interruption), no forced RLF
+    es_pico: bool = True                  # the "ES" xApp of the base mix also sleeps / wakes picos (xapps_p.ESPico)
+    # ---- E6-P xApps appended after the base mix (names from xapps_p.P_XAPPS); () = none
+    xapps: tuple = ()
+    # PowerES: lower ptx on lightly loaded macros, restore when busy [spec 4.2]
+    pes_cadence_s: float = 10.0           # [I] v1 ES cadence
+    pes_u_low: float = 0.30               # [I]/[S->] full-band load below which the cell is light
+    pes_u_high: float = 0.80              # [I] v1 ES u_on: ACTIVE-capacity util above which power is restored
+    pes_hold_s: float = 60.0              # [I] v1 ES low-load spell
+    pes_step_db: float = 3.0              # [S->] one TR 38.864 grid step (floor = ptx_range_db[0])
+    # Coverage: raise ptx where the edge SINR is weak (absolute and relative to neighbours) or protected floors fail;
+    # release a positive offset toward nominal when comfortable [spec 4.3]
+    cov_cadence_s: float = 10.0           # [A] same clock as PowerES
+    cov_sinr_low_db: float = -6.0         # [S->] Q_in: edge-SINR percentile below which power is raised
+    cov_sinr_ok_db: float = -3.0          # [S->] Q_in + one step: above it a positive offset is released
+    cov_margin_db: float = 3.0            # [S->] raise only if the edge is >= one step below the neighbours' mean edge
+    cov_floor_frac: float = 0.05          # [S->] protected below-floor share that also triggers a raise
+    cov_step_db: float = 3.0              # [S->] TR 38.864 grid; ceiling ptx_range_db[1]
+    # SliceGuarantee: raise prot_min when protected floors are violated, lower when the share is slack [spec 4.4]
+    sg_cadence_s: float = 5.0             # [I] v1 SLICE decision window
+    sg_viol_hi: float = 0.05              # [S->] 95 % availability rule
+    sg_viol_lo: float = 0.01              # [A] release hysteresis (1/5 of the trigger)
+    sg_slack: float = 0.5                 # [I] v1 SLICE "reservation mostly wasted" ratio
+    sg_hold_s: float = 10.0               # [I] v1 SLICE good spell
+    sg_step: float = 0.05                 # [I] v1 SLICE step
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.ptx_on or self.prot_on or self.xapps)
+
+
+@dataclass(frozen=True)
 class E6Config:
     seed: int = 0
     # scenario factors
@@ -149,6 +215,8 @@ class E6Config:
     mis_ttt_ms: int = 480             # [S] TR 36.839 Tab 5.3.2.1 Set 1 TTT 480 ms (the numeric pair only; the
     #                                   rollout on this road is a too-late-HO hypothesis, not a documented incident)
     extra: dict = field(default_factory=dict)
+    # E6-P extension (default OFF: E6PConfig() leaves E6-scn-v1 bit-identical)
+    e6p: E6PConfig = field(default_factory=E6PConfig)
 
     def ue_count(self) -> int:
         return self.n_ue

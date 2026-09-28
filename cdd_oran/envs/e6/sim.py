@@ -14,6 +14,19 @@ Configuration changes applied by the RIC take effect at the start of the next ti
 Exogenous randomness is keyed by (seed, stream, tick) so arms with different actions see the same tape.
 Stress scenarios (cfg.scenario = "surge" | "mistune", see docs/benchmark/E6_STRESS_SCENARIOS.md) are drawn once from
 the (seed, "scenario") stream and are otherwise deterministic in time; "base" builds no scenario object at all.
+
+E6-P extension (cfg.e6p, config.E6PConfig; default OFF, every branch below is guarded so E6-scn-v1 is bit-identical):
+  * Tx power: ``ptx_off`` (dB, per cell) is added to the cell's gain column in ``_gains`` -> serving RSRP, SINR, the
+    interference the cell causes and the measured L3 (A3 handover) all follow. EARTH power uses
+    P0 + DP * rho * PMAX * 10^(ptx_off/10).
+  * Protected slice: ``prot`` flags a subset of eMBB UEs (own RNG stream "e6p"; they stay eMBB for traffic, for the
+    eMBB SLA and for every per-slice KPM). Pool order in the scheduler, per cell:
+      1. LL DEDICATED pool  = cap * ll_ratio: LL-only, NOT work-conserving (idle reserved PRBs are wasted), unchanged;
+      2. protected MIN share = min(cap * prot_min, cap - dedicated): protected UEs are served from it first (equal
+         share); whatever they do not use goes back to step 3 (work-conserving, TS 28.541 rRMPolicyMinRatio);
+      3. SHARED pool = the rest: LL remainder, eMBB (protected residual demand included) and BE, equal share.
+    Per-UE floor: a protected UE-second violates when backlogged >= prot_min_backlog_s with throughput below
+    prot_floor_bps, or in outage; accumulated in sla["prot_viol"] / sla["prot_ue_s"] (present only when enabled).
 """
 from __future__ import annotations
 
@@ -22,14 +35,20 @@ import numpy as np
 from . import config as C
 from .geometry import GainMaps, Layout
 
-STREAMS = {"layout": 1, "ue": 2, "mob": 3, "traffic": 4, "meas": 5, "load": 6, "kpm": 7, "xapp": 8, "scenario": 9}
+STREAMS = {"layout": 1, "ue": 2, "mob": 3, "traffic": 4, "meas": 5, "load": 6, "kpm": 7, "xapp": 8, "scenario": 9,
+           "e6p": 10}
 LL, EMBB, BE = 0, 1, 2
 A_L3 = 0.5 ** (C.L3_K / 4.0)
 NOISE_W = 10 ** ((C.NOISE_DBM_HZ + 10 * np.log10(C.BW_HZ) + C.UE_NF_DB) / 10) / 1000.0
 
 
-def _rng(seed, stream, t=0):
-    return np.random.default_rng([int(seed), 6600, STREAMS[stream], int(t)])
+RESEED_TAG = 6620        # E6-P lookahead re-draw key (env.copy(reseed=...)); disjoint from 6600 and registry tags
+
+
+def _rng(seed, stream, t=0, salt=None):
+    if salt is None:
+        return np.random.default_rng([int(seed), 6600, STREAMS[stream], int(t)])
+    return np.random.default_rng([int(seed), 6600, STREAMS[stream], int(t), RESEED_TAG, int(salt)])
 
 
 class Plant:
@@ -64,6 +83,18 @@ class Plant:
         # stress scenario (S1 surge / S2 mistune); None for the calm base plant (bit-identical to pre-scenario E6)
         self.oam_hook = None          # set by the RIC layer: called (knob, value, now) on every OAM/SMO write
         self.scn = None if cfg.scenario == "base" else make_scenario(cfg, self)
+        self.rng_salt = None          # None = the episode tape; an int re-draws all FUTURE exogenous draws (reseed)
+        # E6-P (default off; nothing below consumes an existing RNG stream)
+        P = cfg.e6p
+        self.P, self.p_on, self.p_ptx, self.p_prot = P, P.enabled, bool(P.ptx_on), bool(P.prot_on)
+        if self.p_on:
+            validate_e6p(P)
+        self.ptx_cells = self.lay.is_macro.copy() if P.ptx_scope == "macro" else np.ones(nc, bool)
+        self.ptx_off = np.where(self.ptx_cells & self.p_ptx, float(P.ptx_init_db), 0.0)   # dB offset per cell
+        self.prot = np.zeros(n, bool)
+        if self.p_prot:
+            self.prot = (self.sl == EMBB) & (_rng(s, "e6p", 1).uniform(size=n) < P.prot_frac)
+        self.prot_min = np.full(nc, float(P.prot_min_init) if self.p_prot else 0.0)   # min PRB share per cell
         # ---------------------------------------------------------------- configuration (RIC-controlled knobs)
         self.cio = np.zeros((nc, nc))                                 # CIO[s, n] dB (A3 offset for s -> n)
         self.hys = np.full(nc, 2.0)
@@ -101,23 +132,42 @@ class Plant:
         self.sec_outage = np.zeros(n, bool)
         self.sla = {"viol_ue_s": 0.0, "ue_s": 0.0, "ll_viol": 0.0, "embb_viol": 0.0, "outage_viol": 0.0,
                     "severe": 0, "energy_j": 0.0, "rlf": 0, "ho": 0, "pingpong": 0}
+        if self.p_on:
+            self.sla["lowsinr_ue_s"] = 0.0                               # UE-s with serving SINR < Q_in (-6 dB)
+        if self.p_prot:
+            self.sla.update({"prot_viol": 0.0, "prot_ue_s": 0.0})
         self.cell_viol_run = np.zeros((nc, 3))
         self.ctr = self._new_counters()
 
     # ================================================================================================ helpers
     def _gains(self):
         g = self.gm.lookup(self.pos).astype(float)
+        if self.p_ptx:
+            g += self.ptx_off[None, :]
         g[self.indoor] -= C.O2I_DB
         g[:, self.asleep | (self.waking_until > self.t * C.TICK_S)] = -300.0
         return g
 
+    def _tape(self, stream, t):
+        """Per-tick exogenous generator: the episode tape, or its re-drawn future after ``env.copy(reseed=k)``."""
+        if self.rng_salt is None:
+            return _rng(self.cfg.seed, stream, t)
+        return _rng(self.cfg.seed, stream, t, self.rng_salt)
+
     def _new_counters(self):
         nc = self.nc
-        return {"prb_used": np.zeros((nc, 3)), "prb_rsv": np.zeros(nc), "prb_cap": np.zeros(nc), "ticks": 0, "bits": np.zeros((nc, 3)),
-                "ho_att": np.zeros((nc, nc)), "ho_succ": np.zeros((nc, nc)), "too_late": np.zeros((nc, nc)),
-                "too_early": np.zeros((nc, nc)), "wrong_cell": np.zeros((nc, nc)), "pingpong": np.zeros((nc, nc)),
-                "rlf": np.zeros(nc), "energy_j": np.zeros(nc), "ll_delay": [[] for _ in range(nc)],
-                "embb_thp": [[] for _ in range(nc)], "act_ue": np.zeros((nc, 3))}
+        c = {"prb_used": np.zeros((nc, 3)), "prb_rsv": np.zeros(nc), "prb_cap": np.zeros(nc), "ticks": 0, "bits": np.zeros((nc, 3)),
+             "ho_att": np.zeros((nc, nc)), "ho_succ": np.zeros((nc, nc)), "too_late": np.zeros((nc, nc)),
+             "too_early": np.zeros((nc, nc)), "wrong_cell": np.zeros((nc, nc)), "pingpong": np.zeros((nc, nc)),
+             "rlf": np.zeros(nc), "energy_j": np.zeros(nc), "ll_delay": [[] for _ in range(nc)],
+             "embb_thp": [[] for _ in range(nc)], "act_ue": np.zeros((nc, 3))}
+        if self.p_on:                              # E6-P counters (only when enabled)
+            c.update({"sinr_serv": [], "sinr_val": []})
+            if self.p_prot:
+                c.update({"prot_dem": np.zeros(nc), "prot_used": np.zeros(nc), "prot_min_prb": np.zeros(nc),
+                          "prot_bits": np.zeros(nc), "prot_act": np.zeros(nc), "prot_eval": np.zeros(nc),
+                          "prot_below": np.zeros(nc)})
+        return c
 
     def take_counters(self):
         c, self.ctr = self.ctr, self._new_counters()
@@ -134,13 +184,13 @@ class Plant:
         now = t * dt
         n, nc = self.n, self.nc
         # ---- 1. hidden processes
-        rl = _rng(cfg.seed, "load", t)
+        rl = self._tape("load", t)
         a = np.exp(-dt / cfg.m_tau_s)
         logm = np.log(self.m) * a + cfg.m_sigma * np.sqrt(1 - a * a) * rl.normal(size=7)
         self.m = np.exp(logm)
         if self.scn is not None:
             self.scn.on_tick(self, now)
-        rm = _rng(cfg.seed, "mob", t)
+        rm = self._tape("mob", t)
         turn = rm.uniform(size=n) < dt / 20.0                          # [A] new heading every ~20 s
         self.heading = np.where(turn, rm.uniform(0, 2 * np.pi, n), self.heading)
         mv = self.mobile_idx
@@ -150,7 +200,7 @@ class Plant:
                                                                                     np.sin(self.heading[mv])])
         if self.scn is not None:
             self.scn.move(self, dt)
-        rt = _rng(cfg.seed, "traffic", t)
+        rt = self._tape("traffic", t)
         site = self.site_of[self.serv]
         total = cfg.warmup_s + cfg.scored_s
         ramp = cfg.ramp[0] + (cfg.ramp[1] - cfg.ramp[0]) * min(now / max(total, 1e-9), 1.0)   # compressed diurnal ramp
@@ -168,7 +218,7 @@ class Plant:
         self.ll_arr[:, t % 64] = self.ll_cum_a
         # ---- 2. radio
         g = self._gains()
-        rq = _rng(cfg.seed, "meas", t)
+        rq = self._tape("meas", t)
         meas = g + rq.normal(0, C.MEAS_ERR_DB, g.shape)
         self.l3 = (1 - A_L3) * self.l3 + A_L3 * meas
         pw = 10 ** (g / 10) / 1000.0
@@ -216,6 +266,19 @@ class Plant:
         left = cap_prb - ded
         alloc = alloc_ded.copy()
         d_o = np.where(ll, d_ll - alloc_ded, demand)          # LL remainder shares the pool equally with eMBB/BE
+        if self.p_prot:                                       # E6-P protected min share (work-conserving)
+            m_share = np.minimum(cap_prb * self.prot_min, np.maximum(left, 0.0))
+            d_p = np.where(self.prot, d_o, 0.0)
+            left_m = m_share.copy()
+            for _ in range(2):                                            # equal share inside the min share
+                nbp = np.bincount(cell, (d_p > 1e-9).astype(float), nc)
+                sh = np.where(nbp > 0, left_m / np.maximum(nbp, 1), 0.0)
+                give = np.minimum(d_p, sh[cell])
+                alloc += give
+                d_p = d_p - give
+                d_o = d_o - give
+                left_m = left_m - np.bincount(cell, give, nc)
+            left = left - (m_share - left_m)                              # unused min share -> shared pool
         for _ in range(2):                                                # equal share, water-filled twice
             nb = np.bincount(cell, (d_o > 1e-9).astype(float), nc)
             share = np.where(nb > 0, left / np.maximum(nb, 1), 0.0)
@@ -254,9 +317,23 @@ class Plant:
             ctr["act_ue"][:, sidx] += np.bincount(cell[m_], backlogged[m_].astype(float), nc)
         ctr["prb_cap"] += cap_prb
         ctr["prb_rsv"] += ded - used_ded                                 # reserved but idle dedicated PRBs
-        p_mac = car * (C.MACRO_P0_W + C.MACRO_DP * self.rho * C.MACRO_PMAX_W) + \
-            (C.MACRO_NTRX - car) * C.MACRO_SLEEP_W / C.MACRO_NTRX
-        p_pic = C.PICO_P0_W + C.PICO_DP * self.rho * C.PICO_PMAX_W
+        if self.p_prot:
+            pm = self.prot
+            capd = np.maximum(cap_prb, 1e-9)
+            ctr["prot_dem"] += np.where(cap_prb > 0, np.minimum(1.0, np.bincount(cell[pm], demand[pm], nc) / capd), 0.0)
+            ctr["prot_used"] += np.bincount(cell[pm], alloc[pm], nc)
+            ctr["prot_min_prb"] += m_share
+            ctr["prot_bits"] += np.bincount(cell[pm], served[pm], nc)
+            ctr["prot_act"] += np.bincount(cell[pm], backlogged[pm].astype(float), nc)
+        if self.p_ptx:                                                   # E6-P: EARTH P_out scales with Tx power
+            lin = 10 ** (self.ptx_off / 10)
+            p_mac = car * (C.MACRO_P0_W + C.MACRO_DP * self.rho * C.MACRO_PMAX_W * lin) + \
+                (C.MACRO_NTRX - car) * C.MACRO_SLEEP_W / C.MACRO_NTRX
+            p_pic = C.PICO_P0_W + C.PICO_DP * self.rho * C.PICO_PMAX_W * lin
+        else:
+            p_mac = car * (C.MACRO_P0_W + C.MACRO_DP * self.rho * C.MACRO_PMAX_W) + \
+                (C.MACRO_NTRX - car) * C.MACRO_SLEEP_W / C.MACRO_NTRX
+            p_pic = C.PICO_P0_W + C.PICO_DP * self.rho * C.PICO_PMAX_W
         pw_cell = np.where(self.lay.is_macro, p_mac, np.where(self.asleep, C.PICO_SLEEP_W, p_pic))
         pw_cell = np.where(~self.lay.is_macro & (self.waking_until > now), C.PICO_P0_W, pw_cell)
         ctr["energy_j"] += pw_cell * dt
@@ -339,6 +416,8 @@ class Plant:
         self.sec_viol_ll, self.sec_viol_embb, self.sec_viol_be = ll_v, em_v, be_v
         self.sec_out, self.sec_scored = self.sec_outage.copy(), scored
         cell = self.serv
+        if self.p_on:
+            self._close_second_p(thp, scored)
         for u in np.nonzero(sl == LL)[0]:                     # every LL UE-second is a sample (zeros included)
             if not self.sec_outage[u]:
                 self.ctr["ll_delay"][cell[u]].append(self.sec_maxdelay[u])
@@ -348,6 +427,43 @@ class Plant:
         self.sec_bits[:] = 0
         self.sec_maxdelay[:] = 0
         self.sec_outage[:] = False
+
+    def sleep_handover(self, c, now):
+        """E6-P graceful pico sleep (spec 6.2; called by the RIC right after ``asleep[c]`` is set, only when enabled):
+        every UE served by c is handed over to its best remaining cell by measured L3 RSRP with the normal HO
+        execution (``_handover``: HO_EXEC_S interruption; a target below HO_FAIL_SINR_DB still fails -> RLF). UEs already
+        in HO interruption / RLF outage are only re-pointed (their outage is not shortened)."""
+        g = self._gains()                                              # c is already masked out (-300 dB)
+        pw = 10 ** (g / 10) / 1000.0
+        off = self.asleep | (self.waking_until > now)
+        for u in np.nonzero(self.serv == c)[0]:
+            l3 = np.where(off, -np.inf, self.l3[u])
+            tgt = int(np.argmax(l3))
+            if self.int_until[u] > now:
+                self.serv[u] = tgt
+                self.ttt_cand[u], self.ttt_acc[u] = -1, 0.0
+            else:
+                self._handover(u, tgt, now, pw)
+
+    def _close_second_p(self, thp, scored):
+        """E6-P per-second bookkeeping: serving-SINR samples (edge-SINR KPM) and the protected per-UE floor."""
+        ctr, nc, cell = self.ctr, self.nc, self.serv
+        ok = ~self.sec_outage
+        ctr["sinr_serv"].append(cell[ok].copy())
+        ctr["sinr_val"].append(self.sinr_ewma[ok].copy())
+        if scored:
+            self.sla["lowsinr_ue_s"] += float((self.sinr_ewma < C.QIN_DB).sum())
+        if not self.p_prot:
+            return
+        P, pm = self.P, self.prot
+        act = pm & (self.sec_backlog_t >= P.prot_min_backlog_s)
+        pv = pm & ((act & (thp < P.prot_floor_bps)) | self.sec_outage)
+        self.sec_viol_prot = pv
+        if scored:
+            self.sla["prot_viol"] += float(pv.sum())
+            self.sla["prot_ue_s"] += float(pm.sum())
+        ctr["prot_eval"] += np.bincount(cell[act | pv], minlength=nc)
+        ctr["prot_below"] += np.bincount(cell[pv], minlength=nc)
 
 
 # ==================================================================================================== stress scenarios
@@ -498,6 +614,21 @@ class MistuneScenario(_Scenario):
 
 
 SCENARIOS = {"surge": SurgeScenario, "mistune": MistuneScenario}
+
+
+def validate_e6p(P):
+    """Reject invalid E6-P parameters (called only when the extension is enabled)."""
+    def need(ok, msg):
+        if not ok:
+            raise ValueError(f"E6-P: {msg}")
+    need(P.ptx_scope in ("macro", "all"), "ptx_scope must be 'macro' or 'all'")
+    lo, hi = P.ptx_range_db
+    need(lo <= P.ptx_init_db <= hi, "ptx_init_db must lie in ptx_range_db")
+    need(P.ptx_grid_db > 0 and P.ptx_max_step_db > 0, "ptx grid/step must be > 0")
+    need(0.0 <= P.prot_frac <= 1.0 and P.prot_floor_bps > 0, "prot_frac in [0, 1] and prot_floor_bps > 0")
+    mlo, mhi = P.prot_min_range
+    need(0.0 <= mlo <= P.prot_min_init <= mhi <= 1.0, "need 0 <= prot_min lo <= init <= hi <= 1")
+    need(P.prot_min_grid > 0 and P.prot_min_max_step > 0, "prot_min grid/step must be > 0")
 
 
 def make_scenario(cfg, plant):
