@@ -207,7 +207,14 @@
           140059
         ]
       ],
-      "v1_diagnostic_note": "Reserved 2026-09-28 for EXPLORATORY post-Gate-A diagnostics of the frozen E6-scn-v1 xApp stack (docs/benchmark/E6_V1_DIAGNOSTICS.md, scratchpad/e6_dev/v1_diag.py). seed = 140000 + 10*stratum + j, stratum as in 'mapping', j = 0..9. Diagnostic/development evidence only: never for Gate A/B, v2 confirmation or TEST."
+      "v1_diagnostic_note": "Reserved 2026-09-28 for EXPLORATORY post-Gate-A diagnostics of the frozen E6-scn-v1 xApp stack (docs/benchmark/E6_V1_DIAGNOSTICS.md, scratchpad/e6_dev/v1_diag.py). seed = 140000 + 10*stratum + j, stratum as in 'mapping', j = 0..9. Diagnostic/development evidence only: never for Gate A/B, v2 confirmation or TEST.",
+      "e6p_screen_episodes": [
+        [
+          150000,
+          150399
+        ]
+      ],
+      "e6p_screen_note": "Reserved 2026-09-28 for the E6-P conflict screen (Gate A v2): docs/benchmark/E6P_SCREEN_PROTOCOL.md section 3 defines the sub-ranges (load calibration fit 150000-150009 / check 150010-150019, mechanism tests 150020-150059, oracle timing pilot 150060, screen seeds as listed there). DEV only; never TEST."
     }
   }
 }
