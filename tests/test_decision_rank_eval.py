@@ -89,6 +89,49 @@ def test_summarize_clusters_by_episode_and_counts_abstentions():
     assert set(p["step5_criterion"]) == {"improvement_gated_lo_gt_0", "guardrails_credibly_worse", "met"}
 
 
+def _rows(model_pred, n_seeds=6, per=5, n=8, K=5, noise_sd=None):
+    """Synthetic slot records: model_pred(J, rng) -> (pred, std) per slot."""
+    rows, rng = [], np.random.default_rng(11)
+    for seed in range(n_seeds):
+        for k in range(per):
+            J = _panel(seed * 100 + k, n)
+            pred, sd = model_pred(J, rng)
+            m = RE.slot_metrics(J, pred)
+            g = {c: 0.0 for c in RE.GUARDRAILS}
+            orc = {c: list(J) if c == "J" else [0.0] * n for c in RE.ORACLE_COMPONENTS}
+            rows.append({"type": "slot", "seed": seed, "scenario": "base", "load": "medium", "oracle": orc,
+                         "models": {"a": {"pred": list(pred), "std": list(sd), "unid": [False] * n,
+                                          "ood": [False] * n, "allowed": None, "metrics": m, "guard": g,
+                                          "guard_gated": g, "search_pick": m["pick"]}}})
+    return rows
+
+
+def test_beats_zero_contrast_separates_good_harmful_and_null_rankers():
+    good = _rows(lambda J, r: (J - J[0], np.full(len(J), 0.1)))
+    bad = _rows(lambda J, r: (-(J - J[0]), np.full(len(J), 0.1)))
+    null = _rows(lambda J, r: (np.zeros(len(J)), np.zeros(len(J))))
+    g = RE.beats_zero_contrast(good, "a", require_split=None, n_boot=300)
+    b = RE.beats_zero_contrast(bad, "a", require_split=None, n_boot=300)
+    z = RE.beats_zero_contrast(null, "a", require_split=None, n_boot=300)
+    assert g["beats"] and not g["harms"] and g["n_episodes"] == 6
+    assert b["harms"] and not b["beats"]
+    assert not z["beats"] and not z["harms"] and z["deviate"] == 0 and z["improvement"]["mean"] == 0.0
+    with pytest.raises(ValueError):                              # seed 0 is not a held-out DEV diag seed
+        RE.beats_zero_contrast(good, "a")
+
+
+def test_shrink_rows_zeroes_noise_dominated_panels_and_recovers_accept_all():
+    # contrasts are pure member noise (|mean| << member sd): EB shrinks all to 0 -> the pick is accept-all
+    noisy = _rows(lambda J, r: (np.r_[0.0, r.normal(0, 1.0, len(J) - 1)], np.r_[0.0, np.full(len(J) - 1, 20.0)]))
+    sh = RE.shrink_rows(noisy, "a", n_members=5)
+    assert all(r["models"]["a"]["tau2"] == 0.0 for r in sh)
+    assert all(r["models"]["a"]["metrics"]["pick_raw"] == 0 for r in sh)
+    z = RE.beats_zero_contrast(sh, "a", require_split=None, n_boot=200)
+    assert z["improvement"]["mean"] == 0.0 and z["deviate"] == 0
+    with pytest.raises(ValueError):
+        RE.shrink_rows(sh, "a", n_members=5)                       # never shrink twice
+
+
 # ------------------------------------------------------------------------------------------------ real E6 (short)
 H = 20
 

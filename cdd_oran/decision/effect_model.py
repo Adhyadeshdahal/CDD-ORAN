@@ -602,6 +602,46 @@ def unidentified_parts(plan: P.Plan, support: Mapping) -> tuple:
     return tuple(sorted(bad))
 
 
+# ------------------------------------------------------------------------------------------------ EB shrinkage
+SHRINK_MODES = (None, "eb")
+
+
+def eb_shrink(members, tau2: float | None = None, ddof: int = 1) -> tuple[np.ndarray, np.ndarray, float]:
+    """Empirical-Bayes shrinkage of per-candidate contrasts toward the accept-all contrast 0.
+
+    members (K, P): K ensemble (bootstrap) members' priced contrasts for P candidates. Model: the estimate
+    m_j = mean_k members[k, j] ~ N(Delta_j, v_j) with v_j = the member variance (``ddof``; the bootstrap variance of
+    one fit), and the prior Delta_j ~ N(0, tau^2) centred on the ACCEPT-ALL contrast (0 by construction, the
+    arbiter's default), not on the candidates' grand mean. Posterior mean = s_j m_j with
+        s_j = tau^2 / (tau^2 + v_j) = 1 - v_j / (v_j + tau^2)      (heteroscedastic James-Stein toward a point).
+    ``tau2`` None = method of moments over the candidates in the call (E[m^2] = tau^2 + E[v] under the prior):
+    tau^2 = max(0, mean_j(m_j^2 - v_j)) over candidates that are not exact zeros (accept-all has m = v = 0 and
+    carries no information about tau). tau^2 = 0 (member noise explains all the spread) -> every uncertain contrast
+    is shrunk to exactly 0 (-> ties -> the tie rule picks accept-all). Candidates with v_j = 0 keep s_j = 1.
+    Members are scaled by s_j (so the shrunk mean = s_j m_j and the member spread scales with it; the sign of every
+    member and hence member-agreement tests are unchanged). Returns (shrunk members (K, P), s (P,), tau^2)."""
+    X = np.asarray(members, float)
+    if X.ndim != 2:
+        raise ValueError("members must be (K, P)")
+    v = X.var(0, ddof=ddof) if X.shape[0] > ddof else np.zeros(X.shape[1])
+    s, tau2 = eb_factors(X.mean(0), v, tau2)
+    return X * s[None, :], s, float(tau2)
+
+
+def eb_factors(mean, var, tau2: float | None = None) -> tuple[np.ndarray, float]:
+    """Shrinkage factors of ``eb_shrink`` from per-candidate means (P,) and estimate variances (P,) -> (s, tau^2)."""
+    m, v = np.asarray(mean, float), np.asarray(var, float)
+    info = np.isfinite(m) & np.isfinite(v) & ((m != 0) | (v != 0))
+    if tau2 is None:
+        tau2 = float(max(0.0, np.mean(m[info] ** 2 - v[info]))) if info.any() else 0.0
+    if tau2 < 0:
+        raise ValueError("tau2 must be >= 0")
+    s = np.ones_like(m)
+    pos = np.isfinite(v) & (v > 0)
+    s[pos] = tau2 / (tau2 + v[pos])
+    return s, float(tau2)
+
+
 @dataclass(frozen=True)
 class EffectScore(Score):
     members: tuple = ()
@@ -619,14 +659,21 @@ class EffectWM:
     (module docstring): "accept_all" (default; the arbiter's declared default continuation) or "hold".
     ``support`` = {(xapp, mode): identified} for the deployment stratum (``SupportRule.identified``); a plan using an
     unidentified (xapp, mode) or rollback is EXCLUDED from learned scoring: mean = +inf (never selected), ood = True
-    (the gate refuses), ``unidentified`` lists the parts. None = no support gating (every part allowed)."""
+    (the gate refuses), ``unidentified`` lists the parts. None = no support gating (every part allowed).
+    ``shrink``: None (raw ensemble contrasts) or "eb" (``eb_shrink`` toward the accept-all contrast 0 over the plans
+    of each ``score`` call, or with a fixed prior variance ``tau2``); applied to the priced plan contrasts before the
+    Score is formed, so mean / std / members are all the shrunk ones. ``last_shrink`` = (s (P,), tau^2) of the last
+    call (None when off)."""
     privileged = False
 
     def __init__(self, model: PolicyEffectModel, site, w_rlf: float = 0.0, w_churn: float = 0.0,
                  stratifier: Callable | None = None, check_support: bool = True, continuation: str = "accept_all",
-                 support: Mapping | None = None):
+                 support: Mapping | None = None, shrink: str | None = None, tau2: float | None = None):
         if continuation not in ("accept_all", "hold"):
             raise ValueError("continuation in {accept_all, hold}")
+        if shrink not in SHRINK_MODES:
+            raise ValueError(f"shrink in {SHRINK_MODES}")
+        self.shrink, self.tau2, self.last_shrink = shrink, tau2, None
         self.continuation, self.first_stage = continuation, support
         self.model, self.site = model, np.asarray(site)
         self.regions = sorted({int(x) for x in self.site})
@@ -649,6 +696,9 @@ class EffectWM:
         codes = np.array([[CO.encode(p[g]) for g in self.regions] for p in plans], int)
         cw = self.model.cost_weights(ctx.lam_e, ctx.w_ll, self.w_rlf, self.w_churn)
         mem = (self.model.member_effects(own, glob, codes, self.continuation) @ cw).sum(-1)   # (K, P)
+        if self.shrink == "eb":
+            mem, s, t2 = eb_shrink(mem, self.tau2)
+            self.last_shrink = (s, t2)
         bad_region = np.zeros(len(self.regions), bool)
         if self.check_support and self.model.support is not None:
             bad_region = self.model.support.outside(np.hstack([own, np.repeat(glob[None], len(own), 0)]))

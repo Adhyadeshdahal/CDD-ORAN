@@ -29,6 +29,10 @@ Pieces
                      Spearman rho (all candidates with raw predictions; supported subset), abstentions.
   ``summarize``      episode-clustered bootstrap CIs (``cluster_bootstrap``; cluster = episode) of every metric and
                      of the guardrail component deltas (pick - accept-all), pooled and per stratum.
+  ``shrink_rows``    offline re-scoring of stored slot records with EB shrinkage toward the accept-all contrast
+                     (``effect_model.eb_factors`` from the recorded mean / member std; no simulation).
+  ``beats_zero_contrast``  the precondition "the model's picks beat accept-all (zero contrast) on held-out DEV
+                     slots": episode-clustered CI of the paired improvement pick vs accept-all; beats iff lo > 0.
 
 Timing semantics = TrueSimWM's: at slot start t the second t has already been played; the rollout applies the plan
 at t and plays seconds t+1 .. t+H, i.e. the window (t, t+H] -- the same window as effect_model's labels. The
@@ -348,11 +352,11 @@ def _as_fitted(m) -> Fitted:
 def oracle_panel(cfg, slot_times: Sequence[int] | None = None, candidates: CandidateSpec | None = None,
                  models: Mapping | None = None, support_rule: EM.SupportRule | None = SUPPORT_RULE,
                  gates: Mapping | None = None, lam_e: float = LAM_E, w_ll: float = W_LL, D: int = 20, H: int = 90,
-                 on_slot: Callable[[dict], None] | None = None) -> list[dict]:
+                 on_slot: Callable[[dict], None] | None = None, shrink: str | None = None) -> list[dict]:
     """Oracle panels of one episode (module docstring). ``models``: {name: Fitted | PolicyEffectModel} (every
     model's H must equal ``H``); ``support_rule`` None = no support gating; ``gates``: optional {name:
-    ConformalGate} (calibrated on calib seeds) for the gated pick. Returns one record per slot (also passed to
-    ``on_slot``). PRIVILEGED (reads the true simulator); run only on diagnostic / evaluation seeds."""
+    ConformalGate} (calibrated on calib seeds) for the gated pick; ``shrink`` (None | "eb") is passed to every
+    EffectWM (search, raw and gated scores). Returns one record per slot (also passed to ``on_slot``). PRIVILEGED (reads the true simulator); run only on diagnostic / evaluation seeds."""
     from cdd_oran.envs.e6.env import E6Env
     candidates = candidates if candidates is not None else CandidateSpec()
     models = {k: _as_fitted(v) for k, v in (models or {}).items()}
@@ -369,8 +373,8 @@ def oracle_panel(cfg, slot_times: Sequence[int] | None = None, candidates: Candi
         if f.model.H != H:
             raise ValueError(f"model {name} has H={f.model.H}, panel H={H}")
         sup = f.support(stratum, support_rule) if support_rule is not None else None
-        raw = EM.EffectWM(f.model, site)
-        gated = EM.EffectWM(f.model, site, support=sup)
+        raw = EM.EffectWM(f.model, site, shrink=shrink)
+        gated = EM.EffectWM(f.model, site, support=sup, shrink=shrink)
         rec = _RecordingWM(gated)
         arb = WG3Arbiter(rec, site, lam_e, w_ll, D=D, H=H, seed=cfg.seed, start_s=float(cfg.warmup_s),
                          **dict(candidates.search))
@@ -428,7 +432,7 @@ def oracle_panel(cfg, slot_times: Sequence[int] | None = None, candidates: Candi
                                "search_pick": keys.index(picks[name]), "metrics": met, "guard": guard,
                                "guard_gated": guard_g}
             row = {"type": "slot", "version": RANK_VERSION, "seed": int(cfg.seed), "scenario": stratum[0],
-                   "load": stratum[1], "k": k, "t": t, "H": H, "D": D, "lam_e": lam_e, "w_ll": w_ll,
+                   "load": stratum[1], "k": k, "t": t, "H": H, "D": D, "lam_e": lam_e, "w_ll": w_ll, "shrink": shrink,
                    "cands": [{"src": s, "codes": list(map(int, c))} for s, c in zip(srcs, keys, strict=True)],
                    "oracle": orc, "models": rec_m, "pred_components": list(EM.COMPONENTS)}
             pending.append((t, dict(env.plant.sla), int(env.stats["changes"]), row))
@@ -484,3 +488,66 @@ def summarize(rows: Sequence[Mapping], n_boot: int = 2000, alpha: float = 0.05, 
             out[name]["strata"] = {f"{s}-{ld}": block([r for r in rs if (r["scenario"], r["load"]) == (s, ld)], name)
                                    for s, ld in st}
     return out
+
+
+# ================================================================================================ EB re-scoring
+PICKS = {"raw": ("pick_raw", "improvement_raw"), "sup": ("pick", "improvement"),
+         "gated": ("pick_gated", "improvement_gated")}
+
+
+def shrink_rows(rows: Sequence[Mapping], name: str, n_members: int, tau2: float | None = None,
+                ddof: int = 1) -> list[dict]:
+    """Offline EB shrinkage of stored (unshrunk) slot records for model ``name``: per slot, the recorded raw mean
+    ``pred`` and member std ``std`` (population std over ``n_members`` members) give v = std^2 K / (K - ddof), then
+    ``effect_model.eb_factors`` over the slot's candidates (the same plans EffectWM scored in one call). Returns
+    copies whose ``models[name]`` has the shrunk pred / std, ``s``, ``tau2`` and recomputed metrics. The panel is
+    unchanged (the arbiter's search candidates were chosen unshrunk) and the calibrated gate's verdicts are dropped
+    (``allowed`` None: the gate was calibrated on unshrunk scores), so the gated pick = supported and in-support."""
+    K = int(n_members)
+    if K <= ddof:
+        raise ValueError("n_members must exceed ddof")
+    out = []
+    for r in rows:
+        if r.get("type", "slot") != "slot" or name not in r["models"]:
+            continue
+        if r.get("shrink"):
+            raise ValueError("record is already shrunk")
+        mr = r["models"][name]
+        m, sd = np.asarray(mr["pred"], float), np.asarray(mr["std"], float)
+        s, t2 = EM.eb_factors(m, sd ** 2 * K / (K - ddof), tau2)
+        new = dict(mr, pred=(s * m).tolist(), std=(s * sd).tolist(), s=s.tolist(), tau2=t2, allowed=None)
+        new["metrics"] = slot_metrics(r["oracle"]["J"], new["pred"], mr["unid"], mr["ood"], None)
+        orc = r["oracle"]
+        new["guard"] = {c: orc[c][new["metrics"]["pick"]] - orc[c][0] for c in GUARDRAILS}
+        new["guard_gated"] = {c: orc[c][new["metrics"]["pick_gated"]] - orc[c][0] for c in GUARDRAILS}
+        out.append(dict(r, models={**r["models"], name: new}, shrink="eb"))
+    return out
+
+
+def beats_zero_contrast(rows: Sequence[Mapping], name: str, pick: str = "raw", n_boot: int = 2000,
+                        alpha: float = 0.05, seed: int = 0, require_split: str | None = "diag") -> dict:
+    """Precondition for deploying a learned ranker: do its picks beat the zero-contrast rule (always accept-all) on
+    held-out DEV slots? Paired per-slot improvement J[accept-all] - J[pick] (``pick`` in raw | sup | gated),
+    episode-clustered bootstrap CI; ``beats`` iff the CI lower bound > 0 (``harms`` iff the upper bound < 0).
+    ``require_split``: every slot's seed must be a DEV seed of that split (``collect.dev_stratum``; "diag" = held
+    out from fitting); None skips the check. Records must carry the metrics (``oracle_panel`` / ``shrink_rows``)."""
+    if pick not in PICKS:
+        raise ValueError(f"pick in {tuple(PICKS)}")
+    rs = [r for r in rows if r.get("type", "slot") == "slot" and name in r["models"]]
+    if not rs:
+        raise ValueError(f"no slot records for model {name}")
+    if require_split is not None:
+        def split(seed):
+            try:
+                return CO.dev_stratum(int(seed))["split"]
+            except ValueError:
+                return None
+
+        bad = sorted({int(r["seed"]) for r in rs if split(r["seed"]) != require_split})
+        if bad:
+            raise ValueError(f"seeds not in DEV split {require_split!r}: {bad[:5]}")
+    pk, ik = PICKS[pick]
+    mt = [r["models"][name]["metrics"] for r in rs]
+    ci = cluster_bootstrap([m[ik] for m in mt], [r["seed"] for r in rs], n_boot, alpha, seed)
+    return {"model": name, "pick": pick, "improvement": ci, "beats": bool(ci["lo"] > 0), "harms": bool(ci["hi"] < 0),
+            "deviate": int(sum(m[pk] != 0 for m in mt)), "n_slots": len(rs), "n_episodes": ci["n_clusters"]}

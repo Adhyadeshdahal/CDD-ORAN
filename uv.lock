@@ -54,7 +54,7 @@ requires-dist = [
     { name = "gymnasium", specifier = ">=1.2.3" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "networkx", specifier = ">=3.3" },
-    { name = "numpy", specifier = ">=2.0" },
+    { name = "numpy", specifier = "==2.4.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "tensorboard", specifier = ">=2.18" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.10.0,<2.11" },
@@ -64,7 +64,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 baselines = [
     { name = "scikit-learn", specifier = ">=1.9.1" },
-    { name = "scipy", specifier = ">=1.18.1" },
+    { name = "scipy", specifier = "==1.18.1" },
     { name = "shap", specifier = ">=0.52.0" },
 ]
 dev = [

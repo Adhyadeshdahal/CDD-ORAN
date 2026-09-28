@@ -364,3 +364,61 @@ def test_uncalibrated_gate_reproduces_accept_all_and_oracle_record_runs(e6_model
     ctx = DecisionContext(obs, arb.site, arb.regions, 20, 20.0, 1.0, 1.0, env.last_change, {}, env)
     rec = oracle_record(arb, ctx)
     assert np.isfinite(rec["pred"]) and np.isfinite(rec["realized"])
+
+
+# ------------------------------------------------------------------------------------------------ EB shrinkage
+def test_eb_shrink_returns_exact_zero_when_member_variance_dominates():
+    rng = np.random.default_rng(0)
+    mem = rng.normal(0.0, 10.0, (5, 30))                         # no true contrast: all spread is member noise
+    mem[:, 0] = 0.0                                              # accept-all: exact zero, no information
+    out, s, tau2 = EM.eb_shrink(mem)
+    assert tau2 == 0.0 and np.all(out == 0.0) and s[0] == 1.0
+
+
+def test_eb_shrink_leaves_signal_dominated_contrasts_nearly_intact():
+    rng = np.random.default_rng(1)
+    truth = rng.normal(0.0, 50.0, 40)
+    mem = truth[None, :] + rng.normal(0.0, 0.5, (5, 40))
+    out, s, tau2 = EM.eb_shrink(mem)
+    assert tau2 > 1000 and s.min() > 0.999
+    np.testing.assert_allclose(out.mean(0), mem.mean(0), rtol=2e-3)
+
+
+def test_eb_shrink_preserves_ranking_under_equal_member_variance_and_member_signs():
+    rng = np.random.default_rng(2)
+    base = np.linspace(-30, 30, 12)
+    noise = rng.normal(0, 1.0, (5, 1)) * np.ones((1, 12))       # identical member spread for every candidate
+    mem = base[None, :] + noise * 3.0
+    out, s, tau2 = EM.eb_shrink(mem)
+    assert 0 < s.min() < 1 and np.allclose(s, s[0])
+    assert (np.argsort(out.mean(0)) == np.argsort(mem.mean(0))).all()
+    assert (np.sign(out) == np.sign(mem)).all()                  # member-agreement tests are unaffected
+    # a noisier candidate is shrunk harder; a fixed prior variance is used as given
+    mem2 = mem.copy()
+    mem2[:, 3] += rng.normal(0, 20.0, 5)
+    _, s2, _ = EM.eb_shrink(mem2, tau2=100.0)
+    assert s2[3] < np.delete(s2, 3).min()
+    with pytest.raises(ValueError):
+        EM.eb_shrink(mem, tau2=-1.0)
+
+
+def test_effect_wm_shrink_option_scores_shrunk_and_accept_all_stays_zero(e6_model):
+    env = E6Env(_cfg(16), log=False, wg3=True)
+    site = env.plant.lay.cell_site
+    raw, eb = EM.EffectWM(e6_model, site), EM.EffectWM(e6_model, site, shrink="eb")
+    while env.sec < 70:
+        obs = env.step_propose()
+        raw.observe(obs)
+        eb.observe(obs)
+        env.step_apply({"decisions": ["accept"] * len(obs["requests"]), "writes": [], "rollback": []})
+    ctx = DecisionContext(obs, raw.site, raw.regions, 20, 20.0, 1.0, 1.0)
+    plans = [P.accept_all(raw.regions), P.network(raw.regions, P.uniform("reject"))] +         [P.network(raw.regions, {"mode": {y: (m if y == x else "accept") for y in P.XAPPS}, "rb": 0})
+         for x in P.XAPPS for m in ("reject", "lock")]
+    r, e = raw.score(ctx, plans), eb.score(ctx, plans)
+    s, tau2 = eb.last_shrink
+    assert raw.last_shrink is None and tau2 >= 0 and np.all((0 <= s) & (s <= 1))
+    assert e[0].mean == 0.0 == r[0].mean and e[0].std == 0.0
+    np.testing.assert_allclose([x.mean for x in e], s * np.array([x.mean for x in r]), atol=1e-9)
+    np.testing.assert_allclose([x.std for x in e], s * np.array([x.std for x in r]), atol=1e-9)
+    with pytest.raises(ValueError):
+        EM.EffectWM(e6_model, site, shrink="js")

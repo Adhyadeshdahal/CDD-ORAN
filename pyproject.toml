@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 license = { file = "LICENSE" }
 dependencies = [
     "torch>=2.10.0,<2.11",
-    "numpy>=2.0",
+    "numpy==2.4.2",   # exact: E6 trajectories are chaotic; see scratchpad/e6_dev/cloud.py docstring
     "gymnasium>=1.2.3",
     "networkx>=3.3",
     "matplotlib>=3.9",
@@ -32,7 +32,7 @@ explicit = true
 [dependency-groups]
 baselines = [
     "scikit-learn>=1.9.1",
-    "scipy>=1.18.1",
+    "scipy==1.18.1",  # exact: the E6 sim uses scipy (gaussian_filter, norm.cdf)
     "shap>=0.52.0",
 ]
 dev = [
