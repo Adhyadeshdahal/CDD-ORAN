@@ -164,6 +164,15 @@ cannot change a verdict. Drivers use timeouts, and background processes are clea
   QoS thresholds from `sg_viol_hi` and `cov_sinr_low_db`.
 - Oracle "half" = slew rule with 1 dB / 0.05 quanta (legacy halving rounds carrier/sleep/prot_min to no-op or full step).
 
+- **M4 amended after Stage 0b (user decision 2026-09-28).** M4 is evaluated per xApp only in strata where the freeze
+  arm's own KPI is material: PSVR ≥ 36 UE-s per UE-h, low-SINR share ≥ 0.01 (the same 1 %-of-UE-time floor as
+  criterion 1); energy is always material. An xApp with fewer than 2 acting, material strata is inert. A pair
+  containing a failing or inert xApp is not screenable (reported, not fixed); the screen proceeds for the remaining
+  pairs. **Disclosure:** this was amended after single-xApp vs freeze results on the mechanism seeds (150020-150059)
+  were seen: SliceGuarantee left PSVR unchanged at L10 where freeze PSVR was 10.8-13.4 (< 36; min share non-binding)
+  and cut it 255→58 / 384→125 at L40; Coverage worsened its KPI. No co-deployment, arbiter or screen-seed outcome had
+  been run. Gate A v2 quantities and thresholds are unchanged.
+
 ## 9. Frozen at doc commit
 All of `E6P_SPEC.md` §2-§5 (values, semantics, xApp rules, metric, X = 0.90, guardrail margin, screenability floor);
 this document's pairs, strata, seed ranges, arm definitions, oracle constants and energy constraint, precondition pass
