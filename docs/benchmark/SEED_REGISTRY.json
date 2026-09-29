@@ -216,7 +216,20 @@
           150399
         ]
       ],
-      "e6p_screen_note": "Reserved 2026-09-28 for the E6-P conflict screen (Gate A v2): docs/benchmark/E6P_SCREEN_PROTOCOL.md section 3 defines the sub-ranges (load calibration fit 150000-150009 / check 150010-150019, mechanism tests 150020-150059, oracle timing pilot 150060, screen seeds as listed there). DEV only; never TEST."
+      "e6p_screen_note": "Reserved 2026-09-28 for the E6-P conflict screen (Gate A v2): docs/benchmark/E6P_SCREEN_PROTOCOL.md section 3 defines the sub-ranges (load calibration fit 150000-150009 / check 150010-150019, mechanism tests 150020-150059, oracle timing pilot 150060, screen seeds as listed there). DEV only; never TEST.",
+      "e6p_v2_screen_episodes": [
+        [
+          155000,
+          155199
+        ]
+      ],
+      "e6p_v2_confirmation_reserved": [
+        [
+          155200,
+          155399
+        ]
+      ],
+      "e6p_v2_note": "Reserved 2026-09-29 for the E6-P v2 O_tape falsifier (docs/benchmark/E6P_V2_OTAPE_PROTOCOL.md; single follow-up to the E6-P Gate A v2 screen, rule K4: no v3). Screen 155000-155199 with seed = 155000 + 10*stratum + j, j = 0..7 (strata 1 and 3 used: 155010-155017, 155030-155037; the rest unused); 155200-155399 reserved for a later confirmation, untouched by the v2 screen. Bootstrap tags 6611 (inherited) and 6612 (descriptive re-drawn advantage). DEV only; never TEST."
     }
   },
   "XTRUCE": {
