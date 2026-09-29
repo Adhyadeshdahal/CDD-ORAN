@@ -106,8 +106,8 @@ PAIR, STRATUM = "P3", 3                 # P3 surge-L40
 SEED_BLOCK = (180000, 183999)
 FORBIDDEN = ((150200, 150399), (155200, 155399), (160000, 179999))
 CELL_BASE, PB_BASE = 183300, 183400     # P3 s3 block; placebo + profiles block
-STAGES = ("dev", "eval", "eval_ext", "eval_v2", "placebo", "placebo_ext", "gt", "gt_ext", "prof")
-FROZEN_STAGES = ("eval", "eval_ext", "eval_v2", "gt", "gt_ext")
+STAGES = ("dev", "eval", "eval_ext", "eval_v2", "eval_v3", "placebo", "placebo_ext", "gt", "gt_ext", "prof")
+FROZEN_STAGES = ("eval", "eval_ext", "eval_v2", "eval_v3", "gt", "gt_ext")
 GT_EXT_BASE = 183520                    # v2 re-test GT (added 2026-09-30, after the v1 verdict; records are "gt")
 J_RANGE = {"dev": range(0, 20), "eval": range(20, 80), "gt": range(80, 100)}
 N_PLACEBO, N_PROF = 20, 8
@@ -142,6 +142,9 @@ def jobs(stage: str) -> list:
         #                       + 183560-183979; records "eval", sub "v2", fold = j // 120 (4 folds)
         seeds = list(range(183460, 183520)) + list(range(183560, 183980))
         return [("eval", "v2", check_seed(sd), j, j // 120) for j, sd in enumerate(seeds)]
+    if stage == "eval_v3":    # discovery v3 re-test EVAL (power-sized from v2, 1200 eps): 182000-183199 (unused part of
+        #                       the registered block); records "eval", sub "v3", fold = j // 300 (4 folds)
+        return [("eval", "v3", check_seed(182000 + j), j, j // 300) for j in range(1200)]
     if stage == "gt_ext":     # fresh knockout GT for the discovery v2 re-test: 183520-183539, records are "gt"
         return [("gt", "ext", check_seed(GT_EXT_BASE + j), j, None) for j in range(20)]
     if stage == "placebo_ext":  # fresh sharp-null calibration for the v2 re-test: 183540-183559, records "placebo"
