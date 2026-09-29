@@ -65,3 +65,5 @@ scratchpad/decision_stack/*
 !scratchpad/decision_stack/req_pilot/
 !scratchpad/decision_stack/diag_rank/
 scratchpad/decision_stack/diag_rank/*.pkl
+# discovery raw episodes are large (10-30 MB each; Kaggle kernel outputs e6p-disc-* keep a copy): not tracked
+scratchpad/e6_dev/runs/e6p-disc-*/all.jsonl
