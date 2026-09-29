@@ -1,0 +1,1958 @@
+{
+ "dir": {
+  "orient": "dir",
+  "delta": {
+   "pv": 0.7683333333333334,
+   "v": 21.796666666666667,
+   "e": 331.16178522837595,
+   "rlf": 0.010000000000000002,
+   "load": 51.97388888888889
+  },
+  "cells": [
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": -9.36936936936937,
+    "ci": [
+     -12.626326212728083,
+     -6.619042754736302
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "v",
+    "mean": -135.31906906906906,
+    "ci": [
+     -158.5811712753893,
+     -111.63335411134126
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 6623.235704567518,
+    "ci": [
+     6317.507151890292,
+     6943.179776129457
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": -0.007507507507507507,
+    "ci": [
+     -0.01828410689170183,
+     0.003030648955306492
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "load",
+    "mean": -64.0105105105105,
+    "ci": [
+     -79.68400162540637,
+     -49.56978860135018
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": 1.4902402402402402,
+    "ci": [
+     0.6445045994996105,
+     2.6771000346397464
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": 14.77102102102102,
+    "ci": [
+     9.739805114879651,
+     20.376600217864926
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": 310.4503140827284,
+    "ci": [
+     189.53358357806627,
+     444.8124621889023
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": 0.0015015015015015017,
+    "ci": [
+     -0.026228272906735996,
+     0.030906696459895196
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": 46.766516516516525,
+    "ci": [
+     36.13654078934115,
+     57.88075496342739
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": 0.6629129129129129,
+    "ci": [
+     0.20028090619312278,
+     1.2126214734859948
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "v",
+    "mean": 9.463963963963964,
+    "ci": [
+     5.844774594885186,
+     13.716445146157296
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "e",
+    "mean": 159.83091717969927,
+    "ci": [
+     75.73566369599828,
+     247.59481003751645
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": 0.006006006006006008,
+    "ci": [
+     -0.019851267042727785,
+     0.029630497007546185
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "load",
+    "mean": 17.243993993993993,
+    "ci": [
+     11.45582613680718,
+     23.47232911912838
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": -2.2666666666666666,
+    "ci": [
+     -3.9336559139784937,
+     -0.9671236959761548
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "v",
+    "mean": -12.644444444444444,
+    "ci": [
+     -24.133389830508474,
+     -4.2978728070175425
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "e",
+    "mean": -190.8252801683214,
+    "ci": [
+     -200.23609985620962,
+     -181.57611315520694
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": -0.2,
+    "ci": [
+     -0.2736318407960198,
+     -0.13333333333333333
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "load",
+    "mean": -1039.4777777777776,
+    "ci": [
+     -1155.1529229817509,
+     -926.5479864253393
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": 15.366666666666667,
+    "ci": [
+     8.031666666666668,
+     23.657087723148962
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": 435.9333333333333,
+    "ci": [
+     359.15353107344635,
+     509.5822612085769
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": 6125.940324017444,
+    "ci": [
+     4521.216965057127,
+     7794.338513312665
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": 0.07777777777777777,
+    "ci": [
+     -0.028748235531357132,
+     0.19774011299435024
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": 967.0611111111112,
+    "ci": [
+     865.6536838138308,
+     1071.7585893416929
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": 2.2388888888888885,
+    "ci": [
+     0.5637033911925423,
+     4.079130138320671
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "v",
+    "mean": 53.11666666666667,
+    "ci": [
+     26.10154512907481,
+     87.16384652981426
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "e",
+    "mean": 1323.0954065649464,
+    "ci": [
+     859.821758631315,
+     1907.695401118827
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": 0.09444444444444443,
+    "ci": [
+     0.028735632183908042,
+     0.16352201257861634
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "load",
+    "mean": 72.41666666666669,
+    "ci": [
+     47.00816620024875,
+     100.72401515151516
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": 3.340175953079179,
+    "ci": [
+     1.515973389355742,
+     5.901705286063621
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "v",
+    "mean": 56.402737047898334,
+    "ci": [
+     32.55993229166667,
+     91.42891402638594
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 4931.900042531079,
+    "ci": [
+     4080.4235738289603,
+     5911.332701891655
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": 0.009775171065493646,
+    "ci": [
+     -0.018339196097744013,
+     0.03333333333333333
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "load",
+    "mean": 351.1065493646139,
+    "ci": [
+     291.0324205529098,
+     421.00954407795115
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": -0.8719452590420333,
+    "ci": [
+     -2.5543268840841145,
+     1.1276552008649143
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": -26.1603128054741,
+    "ci": [
+     -37.38500481636751,
+     -14.065611231398414
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": -443.61528194598105,
+    "ci": [
+     -709.5617166126535,
+     -192.45386423304285
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": -0.032258064516129024,
+    "ci": [
+     -0.07951131826417755,
+     0.018258352011954346
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": -235.89051808406643,
+    "ci": [
+     -281.07024092023175,
+     -195.92113815188023
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": -2.6999022482893453,
+    "ci": [
+     -6.545720045315208,
+     0.20287086366853732
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "v",
+    "mean": -26.27956989247312,
+    "ci": [
+     -44.42415346367775,
+     -11.016249230597055
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "e",
+    "mean": -312.1479462754052,
+    "ci": [
+     -494.87233209029995,
+     -137.2480497410221
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": -0.012707722385141739,
+    "ci": [
+     -0.061334466477809234,
+     0.04687539819062182
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "load",
+    "mean": -115.21603128054743,
+    "ci": [
+     -152.4020461886305,
+     -86.7868646099744
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": -2.8596491228070176,
+    "ci": [
+     -4.156120655013059,
+     -1.8368863258970471
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "v",
+    "mean": 0.32388663967611336,
+    "ci": [
+     -0.9541540867844144,
+     1.9220584474714968
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 9.503584672098093,
+    "ci": [
+     1.1105706977245593,
+     20.333776576146814
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": 0.0,
+    "ci": [
+     0.0,
+     0.0
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "load",
+    "mean": 0.35829959514170046,
+    "ci": [
+     -0.05738432130316441,
+     1.004632022566805
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": -0.08906882591093118,
+    "ci": [
+     -0.16451946787414853,
+     -0.012908532550672031
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": -0.03238866396761133,
+    "ci": [
+     -0.2999540462427746,
+     0.22445306141027302
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": 0.7765099800304875,
+    "ci": [
+     -12.145905729202823,
+     13.139920834753376
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": -0.0006747638326585695,
+    "ci": [
+     -0.002028500634904929,
+     0.0
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": -0.27125506072874495,
+    "ci": [
+     -0.8785999182544174,
+     0.11513029343045059
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": -0.07152496626180836,
+    "ci": [
+     -0.16478714342034864,
+     0.030570364615425817
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.7683333333333334,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "v",
+    "mean": -0.1120107962213225,
+    "ci": [
+     -0.27767937666709325,
+     0.05699494173457532
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 21.796666666666667,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "e",
+    "mean": -0.762856997745265,
+    "ci": [
+     -5.019074465743338,
+     3.326876847883208
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 331.16178522837595,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": 0.0,
+    "ci": [
+     -0.001818347710683477,
+     0.002118756522364965
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "load",
+    "mean": -0.08704453441295547,
+    "ci": [
+     -0.21023618347038345,
+     0.0020232301602751404
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 51.97388888888889,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   }
+  ],
+  "counts": {
+   "TRUE": 27,
+   "NULL": 19,
+   "INDET": 14
+  },
+  "rule": "TRUE: CI[0.025, 0.975] excludes 0 and |mean| >= delta; NULL: CI within +-delta; delta = max(0.05 * max|mean| of the KPI, floor {'pv': 0.5}); INDET otherwise / unsupported (< 10 units or < 3 episodes); episode-cluster bootstrap B=4000, tag 6617"
+ },
+ "act": {
+  "orient": "act",
+  "delta": {
+   "pv": 0.5233333333333333,
+   "v": 20.202222222222222,
+   "e": 293.45724867465896,
+   "rlf": 0.010000000000000002,
+   "load": 47.495000000000005
+  },
+  "cells": [
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": -8.758258258258257,
+    "ci": [
+     -12.0965362931642,
+     -6.0017877906761985
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "v",
+    "mean": -127.32657657657657,
+    "ci": [
+     -151.31014171800706,
+     -102.95108337934376
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 4807.557650170348,
+    "ci": [
+     4248.276222264152,
+     5382.808431870915
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": -0.0030030030030030034,
+    "ci": [
+     -0.013544461147551813,
+     0.007010168487560882
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "own",
+    "kpi": "load",
+    "mean": -58.27177177177177,
+    "ci": [
+     -73.74351389019878,
+     -44.49383710047264
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": 1.4632132132132132,
+    "ci": [
+     0.5789893444115046,
+     2.6974917957836837
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": 14.825075075075075,
+    "ci": [
+     9.507968177052886,
+     20.449846035411863
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": 330.5723066219187,
+    "ci": [
+     182.69676236383344,
+     488.2507902338759
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": 8.751758077000107e-19,
+    "ci": [
+     -0.025109898840103805,
+     0.027716887049152934
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": 43.80105105105105,
+    "ci": [
+     34.0661234080995,
+     54.84725614182714
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": 0.759009009009009,
+    "ci": [
+     0.28711617759877245,
+     1.3302927196930356
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "v",
+    "mean": 8.905405405405405,
+    "ci": [
+     4.919827939994491,
+     13.247759993267696
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "e",
+    "mean": 148.01503067040596,
+    "ci": [
+     64.02647777211783,
+     234.74632996828882
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": 0.0030030030030030025,
+    "ci": [
+     -0.020603580959911886,
+     0.026481301115512848
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "carrier",
+    "relation": "far",
+    "kpi": "load",
+    "mean": 14.470720720720719,
+    "ci": [
+     8.883470954757245,
+     20.689882499399392
+    ],
+    "n": 444,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": 2.1666666666666665,
+    "ci": [
+     0.8479532163742689,
+     3.818948739035089
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "v",
+    "mean": 12.21111111111111,
+    "ci": [
+     3.8121150362318845,
+     23.907679033649703
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 176.20613869561086,
+    "ci": [
+     152.36984745868995,
+     197.10690603184526
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": 0.2,
+    "ci": [
+     0.1311426619828259,
+     0.2711969031178071
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "own",
+    "kpi": "load",
+    "mean": 949.9,
+    "ci": [
+     770.8098611111109,
+     1124.1958693492297
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": -10.466666666666667,
+    "ci": [
+     -18.513425925925926,
+     -3.8303741780124105
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": -404.0444444444444,
+    "ci": [
+     -483.50588720486644,
+     -328.47265466531434
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": -5869.144973493178,
+    "ci": [
+     -7785.54973689159,
+     -4148.581608293118
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": -0.06666666666666664,
+    "ci": [
+     -0.1868753322700691,
+     0.046875
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "sleep",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": -878.5055555555557,
+    "ci": [
+     -1038.3188453928772,
+     -718.5882741465089
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": -2.061111111111111,
+    "ci": [
+     -4.1692410373760485,
+     -0.052889384920634656
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "v",
+    "mean": -52.18333333333333,
+    "ci": [
+     -86.31107102433505,
+     -24.476904761904763
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "e",
+    "mean": -1303.779482852958,
+    "ci": [
+     -1849.9666585861537,
+     -823.458680020237
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": -0.09444444444444443,
+    "ci": [
+     -0.164021164021164,
+     -0.029227162734422205
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "sleep",
+    "relation": "far",
+    "kpi": "load",
+    "mean": -71.39444444444445,
+    "ci": [
+     -99.6203869047619,
+     -44.661601181304576
+    ],
+    "n": 60,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": 3.365591397849462,
+    "ci": [
+     1.4930896007428036,
+     5.967226260528442
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "v",
+    "mean": 55.76539589442815,
+    "ci": [
+     31.707664456272422,
+     89.15355760844416
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 4794.768302121354,
+    "ci": [
+     3997.510391062914,
+     5684.869950374393
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": 0.017595307917888565,
+    "ci": [
+     -0.00509683995922528,
+     0.039029987944544896
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "own",
+    "kpi": "load",
+    "mean": 328.52785923753663,
+    "ci": [
+     268.9361071765817,
+     401.25211632016163
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": 1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": -0.7350928641251222,
+    "ci": [
+     -2.473833792637745,
+     1.2629215167548509
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": -24.07233626588466,
+    "ci": [
+     -35.230560394889665,
+     -12.51548648190524
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": -456.9843022773442,
+    "ci": [
+     -753.5282953640029,
+     -194.00591457232306
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": -0.026392961876832835,
+    "ci": [
+     -0.06466925510497555,
+     0.015578414769282243
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": -222.33235581622682,
+    "ci": [
+     -270.3456673145449,
+     -179.74593800659622
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": -2.780058651026393,
+    "ci": [
+     -6.778126037073912,
+     0.12690648827506842
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "v",
+    "mean": -25.700879765395893,
+    "ci": [
+     -45.122299828647094,
+     -11.702061229000885
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "e",
+    "mean": -257.8827665615492,
+    "ci": [
+     -465.063713094259,
+     -80.16597617454384
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": -0.008797653958944277,
+    "ci": [
+     -0.05955987785261746,
+     0.05346985210466439
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "INDET",
+    "sign": 0,
+    "why": "neither rule"
+   },
+   {
+    "family": "ptx",
+    "relation": "far",
+    "kpi": "load",
+    "mean": -106.1955034213099,
+    "ci": [
+     -139.9163311608026,
+     -79.33584047697548
+    ],
+    "n": 341,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "pv",
+    "mean": -2.9176788124156543,
+    "ci": [
+     -4.173304979367103,
+     -1.9444337194337193
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "TRUE",
+    "sign": -1,
+    "why": "CI excludes 0, |mean| >= delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "v",
+    "mean": 0.5695006747638326,
+    "ci": [
+     -0.8550187734668336,
+     2.205806426881626
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "e",
+    "mean": 10.885713180238325,
+    "ci": [
+     3.0583885408182727,
+     21.393704697053224
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "rlf",
+    "mean": 0.0,
+    "ci": [
+     0.0,
+     0.0
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "own",
+    "kpi": "load",
+    "mean": 0.4392712550607288,
+    "ci": [
+     0.02323326587724816,
+     1.0575960257894284
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "pv",
+    "mean": -0.07557354925775978,
+    "ci": [
+     -0.1556083660026372,
+     0.004842983116526871
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "v",
+    "mean": -0.05398110661268557,
+    "ci": [
+     -0.31424326393090296,
+     0.22974929802505298
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "e",
+    "mean": -2.8966006417861587,
+    "ci": [
+     -14.66118877437485,
+     9.411693198804352
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "rlf",
+    "mean": 0.0006747638326585695,
+    "ci": [
+     0.0,
+     0.00202020202020202
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "nbr",
+    "kpi": "load",
+    "mean": -0.34143049932523617,
+    "ci": [
+     -0.9396806210376643,
+     0.039727053890355676
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "pv",
+    "mean": -0.0013495276653171329,
+    "ci": [
+     -0.0791625547704575,
+     0.09172773647936922
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.5233333333333333,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "v",
+    "mean": -0.06477732793522266,
+    "ci": [
+     -0.2265155667126578,
+     0.09405723011552249
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 20.202222222222222,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "e",
+    "mean": -1.125685532353119,
+    "ci": [
+     -5.4735112183915,
+     2.993713054831033
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 293.45724867465896,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "rlf",
+    "mean": 0.0,
+    "ci": [
+     -0.0018417055717518502,
+     0.002066115702479339
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 0.010000000000000002,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   },
+   {
+    "family": "prot_min",
+    "relation": "far",
+    "kpi": "load",
+    "mean": -0.09784075573549258,
+    "ci": [
+     -0.24147171820913688,
+     0.0025416783609318074
+    ],
+    "n": 494,
+    "n_eps": 20,
+    "delta": 47.495000000000005,
+    "status": "NULL",
+    "sign": 0,
+    "why": "CI within +-delta"
+   }
+  ],
+  "counts": {
+   "TRUE": 29,
+   "NULL": 18,
+   "INDET": 13
+  },
+  "rule": "TRUE: CI[0.025, 0.975] excludes 0 and |mean| >= delta; NULL: CI within +-delta; delta = max(0.05 * max|mean| of the KPI, floor {'pv': 0.5}); INDET otherwise / unsupported (< 10 units or < 3 episodes); episode-cluster bootstrap B=4000, tag 6617"
+ }
+}
