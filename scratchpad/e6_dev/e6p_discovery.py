@@ -101,13 +101,13 @@ PLAN = "scratchpad/e6_dev/decision/STEP1_MSCR_PLAN.md (2026-09-29, not frozen)"
 SCHEMA = "e6p-disc-rec/1"
 PROTOCOL_DOC = "docs/benchmark/E6P_DISCOVERY_PROTOCOL.md"
 REGISTRY_DOC = "docs/benchmark/SEED_REGISTRY.json"
-FROZEN_SHA256 = None                    # set to the protocol doc's sha256 (LF-normalised) at the freeze
+FROZEN_SHA256 = "f9d8774021fbdfed21f265efc0e00f07f7a626124914261ba9354b5132cccb75"  # E6P_DISCOVERY_PROTOCOL.md frozen 2026-09-29
 PAIR, STRATUM = "P3", 3                 # P3 surge-L40
 SEED_BLOCK = (180000, 183999)
 FORBIDDEN = ((150200, 150399), (155200, 155399), (160000, 179999))
 CELL_BASE, PB_BASE = 183300, 183400     # P3 s3 block; placebo + profiles block
-STAGES = ("dev", "eval", "placebo", "gt", "prof")
-FROZEN_STAGES = ("eval", "gt")
+STAGES = ("dev", "eval", "eval_ext", "placebo", "gt", "prof")
+FROZEN_STAGES = ("eval", "eval_ext", "gt")
 J_RANGE = {"dev": range(0, 20), "eval": range(20, 80), "gt": range(80, 100)}
 N_PLACEBO, N_PROF = 20, 8
 PROFILES = ("ES", "PowerES", "SliceGuarantee")
@@ -134,6 +134,9 @@ def jobs(stage: str) -> list:
     if stage in J_RANGE:
         return [(stage, "", check_seed(CELL_BASE + j), j, (j - 20) // 20 if stage == "eval" else None)
                 for j in J_RANGE[stage]]
+    if stage == "eval_ext":   # K1 extension (protocol sec. 11.5): EVAL folds 3-5 on 183460-183519, records are "eval"
+        return [("eval", "ext", check_seed(PB_BASE + N_PLACEBO + N_PROF * len(PROFILES) + 16 + j), j, 3 + j // 20)
+                for j in range(60)]
     if stage == "placebo":
         return [(stage, "", check_seed(PB_BASE + j), j, None) for j in range(N_PLACEBO)]
     if stage == "prof":
