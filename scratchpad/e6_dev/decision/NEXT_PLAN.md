@@ -15,7 +15,7 @@ energy. All environment and gate work exists only to give that arbiter a fair te
     0.595 ≥ 0.10, so c3 PASSES.
   - **Final v2 verdict for P3 surge-L40: NOISE STOP.** c1, c2 and c3 pass; only c4 fails (0.676 vs 0.70).
     P1 is DEAD (no loss on fresh seeds).
-  - Best static rule: R 0.26. QACM and priority do nothing, because the conflict is indirect: ES sleep → neighbour
+  - Best deployable static rule: R 0.26 (the hindsight static R 0.76 above is privileged, not deployable). QACM and priority do nothing, because the conflict is indirect: ES sleep → neighbour
     load → protected-slice violations.
 - The lesson: the edge is real on average but noisy per decision. So act on averaged evidence (regime or window
   policies), not on single decisions.
