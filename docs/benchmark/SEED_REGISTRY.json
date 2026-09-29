@@ -132,7 +132,9 @@
     6262,
     7707,
     7708,
-    7373
+    7373,
+    7019,
+    7020
   ],
   "rng_stream_notes": {
     "E5_NOISE_DETECT observation noise": "default_rng([seed, 5, int(round(1000*kappa))]), kappa in {0.1, 0.3} -> tags (5, 100) and (5, 300)"
@@ -216,5 +218,39 @@
       ],
       "e6p_screen_note": "Reserved 2026-09-28 for the E6-P conflict screen (Gate A v2): docs/benchmark/E6P_SCREEN_PROTOCOL.md section 3 defines the sub-ranges (load calibration fit 150000-150009 / check 150010-150019, mechanism tests 150020-150059, oracle timing pilot 150060, screen seeds as listed there). DEV only; never TEST."
     }
+  },
+  "XTRUCE": {
+    "used": [
+      [
+        0,
+        2
+      ]
+    ],
+    "note": "xTRUCE plant (cdd_oran/envs/xtruce, arXiv:2608.28532 reimplementation). Seeds 0-2: build sanity + qos_margin tuning (disclosed). 1000-1199: floors_reachable construction check only. 2026-09-29: Gate A v2 screen block reserved (XTRUCE_SCREEN_PROTOCOL.md).",
+    "dev_reserved": {
+      "xtruce_screen_episodes": [
+        [
+          190000,
+          190199
+        ]
+      ],
+      "xtruce_confirmation_reserved": [
+        [
+          190200,
+          190399
+        ]
+      ],
+      "mapping": "seed = 190000 + 50*stratum + j; j 0..43 screen candidates (first 40 passing floors_reachable), 44..48 mechanism, 190199 oracle pilot. 190200-190399 untouched (confirmation).",
+      "rng_stream_tags": {
+        "7019": "bootstrap default_rng([7019, pair_idx, stratum])",
+        "7020": "oracle search"
+      }
+    },
+    "construction_only": [
+      [
+        1000,
+        1199
+      ]
+    ]
   }
 }
