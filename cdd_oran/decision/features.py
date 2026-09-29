@@ -28,6 +28,20 @@ Ownership: ``knob_ownership(trace)`` counts, from the logged requests, which kno
 Degenerate columns (constant, or almost all one value) are DROPPED and recorded (``Panel.dropped``): MSCR's
 equal-count binning breaks ties by row order, so a constant or tied column would bin by time/cell order (known
 MSCR BUG-2) and a constant target inflates S* by rounding (BUG-1). ``discovery`` re-checks on the rows it uses.
+
+E6-P panel (``build_panel_p``; scratchpad/e6_dev/decision/STEP1_MSCR_PLAN.md): the E6 panel plus
+  knob_own    own_ptx (Tx-power offset dB; cells without a ptx knob, i.e. picos under ptx_scope "macro", get 0 = their
+              fixed offset), own_prot_min (protected min PRB share);
+  knob_nbr    nbr_sleep, nbr_ptx, nbr_prot_min (mean over the CIO neighbours, like nbr_carrier);
+  state_nbr   nbr_act_ue_lag: mean neighbour active UEs (fast report act_ue summed over slices) over the previous
+              window;
+  kpi         prot_viol (protected violated UEs per second = fast report prot_below_frac * prot_eval, 0 when no
+              protected UE was evaluated), prot_act_ue (fast), edge_sinr_p (fast, dB); each with a <family>_lag.
+Obs-only: built from ``Trace.features()`` (delivered reports, logged requests, pre-action configuration); no lab_*
+array, no plant attribute. The 1 % minority filter judges own_sleep on PICO rows only (``drop_degenerate_p``): a
+macro never sleeps, so on all rows a pico sleep of any length is a < 1 % minority almost by construction (21 of 24
+cells are macros); the column is kept iff it is not degenerate on the pico rows (recorded in ``Panel.notes``).
+NOTE: ``discovery.discover_template`` re-checks degeneracy per target on ALL its thinned rows (unchanged E6 rule).
 """
 from __future__ import annotations
 
@@ -41,10 +55,12 @@ from cdd_oran.envs.e6.config import MACRO_NTRX
 
 from .trace import LABEL_PREFIX, Trace
 
-KNOB_FAMILIES = ("cio", "hys", "ttt", "ll_ratio", "carrier", "sleep")
+KNOB_FAMILIES = ("cio", "hys", "ttt", "ll_ratio", "carrier", "sleep", "ptx", "prot_min")
 KPI_FAMILIES = ("prb_util", "ll_delay_p95", "embb_thp_p5", "rlf", "too_late", "too_early", "energy_w")
+KPI_FAMILIES_PX = ("prot_viol", "prot_act_ue", "edge_sinr_p")          # E6-P additions (build_panel_p)
+KPI_FAMILIES_P = KPI_FAMILIES + KPI_FAMILIES_PX
 KPI_GRAN_S = {"prb_util": 1, "ll_delay_p95": 1, "embb_thp_p5": 5, "rlf": 30, "too_late": 30, "too_early": 30,
-              "energy_w": 60}
+              "energy_w": 60, "prot_viol": 1, "prot_act_ue": 1, "edge_sinr_p": 1}
 _KPI_SRC = {"prb_util": "fast", "ll_delay_p95": "fast", "embb_thp_p5": "thp", "rlf": "mob", "too_late": "mob",
             "too_early": "mob", "energy_w": "energy"}
 # column -> (kind, knob/kpi family, scope)
@@ -53,6 +69,10 @@ KNOB_COLUMNS = {"own_hys": ("knob_own", "hys"), "own_ttt": ("knob_own", "ttt"),
                 "own_sleep": ("knob_own", "sleep"), "cio_out_mean": ("knob_own", "cio"),
                 "cio_out_max": ("knob_own", "cio"), "cio_in_mean": ("knob_nbr", "cio"),
                 "nbr_carrier": ("knob_nbr", "carrier")}
+KNOB_COLUMNS_P = {"own_ptx": ("knob_own", "ptx"), "own_prot_min": ("knob_own", "prot_min"),
+                  "nbr_sleep": ("knob_nbr", "sleep"), "nbr_ptx": ("knob_nbr", "ptx"),
+                  "nbr_prot_min": ("knob_nbr", "prot_min")}
+PICO_JUDGED = ("own_sleep",)          # columns whose minority filter is judged on pico rows (drop_degenerate_p)
 KINDS = ("knob_own", "knob_nbr", "state_nbr", "kpi", "kpi_lag", "context")
 
 
@@ -71,6 +91,7 @@ class Panel:
     ownership: dict            # xapp -> {knob family: {"req": n, "applied": n}}
     xapps: list                # xApps present in the episodes
     dropped: dict = dataclasses.field(default_factory=dict)   # column -> reason
+    notes: dict = dataclasses.field(default_factory=dict)     # column -> note (e.g. judged on pico rows)
 
     @property
     def n(self) -> int:
@@ -312,3 +333,138 @@ def build_panels(traces, step_s: int = 10, t_min: int = 0, min_minor_frac: float
     """Pooled panel of several traces (episode id = position); degenerate columns judged on the pooled rows."""
     return concat_panels([build_panel(tr, step_s, t_min, i, drop_degenerate=False) for i, tr in enumerate(traces)],
                          min_minor_frac=min_minor_frac)
+
+
+# ------------------------------------------------------------------------------------------------ E6-P panel
+def drop_degenerate_p(panel: Panel, min_minor_frac: float = 0.01) -> Panel:
+    """``Panel.drop_degenerate`` with the E6-P sleep rule: a ``PICO_JUDGED`` column flagged on all rows is re-judged on
+    the pico rows (is_macro == 0) and kept (``notes``) when it is not degenerate there."""
+    bad = degenerate_columns(panel.data, min_minor_frac)
+    notes = dict(panel.notes)
+    if "is_macro" in panel.data:
+        pico = panel.data["is_macro"] < 0.5
+        for c in PICO_JUDGED:
+            if c in bad and pico.any():
+                why = degenerate_columns({c: panel.data[c][pico]}, min_minor_frac)
+                if not why:
+                    notes[c] = f"kept: judged on {int(pico.sum())} pico rows (all rows: {bad.pop(c)})"
+                else:
+                    bad[c] = f"{bad[c]}; pico rows: {why[c]}"
+    return dataclasses.replace(panel, data={k: v for k, v in panel.data.items() if k not in bad},
+                               kind={k: v for k, v in panel.kind.items() if k not in bad},
+                               family={k: v for k, v in panel.family.items() if k not in bad},
+                               dropped={**panel.dropped, **bad}, notes=notes)
+
+
+def build_panel_p(trace: Trace, step_s: int = 10, t_min: int = 0, episode: int = 0,
+                  drop_degenerate: bool = True, min_minor_frac: float = 0.01) -> Panel:
+    """E6-P per-cell panel (module docstring): ``build_panel`` + the E6-P knob / state / KPI columns. Obs-only."""
+    p = build_panel(trace, step_s, t_min, episode, drop_degenerate=False)
+    a = trace.features()
+    assert not any(k.startswith(LABEL_PREFIX) for k in a)
+    knobs = [tuple(k) for k in trace.meta["knobs"]]
+    kidx = {k: i for i, k in enumerate(knobs)}
+    C = len(p.cell_region)
+    step = int(step_s)
+    tk = np.unique(p.t)
+    K = len(tk)
+    cfg = np.stack([trace.config_at(int(t) + 1) for t in tk]) if K else np.zeros((0, len(knobs)))
+    nb = p.neighbours
+    nan = np.full(K, np.nan)
+
+    def per_cell(fam, default):
+        idx = [kidx.get((fam, c), -1) for c in range(C)]
+        out = np.full((K, C), float(default))
+        for c, i in enumerate(idx):
+            if i >= 0:
+                out[:, c] = cfg[:, i]
+        return out, any(i >= 0 for i in idx)
+
+    def nbr_mean(v):
+        return np.stack([v[:, n].mean(1) if n else nan for n in nb], 1) if K else np.zeros((0, C))
+
+    cols, have = {}, {}
+    cols["own_ptx"], have["own_ptx"] = per_cell("ptx", 0.0)
+    cols["own_prot_min"], have["own_prot_min"] = per_cell("prot_min", 0.0)
+    sleep, have_sleep = per_cell("sleep", 0.0)
+    cols["nbr_sleep"], have["nbr_sleep"] = nbr_mean(sleep), have_sleep
+    cols["nbr_ptx"], have["nbr_ptx"] = nbr_mean(cols["own_ptx"]), have["own_ptx"]
+    cols["nbr_prot_min"], have["nbr_prot_min"] = nbr_mean(cols["own_prot_min"]), have["own_prot_min"]
+
+    def field(name):
+        return lambda j: np.asarray(a[f"kpm_fast_{name}"][j], float)
+
+    def act_ue(j):
+        v = np.asarray(a["kpm_fast_act_ue"][j], float)
+        return v.sum(1) if v.ndim == 2 else v
+
+    def prot_viol(j):
+        ev = np.asarray(a["kpm_fast_prot_eval"][j], float)
+        fr = np.asarray(a["kpm_fast_prot_below_frac"][j], float)
+        return np.where(ev > 0, np.rint(np.nan_to_num(fr) * ev), 0.0)
+
+    fields = {"act_ue": act_ue}
+    if "kpm_fast_prot_eval" in a and "kpm_fast_prot_below_frac" in a:
+        fields["prot_viol"] = prot_viol
+    for name in ("prot_act_ue", "edge_sinr_p"):
+        if f"kpm_fast_{name}" in a:
+            fields[name] = field(name)
+    fast = _kpi_windows(a, "fast", tk, step, C, fields)
+
+    def lag(v, L):
+        out = np.full((K, C), np.nan)
+        if K > L:
+            out[L:] = v[:-L]
+        return out
+
+    data, kind, family = dict(p.data), dict(p.kind), dict(p.family)
+    dropped = dict(p.dropped)
+
+    def put(name, arr, k, fam):
+        data[name] = np.asarray(arr, float).reshape(-1)       # row order: step-major, then cell
+        kind[name], family[name] = k, fam
+
+    for name, (k, fam) in KNOB_COLUMNS_P.items():
+        if have[name]:
+            put(name, cols[name], k, fam)
+        else:
+            dropped[name] = "knob_absent_in_mix"
+    put("nbr_act_ue_lag", nbr_mean(lag(fast["act_ue"], 1)), "state_nbr", "act_ue")
+    for fam in KPI_FAMILIES_PX:
+        if fam not in fast:
+            dropped[fam] = "report_field_absent"
+            continue
+        put(fam, fast[fam], "kpi", fam)
+        put(fam + "_lag", lag(fast[fam], max(1, math.ceil(KPI_GRAN_S[fam] / step))), "kpi_lag", fam)
+    out = dataclasses.replace(p, data=data, kind=kind, family=family, dropped=dropped)
+    return drop_degenerate_p(out, min_minor_frac) if drop_degenerate else out
+
+
+PANEL_REC_SCHEMA = "e6p-panel/1"
+
+
+def panel_to_rec(panel: Panel) -> dict:
+    """JSON-able record of a panel (float32 arrays via ``collect_p.enc``). The layout's ``cell_region`` (cell site) is
+    NOT recorded (privileged on E6-P: ``gt_static``); ``panel_from_rec`` fills a placeholder (one region per cell)."""
+    from .collect_p import enc
+    return {"schema": PANEL_REC_SCHEMA, "step_s": int(panel.step_s), "n_rows": int(panel.n),
+            "n_cells": len(panel.neighbours), "episode": enc(panel.episode), "t": enc(panel.t),
+            "cell": enc(panel.cell), "columns": list(panel.data), "kind": dict(panel.kind),
+            "family": dict(panel.family), "data": {c: enc(v) for c, v in panel.data.items()},
+            "neighbours": [[int(x) for x in n] for n in panel.neighbours], "ownership": panel.ownership,
+            "xapps": list(panel.xapps), "dropped": dict(panel.dropped), "notes": dict(panel.notes)}
+
+
+def panel_from_rec(rec: dict, episode: int | None = None) -> Panel:
+    """Inverse of ``panel_to_rec`` (values as float64; ``episode`` overrides the recorded episode id)."""
+    from .collect_p import dec
+    if rec.get("schema") != PANEL_REC_SCHEMA:
+        raise ValueError(f"not a panel record: {rec.get('schema')!r}")
+    n = int(rec["n_rows"])
+    ep = np.full(n, int(episode)) if episode is not None else dec(rec["episode"]).astype(np.int64)
+    return Panel(data={c: dec(rec["data"][c]).astype(float) for c in rec["columns"]}, kind=dict(rec["kind"]),
+                 family=dict(rec["family"]), episode=ep, t=dec(rec["t"]).astype(np.int64),
+                 cell=dec(rec["cell"]).astype(np.int64), step_s=int(rec["step_s"]),
+                 cell_region=np.arange(int(rec["n_cells"])), neighbours=[list(x) for x in rec["neighbours"]],
+                 ownership=rec["ownership"], xapps=list(rec["xapps"]), dropped=dict(rec["dropped"]),
+                 notes=dict(rec.get("notes", {})))

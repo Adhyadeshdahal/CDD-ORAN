@@ -119,3 +119,53 @@ def test_collection_reproduces_inside_env_copy():
     assert key and key == [(u["c"], u["x"], u["t0"], u["mode"], u["p"]) for u in arb2.units[n0:]]
     assert env.plant.sla == env2.plant.sla
     assert np.array_equal(CP.get_tap(env).pv, CP.get_tap(env2).pv)
+
+
+# ---------------------------------------------------------------------------------------------- discovery additions
+def test_high_no_rb_tables():
+    for x in ("ES", "PowerES", "SliceGuarantee"):
+        assert CP.PI0_HIGH_NO_RB[x] == {"accept": 0.5, "half": 0.2, "reject": 0.3}
+    assert CP.PI0["high_no_rb"] is CP.PI0_HIGH_NO_RB
+    pol = CP.RandomizedUnitPolicy(5, "high_no_rb")
+    assert pol.tables is CP.PI0_HIGH_NO_RB
+
+
+def test_placebo_logs_pi0_draws_applies_accept_and_is_bit_identical_to_accept_all():
+    cfg = cfg_p3(seed=6, scored=60.0)
+    ref = E6Env(cfg, log=False, wg3=True)
+    while ref.sec < ref.total_s:
+        ref.step(None)
+    tab = CP.PI0_HIGH_NO_RB
+    res = CP.run_collection(cfg, CP.PlaceboPolicy(cfg.seed, tables=tab), open_rule="feasible")
+    env = res["env"]
+    assert env.plant.sla == ref.plant.sla and env.stats == ref.stats
+    assert np.array_equal(env.plant.q, ref.plant.q) and env.config() == ref.config()
+    units = res["units"]
+    pi0 = CP.RandomizedUnitPolicy(cfg.seed, tables=tab)
+    for u in units:
+        assert u["applied_mode"] == "accept" and "pi0_mode" not in u
+        assert (u["mode"], u["p"]) == pi0(dict(u))                   # the logged mode IS the pi0 draw
+        assert u["p"] == tab[u["x"]][u["mode"]]
+    assert {u["mode"] for u in units} >= {"accept", "half", "reject"}
+
+
+def test_tap_series_matches_the_cumulative_arrays_and_sla():
+    cfg = cfg_p3(seed=7, scored=60.0)
+    res = CP.run_collection(cfg, CP.RandomizedUnitPolicy(cfg.seed, tables=CP.PI0_HIGH_NO_RB), open_rule="feasible")
+    env, tap = res["env"], res["tap"]
+    s = tap.series()
+    T = env.total_s
+    assert s["fields"] == list(CP.SERIES_FIELDS) and s["data"].shape == (T, len(CP.SERIES_FIELDS), env.plant.nc)
+    assert np.array_equal(s["t"], np.arange(1, T + 1)) and s["scored"].sum() == T - int(cfg.warmup_s)
+    D, sc = s["data"].astype(float), s["scored"]
+    f = {k: i for i, k in enumerate(CP.SERIES_FIELDS)}
+    ext = dict(zip(("pv", "e", "v") + CP.EXT_FIELDS, tap.arrays(ext=True), strict=True))
+    assert np.array_equal(D[sc, f["pv"]].sum(0), ext["pv"]) and np.array_equal(D[sc, f["v"]].sum(0), ext["v"])
+    assert np.allclose(D[sc, f["e"]].sum(0), ext["e"], rtol=1e-5)
+    assert np.array_equal(D[sc, f["rlf"]].sum(0), ext["rlf"]) and np.array_equal(D[sc, f["ue"]].sum(0), ext["load"])
+    assert np.allclose(D[sc, f["prb_used"]].sum(0), ext["prb"], rtol=1e-5)
+    assert D[:, f["rlf"]].sum() == env.plant.sla["rlf"]
+    assert np.all(D[:, f["ue"]].sum(1) == env.plant.n)                # every UE is served by exactly one cell
+    assert np.all(D[:, f["prot_ue"]].sum(1) == env.plant.prot.sum())
+    assert np.all(D[:, f["prb_used"]] <= D[:, f["prb_cap"]] + 1e-3) and np.all(D[:, f["pv"]] <= D[:, f["prot_ue"]])
+    assert len(tap.arrays()) == 3                                     # default arrays() unchanged

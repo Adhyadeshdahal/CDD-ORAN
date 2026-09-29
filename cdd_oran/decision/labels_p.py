@@ -16,6 +16,12 @@ Region probe (G0b, sampled with REGION_RATE among labelled units, tag 6614, only
 cells): with the same mode m (default reject) held from t0 for T on ALL of x's cells in the unit's region (the oracle's
 region = ``plant.lay.cell_site``; privileged, labeller only) and, separately, on each cell of the region alone
 (``HoldPolicy`` window [t0, t0 + T): a cell's unit opens at x's first request there), network contrasts vs AA.
+
+``Labeller(cells=True)`` (option; default off = the output above, unchanged): rollouts also snapshot the tap's extended
+per-cell arrays (``collect_p.CellKPITap.arrays(ext=True)``) and every label gains ``cell_kpis`` = ``CELL_KPIS`` (pv,
+e, v, rlf, load = served UE-s, prb = PRBs used) and ``cell`` = {m: (len(ks), len(CELL_KPIS), cells) array of the
+per-cell contrast m - accept per reseed k} (same CRN convention as ``d``; accept rows are zero). Used by the E6-P
+discovery knockout ground truth (``gt_p``).
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ REGION_RATE = 0.2
 H_LABEL = 90
 KS = (1, 2)
 KPIS = ("pv", "e", "v")
+CELL_KPIS = ("pv", "e", "v", "rlf", "load", "prb")
 
 
 def label_modes(x: str) -> tuple[str, ...]:
@@ -51,23 +58,24 @@ def region_sampled(seed: int, unit, rate: float = REGION_RATE) -> bool:
     return _u(seed, REGION_TAG, unit) < rate
 
 
-def _snapshot(sim):
+def _snapshot(sim, ext=False):
     S, tap = sim.plant.sla, get_tap(sim)
-    return (float(S["prot_viol"]), float(S["energy_j"]), float(S["viol_ue_s"])), tap.arrays()
+    return (float(S["prot_viol"]), float(S["energy_j"]), float(S["viol_ue_s"])), tap.arrays(ext)
 
 
-def _diff(sim, s0, n_sec):
-    net1, cell1 = _snapshot(sim)
+def _diff(sim, s0, n_sec, ext=False):
+    net1, cell1 = _snapshot(sim, ext)
     return {"net": np.array(net1) - np.array(s0[0]), "cell": np.stack([a - b for a, b in zip(cell1, s0[1],
                                                                                           strict=True)]),
             "secs": n_sec}
 
 
-def rollout(env, obs, snap, policy, k: int, H: int = H_LABEL):
+def rollout(env, obs, snap, policy, k: int, H: int = H_LABEL, ext: bool = False):
     """Copy ``env`` (pending second t0) with reseed k, decide t0 with ``snap.fork(policy)`` on ``obs``, run H more
-    seconds under the same arbiter. -> {"net": [pv, e, v], "cell": (3, cells) array, "secs"}."""
+    seconds under the same arbiter. -> {"net": [pv, e, v], "cell": (3, cells) array (``ext``: (6, cells) in
+    ``CELL_KPIS`` order), "secs"}."""
     sim = env.copy(reseed=k)
-    s0 = _snapshot(sim)
+    s0 = _snapshot(sim, ext)
     arb = snap.fork(policy)
     sim.step_apply(arb(obs))
     n = 0
@@ -75,19 +83,19 @@ def rollout(env, obs, snap, policy, k: int, H: int = H_LABEL):
         o = sim.step_propose()
         sim.step_apply(arb(o))
         n += 1
-    return _diff(sim, s0, n)
+    return _diff(sim, s0, n, ext)
 
 
-def aa_rollout(env, k: int, H: int = H_LABEL):
+def aa_rollout(env, k: int, H: int = H_LABEL, ext: bool = False):
     """Direct accept-all rollout (no arbiter object at all): the reference the accept label must equal."""
     sim = env.copy(reseed=k)
-    s0 = _snapshot(sim)
+    s0 = _snapshot(sim, ext)
     sim.step_apply({"decisions": ["accept"] * len(sim._pending[2]), "writes": []})
     n = 0
     while n < H and sim.sec < sim.total_s:
         sim.step(None)
         n += 1
-    return _diff(sim, s0, n)
+    return _diff(sim, s0, n, ext)
 
 
 def _vals(res, cells):
@@ -96,44 +104,52 @@ def _vals(res, cells):
 
 
 class Labeller:
-    """Stateful per-episode labeller: ``AA`` rollouts cached per (t0, k); CPU accounting in ``cpu_s``."""
+    """Stateful per-episode labeller: ``AA`` rollouts cached per (t0, k); CPU accounting in ``cpu_s``. ``cells``:
+    keep per-cell contrast vectors (module docstring)."""
 
-    def __init__(self, ks=KS, H: int = H_LABEL, T: float = T_UNIT):
+    def __init__(self, ks=KS, H: int = H_LABEL, T: float = T_UNIT, cells: bool = False):
         self.ks, self.H, self.T = tuple(ks), int(H), float(T)
+        self.cells = bool(cells)
         self.cache, self.cpu_s, self.n_roll = {}, 0.0, 0
 
     def aa(self, env, obs, snap, t0, k):
         key = (float(t0), int(k))
         if key not in self.cache:
             self.cache = {kk: v for kk, v in self.cache.items() if kk[0] == float(t0)}   # only t0's entries live
-            self.cache[key] = rollout(env, obs, snap, HoldPolicy((), "accept", 0, 0), k, self.H)
+            self.cache[key] = rollout(env, obs, snap, HoldPolicy((), "accept", 0, 0), k, self.H, self.cells)
             self.n_roll += 1
         return self.cache[key]
 
     def hold(self, env, obs, snap, keys, mode, t0, k, window):
         self.n_roll += 1
-        return rollout(env, obs, snap, HoldPolicy(keys, mode, t0, t0 + window), k, self.H)
+        return rollout(env, obs, snap, HoldPolicy(keys, mode, t0, t0 + window), k, self.H, self.cells)
 
     def label(self, env, obs, snap, unit, modes=None) -> dict:
         t_cpu = time.process_time()
         c, x, t0 = unit["c"], unit["x"], unit["t0"]
         modes = tuple(modes) if modes is not None else label_modes(x)
-        raw = {}
+        raw, cellres = {}, {}
         for m in modes:
-            raw[m] = []
+            raw[m], cellres[m] = [], []
             for k in self.ks:
                 res = self.aa(env, obs, snap, t0, k) if m == "accept" else \
                     self.hold(env, obs, snap, {(c, x)}, m, t0, k, 1.0)
                 raw[m].append(_vals(res, unit["exp"]) | {"secs": res["secs"]})
+                cellres[m].append(res["cell"])
         d, mean = {}, {}
         for m in modes:
             d[m] = {sc: {kpi: [raw[m][i][sc][j] - raw["accept"][i][sc][j] for i in range(len(self.ks))]
                          for j, kpi in enumerate(KPIS)} for sc in ("exp", "net")}
             mean[m] = {sc: {kpi: float(np.mean(v)) for kpi, v in d[m][sc].items()} for sc in d[m]}
+        out = {"modes": list(modes), "H": self.H, "ks": list(self.ks), "raw": raw, "d": d, "mean": mean}
+        if self.cells:
+            out["cell_kpis"] = list(CELL_KPIS)
+            out["cell"] = {m: np.stack([cellres[m][i] - cellres["accept"][i] for i in range(len(self.ks))])
+                           for m in modes}
         cpu = time.process_time() - t_cpu
         self.cpu_s += cpu
-        return {"modes": list(modes), "H": self.H, "ks": list(self.ks), "raw": raw, "d": d, "mean": mean,
-                "cpu_s": round(cpu, 3)}
+        out["cpu_s"] = round(cpu, 3)
+        return out
 
     def region_probe(self, env, obs, snap, unit, site, mode="reject", label=None) -> dict | None:
         """G0b probe; None when x acts on < 2 cells of the unit's region. ``label`` (the unit's label) supplies the
@@ -163,5 +179,5 @@ class Labeller:
                 "sum_dC": sum_c, "kpis": list(KPIS), "cpu_s": round(cpu, 3)}
 
 
-__all__ = ["H_LABEL", "KPIS", "KS", "LABEL_RATE", "LABEL_TAG", "REGION_RATE", "REGION_TAG", "Labeller",
+__all__ = ["CELL_KPIS", "H_LABEL", "KPIS", "KS", "LABEL_RATE", "LABEL_TAG", "REGION_RATE", "REGION_TAG", "Labeller",
            "aa_rollout", "label_modes", "region_sampled", "rollout", "sampled"]

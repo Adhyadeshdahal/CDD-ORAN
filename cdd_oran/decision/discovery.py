@@ -58,6 +58,13 @@ from .features import KPI_FAMILIES, KPI_GRAN_S, Panel, degenerate_columns, write
 # LL p95 delay. prb_util is SHARED state read by TS and ES (a mediator), owned by nobody. Declared, not learned.
 KPI_OWNER = {"rlf": "MRO", "too_late": "MRO", "too_early": "MRO", "embb_thp_p5": "TS", "energy_w": "ES",
              "ll_delay_p95": "SLICE", "prb_util": None}
+# E6-P (P1-P3 xApps; pass as DiscoveryConfig(kpi_owner=KPI_OWNER_P)): energy is the objective of BOTH ES and PowerES
+# (an owner may be a tuple: a knob of any listed owner is then not a conflict on that KPI); the protected-slice KPIs
+# belong to SliceGuarantee, the edge SINR to Coverage; prb_util / prot_act_ue / rlf are shared state, owned by nobody
+# (no MRO in E6-P). Declared, not learned.
+KPI_OWNER_P = {"energy_w": ("ES", "PowerES"), "prot_viol": "SliceGuarantee", "edge_sinr_p": "Coverage",
+               "embb_thp_p5": None, "ll_delay_p95": None, "prb_util": None, "prot_act_ue": None, "rlf": None,
+               "too_late": None, "too_early": None}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -72,6 +79,7 @@ class DiscoveryConfig:
     weight_floor: float = 0.05          # soft-prior floor: no tested column ever gets weight 0
     ridge: float = 1e-3                 # sign regression ridge (on standardised columns)
     targets: tuple = KPI_FAMILIES
+    kpi_owner: dict | None = None       # KPI family -> owner xApp (or tuple of owners); None = KPI_OWNER (E6)
 
 
 @dataclasses.dataclass
@@ -243,8 +251,9 @@ def discover_template(panel: Panel, config: DiscoveryConfig | None = None, n_job
                           "scope": panel.scope(c), "p": float(pv[i]), "s_star": float(s_star[i]),
                           "coef": float(coef[i]), "sign": int(np.sign(coef[i])), "declared": bool(declared[i]),
                           "weight": soft_weight(float(pv[i]), cfg.mscr.n_perm, cfg.weight_floor)})
+    owner = KPI_OWNER if cfg.kpi_owner is None else cfg.kpi_owner
     return TemplateGraph(edges=edges, diagnostics=diags, ownership=panel.ownership, xapps=list(panel.xapps),
-                         kpi_owner={k: v for k, v in KPI_OWNER.items()}, cell_region=panel.cell_region,
+                         kpi_owner={k: v for k, v in owner.items()}, cell_region=panel.cell_region,
                          neighbours=panel.neighbours, config=cfg)
 
 
@@ -261,10 +270,13 @@ def conflict_map(graph: TemplateGraph, declared_only: bool = False, min_req: int
         if e["kind"] not in ("knob_own", "knob_nbr") or (declared_only and not e["declared"]):
             continue
         owner = graph.kpi_owner.get(e["kpi"])
-        if owner is None or owner not in graph.xapps:
+        owners = tuple(owner) if isinstance(owner, (tuple, list)) else (owner,)
+        live = [o for o in owners if o is not None and o in graph.xapps]
+        if not live:
             continue
+        owner = live[0] if len(live) == 1 else "+".join(live)
         for x in writers(graph.ownership, e["family"], min_req):
-            if x != owner:
+            if x not in live:
                 out.append({"src_xapp": x, "knob_family": e["family"], "column": e["column"], "scope": e["scope"],
                             "kpi": e["kpi"], "dst_xapp": owner, "p": e["p"], "sign": e["sign"], "coef": e["coef"],
                             "declared": e["declared"], "weight": e["weight"]})
