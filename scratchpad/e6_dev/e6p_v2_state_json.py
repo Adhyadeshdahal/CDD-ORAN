@@ -26,6 +26,23 @@ STATE = r'''{
  "not_screenable_pairs": [
   "P2"
  ],
+ "sources": [
+  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s1\\all.jsonl",
+  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s2k\\all.jsonl",
+  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s2r\\all.jsonl"
+ ],
+ "stage1_crit1": [
+  [
+   "P3",
+   3
+  ]
+ ],
+ "stage2_crit12": [
+  [
+   "P3",
+   3
+  ]
+ ],
  "v1_stage1_crit1": [
   [
    "P1",
@@ -40,5 +57,5 @@ STATE = r'''{
    3
   ]
  ],
- "written_utc": "2026-09-29T04:47:35Z"
+ "written_utc": "2026-09-29T11:24:05Z"
 }'''
