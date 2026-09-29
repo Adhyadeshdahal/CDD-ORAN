@@ -160,6 +160,7 @@ def fingerprint(seconds: int = 300) -> dict:
 def main(out, name, script="grid.py", kernels="3", pin="match"):
     if pin not in PINS:
         sys.exit(f"PIN in {PINS}")
+    script = os.path.basename(script)      # bundle paths are e6dev/<basename>; a repo-relative path used to break both
     import warnings
     if ROOT not in sys.path:
         sys.path.insert(0, ROOT)
