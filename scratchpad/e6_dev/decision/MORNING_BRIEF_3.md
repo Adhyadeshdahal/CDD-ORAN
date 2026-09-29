@@ -28,6 +28,43 @@
      ground truth and fresh fake data. The old data is used only for development, never for the final score.
 4. **Result of the fresh test:** pending (see below).
 
+## Step 2 (the referee): an early warning, which needs your decision
+I did not wait for step 1 to finish before checking whether step 2 can win at all. I ran the plan's cheapest
+go/no-go check, then had three agents argue it out: a forensics agent, an advocate and a skeptic.
+- **The go/no-go check failed badly.** After the 2-minute warm-up there is little left for a referee to decide:
+  about 2.6 carrier-offs, 2.7 power-downs and 0.4 pico sleeps per episode. Predicted recovery is about 3 % of the
+  loss, against the 35 % needed.
+- **The advocate could not make the case either.** It tried hard, including 60 small simulations on development
+  seeds.
+  - The best referee it found recovers about 23 %, very noisily, and breaks the latency guardrail.
+  - Its one working lever is a simple fixed rule, "don't let PowerES raise power in already-full cells", and that
+    rule needs no causal map.
+- **The skeptic's numbers.**
+  - About half of the "cheating referee's" 1.35 comes from seeing the future. Without that it is worth about 0.64,
+    and even that needs a full simulator for planning ahead.
+  - The one learnable signal (protected-user load on the cell itself) never changes a decision.
+  - So "referee with our map" vs "no map" vs "SHAP map" would likely come out identical. The step-3 comparison could
+    not show that the map matters on this scenario.
+- **The forensics agent found what the "cheating referee" actually does.** It re-ran the oracle and recorded its
+  choices.
+  - Mostly it **blocks PowerES from turning power back up**, about 149 of 156 times per episode, so in effect it is
+    a fixed rule. It also damps the slice-protection xApp a little.
+  - A plain fixed rule on development seeds, "after warm-up, block power-restores, pico sleeps and carrier-offs",
+    already recovers about 30 % of the loss with the guardrails passing. That is very noisy (CI 1-55 %), but it
+    beats the best fixed rule we had tested (26 %), and it uses no causal map at all.
+- **My reading.** On P3 surge-L40, a causal-map referee is unlikely to beat a well-chosen fixed rule. Even if it
+  did, the map would not be the reason. The discovery half (step 1) can still stand on its own.
+- **Options for you, from the skeptic, which I think are worth discussing:**
+  1. A test world where map quality decides the outcome: logs that are *not* randomised, so the correlation-based
+     methods pick the wrong links (they already invent 10-18 links on fake data) and a referee built on their map
+     makes wrong calls.
+  2. A scenario where the neighbour chain is the only fix, for example a load dip then a surge, so there are many
+     sleep decisions after warm-up.
+  3. A diagnosis/attribution claim: "which xApp harms which KPI, with error control". MSCR's precision 1.00, correct
+     signs and honest placebo behaviour support this; the baselines don't.
+- I did **not** spend the ~110 CPU-h step-2 evaluation. The evidence says it would most likely fail, and a pivot is
+  your call.
+
 ## Timeline
 - 23:30 The full step-1 analysis started on Colab. Colab took the machine back halfway, so I re-ran it on the laptop
   as a separate, light process.
