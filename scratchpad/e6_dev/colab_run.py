@@ -163,11 +163,11 @@ def new_session(name, tries=3):
     for k in range(tries):
         try:
             out = colab("new", "-s", name, "--tpu", "v5e1", timeout=HTTP_TIMEOUT + 300)
-            print(out[-300:], flush=True)
+            print(out[-300:].encode("ascii", "replace").decode(), flush=True)
             if "READY" in out:
                 return
         except (RuntimeError, subprocess.TimeoutExpired) as e:
-            print(f"new attempt {k + 1} failed: {str(e)[-300:]}", flush=True)
+            print(f"new attempt {k + 1} failed: {str(e)[-300:]}".encode("ascii", "replace").decode(), flush=True)
         n, _ = active_assignments()
         if n:
             ses = colab("sessions", timeout=120, check=False)

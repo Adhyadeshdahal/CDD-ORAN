@@ -106,8 +106,9 @@ PAIR, STRATUM = "P3", 3                 # P3 surge-L40
 SEED_BLOCK = (180000, 183999)
 FORBIDDEN = ((150200, 150399), (155200, 155399), (160000, 179999))
 CELL_BASE, PB_BASE = 183300, 183400     # P3 s3 block; placebo + profiles block
-STAGES = ("dev", "eval", "eval_ext", "placebo", "gt", "prof")
-FROZEN_STAGES = ("eval", "eval_ext", "gt")
+STAGES = ("dev", "eval", "eval_ext", "placebo", "placebo_ext", "gt", "gt_ext", "prof")
+FROZEN_STAGES = ("eval", "eval_ext", "gt", "gt_ext")
+GT_EXT_BASE = 183520                    # v2 re-test GT (added 2026-09-30, after the v1 verdict; records are "gt")
 J_RANGE = {"dev": range(0, 20), "eval": range(20, 80), "gt": range(80, 100)}
 N_PLACEBO, N_PROF = 20, 8
 PROFILES = ("ES", "PowerES", "SliceGuarantee")
@@ -137,6 +138,10 @@ def jobs(stage: str) -> list:
     if stage == "eval_ext":   # K1 extension (protocol sec. 11.5): EVAL folds 3-5 on 183460-183519, records are "eval"
         return [("eval", "ext", check_seed(PB_BASE + N_PLACEBO + N_PROF * len(PROFILES) + 16 + j), j, 3 + j // 20)
                 for j in range(60)]
+    if stage == "gt_ext":     # fresh knockout GT for the discovery v2 re-test: 183520-183539, records are "gt"
+        return [("gt", "ext", check_seed(GT_EXT_BASE + j), j, None) for j in range(20)]
+    if stage == "placebo_ext":  # fresh sharp-null calibration for the v2 re-test: 183540-183559, records "placebo"
+        return [("placebo", "ext", check_seed(GT_EXT_BASE + 20 + j), j, None) for j in range(N_PLACEBO)]
     if stage == "placebo":
         return [(stage, "", check_seed(PB_BASE + j), j, None) for j in range(N_PLACEBO)]
     if stage == "prof":
