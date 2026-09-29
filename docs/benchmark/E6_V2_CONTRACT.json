@@ -1,0 +1,199 @@
+{
+  "contract": "E6-xapps-v2",
+  "status": "DRAFT 2026-09-28 (rev. after E6_V1_DIAGNOSTICS.md) -- NOT FROZEN. Written before any v2 SLA/SVR/own-KPI outcome was run or inspected. Freeze = sol review + user go + [V] citations checked + hashes refreshed + seeds and rng tag registered in SEED_REGISTRY.json. Any change after freeze = new stack version + new contract.",
+  "spec": "docs/benchmark/E6_V2_XAPPS_SPEC.md",
+  "relation_to_v1": "Separate experiment after the predeclared gate-A kill of E6-scn-v1 + v1 xApps (scratchpad/e6_dev/GATE_A_RESULT.txt, scratchpad/e6_dev/decision/SOL_GATE_A.md). v1 FAIL stays published; a v2 pass does not validate v1.",
+  "scenario_version": "E6-scn-v1 (unchanged; docs/benchmark/E6_SCENARIO_CONTRACT.json)",
+  "stack": {
+    "module": "cdd_oran/envs/e6/xapps_v2.py",
+    "mixes": {
+      "V2_M4": [
+        "MROv2 (role MRO)",
+        "MLB (role TS)",
+        "xapps.ES (v1, unchanged)",
+        "xapps.SliceSLA (v1, unchanged)"
+      ],
+      "V2_M_TS_MRO": [
+        "MROv2",
+        "MLB"
+      ],
+      "V2_TS": [
+        "MLB"
+      ],
+      "V2_MRO": [
+        "MROv2"
+      ],
+      "V2_M2": [
+        "MROv2",
+        "MLB",
+        "xapps.ES"
+      ],
+      "V2_none": []
+    },
+    "entry_point": "xapps_v2.make_env_v2(cfg, **E6Env kwargs)",
+    "role_names_unchanged": true,
+    "neighbour_relations": "run-time ANR-like NRT per xApp from delivered mob (HO/RLF/ping-pong) and mr (border_all within 6 dB margin) reports; symmetric; starts empty; no removal; Layout.neighbours never read by v2 xApps",
+    "knob_registry": "CIO on all nc*(nc-1) ordered pairs + v1 non-CIO knobs (+ ll_ratio when SLICE); ric.py unchanged; env.py hooks described in spec sec. 2.3, not applied"
+  },
+  "kpm_extension": {
+    "mr": {
+      "period_s": 5,
+      "fields": [
+        "conn",
+        "border_all (nc,nc,6) cumulative 1 dB A3-margin bins",
+        "border_act (backlogged)",
+        "se_src / se_tgt (mean RSRQ-like SE estimate of active border UEs at source / target)"
+      ]
+    },
+    "mobq": {
+      "period_s": 30,
+      "aligned_with": "mob",
+      "fields": [
+        "lowq_dwell (nc,nc): 1 Hz samples of UEs with serving SINR EWMA < Qout (-8 dB) while another cell is measured stronger, attributed to (serving, strongest other)"
+      ]
+    },
+    "rng": "default_rng([seed, 6600, 7101, sec, j]) j=0 mr, j=1 mobq; parent KPM draws untouched (v1 bit-identical, tested)",
+    "rng_stream_tag_to_register": 7101
+  },
+  "constants": {
+    "MLB": {
+      "cadence_s": 10.0,
+      "N_FAST": 10,
+      "target_bps": 2000000.0,
+      "GAMMA": 0.2,
+      "CIO_MAX_dB": 4.0,
+      "MAX_STEP_dB": 2.0,
+      "HO_GUARD": 0.1,
+      "HO_MIN_EV": 3,
+      "BLOCK_S": 120.0,
+      "RESTORE_S": 60.0,
+      "scale": "U(0.75,1.25) per seed x xapp_threshold_scale (inherited)",
+      "update": "GAMMA x 0.5",
+      "N_THP": 2,
+      "HOLD_N": 2,
+      "GAMMA_meaning": "required moved-UE rate gain se_tgt*kappa_n/(A_n+m) >= (1+GAMMA) se_src*kappa_s/max(A_s,1)",
+      "verification": "rollback if first post-push mob window shows 0 HO attempts s->n, HO guard trips post-push, or neighbour degrades; pair blocked BLOCK_S"
+    },
+    "MROv2": {
+      "cadence_s": 30.0,
+      "N_WIN": 2,
+      "TL_THR": 0.02,
+      "TE_THR": 0.1,
+      "MIN_TL": 2,
+      "MIN_EV": 3,
+      "HYS_ENV_dB": [
+        0.0,
+        3.0
+      ],
+      "TTT_ENV_ms": [
+        40,
+        480
+      ],
+      "HYS_STEP_dB": 0.5,
+      "CIO_ENV_dB": 3.0,
+      "LOCK_S": 120.0,
+      "wrong_cell_ratio": "TL_THR",
+      "tie_break": "TTT",
+      "update": "HYS_STEP 1.0",
+      "DWELL_PER_EVENT_S": 1.0,
+      "QOUT_dB": -8.0,
+      "late_eff": "too_late + lowq_dwell/T310",
+      "no_hys_up_if": "late_eff ratio > TL_THR (no minimum count)",
+      "fresh_window": "2 mob reports starting at/after the cell's last own applied change"
+    },
+    "ES": "xapps.ES unchanged",
+    "SLICE": "xapps.SliceSLA unchanged"
+  },
+  "seeds_proposed": {
+    "v2_dev": {
+      "range": [
+        150000,
+        150019
+      ],
+      "use": "mechanics/integration only; runner drops SLA/SVR/own-KPI fields"
+    },
+    "v2_gate_a_confirmation": {
+      "range": [
+        151000,
+        151009
+      ],
+      "use": "gate-A rerun, v1 and v2 side by side on identical tapes; run once after freeze"
+    },
+    "v2_reserved": {
+      "range": [
+        152000,
+        152029
+      ],
+      "use": "untouched until a v2 Gate B protocol is frozen"
+    },
+    "avoid": {
+      "range": [
+        140000,
+        149999
+      ],
+      "reason": "v1 diagnostics block; Worker M registered 140000-140059 (v1_diagnostic_episodes); whole block avoided"
+    },
+    "registry": "docs/benchmark/SEED_REGISTRY.json#E6 (not yet edited)",
+    "disjointness": "checked against E6 used ranges 0-30, 100000-100179, 110000-110179, 120000-120179, 130000-130179 and TEST >= 960000"
+  },
+  "gate_a_rerun": {
+    "rule": "UNCHANGED: PASS iff in surge or mistune (at every load of that scenario): min(TS alone, TS+MRO) mean SVR ratio <= 0.85 x freeze AND controllable fraction = (SVR_freeze - SVR_best_static_or_subset) / SVR_freeze >= 0.35",
+    "computation": "scratchpad/e6_dev/gate_a.py summarize() semantics, applied per stack",
+    "matrix": {
+      "scenario": [
+        "base",
+        "surge",
+        "mistune"
+      ],
+      "load": [
+        "medium",
+        "high"
+      ],
+      "mobility": "mixed",
+      "kpm": "nominal",
+      "update": false,
+      "warmup_s": 120,
+      "scored_s": 600,
+      "seeds": "v2_gate_a_confirmation",
+      "stacks": [
+        "M4",
+        "V2_M4"
+      ]
+    },
+    "arms_per_stack": [
+      "noarb",
+      "14 non-trivial subsets (incl. TS, MRO, MRO+TS)",
+      "mistune: SMORestore alone (accept-all) and wrapped around TS+MRO"
+    ],
+    "arms_stack_independent": [
+      "freeze",
+      "tuned_static (hindsight, baselines.tuned_static_grid)"
+    ],
+    "identity_check": "freeze under M4 == freeze under V2_M4 bit-for-bit on one seed, reported",
+    "report": "every seed/cell/arm/stack; v1 and v2 side by side; own KPIs; churn/ACK/rollback/action-mix; crashes count as noarb; no filtering, no reruns",
+    "open": "confirmation n = 10 (proposed) vs 5 (v1) -- user decision",
+    "scoring_primary": "WHOLE scored window (E6Env.score svr), v1 rule unchanged; declared before any v2 outcome",
+    "secondary": "SECONDARY (descriptive, never gating): same ratios on the event window from trace labels -- surge [t0, t_end], mistune [push_t, end]; separate table",
+    "physics_ceiling": "E6_V1_DIAGNOSTICS: capacity-limited 74-93 % of violated eMBB UE-s, CIO-relievable <= 3.5 %, mistune repair <= 7.4 % of violated UE-s -> gate A v2 may fail on physics regardless of xApp quality (spec sec. 7)"
+  },
+  "file_hashes": {
+    "method": "sha256 of file bytes with CRLF normalised to LF (DRAFT; refresh at freeze)",
+    "cdd_oran/envs/e6/xapps_v2.py": "a57deb2c5b83c1965f74b1e2bcb3fa4d77ee7a95b386157ae320afed58278662",
+    "tests/test_e6_xapps_v2.py": "d0202b9262e1186d99ca99b2ec95ee12229fc236ef111a42e7669835119ec08a",
+    "docs/benchmark/E6_V2_XAPPS_SPEC.md": "REFRESH_AT_FREEZE",
+    "cdd_oran/envs/e6/xapps.py": "1479d59f8fa1994ded7f0513ef741699e68d5eb21c70107a76dcaf4967160899",
+    "cdd_oran/envs/e6/ric.py": "3cb3e5dd34943aa284a112f4a29c79413323b36de8111d448bac48b3e8f6f020",
+    "cdd_oran/envs/e6/env.py": "759e065a33b31b6590fbaa8ad279dcc9de0ae61616907a968f6b8564b4799745",
+    "cdd_oran/envs/e6/sim.py": "487125e6c495c104924303dbc33a1ba4e7ed2320e301bd7b5d509deb7de6bcf0",
+    "cdd_oran/envs/e6/config.py": "d7cbc1da9e96d50df1636d55289e8a21b3f6135deeef5ee5fcd21e28a5559837",
+    "cdd_oran/envs/e6/baselines.py": "ff2bf769c155a7bb93d33bd7d5e5e017cf787593b45c8cdca55bdf661dc62a11"
+  },
+  "development_evidence": "docs/benchmark/E6_V1_DIAGNOSTICS.md (exploratory, seeds 140000-140051; motivates mechanisms only, no threshold taken from it)",
+  "tests": {
+    "date": "2026-09-28",
+    "tests/test_e6_xapps_v2.py": "35 passed",
+    "E6 files (xapps_v2, scenarios, env_wg3, baselines, published)": "111 passed",
+    "decision tests importing E6 (arbiter, discovery, effect_model, probe_crt, rank_eval, trace)": "64 passed",
+    "ruff": "clean"
+  }
+}

@@ -609,6 +609,18 @@ untested equation. If E5 needs a mechanism not validated in E2–E4 to show a ga
 rejected outright (Decision Gates: "E5 introduces mechanisms not already validated
 independently").
 
+**Finalization scope note (2026-09-16) — occupancy-conditional decision claim.** The E2-ID
+gated-decision-MDE characterization (sol-reviewed SOUND-WITH-CAVEATS) scopes E5's decision claim:
+a complete causal fan-out prevents the locally-attractive-but-globally-harmful shared-knob action
+**where the harm is active (in-gate)**, but **net all-deployment benefit is occupancy-dependent** and
+washes out at realistic low occupancy via the learned world-model's off-gate collateral; the binding
+constraint is the **learned world-model's off-gate generalization / sample efficiency, not discovery**
+(the oracle-structure arm fails identically at finite occupancy). E5 is therefore scoped to this
+occupancy-conditional claim, **not** the unconditional strong claim. This is an E2-ID, fixed-k-NN
+characterization that *informs* E5 — the composed E5 environment (`e5.py` / gate contract) is **not
+built**. See `docs/benchmark/E5_DATA_COLLECTION_CONTRACT.md` (finalized) and
+`plans/013-e5-finalization-occupancy-conditional.md`.
+
 ---
 
 ## Cross-cutting requirements (apply to all envs)
