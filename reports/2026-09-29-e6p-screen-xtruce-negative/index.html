@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E6-P screen and xTRUCE stage 0</title>
+<style>
+  :root{--bg:#faf9f6;--card:#fff;--ink:#20242a;--soft:#5c6470;--line:#e6e3db;--good:#1f8a5b;--bad:#c0492f;
+    --acc:#2a6cc0;--amb:#a66d12;--accbg:#eaf0f8;--goodbg:#e8f5ee;--badbg:#faeae4;--ambbg:#faf1df;--mono:#f2f0ea;
+    --eq:#dbe8f8;--fig:#ffffff}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  }
+  :root[data-theme="dark"]{--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 16px 100px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
+  .kick{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  h1{font-size:1.85rem;line-height:1.22;margin:8px 0 6px;letter-spacing:-0.01em}
+  .meta{color:var(--soft);font-size:.9rem}
+  h2{font-size:1.28rem;margin:46px 0 12px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-0.01em}
+  h3{font-size:1.05rem;margin:26px 0 8px}
+  p{margin:0 0 14px} strong{font-weight:650}
+  a{color:var(--acc)}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.86em;
+    background:var(--mono);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+  pre{background:var(--mono);padding:12px 14px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--bad);
+    border-radius:10px;padding:18px 22px;margin:20px 0}
+  .tag{display:inline-block;background:var(--badbg);color:var(--bad);font-weight:700;font-size:.74rem;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin:0 6px 8px 0}
+  .tag.amb{background:var(--ambbg);color:var(--amb)} .tag.acc{background:var(--accbg);color:var(--acc)}
+  .verdict p{margin:0 0 8px;font-size:1.0rem}
+  .plain{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:18px 0}
+  .plain p{margin:0}
+  figure{margin:22px 0;padding:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--fig);padding:4px}
+  figcaption{color:var(--soft);font-size:.88rem;margin-top:8px;padding-left:2px}
+  .tw{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:.83rem;font-variant-numeric:tabular-nums}
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:right;vertical-align:top}
+  th:first-child,td:first-child,td.l,th.l{text-align:left}
+  thead th{background:var(--mono);font-weight:650}
+  td.no{color:var(--bad);font-weight:600} td.yes{color:var(--good);font-weight:600}
+  td.eq{background:var(--eq)}
+  .m{font-size:.72rem;color:var(--bad);font-weight:700}
+  .call{border-left:4px solid var(--acc);background:var(--accbg);padding:13px 18px;border-radius:0 8px 8px 0;margin:18px 0}
+  .call.amb{border-color:var(--amb);background:var(--ambbg)} .call.bad{border-color:var(--bad);background:var(--badbg)}
+  .call .k{font-weight:700;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc);
+    display:block;margin-bottom:4px} .call.amb .k{color:var(--amb)} .call.bad .k{color:var(--bad)}
+  .call p:last-child{margin-bottom:0}
+  ul,ol{margin:0 0 14px;padding-left:24px} li{margin:5px 0}
+  .foot{color:var(--soft);font-size:.84rem;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  @media(max-width:700px){.four{grid-template-columns:1fr 1fr}.three{grid-template-columns:1fr}}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .kv b{display:block;font-size:1.35rem;letter-spacing:-0.01em} .kv span{color:var(--soft);font-size:.82rem}
+  .ph{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--amb);
+    border:1.5px solid var(--amb);border-radius:4px;padding:0 6px;margin-right:6px;vertical-align:1px}
+  .toc{font-size:.9rem;columns:2;column-gap:28px;margin:10px 0 0;padding-left:20px}
+  @media(max-width:620px){.toc{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kick">CDD-ORAN · E6-P and xTRUCE conflict screens · overnight 2026-09-28/29 · archival</div>
+  <h1>Gate A v2 overnight: E6-P is dead, and the xTRUCE plant cannot be screened</h1>
+  <div class="meta">Report written 2026-09-29 · DEV screens only (no confirmatory or TEST seed touched) · all cloud runs on
+    Kaggle Linux (glibc 2.35, numpy 2.4.2, scipy 1.18.1) · E6-P protocol E6P-v1 (spec commit <code>2afbc1c</code>,
+    amended <code>e15f2d1</code>, <code>2afd081</code>) · xTRUCE protocol XTS-v1 (frozen <code>f08747e</code>) ·
+    every number below is recomputed from the raw run files by <code>make_figs.py</code> and written to
+    <code>figures_data.json</code></div>
+</header>
+
+<div class="verdict">
+  <span class="tag">E6-P: P1 DEAD · P3 DEAD</span><span class="tag amb">E6-P: P2 not screenable</span><span class="tag amb">xTRUCE XTS-v1: not screenable (X1-X4)</span>
+  <p><strong>E6-P, preregistered verdict: DEAD (not recoverable) for P1 and P3.</strong> The co-deployment loss is real
+  in three L40 cells (Λ 0.72-1.55), and no static rule recovers any of it (R_static 0.000 / 0.087 / 0.008). The
+  budgeted oracle recovers 38-88 % of the loss, but in every one of those cells it breaks a guardrail against
+  accept-all, so it is ineligible and R_or = 0. Its per-decision advantage also keeps its sign on a redrawn future
+  only 55-66 % of the time, below the 0.70 bar. Stage 3 was not run.</p>
+  <p style="margin:0"><strong>xTRUCE, frozen XTS-v1: NOT SCREENABLE.</strong> Stage 0 mechanism check M4 fails for
+  QoS (one stratum, 2/5 seeds) and for LB. QoS is in every pair, so no pair reaches stage 1.</p>
+</div>
+
+<div class="four">
+  <div class="kv"><b>3 / 8</b><span>E6-P pair-strata with a material loss at matched energy (all L40)</span></div>
+  <div class="kv"><b>0</b><span>eligible arms, oracle included, that recover ≥ 50 % of it</span></div>
+  <div class="kv"><b>0.55-0.66</b><span>oracle sign reliability ρ_sign (bar 0.70), 223-240 deviations per cell</span></div>
+  <div class="kv"><b>0 / 16</b><span>xTRUCE pair-strata screenable after stage 0</span></div>
+</div>
+
+<h2 style="border-top:none;margin-top:28px">Plain-language summary</h2>
+<div class="plain"><p>We run several automated network apps together on one simulated radio network: some switch
+equipment off to save energy, one tries to guarantee service for a protected group of users. Our question was whether
+running them together hurts the protected users, and whether a smart referee between the apps could undo that harm.
+On the E6-P network the harm is real at medium load: protected users see 72 % to 155 % more service failures than
+the best single app gives them, at the same energy saving. No simple fixed rule (ranking the apps, locking settings,
+or a published referee called QACM) removes any of it; they behave exactly like having no referee. A referee that can
+see the future does remove much of the harm, but only by breaking other service limits and saving more energy than
+asked, and its choices are mostly luck: on a rerun of the same moment with fresh randomness, its choice is better
+only about 55-66 % of the time. So the pre-registered screen says there is no room for a learned referee on this
+network. A second, independently built network (a re-implementation of the published xTRUCE setup) could not be
+screened at all, because two of its apps failed a basic check that each app, alone, improves the thing it is meant to
+improve.</p></div>
+
+<ol class="toc">
+  <li><a href="#q">Question, Gate A v2 logic, preregistration ledger</a></li>
+  <li><a href="#plant">E6-P plant, pairs, strata, arms</a></li>
+  <li><a href="#s0">Stage 0 (0a / 0b / 0c)</a></li>
+  <li><a href="#s1">Stage 1: loss and static arms</a></li>
+  <li><a href="#s2">Stage 2: the oracle</a></li>
+  <li><a href="#ph">Post-hoc diagnostics</a></li>
+  <li><a href="#x">xTRUCE plant and stage 0</a></li>
+  <li><a href="#cdd">Where the causal method stands</a></li>
+  <li><a href="#fwd">Strategy debate, forward paths, open decisions</a></li>
+  <li><a href="#repro">Reproduction</a></li>
+</ol>
+
+<figure>
+  <img src="fig1_gate_funnel.png" alt="Gate A v2 funnel for E6-P and xTRUCE">
+  <figcaption>Fig 1. Gate A v2 funnel. E6-P: 12 pair-strata; P2 drops at stage 0 (Coverage inert under the amended
+  M4); 3 of the remaining 8 pass criterion 1; none passes criterion 2 (oracle ineligible) and none would pass
+  criterion 4 (ρ_sign 0.547 / 0.607 / 0.658); stage 3 was not run. xTRUCE: all 16 pair-strata drop at stage 0.</figcaption>
+</figure>
+
+<!-- ============================================================ 1 -->
+<h2 id="q">1. The question and the Gate A v2 logic</h2>
+<p>E6 (the earlier plant) showed privileged one-slot oracle headroom that no learned model could rank: the learned
+ρ vs the oracle was ≈ 0, and at request level the sign of an arbitration effect was not predictable (sign AUC
+0.55-0.62, §8). The scouts then argued that any real edge for a learned O-RAN WG3 arbiter needs <em>indirect</em>,
+state-dependent conflicts scored at <em>matched energy</em>, because direct same-knob conflicts are resolved by static
+priority. E6-P was built to contain exactly that (energy saving versus a protected-slice guarantee), and Gate A v2
+asks, per (pair, stratum), four conjunctive questions before any learner is trained:</p>
+<ol>
+  <li><strong>c1 Loss.</strong> Accept-all (AA) is energy-matched, Λ = (V_AA − V_ref)/V_ref ≥ 0.15,
+  V_AA − V_ref ≥ 36 (1 % of protected UE-time), and the paired-seed bootstrap one-sided 90 % lower bound of
+  V_AA − V_ref is &gt; 0. V is PSVR (protected-floor violated UE-s per protected UE-hour); V_ref is the best single xApp.</li>
+  <li><strong>c2 Recoverable.</strong> R_or ≥ 0.50, where R = (V_AA − V_a)/(V_AA − V_ref) and R_or is the budgeted WG3
+  oracle's R if it is eligible (energy-matched, X = 0.90, and all four guardrails ≤ 1.10 × AA), else 0.</li>
+  <li><strong>c3 State-dependent headroom.</strong> R_or − R_static ≥ 0.10, with R_static the best eligible static
+  arm (subsets, priority orders, cell-priority lock, knob-lock, QACM, per-region hindsight static).</li>
+  <li><strong>c4 Oracle sign reliability.</strong> At each oracle deviation from AA, the plan and AA are re-scored on a
+  copy with the post-decision randomness redrawn; ρ_sign = share of deviations whose advantage sign is kept ≥ 0.70.
+  Added after the E6 rank diagnosis and before any E6-P outcome.</li>
+</ol>
+<p>Verdicts: PASS if some stratum meets 1-4; NOISE STOP if 1-3 hold but 4 fails everywhere; DEAD (no loss) if no
+stratum meets 1; DEAD (not recoverable) if every stratum meeting 1 fails 2; NO-EDGE STOP if 1-2 hold but 3 fails
+everywhere. The screen is a DEV screen: it can only kill a pair or pass it on to a separately preregistered
+confirmation (reserved seeds 150200-150399, untouched).</p>
+
+<h3>Preregistration ledger</h3>
+<div class="tw"><table>
+<thead><tr><th>commit</th><th class="l">time (NST, +05:45)</th><th class="l">what</th><th class="l">relevance / hashes</th></tr></thead>
+<tbody>
+<tr><td><code>88cf35b</code></td><td class="l">09-28 09:41</td><td class="l">EB contrast shrinkage, beats-zero check; pin numpy 2.4.2 / scipy 1.18.1</td><td class="l">Platform pin after the E6 finding that oracle panels diverge across platforms (libm, glibc vs UCRT).</td></tr>
+<tr><td><code>f23bafb</code></td><td class="l">09-28 09:57</td><td class="l">E6-P build: tx-power knob, protected slice, PowerES / Coverage / SliceGuarantee xApps</td><td class="l">Default-off, E6-scn-v1 bit-identical when disabled.</td></tr>
+<tr><td><code>2afbc1c</code></td><td class="l">09-28 09:57</td><td class="l">E6P_SPEC.md + E6P_SCREEN_PROTOCOL.md frozen; seeds 150000-150399 reserved</td><td class="l"><code>e6p_spec_commit</code> = 2afbc1c8…; spec sha256 5db7ef17…; registry 5ab935fe…</td></tr>
+<tr><td><code>e15f2d1</code></td><td class="l">09-28 10:50</td><td class="l">Screen arms, QACM mapping; <strong>amendment 8a (a)</strong>: M1(b) restricted to macros with non-zero occupancy; QACM fitted on E6 DEV seeds 20-23; oracle "half" = slew rule</td><td class="l">Before any protocol-seed run (found on a DEV smoke: 3/21 macros idle at the snapshot). Protocol sha 8acd424b… is stamped on stages 0a, 0b, 0c.</td></tr>
+<tr><td>runs</td><td class="l">09-28 16:17 / 17:33 / 23:44</td><td class="l">Stage 0a / 0b / 0c launched on Kaggle</td><td class="l">git e15f2d1, <code>e6_dirty</code> false</td></tr>
+<tr><td><code>2afd081</code></td><td class="l">09-28 23:58</td><td class="l"><strong>amendment 8a (b), M4</strong>: evaluate "each xApp alone improves its own KPI" only in strata whose freeze own-KPI is material (PSVR ≥ 36, low-SINR share ≥ 0.01, energy always)</td><td class="l"><strong>Outcome-informed, disclosed</strong>: made after stage-0b single-xApp vs freeze results on mechanism seeds (150020-150059) were seen; user decision ("ok change it"). No co-deployment, arbiter or screen-seed outcome existed. Protocol sha 9705653c… is stamped on stages 1 and 2.</td></tr>
+<tr><td>runs</td><td class="l">09-29 00:25 / 02:00</td><td class="l">Stage 1 (992 jobs, 16 shards on 4 kernels) / stage 2 (24 oracle episodes, 5 kernels)</td><td class="l">git 2afd081; verdict logged 06:30</td></tr>
+<tr><td><code>4dae03a</code></td><td class="l">09-29 00:52</td><td class="l">xTRUCE plant (numpy) + XTRUCE_SIM_SPEC.md, 19 tests</td><td class="l">Hedge built in parallel, before any E6-P verdict.</td></tr>
+<tr><td><code>c30f893</code></td><td class="l">09-29 02:27</td><td class="l">E6-P arbiter L0 infra: units, randomized π0 collection with propensities, CRN labels, IPS/SNIPS/DR (25 tests)</td><td class="l">Built in case a pair passed. Parked; never run on protocol seeds.</td></tr>
+<tr><td><code>f08747e</code></td><td class="l">09-29 06:39</td><td class="l">XTRUCE_SCREEN_PROTOCOL.md frozen (XTS-v1); seeds 190000-190399 and tags 7019/7020 registered</td><td class="l">doc sha256 2f86bf9d…, plant file hashes pinned in the driver. Contains two pre-freeze changes: V_ref switched to E6-P's best-single definition, and the oracle guardrail constraint (<strong>informed by the E6-P outcome, disclosed in its §10</strong>; no xTRUCE outcome seen). Stage 0 launched 06:41.</td></tr>
+</tbody></table></div>
+<div class="call amb"><span class="k">Amendment disclosure, in one place</span>
+<p>(1) M1(b) and the QACM/half implementation notes: before any protocol seed. (2) M4 material-strata rule: after
+single-xApp outcomes on mechanism seeds. Under the <em>literal</em> M4 rule, SliceGuarantee fails (it cannot improve
+PSVR at L10 where freeze PSVR is 10.8-13.4 and its minimum share never binds), which would have made P1 and P3 not
+screenable and ended the screen at stage 0. The amendment kept them in; it did not help them pass. (3) The xTRUCE
+oracle guardrail constraint is a lesson carried over from the E6-P result, disclosed before freeze. No value was
+changed after any co-deployment or oracle outcome.</p></div>
+
+<!-- ============================================================ 2 -->
+<h2 id="plant">2. E6-P plant, pairs, strata and arms</h2>
+<p>E6-P extends E6 (24 cells: 7 macro sites × 3 sectors + 3 picos; 300 UEs; 120 s warm-up + 600 s scored) with a
+per-macro Tx-power offset knob <code>ptx</code> (−9…+3 dB, 1 dB grid, EARTH energy model) and a protected eMBB slice
+(20 % of eMBB UEs, ≈ 11 % of all UEs) with a work-conserving minimum PRB share <code>prot_min</code> (0…0.5) and a
+2 Mb/s per-UE floor. Values come from TR 38.864, EARTH, TS 28.541, TR 26.925 and frozen E6 values, each tagged
+[S]/[I]/[A] in <code>E6P_SPEC.md</code>. Metric: PSVR; energy-matched iff E_freeze − E_a ≥ 0.90 (E_freeze − E_A-alone);
+guardrails vs AA: all-UE SVR, non-protected eMBB violated UE-s, LL violated UE-s, RLF, each ≤ 1.10×.</p>
+<div class="tw"><table>
+<thead><tr><th>pair</th><th class="l">xApps</th><th class="l">energy side A</th><th class="l">protection side</th><th class="l">conflict class</th></tr></thead>
+<tbody>
+<tr><td>P1 (primary)</td><td class="l">ES (carrier + pico sleep), SliceGuarantee</td><td class="l">ES</td><td class="l">SliceGuarantee</td><td class="l">indirect: capacity removed vs guaranteed share</td></tr>
+<tr><td>P2</td><td class="l">PowerES, Coverage</td><td class="l">PowerES</td><td class="l">Coverage</td><td class="l">direct (same <code>ptx</code>) + indirect; declared direct-conflict control</td></tr>
+<tr><td>P3</td><td class="l">ES, PowerES, SliceGuarantee</td><td class="l">ES + PowerES</td><td class="l">SliceGuarantee</td><td class="l">three-way indirect</td></tr>
+</tbody></table></div>
+<p><strong>Strata</strong> (4): scenario {base, surge} × load {L10, L40}; s0 base-L10, s1 base-L40, s2 surge-L10,
+s3 surge-L40. L is the TR 38.864 load (share of PRBs used, freeze arm, base). <strong>Seeds</strong>: load
+calibration 150000-150019; mechanism 150020-150059; timing 150060; screen 150100 + 10·stratum + j, j = 0..7
+(8 per stratum); reserved 150200-150399. <strong>Arms</strong>: (1) freeze; (2) each xApp alone; (3) accept-all;
+(4) other subsets; (5) per-knob priority, every order; (6) cell-priority lock (60 s lease), every order;
+(7) knob-lock; (8) QACM behind its wrapper; (9) per-region hindsight static (stage 3 only); (10) budgeted WG3 oracle
+(stage 2 only: D = 20 s, H = 90 s, n_glob 6, n_loc 2, modes accept / reject / half / lock + rollback, churn capped at
+AA's, true-tape lookahead, one-sided energy bound).</p>
+
+<!-- ============================================================ 3 -->
+<h2 id="s0">3. Stage 0: calibration, mechanisms, timing</h2>
+<h3>0a load calibration (freeze arm, base)</h3>
+<div class="tw"><table>
+<thead><tr><th>stratum</th><th>load_factor (frozen)</th><th>bisection iterations</th><th>fit mean L (150000-09)</th><th>check mean L (150010-19)</th><th>check range</th></tr></thead>
+<tbody>
+<tr><td>L10</td><td>0.7875</td><td>2</td><td>10.48 %</td><td>10.21 %</td><td>9.00-13.09 %</td></tr>
+<tr><td>L40</td><td>1.75547</td><td>6</td><td>40.48 %</td><td>39.90 %</td><td>33.38-50.23 %</td></tr>
+</tbody></table></div>
+<h3>0b mechanism checks (seeds 150020-150059)</h3>
+<ul>
+  <li><strong>M1 power step → SINR</strong>: PASS. (a), (c), (d) exact. (b) with the 8a(a) restriction: the share of
+  <em>loaded</em> macros whose neighbour-edge UEs move the right way is 1.00 on all 4 seeds (all macros incl. idle:
+  0.857 / 0.714 / 0.905 / 0.762).</li>
+  <li><strong>M2 work-conserving quota</strong>: PASS (a-e). <strong>M3 carrier off / pico sleep</strong>: PASS.
+  <strong>M5(b) bit-identity</strong>: PASS (720 s, no differing second).</li>
+  <li><strong>M6 graceful sleep</strong>: PASS, 0 RLFs within 2 s of a pico sleep among 316 eligible UEs (4 seeds).</li>
+  <li><strong>M4 own KPI vs freeze</strong>: table below. Under the amended rule all xApps pass except Coverage, which
+  acts but is never material (freeze low-SINR share 0.0002-0.0015, floor 0.01), so it is inert and <strong>P2 is not
+  screenable</strong>.</li>
+</ul>
+<div class="tw"><table>
+<thead><tr><th>pair:xApp</th><th class="l">own KPI</th><th>s0 base-L10</th><th>s1 base-L40</th><th>s2 surge-L10</th><th>s3 surge-L40</th><th>literal rule</th><th>amended (8a)</th></tr></thead>
+<tbody>
+<tr><td class=l>P1:ES</td><td class=l>energy (MJ)</td><td>14.15 → 10.17 (4/4)</td><td>17.39 → 16.10 (4/4)</td><td>14.18 → 10.21 (4/4)</td><td>17.30 → 15.62 (4/4)</td><td>pass</td><td class=yes>pass</td></tr>
+<tr><td class=l>P1:SliceGuarantee</td><td class=l>PSVR</td><td>13.4 → 13.4 (0/4) <span class=m>n/m</span></td><td>254.9 → 58.2 (4/4)</td><td>10.8 → 10.8 (1/4) <span class=m>n/m</span></td><td>383.7 → 124.9 (4/4)</td><td>fail</td><td class=yes>pass</td></tr>
+<tr><td class=l>P2:PowerES</td><td class=l>energy (MJ)</td><td>14.15 → 13.31 (4/4)</td><td>17.39 → 15.98 (4/4)</td><td>14.18 → 13.31 (4/4)</td><td>17.30 → 15.41 (4/4)</td><td>pass</td><td class=yes>pass</td></tr>
+<tr><td class=l>P2:Coverage</td><td class=l>low-SINR share</td><td>0.00022 → 0.00020 (3/4) <span class=m>n/m</span></td><td>0.00146 → 0.00138 (3/4) <span class=m>n/m</span></td><td>0.00024 → 0.00026 (1/4) <span class=m>n/m</span></td><td>0.00107 → 0.00142 (0/4) <span class=m>n/m</span></td><td>fail</td><td class=no>inert → not screenable</td></tr>
+<tr><td class=l>P3:ES</td><td class=l>energy (MJ)</td><td>14.15 → 10.17 (4/4)</td><td>17.39 → 16.10 (4/4)</td><td>14.18 → 10.21 (4/4)</td><td>17.30 → 15.62 (4/4)</td><td>pass</td><td class=yes>pass</td></tr>
+<tr><td class=l>P3:PowerES</td><td class=l>energy (MJ)</td><td>14.15 → 13.30 (4/4)</td><td>17.39 → 15.86 (4/4)</td><td>14.18 → 13.34 (4/4)</td><td>17.30 → 15.56 (4/4)</td><td>pass</td><td class=yes>pass</td></tr>
+<tr><td class=l>P3:SliceGuarantee</td><td class=l>PSVR</td><td>13.4 → 13.4 (0/4) <span class=m>n/m</span></td><td>254.9 → 57.7 (4/4)</td><td>10.8 → 11.0 (1/4) <span class=m>n/m</span></td><td>383.7 → 124.4 (4/4)</td><td>fail</td><td class=yes>pass</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Cells: freeze → xApp alone, pooled over 4 seeds
+(seeds improving). n/m = freeze KPI not material, stratum not evaluated under 8a. Energy in MJ scored, 4 seeds.</p>
+<h3>0c oracle timing (P1 base-L40, seed 150060, scores not recorded)</h3>
+<p>4 528 s per episode (121 s reference arms + 4 406 s oracle), 947 rollouts, 31 decision epochs, 24 deviations. The
+actual stage-2 episodes took 7 529-9 320 s each (mean 8 117 s; 24 episodes ≈ 54 CPU-h).</p>
+
+<!-- ============================================================ 4 -->
+<h2 id="s1">4. Stage 1: the loss exists, and no static arm touches it</h2>
+<p>992 jobs (P1 and P3 × 4 strata × 8 seeds × all arms, freeze shared; P2 skipped as not screenable), mean 62 s
+per job. Criterion 1 per pair-stratum:</p>
+<div class="tw"><table>
+<thead><tr><th>pair · stratum</th><th>A saves</th><th>AA retention</th><th>V_AA</th><th>V_ref (SG alone)</th><th>Λ</th><th>V_AA−V_ref</th><th>LB90</th><th>R_static</th><th class="l">best eligible static arm</th><th>c1</th></tr></thead>
+<tbody>
+<tr><td>P1 · s0 base-L10</td><td>28.6%</td><td>1.001</td><td>24.5</td><td>9.2</td><td>1.66</td><td>15.3</td><td>8.3</td><td>0.000</td><td class='l'>priority / knob-lock / QACM (= AA)</td><td class='no'>fail: V_AA−V_ref 15.3 &lt; 36</td></tr>
+<tr><td>P1 · s1 base-L40</td><td>8.2%</td><td>0.994</td><td>105.3</td><td>78.2</td><td>0.35</td><td>27.1</td><td>18.6</td><td>0.000</td><td class='l'>priority / knob-lock / QACM (= AA)</td><td class='no'>fail: V_AA−V_ref 27.1 &lt; 36</td></tr>
+<tr><td>P1 · s2 surge-L10</td><td>26.8%</td><td>1.000</td><td>20.3</td><td>14.0</td><td>0.45</td><td>6.3</td><td>3.7</td><td>0.000</td><td class='l'>priority / knob-lock / QACM (= AA)</td><td class='no'>fail: V_AA−V_ref 6.3 &lt; 36</td></tr>
+<tr><td>P1 · s3 surge-L40</td><td>9.4%</td><td>0.986</td><td>92.2</td><td>53.5</td><td>0.72</td><td>38.7</td><td>25.2</td><td>0.000</td><td class='l'>priority / knob-lock / QACM (= AA)</td><td class='yes'>PASS</td></tr>
+<tr><td>P3 · s0 base-L10</td><td>31.1%</td><td>0.998</td><td>32.9</td><td>9.2</td><td>2.58</td><td>23.7</td><td>17.3</td><td>0.362</td><td class='l'>only ES+SG</td><td class='no'>fail: V_AA−V_ref 23.7 &lt; 36</td></tr>
+<tr><td>P3 · s1 base-L40</td><td>13.3%</td><td>1.010</td><td>149.2</td><td>79.1</td><td>0.89</td><td>70.1</td><td>30.0</td><td>0.087</td><td class='l'>cell-lock ES>SG>PowerES</td><td class='yes'>PASS</td></tr>
+<tr><td>P3 · s2 surge-L10</td><td>32.0%</td><td>1.000</td><td>29.5</td><td>14.0</td><td>1.11</td><td>15.5</td><td>11.6</td><td>0.000</td><td class='l'>priority / knob-lock / QACM (= AA)</td><td class='no'>fail: V_AA−V_ref 15.5 &lt; 36</td></tr>
+<tr><td>P3 · s3 surge-L40</td><td>19.1%</td><td>0.987</td><td>135.8</td><td>53.2</td><td>1.55</td><td>82.5</td><td>55.9</td><td>0.008</td><td class='l'>QACM</td><td class='yes'>PASS</td></tr>
+</tbody></table></div>
+<p>Every cell is screenable (A saves 8.2-32.0 % of freeze energy), AA is energy-matched everywhere (retention
+0.986-1.010), Λ ≥ 0.34 and LB90 &gt; 0 everywhere. The five failing cells fail <strong>only</strong> on the 36-unit
+materiality floor: the loss is large in relative terms at L10 (Λ up to 2.58) but small in absolute terms. In every
+cell the reference is SliceGuarantee alone, which is never energy-matched (it saves nothing), so V_ref is a protection
+ceiling, not an attainable arm.</p>
+
+<figure>
+  <img src="fig2_stage1_arms.png" alt="Stage 1 PSVR per arm in the three c1 cells">
+  <figcaption>Fig 2. Pooled PSVR per arm in the three cells that pass c1. Blue bars (every per-knob priority order,
+  knob-lock, QACM) sit on the accept-all line. Hatched = ineligible. The only arms near V_ref drop an energy xApp and
+  lose the energy match.</figcaption>
+</figure>
+
+<div class="call"><span class="k">Static priority, knob-lock and QACM are accept-all here</span>
+<p>In all 8 cells, every per-knob priority order and the knob-lock give <strong>exactly</strong> AA's pooled V and
+AA's churn (e.g. 176.25, 386.6, 367, 511, 442 applied changes per episode). Each knob has exactly one writer (ES owns
+carrier and sleep, PowerES owns ptx, SliceGuarantee owns prot_min), so there is no same-knob contention for them to
+resolve; the loss is purely indirect. QACM also equals AA exactly in all four L10 cells;
+in the L40 cells it is within 0.7 V of AA for P3 (149.4 vs 149.2; 135.1 vs 135.8, R = 0.008, the P3 s3 R_static) and
+slightly worse for P1 (97.4 vs 92.2 at s3; 113.5 vs 105.3 at s1). The only static arm with R &gt; 0.01 in a c1 cell is
+a cell-priority lock (ES &gt; SG &gt; PowerES, P3 s1, R = 0.087).</p></div>
+
+<p><strong>Arm-level table for the three c1 cells</strong> (V / R / energy retention; <span class="m">E</span> = not
+energy-matched, <span class="m">G</span> = energy-matched but fails a guardrail; shaded V = identical to AA):</p>
+<div class="tw"><table>
+<thead><tr><th>grp</th><th class="l">arm</th><th colspan="3">P1 · surge-L40</th><th colspan="3">P3 · base-L40</th><th colspan="3">P3 · surge-L40</th></tr>
+<tr><th></th><th></th><th>V</th><th>R</th><th>ret</th><th>V</th><th>R</th><th>ret</th><th>V</th><th>R</th><th>ret</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class=l>freeze</td><td>249.9</td><td>-4.081</td><td>0.00 <span class=m>E</span></td><td>333.8</td><td>-2.632</td><td>0.00 <span class=m>E</span></td><td>249.9</td><td>-1.383</td><td>0.00 <span class=m>E</span></td></tr>
+<tr><td>2</td><td class=l>only ES</td><td>353.5</td><td>-6.762</td><td>1.00</td><td>442.6</td><td>-4.183</td><td>0.62 <span class=m>E</span></td><td>353.5</td><td>-2.638</td><td>0.49 <span class=m>E</span></td></tr>
+<tr><td>2</td><td class=l>only PowerES</td><td>—</td><td>—</td><td>—</td><td>603.5</td><td>-6.477</td><td>0.62 <span class=m>E</span></td><td>480.2</td><td>-4.173</td><td>0.56 <span class=m>E</span></td></tr>
+<tr><td>2</td><td class=l>only SG</td><td>53.5</td><td>1.000</td><td>0.00 <span class=m>E</span></td><td>79.1</td><td>1.000</td><td>-0.00 <span class=m>E</span></td><td>53.2</td><td>1.000</td><td>0.00 <span class=m>E</span></td></tr>
+<tr><td>3</td><td class=l>accept-all (AA)</td><td>92.2</td><td>0.000</td><td>0.99</td><td>149.2</td><td>0.000</td><td>1.01</td><td>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>4</td><td class=l>only ES+PowerES</td><td>—</td><td>—</td><td>—</td><td>657.0</td><td>-7.239</td><td>1.00</td><td>608.0</td><td>-5.722</td><td>1.00</td></tr>
+<tr><td>4</td><td class=l>only ES+SG</td><td>—</td><td>—</td><td>—</td><td>105.7</td><td>0.620</td><td>0.62 <span class=m>E</span></td><td>91.9</td><td>0.531</td><td>0.49 <span class=m>E</span></td></tr>
+<tr><td>4</td><td class=l>only PowerES+SG</td><td>—</td><td>—</td><td>—</td><td>105.2</td><td>0.628</td><td>0.61 <span class=m>E</span></td><td>87.4</td><td>0.586</td><td>0.56 <span class=m>E</span></td></tr>
+<tr><td>5</td><td class=l>priority ES>PowerES>SG</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>5</td><td class=l>priority ES>SG</td><td class=eq>92.2</td><td>0.000</td><td>0.99</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>5</td><td class=l>priority ES>SG>PowerES</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>5</td><td class=l>priority PowerES>ES>SG</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>5</td><td class=l>priority PowerES>SG>ES</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>5</td><td class=l>priority SG>ES</td><td class=eq>92.2</td><td>0.000</td><td>0.99</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>5</td><td class=l>priority SG>ES>PowerES</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>5</td><td class=l>priority SG>PowerES>ES</td><td>—</td><td>—</td><td>—</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>6</td><td class=l>cell-lock ES>PowerES>SG</td><td>—</td><td>—</td><td>—</td><td>148.7</td><td>0.008</td><td>1.00</td><td>143.5</td><td>-0.093</td><td>0.95</td></tr>
+<tr><td>6</td><td class=l>cell-lock ES>SG</td><td>99.9</td><td>-0.200</td><td>0.99</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>6</td><td class=l>cell-lock ES>SG>PowerES</td><td>—</td><td>—</td><td>—</td><td>143.1</td><td>0.087</td><td>1.07</td><td>131.4</td><td>0.053</td><td>0.92 <span class=m>G</span></td></tr>
+<tr><td>6</td><td class=l>cell-lock PowerES>ES>SG</td><td>—</td><td>—</td><td>—</td><td>187.0</td><td>-0.539</td><td>0.97 <span class=m>G</span></td><td>177.6</td><td>-0.507</td><td>0.98</td></tr>
+<tr><td>6</td><td class=l>cell-lock PowerES>SG>ES</td><td>—</td><td>—</td><td>—</td><td>168.6</td><td>-0.276</td><td>1.14 <span class=m>G</span></td><td>179.7</td><td>-0.532</td><td>1.10 <span class=m>G</span></td></tr>
+<tr><td>6</td><td class=l>cell-lock SG>ES</td><td>114.1</td><td>-0.568</td><td>1.45 <span class=m>G</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>6</td><td class=l>cell-lock SG>ES>PowerES</td><td>—</td><td>—</td><td>—</td><td>144.9</td><td>0.062</td><td>1.26 <span class=m>G</span></td><td>149.1</td><td>-0.162</td><td>1.12 <span class=m>G</span></td></tr>
+<tr><td>6</td><td class=l>cell-lock SG>PowerES>ES</td><td>—</td><td>—</td><td>—</td><td>190.8</td><td>-0.593</td><td>1.18 <span class=m>G</span></td><td>125.9</td><td>0.119</td><td>1.22 <span class=m>G</span></td></tr>
+<tr><td>7</td><td class=l>knob-lock</td><td class=eq>92.2</td><td>0.000</td><td>0.99</td><td class=eq>149.2</td><td>0.000</td><td>1.01</td><td class=eq>135.8</td><td>0.000</td><td>0.99</td></tr>
+<tr><td>8</td><td class=l>QACM</td><td>97.4</td><td>-0.137</td><td>1.01</td><td>149.4</td><td>-0.002</td><td>1.01</td><td>135.1</td><td>0.008</td><td>0.98</td></tr>
+<tr><td>10</td><td class=l>oracle (stage 2)</td><td>77.3</td><td>0.383</td><td>1.14 <span class=m>G</span></td><td>87.5</td><td>0.881</td><td>1.36 <span class=m>G</span></td><td>81.8</td><td>0.654</td><td>1.23 <span class=m>G</span></td></tr>
+</tbody></table></div>
+<p>The one static move that recovers a lot is to not co-deploy one of the energy xApps: in P3 L40, "only ES+SG"
+gives R = 0.620 / 0.531 and "only PowerES+SG" R = 0.628 / 0.586 (base / surge), but at energy retention 0.49-0.62,
+far below 0.90. Nobody in the literature reports this non-energy-matched option as a baseline (debate, C3).</p>
+
+<figure>
+  <img src="fig3_recovery_vs_energy.png" alt="Recovery vs energy retention per arm">
+  <figcaption>Fig 3. Recovery R against energy retention. The eligible region is right of 0.90 with a filled marker.
+  Every filled marker sits at R ≤ 0.09. High-R points are either left of 0.90 (dropping an energy xApp) or the oracle,
+  which is right of 1.1 (it saves more energy than asked) and hollow (guardrail breach).</figcaption>
+</figure>
+
+<!-- ============================================================ 5 -->
+<h2 id="s2">5. Stage 2: the oracle recovers, but only by breaking the rules</h2>
+<p>24 oracle episodes (3 cells × 8 seeds), ≈ 955-959 rollouts per episode.</p>
+<div class="tw"><table>
+<thead><tr><th>cell</th><th>raw R</th><th>energy retention</th><th>SVR ÷ AA</th><th>non-prot. eMBB ÷ AA</th><th>LL viol ÷ AA</th><th>RLF ÷ AA</th><th>eligible</th><th>R_or</th><th>ρ_sign</th><th>n dev.</th><th>verdict (c2 / c4)</th></tr></thead>
+<tbody>
+<tr><td>P1 · surge-L40</td><td>0.383</td><td>1.138</td><td>1.035</td><td>1.044</td><td class="no">1.107</td><td>1.000</td><td class="no">no</td><td>0</td><td class="no">0.547</td><td>223</td><td class="no">fail / fail</td></tr>
+<tr><td>P3 · base-L40</td><td>0.881</td><td>1.361</td><td>0.954</td><td>0.971</td><td>0.953</td><td class="no">1.221</td><td class="no">no</td><td>0</td><td class="no">0.607</td><td>234</td><td class="no">fail / fail</td></tr>
+<tr><td>P3 · surge-L40</td><td>0.654</td><td>1.230</td><td>1.028</td><td>1.052</td><td>0.992</td><td class="no">1.392</td><td class="no">no</td><td>0</td><td class="no">0.658</td><td>240</td><td class="no">fail / fail</td></tr>
+</tbody></table></div>
+<p><strong>Verdict: P1 DEAD (not recoverable), P3 DEAD (not recoverable).</strong> c2 fails in every c1 cell because
+R_or = 0 (ineligible), so c3 and stage 3 are moot. c4 would fail in every cell even if the oracle were eligible. Note
+that P1's LL breach is marginal (1.107 vs 1.10); even with it waived, raw R = 0.383 &lt; 0.50 and ρ_sign = 0.547.</p>
+
+<figure>
+  <img src="fig4_oracle_guardrails.png" alt="Oracle guardrail ratios vs 1.10">
+  <figcaption>Fig 4. Oracle guardrail ratios against accept-all, pooled over 8 seeds. One guardrail crosses 1.10 in
+  each cell (LL violations in P1; RLF in both P3 cells).</figcaption>
+</figure>
+
+<div class="call amb"><span class="k">Why the oracle breaks guardrails (design, not tuning)</span>
+<p>The frozen oracle objective is lexicographic (protected violated UE-s, then all-UE violated UE-s). Its admissibility
+test sees only energy, and only one-sided (energy ≤ bound; <code>e6p_screen.py</code> <code>Oracle.roll</code>, lines
+404-423). RLF and LL are invisible to it and over-saving energy is allowed, so it over-sleeps (retention 1.14-1.36).
+The oracle's rollback is inert on ES because the rollback window (60 s) is shorter than the carrier/sleep dwell
+(120 s). In P3 surge-L40, accept-all itself was energy-inadmissible at 5 of 240 deviations, and one deviation had a
+negative true-tape sign (a worse but admissible plan). None of this was amended after the outcome.</p></div>
+
+<!-- ============================================================ 6 -->
+<h2 id="ph">6. <span class="ph">POST HOC</span>Diagnostics on the oracle's deviations</h2>
+<p>None of these quantities is a protocol criterion, and none can become one for E6P-v1. They are recomputed here
+from the per-deviation records (<code>deviations</code> in <code>e6p-s2/all.jsonl</code>: protected and all-UE violated
+UE-s of AA and of the chosen plan, on the true tape and on the redrawn copy). Advantage = AA − plan in protected
+violated UE-s over the 90 s rollout (positive = plan better).</p>
+<div class="tw"><table>
+<thead><tr><th>cell</th><th>corr(true, redrawn)</th><th>Σ true adv.</th><th>Σ redrawn adv.</th><th>kept share (Σ redrawn / Σ true)</th><th>seed-bootstrap 5 % of Σ redrawn</th><th>|true|-weighted sign retention</th><th>raw R</th><th>de-noised R = raw R × kept share</th><th>implied μ/σ</th></tr></thead>
+<tbody>
+<tr><td>P1 · surge-L40</td><td>0.658</td><td>3107</td><td>1490</td><td>0.480</td><td>−317</td><td>0.828</td><td>0.383</td><td class="no">0.184</td><td>0.39</td></tr>
+<tr><td>P3 · base-L40</td><td>0.257</td><td>5149</td><td>1129</td><td>0.219</td><td>+395</td><td>0.680</td><td>0.881</td><td class="no">0.193</td><td>0.62</td></tr>
+<tr><td>P3 · surge-L40</td><td>0.734</td><td>7053</td><td>4112</td><td>0.583</td><td>+1294</td><td>0.850</td><td>0.654</td><td class="no">0.381</td><td>0.78</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Bootstrap: 10 000 resamples of the 8 seeds, RNG seed
+20260929 (post hoc, not a protocol stream). Weighted retention: Σ|true adv.|·1[lexicographic sign kept] / Σ|true adv.|.
+Implied μ/σ: invert ρ = p² + (1−p)², p = Φ(μ/σ) (a Gaussian model of the per-deviation advantage).</p>
+
+<figure>
+  <img src="fig5_true_vs_redraw.png" alt="True-tape vs redrawn advantage per deviation">
+  <figcaption>Fig 5. Each point is one oracle deviation. Almost all have positive true-tape advantage by
+  construction (the oracle picked them on that tape). On a redrawn future a large share falls below zero (red,
+  hollow). The dotted line is y = x; mass below it is the winner's curse of choosing the best of ~29 single-tape
+  rollouts.</figcaption>
+</figure>
+
+<ul>
+  <li><strong>Some expected advantage survives.</strong> The summed redrawn advantage is positive in all three cells,
+  and its seed-bootstrap 5 % point is above zero for both P3 cells (not for P1). So the oracle is not pure noise.</li>
+  <li><strong>But most of it does not.</strong> Only 22-58 % of the summed true-tape advantage reappears on a redraw.
+  Scaling raw R by that share gives <strong>0.18 / 0.19 / 0.38</strong>, all under the 0.50 bar of c2, before any
+  guardrail constraint costs anything. A guardrail-respecting oracle can only do worse on the same tape.</li>
+  <li><strong>Large advantages are more stable than small ones</strong> in P1 and P3 surge (weighted retention 0.83,
+  0.85 vs unweighted 0.55, 0.66), much less in P3 base (0.68 vs 0.61; correlation only 0.26).</li>
+</ul>
+<div class="call"><span class="k">Cross-check against the debate file</span>
+<p>Agent B's numbers in <code>DEBATE_2026-09-29.md</code> reproduce for the correlations (0.66 / 0.26 / 0.73), the
+summed redrawn advantage (+1490 / +1129 / +4112), the kept shares (48 / 22 / 58 %) and the de-noised R (0.18 / 0.19 /
+0.38). Its bootstrap lower bounds (−320 / +396 / +1256) differ slightly from mine (−317 / +395 / +1294), as expected
+from a different resampling stream. Its |advantage|-weighted sign retention (0.75 / 0.84 / 0.68) does <strong>not</strong>
+reproduce under the definition above (0.83 / 0.68 / 0.85); its weighting was not stated, and the pattern looks like a
+different weight or a permuted cell order. Agent A's implied μ/σ (0.41 / 0.59 / 0.78) is close to the exact inversion
+(0.39 / 0.62 / 0.78).</p></div>
+
+<!-- ============================================================ 7 -->
+<h2 id="x">7. xTRUCE: an independent plant, and why it cannot be screened (yet)</h2>
+<h3>Plant build (commit 4dae03a)</h3>
+<p>A pure-numpy re-implementation of the plant in Xia et al., "xTRUCE: A Provably Safe Arbiter for Multi-xApp Conflict
+Mitigation in Agentic O-RAN", arXiv:2608.28532v2: 4 cells / 20 UEs, 500 m ISD, 12 × 360 kHz RBs, TR 36.814 UMa path
+loss with 8 dB shadowing, AR(1) Rayleigh fading ρ = 0.349, 6 Mb/s exponential arrivals, 1 s epochs, 10/50/2 W power
+parameters, 3 protected UEs with a 2 Mb/s floor. About 2.3-2.9 k epochs/s. The authors' code is not public.</p>
+<p><strong>Provenance</strong> (<code>XTRUCE_SIM_SPEC.md</code>): 32 values stated in the paper [P]; 24 field values
+assumed [A] (7 from named 3GPP/ITU sources, 1 from TR 38.864, 2 inherited from E6-P, 13 with no source, and
+<code>qos_margin</code> = 0.30 marked [A*] because it was chosen on seeds 0-2 with outcomes visible); plus 12
+model-level assumptions (layout, UE drop, xApp rules, hallucination model, …).</p>
+<div class="tw"><table>
+<thead><tr><th class="l">our earlier note</th><th class="l">what the paper says</th></tr></thead>
+<tbody>
+<tr><td class="l">"3GPP UMa path loss" read as TR 38.901</td><td class="l">Reference [38] is TR 36.814 V9.0.0; implemented as Table B.1.2.1-1 UMa.</td></tr>
+<tr><td class="l">xApps command RB share / power / sleep / association</td><td class="l">Those are the arbiter's action variables. xApps post KPI <em>targets</em>; the arbiter maps targets to actions. Our knob-level request interface is an adaptation.</td></tr>
+<tr><td class="l">"65-92 %" violation</td><td class="l">That is the Clipping benchmark's e1 violation ratio across hallucination levels (Direct 30-86 %, xTRUCE 0 %).</td></tr>
+<tr><td class="l">CVXPY static arbiter as baseline</td><td class="l">CVXPY is xTRUCE's own solver. The baselines are Direct and Clipping; there is no static priority baseline.</td></tr>
+<tr><td class="l">direct / indirect conflict scenarios</td><td class="l">The paper cites the taxonomy but defines no such scenarios; its experiments are hallucination, overload, renegotiation and scaling sweeps.</td></tr>
+</tbody></table></div>
+<p>Sanity run (seeds 0-2, disclosed, not screen seeds): at 6 Mb/s accept-all (126 protected violated UE-s) lost 35 %
+versus ES + QoS (93), both energy-matched; at 6 Mb/s cells never sleep.</p>
+
+<h3>Protocol XTS-v1 (frozen f08747e)</h3>
+<p>Same Gate A v2 criteria and thresholds as E6-P (36 per protected UE-hour = 18 violated UE-s per seed-episode).
+Pairs X1 (QoS, ES), X2 (+IC), X3 (+LB), X4 (all four; primary, the paper's deployment). Strata L6/L1 (6 or 1 Mb/s)
+× h0/h50 (hallucination 0 or 0.5). N = 40 screen seeds per stratum from 190000 + 50·stratum + j after the paper's
+floors-reachable seed screen; mechanism seeds j = 44-48; reserved 190200-190399. Guardrails G1 non-protected
+throughput ≥ 0.90 × AA, G2 change-limit epochs ≤ 1.10 × AA + 1 %. Oracle D = 10, H = 40, 29 rollouts per decision,
+starting at t = 0, with the guardrail admissibility constraint. Estimated full cost 4-17 CPU-h.</p>
+
+<h3>Stage 0 results</h3>
+<ul>
+  <li><strong>M1, M2, M3, M5, M8</strong> (unit-level, seed 190044): all PASS.</li>
+  <li><strong>M6 (L1 is a sleep regime)</strong>: PASS. ES-alone sleep cell-seconds per seed: L6-h0 0 (all 5), L6-h50
+  230-270, L1-h0 910-1200, L1-h50 960-1030.</li>
+  <li><strong>M7 conflict incidence</strong> (reported only): mean share of scored epochs with a same-cell multi-xApp
+  request group ranges 0.045 (X4, L1-h0) to 0.324 (X2, L1-h50).</li>
+  <li><strong>0c oracle timing</strong> (X4, 190199): 82 s per episode, 1 953 rollouts, 63 decisions, 63 deviations.</li>
+  <li><strong>M4 each xApp alone improves its own KPI (≥ 4 of 5 seeds, pooled improves)</strong>: FAIL for QoS and LB.</li>
+</ul>
+<div class="tw"><table>
+<thead><tr><th>xApp</th><th class="l">own KPI</th><th>L6-h0</th><th>L6-h50</th><th>L1-h0</th><th>L1-h50</th><th>M4</th></tr></thead>
+<tbody>
+<tr><td class=l>QoS</td><td class=l>protected V</td><td>1829 → 370 (5/5)</td><td class=no>984 → 816 (2/5)</td><td>1418 → 190 (4/5)</td><td>1445 → 864 (4/5)</td><td class=no>FAIL</td></tr>
+<tr><td class=l>ES</td><td class=l>energy, 5 seeds (MJ)</td><td>0.720 → 0.636 (5/5)</td><td>0.720 → 0.556 (5/5)</td><td>0.720 → 0.350 (5/5)</td><td>0.720 → 0.366 (5/5)</td><td class=yes>pass</td></tr>
+<tr><td class=l>IC</td><td class=l>caused interference (W)</td><td>2.61e-08 → 1.64e-09 (5/5)</td><td>9.02e-09 → 4.76e-10 (5/5)</td><td>4.29e-08 → 2.58e-09 (5/5)</td><td>1.93e-09 → 1.22e-10 (5/5)</td><td class=yes>pass</td></tr>
+<tr><td class=l>LB</td><td class=l>mean max demand load</td><td class=no>3.739 → 3.901 (1/5)</td><td class=no>3.773 → 4.006 (0/5)</td><td class=no>0.809 → 0.752 (3/5)</td><td>0.621 → 0.621 (3/5) <span class=m>n/m</span></td><td class=no>FAIL</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Freeze → xApp alone, pooled over 5 mechanism seeds
+(seeds improving). Red = stratum fails. n/m = not material (LB freeze max load ≤ 0.80).</p>
+<figure>
+  <img src="fig6_xtruce_m4.png" alt="xTRUCE M4 own KPI per xApp and stratum">
+  <figcaption>Fig 6. xTRUCE M4. QoS improves its KPI a lot in three strata but only on 2 of 5 seeds at L6-h50 (pooled
+  984 → 816). LB makes its own KPI worse at L6 (1/5 and 0/5 seeds) and improves on only 3/5 seeds at L1-h0.</figcaption>
+</figure>
+<p><strong>Verdict: NOT SCREENABLE under XTS-v1.</strong> QoS is in every pair, so X1-X4 are all excluded. Changing any
+value means XTS-v2 with fresh seeds. The natural XTS-v2 (evaluate M4 only at h0, where a hallucinating xApp is not
+<em>meant</em> to be reliable) would let QoS pass (5/5 and 4/5) but LB would still fail at L6-h0 (1/5), so X1 and X2
+would be screened and X3, X4 would not. That change is outcome-informed and was not made without the user. Caveat:
+the xApp rules are ours (unpublished in the paper), so any xTRUCE-plant outcome has limited evidential weight against
+the published arbiter. The raw stage-0 file also contains accept-all episodes of each pair on the mechanism seeds
+(used for M7 only); no criterion quantity was computed from them.</p>
+
+<!-- ============================================================ 8 -->
+<h2 id="cdd">8. Where the causal method stands</h2>
+<ul>
+  <li><strong>E6: tested, failed.</strong> The learned policy-effect ranker had within-slot ρ vs the oracle of 0.04 /
+  0.02 / 0.01 (all / topology / none); even with noise-free paired oracle labels, context features gave CV R² ≤ 0 and
+  ρ 0.076; oracle effect reliability across platforms was 0.56 (<code>RANK_DIAG_RESULT.md</code>). At request level,
+  <em>whether</em> a reject matters was predictable (AUC 0.97 at H = 10) but its <em>sign</em> was not (best sign AUC
+  0.552 / 0.617 / 0.575 at H = 10 / 30 / 90, all under 0.70; <code>PILOT_RESULT.md</code>).</li>
+  <li><strong>E6-P and xTRUCE: the learned arbiter was not built.</strong> Gate A v2 asks first whether <em>any</em>
+  arbiter could win, using a privileged oracle as the upper reference. On E6-P the answer is no; on xTRUCE the
+  question could not be asked. The structural-world-model arbiter design (<code>ARBITER_DESIGN.md</code>) and its L0
+  infrastructure (c30f893) are parked, not tested.</li>
+  <li><strong>The oracle's noise ceiling bounds any learned model.</strong> A deployable arbiter decides from the
+  present state and must do well in expectation over futures it cannot see. The oracle's choices keep their sign on a
+  redrawn future only 55-66 % of the time, and roughly 20-60 % of its summed advantage survives a redraw. A learned
+  model trained to imitate or predict those choices inherits at most that signal, and a model that learns the
+  expectation perfectly is bounded near the de-noised R (0.18-0.38, post hoc), below the 0.50 bar. Nothing in this
+  screen was a test of causal discovery itself.</li>
+</ul>
+
+<!-- ============================================================ 9 -->
+<h2 id="fwd">9. The strategy debate and the forward paths</h2>
+<p>Three read-only agents argued fixed positions (<code>DEBATE_2026-09-29.md</code>):</p>
+<div class="three">
+  <div class="kv"><div class="tag acc">A</div><b style="font-size:1.02rem">Noise is fundamental: go slow-timescale</b><span>Per regime (load × surge),
+  pick a continuous xApp envelope (activity, PowerES max step, ES threshold / dwell, SG min share) from randomized
+  regime-level interventions. Pooling ~24 deviations lifts μ/σ to ≈ 2.9. Kill if no eligible envelope reaches R ≥
+  0.35. Counter: at regime scale a DEV-tuned static envelope is near-optimal by construction ("PACIFISTA with better
+  knobs"), and no eligible envelope is yet shown to exist.</span></div>
+  <div class="kv"><div class="tag amb">B</div><b style="font-size:1.02rem">Flawed oracle: run E6-P v2</b><span>Guardrail-constrained, two-sided-energy oracle; O_tape
+  as a kill gate (~36 CPU-h) and O_exp selecting on the mean of K = 4 redrawn futures (~121 CPU-h); ≈ 170 CPU-h total,
+  fresh seeds, v1 published as is. Counter, in B's own numbers: de-noised R 0.18 / 0.19 / 0.38 &lt; 0.50; every change
+  is chosen after v1 failed; its proposed seed block clashes with the arbiter block.</span></div>
+  <div class="kv"><div class="tag">C</div><b style="font-size:1.02rem">The negatives are the contribution</b><span>One writer per knob ⇒ priority /
+  lock / QACM = AA; the oracle's headroom is mostly noise plus guardrail breaking; published gains use the wrong
+  baseline; Gate A v2 with ρ_sign is a transferable screen. Methods/benchmark paper (TNSM-style; arXiv now). Counter:
+  self-built plants, self-chosen oracle objective, xTRUCE never actually tested; likely a lower-tier venue without a
+  guardrail-aware oracle.</span></div>
+</div>
+<p><strong>Recommendation in the morning brief:</strong> C now (almost every table derives from runs on disk);
+optionally B's cheap falsifier only (O_tape, guardrail-constrained, fresh seeds, ≈ 36 CPU-h, preregistered as v2);
+treat A as the only remaining edge hypothesis and first check cheaply whether any eligible static envelope exists; do
+not build the learned per-decision arbiter.</p>
+<h3>Open decisions (user only)</h3>
+<ol type="a">
+  <li>Write XTS-v2 (M4 on h0 strata only; screens X1 and X2), &lt; 5 CPU-h.</li>
+  <li>E6-P v2: O_tape only (~36 CPU-h) or full (~170 CPU-h), and which fresh seed block (not 160000-179999).</li>
+  <li>Pivot: A (regime envelope), C (benchmark / negative-result paper), or both in sequence.</li>
+  <li>How to reconcile the Discover journal draft, whose thesis ("causal discovery-driven model-based planning")
+  these results contradict; never place the E6-P tables in both papers.</li>
+  <li>Freezes still pending from before: the arbiter protocol (π0, thresholds, β, seed block 160000-179999, tags
+  6612-6615), and any confirmatory run on 150200-150399.</li>
+</ol>
+<p style="color:var(--soft);font-size:.88rem">Later on 2026-09-29, after the morning brief, an E6-P v2 O_tape
+protocol file appeared in <code>docs/benchmark/E6P_V2_OTAPE_PROTOCOL.md</code> (untracked in git at the time of this
+report). It is outside the scope of this overnight record.</p>
+
+<!-- ============================================================ 10 -->
+<h2 id="repro">10. Reproduction</h2>
+<p><strong>Figures and every number in this report</strong> (local, seconds, reads raw files only):</p>
+<pre><code>PYTHONPATH=. .venv/Scripts/python.exe reports/2026-09-29-e6p-screen-xtruce-negative/make_figs.py</code></pre>
+<p><strong>Driver summaries</strong> (cross-check; never pass <code>--write-state</code> when re-summarising):</p>
+<pre><code>R=scratchpad/e6_dev/runs
+PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_screen.py summary \
+  --in $R/e6p-s0b/all.jsonl,$R/e6p-s0c/all.jsonl,$R/e6p-s1/all.jsonl,$R/e6p-s2/all.jsonl --json OUT.json
+PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/xtruce_screen.py summary \
+  --in $R/xts-s0/all.jsonl,$R/xts-s0c/all.jsonl</code></pre>
+<p>Both agree with <code>make_figs.py</code> on every verdict, V, Λ, LB90, R, retention and ρ_sign reported here.</p>
+<p><strong>Re-running the screens</strong> (cloud only, per stage, each needs the user's go):</p>
+<pre><code>python scratchpad/e6_dev/e6p_screen.py run --stage {0a,0b,0c,1,2,3} --part i/k --out FILE.jsonl
+python scratchpad/e6_dev/xtruce_screen.py run --stage {0,0c,1,1x,2,3} --part i/k --out FILE.jsonl
+# via cloud.py the per-stage wrappers e6p_stage&lt;S&gt;.py / xtruce_stage&lt;S&gt;.py are used</code></pre>
+<ul>
+  <li><strong>Seeds.</strong> E6-P: 150000-150019 calibration, 150020-150059 mechanism, 150060 timing, 150100-150137
+  screen, 150200-150399 reserved (untouched). Bootstrap RNG [6611, pair_idx, stratum]. xTRUCE: 190000-190399
+  (mechanism j 44-48, timing 190199, reserved 190200-190399), bootstrap tag 7019, oracle tag 7020.</li>
+  <li><strong>Code.</strong> E6-P stages 0a-0c at e15f2d1; stages 1-2 at 2afd081 (<code>e6_dirty</code> false).
+  xTRUCE stage 0 at f08747e. Screen drivers live in <code>scratchpad/e6_dev/</code> (untracked); the frozen docs and
+  plant are committed.</li>
+  <li><strong>Numeric platform caveat.</strong> Oracle and episode trajectories are not bit-reproducible across
+  platforms: glibc and Windows UCRT libm differ in the last bit and trajectories diverge (E6: cross-platform effect
+  reliability 0.56). All protocol runs here are Kaggle Linux (glibc 2.35, numpy 2.4.2, scipy 1.18.1, AVX2/FMA3), and
+  stage 0a recorded <code>fp_match</code> False against the local pin. Kaggle and Colab (both Linux) may be pooled
+  within one comparison; <strong>never run protocol seeds on local Windows or mix it into a comparison</strong>.</li>
+</ul>
+
+<div class="foot">
+  Sources: <code>scratchpad/e6_dev/decision/{MORNING_BRIEF_2,DEBATE_2026-09-29,ARBITER_DESIGN}.md</code> ·
+  <code>.tmp/PLAN.md</code> (Overnight log 2026-09-29) · <code>docs/benchmark/{E6P_SPEC,E6P_SCREEN_PROTOCOL,XTRUCE_SIM_SPEC,XTRUCE_SCREEN_PROTOCOL}.md</code> ·
+  raw runs <code>scratchpad/e6_dev/runs/{e6p-s0a,e6p-s0b,e6p-s0c,e6p-s1,e6p-s2,xts-s0,xts-s0c}/all.jsonl</code> ·
+  <code>scratchpad/decision_stack/RANK_DIAG_RESULT.md</code>, <code>scratchpad/decision_stack/req_pilot/PILOT_RESULT.md</code> ·
+  commits 88cf35b, f23bafb, 2afbc1c, e15f2d1, 2afd081, 4dae03a, c30f893, f08747e.
+  Figures and <code>figures_data.json</code> are regenerated live from the raw runs by <code>make_figs.py</code>.
+</div>
+
+</div>
+</body>
+</html>
