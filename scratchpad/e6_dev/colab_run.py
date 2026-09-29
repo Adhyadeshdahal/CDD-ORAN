@@ -11,6 +11,27 @@
   .venv/Scripts/python.exe scratchpad/e6_dev/colab_run.py config NAME [auto_resume=0|1] [max_resumes=N]
   .venv/Scripts/python.exe scratchpad/e6_dev/colab_run.py smoke NAME [SCRIPT=e6p_v2_stage2.py] [MINUTES=8]
   .venv/Scripts/python.exe scratchpad/e6_dev/colab_run.py probe NAME [NS=1,4,8,12,16,24]   # CPU scaling only
+  .venv/Scripts/python.exe scratchpad/e6_dev/colab_run.py job NAME --paths P1 P2 ... --cmd "SHELL CMD" [--out-dir DIR]
+                     [--no-schedule] [--every MIN=10] [--threads N=cgroup quota] [--pins numpy,scipy,...]
+                     [--imports mod1,mod2,...] [--force]
+
+ONE-SHOT JOBS (2026-09-29; for analysis runs too heavy for the laptop). `job` zips the given repo-relative paths (files,
+dirs -- __pycache__ skipped -- or globs; + JOB_MANIFEST.json: git head, dirty status, per-file sha256, local versions of
+the --pins packages) into a temp zip, opens a NEW session NAME, unpacks it to /content/e6run/b (the repo root), pip-pins
+every --pins package (default JOB_PINS) whose version differs from the local .venv (torch from the CPU wheel index),
+re-reads the versions in a fresh process, import-checks --imports (a failed import stops the runtime and aborts: e.g.
+a missing shap would silently switch baselines_disc to its fallback) and writes startup.json (versions before / after,
+pip log, cpu quota, threads, env). Then `bash job.sh` (= set -o pipefail + CMD) runs under nohup with cwd = repo root,
+PYTHONPATH=., `python` = the pinned interpreter, OMP/OPENBLAS/MKL/NUMEXPR/NUMBA threads = --threads (default: the cgroup
+CPU quota, 4 on the TPU v5e-1 VM: 24 visible vCPUs would oversubscribe it), stdout+stderr -> job.log; when it returns,
+bash `times` -> times.txt (children user / sys CPU) and the exit code -> exit_code (written atomically). --out-dir DIR
+(repo-relative) is created before the run. Everything is recorded in runs/NAME/colab.json ("kind": "job").
+  tick (same scheduled task as launch): keep-alive ping + one kernel exec (job alive?, exit code, log tail, session CPU /
+        RSS) that packs job.log + the out dir + startup/job/times files; downloaded to runs/NAME/ (out dir mirrored at
+        runs/NAME/DIR). exit_code present (or the job died without one) -> final pull, stop runtime, verify 0
+        assignments, unschedule. Session gone -> NOT resumable: logged "job-lost", colab.json "lost_utc", unscheduled,
+        never relaunched (re-run `job` under a new NAME). 3 consecutive failed execs -> stop runtime, lost.
+  status / pull / stop NAME work for jobs (status = the tick's exec without download).
 
 UNATTENDED RUNS (2026-09-29, after run e6p-v2-s2c was lost: its laptop poller was OOM-killed, the idle runtime was
 reclaimed, nothing had been pulled). `launch` registers a Windows Task Scheduler task "CDD-ORAN-colab-NAME" (current
@@ -556,6 +577,8 @@ def launch(name, script, P, parts=None, smoke=False, timing=False, probe=(), reu
 
 
 def status(name, quiet=False):
+    if _is_job(name):
+        return job_status(name, quiet)
     st = remote(name, _fill(STATUS, W=W), timeout=300, tag="STATUS")
     if not quiet:
         print(json.dumps({k: st[k] for k in ("script", "P", "n_parts", "finished", "alive", "failed", "jobs_done",
@@ -682,6 +705,8 @@ def _download_merge(name, meta):
 
 def pull(name):
     """Incremental pull (same as a tick's pull, without keep-alive / finish / resume logic)."""
+    if _is_job(name):
+        return job_pull(name)
     meta = load_meta(name)
     st = remote(name, _fill(TICKR, W=W, PARTS=meta["parts"]), timeout=600, tag="TICK")
     res = _download_merge(name, meta)
@@ -787,10 +812,13 @@ def tick(name):
             tick_log(name, "skip", {"reason": "another tick/resume holds runs/NAME/tick.lock"})
             return
         meta = load_meta(name)
-        if meta.get("finished_utc") or meta.get("gave_up_utc"):
-            tick_log(name, "noop", {"finished": meta.get("finished_utc"), "gave_up": meta.get("gave_up_utc")})
+        if meta.get("finished_utc") or meta.get("gave_up_utc") or meta.get("lost_utc") or meta.get("failed_utc"):
+            tick_log(name, "noop", {k: meta.get(k + "_utc") for k in ("finished", "gave_up", "lost", "failed")
+                                    if meta.get(k + "_utc")})
             unschedule(name)
             return
+        if meta.get("kind") == "job":
+            return _job_tick(name, meta)
         try:
             pr = session_probe(name)
         except Exception as e:  # noqa: BLE001  (network / auth hiccup: try again next tick)
@@ -934,6 +962,447 @@ def resume(name, reason="manual"):
             "fp_match": start.get("fp_match"), "env": start.get("env"), "cpu_quota": start.get("cpu_quota")})
         save_meta(name, meta)
         tick_log(name, "resumed", meta["resumes"][-1])
+
+
+# ---------------------------------------------------------------------------------------------- one-shot jobs
+JOB_PINS = ("numpy", "scipy", "scikit-learn", "shap", "numba", "llvmlite", "pandas", "torch")
+TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
+JOB_PULL = "/content/e6job_pull.tar.gz"
+_SKIP_DIRS = {"__pycache__", ".git", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".ipynb_checkpoints"}
+_JOB_FILES = ("job.log", "job.json", "job.sh", "startup.json", "exit_code", "times.txt", "ended", "wrapper.log")
+
+# run in a FRESH process after the pip installs: the versions the job will really see + the import check
+JOB_CHECK = r'''
+import importlib, importlib.metadata as md, json, os, sys, time
+P, I = json.loads(sys.argv[1]), json.loads(sys.argv[2])
+out = {"python": sys.version.split()[0], "executable": sys.executable, "versions": {}, "imports": {}}
+for p in P:
+    try:
+        out["versions"][p] = md.version(p)
+    except Exception:
+        out["versions"][p] = None
+for m in I:
+    t = time.time()
+    try:
+        mod = importlib.import_module(m)
+        out["imports"][m] = {"ok": True, "s": round(time.time() - t, 2), "file": getattr(mod, "__file__", None)}
+    except BaseException as e:
+        out["imports"][m] = {"ok": False, "err": repr(e)[-600:]}
+if "torch" in sys.modules:
+    out["torch_threads"] = sys.modules["torch"].get_num_threads()
+print("CHECK " + json.dumps(out), flush=True)
+'''
+
+JOB_SETUP = r'''
+import json, os, shutil, subprocess, sys, time, zipfile
+import importlib.metadata as md
+W, BUNDLE, PINS, IMPORTS, THREADS, TORCH_INDEX, CHECK = __W__, __BUNDLE__, __PINS__, __IMPORTS__, __THREADS__, __TORCH_INDEX__, __CHECK__
+t0 = time.time()
+os.makedirs(W, exist_ok=True)
+root = os.path.join(W, "b")
+shutil.rmtree(root, ignore_errors=True)
+for f in ("exit_code", "exit_code.tmp", "ended", "times.txt", "job.json", "job.log", "job.sh", "wrapper.log",
+          "startup.json"):
+    try:
+        os.remove(os.path.join(W, f))
+    except FileNotFoundError:
+        pass
+shutil.move(BUNDLE, os.path.join(W, "bundle.zip"))
+zipfile.ZipFile(os.path.join(W, "bundle.zip")).extractall(root)
+man = json.load(open(os.path.join(root, "JOB_MANIFEST.json")))
+want = {p: v for p, v in man.get("local_env", {}).items() if p in PINS and v}
+def base(v):
+    return v.split("+")[0] if v else v
+def ver(p):
+    try:
+        return md.version(p)
+    except Exception:
+        return None
+before = {p: ver(p) for p in PINS}
+need = {p: base(v) for p, v in want.items() if base(before.get(p)) != base(v)}
+inst = []
+def pip(*args):
+    t = time.time()
+    r = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--no-input", "--disable-pip-version-check",
+                        *args], capture_output=True, text=True)
+    inst.append({"args": list(args), "rc": r.returncode, "s": round(time.time() - t, 1),
+                 "tail": (r.stdout + r.stderr)[-800:]})
+    return r.returncode == 0
+plain = [f"{p}=={v}" for p, v in need.items() if p != "torch"]
+if plain and not pip(*plain):
+    for s in plain:
+        pip(s)
+if "torch" in need:                                       # CPU wheel: the PyPI one drags in GBs of CUDA libraries
+    pip(f"torch=={need['torch']}", "--index-url", TORCH_INDEX)
+try:
+    q, per = open("/sys/fs/cgroup/cpu.max").read().split()
+    quota = None if q == "max" else int(q) / int(per)
+except Exception:
+    quota = None
+threads = int(THREADS or max(1, int(quota or os.cpu_count() or 1)))
+bindir = os.path.join(W, "bin")
+os.makedirs(bindir, exist_ok=True)
+for n in ("python", "python3"):
+    p = os.path.join(bindir, n)
+    if os.path.lexists(p):
+        os.remove(p)
+    os.symlink(sys.executable, p)
+jenv = {"PYTHONPATH": ".", "PATH": bindir + os.pathsep + os.environ.get("PATH", ""), "PYTHONUNBUFFERED": "1",
+        "MPLBACKEND": "Agg", **{k: str(threads) for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                                                          "NUMEXPR_NUM_THREADS", "NUMBA_NUM_THREADS")}}
+r = subprocess.run([sys.executable, "-c", CHECK, json.dumps(list(PINS)), json.dumps(list(IMPORTS))],
+                   env=dict(os.environ, **jenv), cwd=root, capture_output=True, text=True, timeout=1200)
+chk = None
+for ln in reversed(r.stdout.splitlines()):
+    if ln.startswith("CHECK "):
+        chk = json.loads(ln[6:])
+        break
+if chk is None:
+    chk = {"error": (r.stdout + r.stderr)[-1500:], "versions": {}, "imports": {}}
+after = chk["versions"]
+diff = {p: {"local": v, "colab": after.get(p)} for p, v in want.items() if base(after.get(p)) != base(v)}
+try:
+    host = subprocess.run(["bash", "-c", "free -g | sed -n 2p; lscpu | grep -E 'Model name|Thread|Core|Socket'"],
+                          capture_output=True, text=True).stdout
+except Exception as e:
+    host = repr(e)
+start = {"manifest": {k: man.get(k) for k in ("name", "git_head", "git_branch", "created_utc", "dirty", "paths")},
+         "n_files": len(man.get("files", [])), "local_python": man.get("local_python"), "python": chk.get("python"),
+         "executable": sys.executable, "cpus": os.cpu_count(), "cpu_quota": quota, "threads": threads,
+         "torch_threads": chk.get("torch_threads"), "want": want, "before": before, "after": after,
+         "pins_ok": not diff, "pins_diff": diff, "install": inst, "imports": chk.get("imports"),
+         "imports_ok": "error" not in chk and all(v.get("ok") for v in chk.get("imports", {}).values()),
+         "check_error": chk.get("error"), "host": host, "job_env": jenv, "t_setup_s": round(time.time() - t0, 1)}
+json.dump(start, open(os.path.join(W, "startup.json"), "w"), indent=1)
+print("JOBSTART " + json.dumps(start), flush=True)
+'''
+
+JOB_LAUNCH = r'''
+import json, os, shlex, subprocess, sys, time
+W, CMD, OUT = __W__, __CMD__, __OUT__
+root = os.path.join(W, "b")
+st = json.load(open(os.path.join(W, "startup.json")))
+env = dict(os.environ, **st["job_env"])
+if OUT:
+    os.makedirs(os.path.join(root, OUT), exist_ok=True)
+sh = os.path.join(W, "job.sh")
+open(sh, "w").write("set -o pipefail\n" + CMD + "\n")
+q = lambda n: shlex.quote(os.path.join(W, n))
+wrap = (f"bash {q('job.sh')} > {q('job.log')} 2>&1 < /dev/null; rc=$?; times > {q('times.txt')}; "
+        f"date +%s > {q('ended')}; echo $rc > {q('exit_code.tmp')}; mv {q('exit_code.tmp')} {q('exit_code')}")
+p = subprocess.Popen(["nohup", "bash", "-c", wrap], env=env, cwd=root, stdin=subprocess.DEVNULL,
+                     stdout=open(os.path.join(W, "wrapper.log"), "a"), stderr=subprocess.STDOUT,
+                     start_new_session=True)
+J = {"pid": p.pid, "cmd": CMD, "out": OUT, "cwd": root, "started": time.time()}
+json.dump(J, open(os.path.join(W, "job.json"), "w"))
+time.sleep(5)
+J["alive_5s"] = p.poll() is None
+try:
+    J["log_head"] = open(os.path.join(W, "job.log"), errors="replace").read()[:600]
+except Exception:
+    J["log_head"] = None
+print("JOBLAUNCHED " + json.dumps(J), flush=True)
+'''
+
+# one kernel exec per tick (= the keep-alive): job state + the pull tarball
+JOB_TICK = r'''
+import json, os, tarfile, time
+W, OUT, DST, FILES, PACK = __W__, __OUT__, __DST__, __FILES__, __PACK__
+root = os.path.join(W, "b")
+jp = os.path.join(W, "job.json")
+J = json.load(open(jp)) if os.path.exists(jp) else {}
+def stat(pid):
+    try:
+        return open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()
+    except Exception:
+        return None
+def alive(pid):
+    s = stat(pid)
+    return bool(s) and s[0] != "Z"
+def rd(n):
+    try:
+        return open(os.path.join(W, n), errors="replace").read().strip()
+    except Exception:
+        return None
+tck = os.sysconf("SC_CLK_TCK")
+cpu_s, rss, nproc = 0.0, 0, 0
+if J:                                     # live processes of the job's session (sid = the nohup wrapper's pid)
+    for d in os.listdir("/proc"):
+        s = stat(d) if d.isdigit() else None
+        if s and int(s[3]) == J["pid"] and s[0] != "Z":
+            nproc += 1
+            cpu_s += (int(s[11]) + int(s[12])) / tck
+            rss += int(s[21]) * os.sysconf("SC_PAGE_SIZE")
+rc, ended, log = rd("exit_code"), rd("ended"), rd("job.log") or ""
+lines = log.splitlines()
+od = os.path.join(root, OUT) if OUT else None
+outs = []
+if od and os.path.isdir(od):
+    for dp, _, fns in os.walk(od):
+        for fn in sorted(fns):
+            f = os.path.join(dp, fn)
+            outs.append([os.path.relpath(f, od), os.path.getsize(f)])
+size = None
+if PACK:
+    with tarfile.open(DST, "w:gz") as t:
+        for n in FILES:
+            if os.path.exists(os.path.join(W, n)):
+                t.add(os.path.join(W, n), arcname=n)
+        if od and os.path.isdir(od):
+            t.add(od, arcname="outdir")
+    size = os.path.getsize(DST)
+now = time.time()
+mem = {ln.split(":")[0]: int(ln.split()[1]) // 1024 for ln in open("/proc/meminfo") if ln.split(":")[0] in
+       ("MemTotal", "MemAvailable")}
+print("JOBTICK " + json.dumps({
+    "launched": bool(J), "alive": bool(J) and alive(J["pid"]), "exit_code": int(rc) if rc else None,
+    "elapsed_s": round((float(ended) if ended else now) - J.get("started", now), 1), "times": rd("times.txt"),
+    "live_cpu_s": round(cpu_s, 1), "live_rss_mb": rss >> 20, "live_procs": nproc, "mem_mb": mem,
+    "log_lines": len(lines), "log_tail": lines[-8:], "traceback": "Traceback" in log, "n_out": len(outs),
+    "out_files": outs[:50], "bytes": size, "uptime_s": float(open("/proc/uptime").read().split()[0]),
+    "load": open("/proc/loadavg").read().split()[:3]}), flush=True)
+'''
+
+
+def _is_job(name):
+    try:
+        return load_meta(name).get("kind") == "job"
+    except (OSError, ValueError):
+        return False
+
+
+def _git(*args):
+    try:
+        r = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, timeout=60, errors="replace")
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _sha256(path):
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def _job_files(paths):
+    """{repo-relative posix path: absolute path} for files, dirs (walked, caches skipped) and globs under ROOT."""
+    out, rootn = {}, os.path.normcase(os.path.abspath(ROOT))
+    for p in paths:
+        p = p.replace("\\", "/").strip()
+        full = os.path.normpath(os.path.join(ROOT, p))
+        hits = sorted(glob.glob(full, recursive=True)) if any(c in p for c in "*?[") else \
+            ([full] if os.path.exists(full) else [])
+        if not hits:
+            raise SystemExit(f"--paths: nothing at {p!r}")
+        for h in hits:
+            if os.path.commonpath([rootn, os.path.normcase(os.path.abspath(h))]) != rootn:
+                raise SystemExit(f"--paths: {h} is outside the repo")
+            walk = os.walk(h) if os.path.isdir(h) else [(os.path.dirname(h), [], [os.path.basename(h)])]
+            for dp, dns, fns in walk:
+                dns[:] = sorted(d for d in dns if d not in _SKIP_DIRS)
+                for fn in sorted(fns):
+                    if not fn.endswith((".pyc", ".pyo")):
+                        f = os.path.join(dp, fn)
+                        out[os.path.relpath(f, ROOT).replace("\\", "/")] = f
+    return out
+
+
+def _job_bundle(name, paths, pins):
+    import importlib.metadata as md
+    import zipfile
+    files = _job_files(paths)
+    local = {}
+    for p in pins:
+        try:
+            local[p] = md.version(p)
+        except md.PackageNotFoundError:
+            local[p] = None
+    man = {"name": name, "created_utc": _utc(), "git_head": _git("rev-parse", "HEAD"),
+           "git_branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
+           "dirty": (_git("status", "--porcelain", "--", *paths) or "").splitlines(), "paths": list(paths),
+           "local_env": local, "local_python": sys.version.split()[0],
+           "files": [{"path": r, "bytes": os.path.getsize(f), "sha256": _sha256(f)} for r, f in sorted(files.items())]}
+    d = os.path.join(tempfile.gettempdir(), "e6_colab")
+    os.makedirs(d, exist_ok=True)
+    zp = os.path.join(d, f"{name}_job.zip")
+    with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+        for r, f in sorted(files.items()):
+            z.write(f, r)
+        z.writestr("JOB_MANIFEST.json", json.dumps(man, indent=1))
+    return zp, man
+
+
+def job(name, paths, cmd, out_dir=None, sched=True, every=10, threads=None, pins=JOB_PINS, imports=(), force=False):
+    """One-shot job: bundle PATHS, new session, pin + import check, run CMD under nohup (see the module docstring)."""
+    if os.path.exists(meta_path(name)) and not force:
+        raise SystemExit(f"{meta_path(name)} exists: pick a new NAME (or --force)")
+    if out_dir:
+        out_dir = out_dir.replace("\\", "/").strip("/")
+        if os.path.isabs(out_dir) or ".." in out_dir.split("/") or out_dir in _JOB_FILES:
+            raise SystemExit(f"--out-dir must be a repo-relative dir, got {out_dir!r}")
+    n, _ = active_assignments()
+    if n:
+        print(f"WARNING: {n} active assignment(s) already; a new TPU v5e-1 may be refused", flush=True)
+    zp, man = _job_bundle(name, paths, pins)
+    meta = {"kind": "job", "session": name, "cmd": cmd, "paths": list(paths), "out_dir": out_dir, "threads": threads,
+            "pins_local": man["local_env"], "imports": list(imports), "git_head": man["git_head"],
+            "dirty": man["dirty"], "n_files": len(man["files"]), "bundle_bytes": os.path.getsize(zp),
+            "bundle_sha256": _sha256(zp), "created_utc": _utc(), "session_no": 0}
+    save_meta(name, meta)
+    print(f"bundle {len(man['files'])} files, {meta['bundle_bytes'] / 1e6:.1f} MB, head {man['git_head']}, "
+          f"dirty {len(man['dirty'])}, local pins {man['local_env']}", flush=True)
+    t0 = time.time()
+    new_session(name)
+    meta["t_new"] = round(time.time() - t0, 1)
+    save_meta(name, meta)
+    try:
+        t1, rb = time.time(), f"/content/{name}_job.zip"
+        colab("upload", "-s", name, zp, rb, timeout=1800)
+        meta["t_upload"] = round(time.time() - t1, 1)
+        start = remote(name, _fill(JOB_SETUP, W=W, BUNDLE=rb, PINS=list(pins), IMPORTS=list(imports), THREADS=threads,
+                                   TORCH_INDEX=TORCH_CPU_INDEX, CHECK=JOB_CHECK), timeout=2700, tag="JOBSTART")
+        meta.update(t_setup=round(time.time() - t1, 1), startup=start)
+        json.dump(start, open(os.path.join(run_dir(name), "startup.json"), "w"), indent=1)
+        print("startup:", json.dumps({k: start.get(k) for k in ("python", "cpus", "cpu_quota", "threads",
+                                                                "torch_threads", "after", "pins_ok", "pins_diff",
+                                                                "imports_ok", "t_setup_s")}), flush=True)
+        if not start["pins_ok"]:
+            print(f"WARNING: versions differ from local: {start['pins_diff']}", flush=True)
+        if not start["imports_ok"]:
+            raise SystemExit(f"import check failed: {start.get('imports')} {start.get('check_error')}")
+        meta["launched"] = remote(name, _fill(JOB_LAUNCH, W=W, CMD=cmd, OUT=out_dir), timeout=300, tag="JOBLAUNCHED")
+    except BaseException as e:
+        meta["failed_utc"], meta["error"] = _utc(), repr(e)[-1500:]
+        save_meta(name, meta)
+        tick_log(name, "job-setup-failed", {"err": repr(e)[-800:]})
+        stop(name)
+        raise
+    finally:
+        os.remove(zp)
+    meta["launched_utc"] = _utc()
+    save_meta(name, meta)
+    tick_log(name, "job-launch", {"pid": meta["launched"]["pid"], "alive_5s": meta["launched"]["alive_5s"],
+                                  "cmd": cmd, "out_dir": out_dir, "threads": meta["startup"]["threads"]})
+    if not meta["launched"]["alive_5s"]:
+        print("NOTE: the job had already exited 5 s after launch; log head:\n" + (meta["launched"]["log_head"] or ""),
+              flush=True)
+    if sched:
+        schedule(name, every)
+    return meta
+
+
+def _job_remote(name, meta, pack=True):
+    return remote(name, _fill(JOB_TICK, W=W, OUT=meta.get("out_dir"), DST=JOB_PULL, FILES=list(_JOB_FILES),
+                              PACK=pack), timeout=600, tag="JOBTICK")
+
+
+def _job_download(name, meta):
+    """Download the tarball the JOB_TICK cell packed into runs/NAME/ (out dir -> runs/NAME/<out_dir>/)."""
+    d = run_dir(name)
+    tgz, tmp = os.path.join(d, "pull.tar.gz"), os.path.join(d, ".pull")
+    colab("download", "-s", name, JOB_PULL, tgz, timeout=1800)
+    shutil.rmtree(tmp, ignore_errors=True)
+    with tarfile.open(tgz) as t:
+        t.extractall(tmp, filter="data")
+    os.remove(tgz)
+    got = []
+    for f in sorted(os.listdir(tmp)):
+        src = os.path.join(tmp, f)
+        if f == "outdir" and os.path.isdir(src) and meta.get("out_dir"):
+            shutil.copytree(src, os.path.join(d, *meta["out_dir"].split("/")), dirs_exist_ok=True)
+            got.append(meta["out_dir"] + "/")
+        elif f in _JOB_FILES and os.path.isfile(src):
+            shutil.copyfile(src, os.path.join(d, f))
+            got.append(f)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return {"pulled": got}
+
+
+def _job_brief(st):
+    return {k: st.get(k) for k in ("alive", "exit_code", "elapsed_s", "live_cpu_s", "live_rss_mb", "live_procs",
+                                   "mem_mb", "log_lines", "traceback", "n_out", "times", "load")}
+
+
+def job_status(name, quiet=False):
+    st = _job_remote(name, load_meta(name), pack=False)
+    if not quiet:
+        print(json.dumps(_job_brief(st)))
+        for ln in st["log_tail"]:
+            print("  |", ln)
+        for f, b in st["out_files"]:
+            print(f"  out: {f} {b} B")
+    return st
+
+
+def job_pull(name):
+    meta = load_meta(name)
+    st = _job_remote(name, meta)
+    res = _job_download(name, meta)
+    print(json.dumps(dict(_job_brief(st), **res)), flush=True)
+    return run_dir(name), st, res
+
+
+def _job_lost(name, meta, why, info=None):
+    meta["lost_utc"], meta["lost_reason"] = _utc(), why
+    save_meta(name, meta)
+    tick_log(name, "job-lost", dict(info or {}, reason=why, action="not resumable: not relaunched; re-run `job` "
+                                                                    "under a new NAME"))
+    unschedule(name)
+
+
+def _job_tick(name, meta):
+    """tick for kind == "job" (called with the tick lock held)."""
+    try:
+        pr = session_probe(name)
+    except Exception as e:  # noqa: BLE001
+        tick_log(name, "probe-error", {"err": str(e)[-400:]})
+        return
+    ka = {k: pr.get(k) for k in ("keepalive_http", "keepalive_err", "kernels_err")}
+    if pr["alive"]:
+        try:
+            st = _job_remote(name, meta)
+            res = _job_download(name, meta)
+        except Exception as e:  # noqa: BLE001
+            meta["exec_failures"] = meta.get("exec_failures", 0) + 1
+            save_meta(name, meta)
+            tick_log(name, "exec-error", {"n": meta["exec_failures"], "err": str(e)[-400:], **ka})
+            if meta["exec_failures"] < 3:
+                return
+            try:
+                stop(name)
+            except SystemExit as e2:
+                tick_log(name, "stop-failed", {"err": str(e2)})
+                return
+            _job_lost(name, meta, "3 consecutive failed execs (runtime stopped)")
+            return
+        meta["exec_failures"] = 0
+        info = dict(_job_brief(st), log_tail=st["log_tail"][-3:], uptime_min=round(st["uptime_s"] / 60, 1),
+                    **res, **ka)
+        if st["exit_code"] is not None or not st["alive"]:
+            meta["exit_code"] = st["exit_code"]
+            info["result"] = (f"exit {st['exit_code']}" if st["exit_code"] is not None
+                              else "DIED without an exit code (wrapper killed?)")
+            info["out_files"] = st["out_files"]
+            save_meta(name, meta)
+            _finish(name, meta, info)
+            return
+        save_meta(name, meta)
+        tick_log(name, "tick", info)
+        return
+    # ---- the session is gone: a job is never resumed
+    ec = os.path.join(run_dir(name), "exit_code")
+    if os.path.exists(ec):                                          # finished + pulled; a previous stop was slow
+        meta["exit_code"] = int(open(ec).read().strip() or -1)
+        _finish(name, meta, {"exit_code": meta["exit_code"], "note": "already complete locally"}, alive=False)
+        return
+    _job_lost(name, meta, "session gone before the exit code was pulled",
+              {"n_assignments": pr.get("n_assignments"), "orphans": pr.get("orphans"), "known": pr.get("known"),
+               "warning": "orphan assignment(s): stop them by hand (colab --auth adc sessions)"
+               if pr.get("n_assignments") else None})
 
 
 # ---------------------------------------------------------------------------------------------- Task Scheduler
@@ -1120,6 +1589,36 @@ if __name__ == "__main__":
         rest = a[1:]
         every = _opt(rest, "--every", 10, int)
         print(schedule(rest[0], every))
+    elif cmd == "job":
+        if len(a) < 2 or a[1].startswith("--"):
+            raise SystemExit(__doc__)
+        jname, rest, kw, paths = a[1], a[2:], {}, []
+        single = {"--cmd": "cmd", "--out-dir": "out_dir", "--every": "every", "--threads": "threads",
+                  "--pins": "pins", "--imports": "imports"}
+        i = 0
+        while i < len(rest):
+            x = rest[i]
+            if x == "--paths":
+                i += 1
+                while i < len(rest) and not rest[i].startswith("--"):
+                    paths.append(rest[i])
+                    i += 1
+                continue
+            if x in single:
+                kw[single[x]] = rest[i + 1]
+                i += 2
+                continue
+            if x in ("--no-schedule", "--force"):
+                kw[x[2:].replace("-", "_")] = True
+                i += 1
+                continue
+            raise SystemExit(f"unknown job argument {x!r}\n{__doc__}")
+        if not paths or not kw.get("cmd"):
+            raise SystemExit("job needs --paths ... and --cmd")
+        job(jname, paths, kw["cmd"], out_dir=kw.get("out_dir"), sched=not kw.get("no_schedule"),
+            every=int(kw.get("every", 10)), threads=int(kw["threads"]) if kw.get("threads") else None,
+            pins=tuple(x for x in kw["pins"].split(",") if x) if "pins" in kw else JOB_PINS,
+            imports=tuple(x for x in kw.get("imports", "").split(",") if x), force=bool(kw.get("force")))
     elif cmd == "config":
         config(*a[1:])
     elif cmd == "smoke":
