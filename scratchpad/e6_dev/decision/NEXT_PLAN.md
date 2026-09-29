@@ -10,7 +10,11 @@ energy. All environment and gate work exists only to give that arbiter a fair te
   - Only **P3 surge-L40** (ES × PowerES × SliceGuarantee under a surge) shows a real loss (Λ 0.37, LB90 32).
   - There the constrained oracle recovers **R 1.35**, CI [0.95, 2.03], and every guardrail improves.
   - Its redrawn advantage is positive on 8/8 seeds.
-  - Per-decision ρ_sign is **0.676 < 0.70**, so the preregistered verdict is not PASS. The stage 3 label is pending.
+  - Per-decision ρ_sign is **0.676 < 0.70**.
+  - Stage 3: the strongest fixed rule (per-region hindsight static) reaches R 0.76. The oracle headroom over it is
+    0.595 ≥ 0.10, so c3 PASSES.
+  - **Final v2 verdict for P3 surge-L40: NOISE STOP.** c1, c2 and c3 pass; only c4 fails (0.676 vs 0.70).
+    P1 is DEAD (no loss on fresh seeds).
   - Best static rule: R 0.26. QACM and priority do nothing, because the conflict is indirect: ES sleep → neighbour
     load → protected-slice violations.
 - The lesson: the edge is real on average but noisy per decision. So act on averaged evidence (regime or window

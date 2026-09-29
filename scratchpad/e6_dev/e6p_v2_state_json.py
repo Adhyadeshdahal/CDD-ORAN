@@ -29,7 +29,8 @@ STATE = r'''{
  "sources": [
   "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s1\\all.jsonl",
   "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s2k\\all.jsonl",
-  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s2r\\all.jsonl"
+  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s2r\\all.jsonl",
+  "D:\\academia\\major-project\\CDD-ORAN\\scratchpad\\e6_dev\\runs\\e6p-v2-s3\\all.jsonl"
  ],
  "stage1_crit1": [
   [
@@ -57,5 +58,5 @@ STATE = r'''{
    3
   ]
  ],
- "written_utc": "2026-09-29T11:24:05Z"
+ "written_utc": "2026-09-29T13:09:06Z"
 }'''
