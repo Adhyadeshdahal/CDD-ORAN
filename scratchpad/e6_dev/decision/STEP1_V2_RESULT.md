@@ -51,3 +51,55 @@ placebo declarations (validity): {'mscr_crt_v2': {'placebo': 0, 'placebo_dev': 0
 VERDICT: KILL [P2v2 not evaluated: --no-baselines]
 timing (s): {'k0_placebo': 0.5, 'unit_tables': 6.6, 'crt_v2_pooled': 9.8, 'crt_v2_fold0': 2.4, 'crt_v2_fold1': 2.4, 'crt_v2_fold2': 2.4, 'crt_v2_fold3': 2.4, 'total': 29.3}; peak RSS 989.3 MB
 ```
+
+## Pass 2 (baselines, v1 code path + DEV far-FPR tau; 1502 s local): P2v2 FAIL (folds 2/4), verdict stays KILL
+
+```
+        method   split  ind P  ind R ind F1   ov P     F1   sign  far  #dec  plc
+   mscr_crt_v2  pooled   1.00   0.50   0.67   0.95   0.82   0.95    5    23    0
+   mscr_crt_v2   fold0   1.00   0.50   0.67   0.94   0.74   1.00    2    19     
+   mscr_crt_v2   fold1   1.00   0.38   0.55   0.94   0.71   0.94    2    18     
+   mscr_crt_v2   fold2   1.00   0.38   0.55   0.94   0.74   1.00    2    19     
+   mscr_crt_v2   fold3   1.00   0.38   0.55   0.94   0.68   1.00    1    17     
+     shap_gbdt  pooled   1.00   0.25   0.40   0.90   0.47   1.00    0    10    6
+     shap_gbdt   fold0   1.00   0.38   0.55   0.91   0.51   1.00    0    11     
+     shap_gbdt   fold1   1.00   0.25   0.40   0.90   0.47   1.00    0    11     
+     shap_gbdt   fold2   1.00   0.38   0.55   0.91   0.51   1.00    0    12     
+     shap_gbdt   fold3   1.00   0.25   0.40   0.90   0.47   1.00    0    10     
+          corr  pooled   1.00   0.38   0.55   0.85   0.54   1.00    0    15   16
+          corr   fold0   1.00   0.38   0.55   0.79   0.52   1.00    1    16     
+          corr   fold1   1.00   0.25   0.40   0.83   0.50   1.00    0    14     
+          corr   fold2   1.00   0.38   0.55   0.79   0.52   1.00    1    16     
+          corr   fold3   1.00   0.62   0.77   0.87   0.60   0.92    0    17     
+       granger  pooled   0.67   0.75   0.71   0.64   0.69   0.71    7    36   13
+       granger   fold0   0.62   0.62   0.62   0.65   0.63   0.82    4    28     
+       granger   fold1   0.67   0.50   0.57   0.64   0.60   0.88    4    27     
+       granger   fold2   0.50   0.50   0.50   0.67   0.65   0.78    3    29     
+       granger   fold3   0.75   0.75   0.75   0.71   0.71   0.75    5    31     
+    granger_by  pooled   0.67   0.75   0.71   0.66   0.70   0.71    6    34    9
+    granger_by   fold0   0.62   0.62   0.62   0.65   0.63   0.82    4    27     
+    granger_by   fold1   0.60   0.38   0.46   0.62   0.53   0.92    4    23     
+    granger_by   fold2   0.57   0.50   0.53   0.68   0.64   0.76    3    27     
+    granger_by   fold3   0.75   0.75   0.75   0.71   0.71   0.75    5    30     
+     two_tower  pooled    nan   0.00   0.00   0.62   0.28   1.00    3     9   10
+     two_tower   fold0    nan   0.00   0.00   0.71   0.29   1.00    2     8     
+     two_tower   fold1    nan   0.00   0.00   0.62   0.28   1.00    3     9     
+     two_tower   fold2    nan   0.00   0.00   0.62   0.28   1.00    3    10     
+     two_tower   fold3    nan   0.00   0.00   0.62   0.28   1.00    3     9     
+           int  pooled   1.00   0.25   0.40   0.86   0.34   1.00    0     7    6
+           int   fold0   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+           int   fold1   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+           int   fold2   1.00   0.25   0.40   0.88   0.39   1.00    0     8     
+           int   fold3   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+          qacm  pooled    nan   0.00   0.00   0.91   0.51   1.00    0    12   11
+          qacm   fold0    nan   0.00   0.00   0.90   0.47   1.00    0    10     
+          qacm   fold1    nan   0.00   0.00   0.89   0.43   1.00    0     9     
+          qacm   fold2    nan   0.00   0.00   0.91   0.51   1.00    0    11     
+          qacm   fold3    nan   0.00   0.00   0.91   0.51   1.00    0    12     
+chain set C (pooled MSCR-CRT v2):
+   sleep|nbr|load     exp +1 GT TRUE(+1) declared True sign +1 p 0.0001 beta 562.1 z 19.81
+   sleep|nbr|pv       exp +1 GT TRUE(+1) declared False sign +1 p 0.007 beta 6.972 z 2.67
+   sleep|nbr|v        exp +1 GT TRUE(+1) declared True sign +1 p 0.0001 beta 272.3 z 9.56
+   ptx|nbr|load       exp -1 GT TRUE(-1) declared True sign -1 p 0.0001 beta -162.3 z -11.66
+placebo declarations (validity): {'mscr_crt_v2': {'placebo': 0, 'placebo_dev': 0}, 'shap_gbdt': {'placebo': 6, 'placebo_dev': 6}, 'corr': {'placebo': 16, 'placebo_dev': 18}, 'granger': {'placebo': 13, 'placebo_dev': 11}, 'granger_by': {'placebo': 9, 'placebo_dev': 8}, 'two_tower': {'placebo': 10, 'placebo_dev': 9}, 'int': {'placebo': 6, 'placebo_dev': 10}, 'qacm': {'placebo': 11, 'placebo_dev': 10}}
+```
