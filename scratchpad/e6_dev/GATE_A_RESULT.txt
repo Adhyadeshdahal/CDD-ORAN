@@ -1,0 +1,18 @@
+scenario load    n  SVR_frz  noarb     TS TS+MRO bestsub  tuned   ctrl pass  best subset
+base     medium  5    245.2  1.102  0.999  1.003   1.000  0.893  0.099 n     freeze
+base     high    5    571.9  1.074  1.013  1.013   1.000  0.980  0.017 n     freeze
+surge    medium  5    341.3  1.116  1.033  1.031   1.000  0.933  0.055 n     freeze
+surge    high    5    650.9  1.060  1.019  1.019   0.999  0.981  0.017 n     sub:MRO
+mistune  medium  5    340.1  1.137  1.011  1.012   1.000  0.940  0.058 n     freeze
+mistune  high    5    684.9  1.077  1.011  1.013   1.000  0.981  0.019 n     freeze
+
+own-KPI (xApp alone vs freeze, mean over seeds):
+  base/medium: MRO rlf_per_ue_h 1.3 vs 1.28 (NOT better); MRO ho_per_ue_h 80.8 vs 81.1; MRO pingpong 230 vs 231; TS embb_viol 1.15e+04 vs 1.14e+04 (NOT better); ES energy_kwh 1.09 vs 1.21; SLICE ll_viol 347 vs 425
+  base/high: MRO rlf_per_ue_h 1.92 vs 1.92 (NOT better); MRO ho_per_ue_h 80.4 vs 80.7; MRO pingpong 228 vs 229; TS embb_viol 2.73e+04 vs 2.7e+04 (NOT better); ES energy_kwh 1.27 vs 1.34; SLICE ll_viol 523 vs 1.14e+03
+  surge/medium: MRO rlf_per_ue_h 1.42 vs 1.4 (NOT better); MRO ho_per_ue_h 80.7 vs 81; MRO pingpong 230 vs 231; TS embb_viol 1.69e+04 vs 1.62e+04 (NOT better); ES energy_kwh 1.14 vs 1.25; SLICE ll_viol 373 vs 482
+  surge/high: MRO rlf_per_ue_h 2.04 vs 2.01 (NOT better); MRO ho_per_ue_h 80.3 vs 80.7; MRO pingpong 228 vs 229; TS embb_viol 3.13e+04 vs 3.08e+04 (NOT better); ES energy_kwh 1.31 vs 1.37; SLICE ll_viol 565 vs 1.27e+03
+  mistune/medium: MRO rlf_per_ue_h 7.59 vs 9.22; MRO ho_per_ue_h 182 vs 179 (NOT better); MRO pingpong 392 vs 319 (NOT better); TS embb_viol 1.4e+04 vs 1.38e+04 (NOT better); ES energy_kwh 1.12 vs 1.23; SLICE ll_viol 1.41e+03 vs 1.55e+03
+  mistune/high: MRO rlf_per_ue_h 9.91 vs 12.3; MRO ho_per_ue_h 184 vs 177 (NOT better); MRO pingpong 464 vs 320 (NOT better); TS embb_viol 3.01e+04 vs 2.98e+04 (NOT better); ES energy_kwh 1.29 vs 1.35; SLICE ll_viol 1.81e+03 vs 2.63e+03
+
+rule: PASS iff in surge or mistune (at every load of that scenario): min(TS alone, TS+MRO) mean SVR ratio <= 0.85 x freeze AND controllable fraction = (SVR_freeze - SVR_best_static_or_subset) / SVR_freeze >= 0.35
+per scenario: {'surge': False, 'mistune': False} -> gate FAIL

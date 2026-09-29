@@ -1,0 +1,2175 @@
+{
+ "protocol": "E6P_SCREEN_PROTOCOL.md Gate A v2 (E6P-v1)",
+ "e6p_spec_commit": "2afbc1c8da381375891c438efea6500f7f5e5467",
+ "notes": [
+  "QACM (arm 8) needs a KPI predictor fitted on logs; the protocol names no fit seeds. It is fitted per (pair, stratum) on accept-all logs of E6 DEV seeds QACM_FIT_SEEDS (registered E6 DEV range 0-30), same scenario and load_factor.",
+  "QACM E6-P mapping (published.MANIFEST_P / QOS_P): SliceGuarantee KPI = per-cell protected below-floor share, QoS 0.05 (sg_viol_hi); Coverage KPI = per-cell edge-SINR p5, QoS -6 dB (cov_sinr_low_db); energy has no QoS.",
+  "Oracle 'half' mode = cdd_oran.decision.plans slew rule (half the step in actuator quanta; single-quantum steps alternate accept/reject) with ptx 1 dB / prot_min 0.05 quanta, not wg3_oracle.py's legacy cur+(prop-cur)/2 (which the actuator grid rounds to a no-op or a full step for carrier / sleep / prot_min).",
+  "Oracle rollouts hold the plan for the whole horizon (wg3_oracle.py semantics): first second + H-1 seconds.",
+  "Oracle stage 2 of the search only accepts ADMISSIBLE trials (energy constraint); an admissible trial beats an inadmissible incumbent; if the final plan is inadmissible accept-all is used.",
+  "rho_sign: advantage = lexicographic sign of (AA - plan) on (protected violated UE-s, all-UE violated UE-s) over the rollout; re-drawn copy = env.copy(reseed=int(t)); a tie (sign 0) kept on both counts as kept.",
+  "Bootstrap RNG default_rng([6611, pair_idx, stratum]) uses pair_idx = 1, 2, 3 for P1, P2, P3; the lower bound is the 10th percentile of V_AA - V_ref over resamples, V_ref re-minimised per resample; arm eligibility is fixed at the point estimate; reported intervals are 5th-95th percentiles.",
+  "Non-protected eMBB violated UE-s = embb_viol - prot_viol (exact: prot_floor_bps == EMBB_THP_TARGET_BPS and the same 0.2 s activity gate / outage rule; asserted).",
+  "M1(b) is evaluated per mechanism seed (each of the 4 seeds must reach 90 %); M4 is run per pair deployment (the xApp variant draw depends on its index in the deployment), 7 (pair, xApp) arms + freeze per seed.",
+  "M5(a) (E6PConfig() default bit-identical to E6-scn-v1) is a local command `m5a` comparing against the pre-E6-P commit 1284869 on a DEV seed (M5 has no protocol seed); M5(b) runs in stage 0b on 150020.",
+  "Stage 0c times the oracle for P1 base-L40 (the heaviest load of the primary pair); scores are not recorded.",
+  "Freeze is run once per (seed, stratum) with mix 'none' and no xApps (plant identical: xApps never touch the plant under freeze) and shared by all pairs."
+ ],
+ "platforms": [
+  "{\"platform\": \"Linux-6.12.90+-x86_64-with-glibc2.35\", \"numpy\": \"2.4.2\"}"
+ ],
+ "stage0b": {
+  "M1": {
+   "pass": true,
+   "n": 4,
+   "detail": [
+    {
+     "a": true,
+     "b_frac": 0.8571428571428571,
+     "b_frac_loaded_macros_diag": 1.0,
+     "n_idle_macros_with_edge_ues": 3,
+     "b": true,
+     "c": true,
+     "d": true,
+     "pass": true
+    },
+    {
+     "a": true,
+     "b_frac": 0.7142857142857143,
+     "b_frac_loaded_macros_diag": 1.0,
+     "n_idle_macros_with_edge_ues": 6,
+     "b": true,
+     "c": true,
+     "d": true,
+     "pass": true
+    },
+    {
+     "a": true,
+     "b_frac": 0.9047619047619048,
+     "b_frac_loaded_macros_diag": 1.0,
+     "n_idle_macros_with_edge_ues": 2,
+     "b": true,
+     "c": true,
+     "d": true,
+     "pass": true
+    },
+    {
+     "a": true,
+     "b_frac": 0.7619047619047619,
+     "b_frac_loaded_macros_diag": 1.0,
+     "n_idle_macros_with_edge_ues": 5,
+     "b": true,
+     "c": true,
+     "d": true,
+     "pass": true
+    }
+   ]
+  },
+  "M2": {
+   "pass": true,
+   "n": 1,
+   "detail": [
+    {
+     "a": true,
+     "b": true,
+     "c": true,
+     "d": true,
+     "e": true,
+     "pass": true,
+     "cell": 10,
+     "n_prot": 4,
+     "n_other": 14
+    }
+   ]
+  },
+  "M3": {
+   "pass": true,
+   "n": 1,
+   "detail": [
+    {
+     "cap_on": true,
+     "cap_off": true,
+     "reactivating": true,
+     "cap_back": true,
+     "pico_sleep": true,
+     "waking": true,
+     "pico_back": true,
+     "pass": true
+    }
+   ]
+  },
+  "M5b": {
+   "pass": true,
+   "n": 1,
+   "detail": [
+    {
+     "pass": true,
+     "first_diff_sec": null,
+     "seconds": 720
+    }
+   ]
+  },
+  "M4": {
+   "pass": true,
+   "detail": {
+    "P1:ES": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 37.75,
+       "own_alone": 10166850.219481241,
+       "own_freeze": 14147647.3401537,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 42.75,
+       "own_alone": 16095730.800404325,
+       "own_freeze": 17393088.281112097,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 35.75,
+       "own_alone": 10212358.771493446,
+       "own_freeze": 14176526.747089727,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 44.75,
+       "own_alone": 15622994.801266255,
+       "own_freeze": 17297281.514723923,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    },
+    "P1:SliceGuarantee": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 157.0,
+       "own_alone": 13.361702127659575,
+       "own_freeze": 13.361702127659575,
+       "pooled_improves": false,
+       "n_seeds_improve": 0,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 263.0,
+       "own_alone": 58.23255813953488,
+       "own_freeze": 254.88372093023256,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 126.5,
+       "own_alone": 10.844444444444445,
+       "own_freeze": 10.844444444444445,
+       "pooled_improves": false,
+       "n_seeds_improve": 1,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 223.75,
+       "own_alone": 124.86131386861314,
+       "own_freeze": 383.73722627737226,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    },
+    "P2:PowerES": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 62.75,
+       "own_alone": 13310085.857656714,
+       "own_freeze": 14147647.3401537,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 70.25,
+       "own_alone": 15977559.199829621,
+       "own_freeze": 17393088.281112097,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 63.5,
+       "own_alone": 13314002.2488176,
+       "own_freeze": 14176526.747089727,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 72.5,
+       "own_alone": 15409489.132824,
+       "own_freeze": 17297281.514723923,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    },
+    "P2:Coverage": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 125.75,
+       "own_alone": 0.00020416666666666668,
+       "own_freeze": 0.00021527777777777778,
+       "pooled_improves": true,
+       "n_seeds_improve": 3,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 224.0,
+       "own_alone": 0.0013819444444444445,
+       "own_freeze": 0.0014555555555555556,
+       "pooled_improves": true,
+       "n_seeds_improve": 3,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 103.0,
+       "own_alone": 0.00025694444444444446,
+       "own_freeze": 0.00024166666666666667,
+       "pooled_improves": false,
+       "n_seeds_improve": 1,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 167.75,
+       "own_alone": 0.0014222222222222223,
+       "own_freeze": 0.0010736111111111111,
+       "pooled_improves": false,
+       "n_seeds_improve": 0,
+       "ok": true
+      }
+     },
+     "inert": true,
+     "pass": false
+    },
+    "P3:ES": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 37.75,
+       "own_alone": 10166850.219481241,
+       "own_freeze": 14147647.3401537,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 42.75,
+       "own_alone": 16095730.800404325,
+       "own_freeze": 17393088.281112097,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 35.75,
+       "own_alone": 10212358.771493446,
+       "own_freeze": 14176526.747089727,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 44.75,
+       "own_alone": 15622994.801266255,
+       "own_freeze": 17297281.514723923,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    },
+    "P3:PowerES": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 63.0,
+       "own_alone": 13299448.205332555,
+       "own_freeze": 14147647.3401537,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 62.5,
+       "own_alone": 15862568.987050554,
+       "own_freeze": 17393088.281112097,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 65.25,
+       "own_alone": 13336495.485615017,
+       "own_freeze": 14176526.747089727,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 74.75,
+       "own_alone": 15564193.655190337,
+       "own_freeze": 17297281.514723923,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    },
+    "P3:SliceGuarantee": {
+     "strata": {
+      "0": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 152.5,
+       "own_alone": 13.361702127659575,
+       "own_freeze": 13.361702127659575,
+       "pooled_improves": false,
+       "n_seeds_improve": 0,
+       "ok": true
+      },
+      "1": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 263.75,
+       "own_alone": 57.72093023255814,
+       "own_freeze": 254.88372093023256,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      },
+      "2": {
+       "acts": true,
+       "material": false,
+       "mean_changes": 128.0,
+       "own_alone": 10.977777777777778,
+       "own_freeze": 10.844444444444445,
+       "pooled_improves": false,
+       "n_seeds_improve": 1,
+       "ok": true
+      },
+      "3": {
+       "acts": true,
+       "material": true,
+       "mean_changes": 223.25,
+       "own_alone": 124.42335766423358,
+       "own_freeze": 383.73722627737226,
+       "pooled_improves": true,
+       "n_seeds_improve": 4,
+       "ok": true
+      }
+     },
+     "inert": false,
+     "pass": true
+    }
+   },
+   "inert_pairs": [
+    "P2"
+   ],
+   "rule": "8a: evaluated only in strata with material freeze own-KPI; per-xApp; pairs with a failing/inert xApp are not screenable; M4 passes if >= 1 pair remains screenable"
+  },
+  "M6": {
+   "pass": true,
+   "n_seeds": 4,
+   "rlf_within_2s": 0,
+   "n_eligible": 316
+  }
+ },
+ "stage0c": {
+  "secs": 4527.6,
+  "ref_secs": 121.2,
+  "oracle_secs": 4405.9,
+  "n_roll": 947,
+  "n_epochs": 31,
+  "n_deviations": 24
+ },
+ "pairs": {
+  "P1": {
+   "rows": {
+    "0": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.2857556371585836,
+     "AA_matched": true,
+     "AA_energy_shortfall": -0.0006089538703146768,
+     "V_AA": 24.541176470588237,
+     "V_ref": 9.223529411764705,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 1.660714285714286,
+     "V_AA_minus_V_ref": 15.317647058823532,
+     "lb90_diff": 8.348919806429313,
+     "Lambda_ci90": [
+      0.6022988505747127,
+      3.360248447204969
+     ],
+     "R_static": 0.0,
+     "R_static_arm": "prio:ES>SliceGuarantee",
+     "c1": false,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 9.2,
+       "E_kwh": 7.849315964406904,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.001536098310292,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 74.68235294117648,
+       "E_kwh": 5.606329679738767,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -3.2734254992319505,
+       "changes": 33.0
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 9.223529411764705,
+       "E_kwh": 7.849305318015137,
+       "retention": 4.746525576356676e-06,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 93.625
+      },
+      "noarb": {
+       "group": 3,
+       "V": 24.541176470588237,
+       "E_kwh": 5.604963804559656,
+       "retention": 1.0006089538703147,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 176.25
+      },
+      "prio:ES>SliceGuarantee": {
+       "group": 5,
+       "V": 24.541176470588237,
+       "E_kwh": 5.604963804559656,
+       "retention": 1.0006089538703147,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 176.25
+      },
+      "prio:SliceGuarantee>ES": {
+       "group": 5,
+       "V": 24.541176470588237,
+       "E_kwh": 5.604963804559656,
+       "retention": 1.0006089538703147,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 176.25
+      },
+      "cell:ES>SliceGuarantee": {
+       "group": 6,
+       "V": 24.75294117647059,
+       "E_kwh": 5.604964343468221,
+       "retention": 1.0006087136064448,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.013824884792626677,
+       "changes": 162.0
+      },
+      "cell:SliceGuarantee>ES": {
+       "group": 6,
+       "V": 27.294117647058822,
+       "E_kwh": 5.557494097039343,
+       "retention": 1.0217725730349931,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.17972350230414727,
+       "changes": 181.625
+      },
+      "lock": {
+       "group": 7,
+       "V": 24.541176470588237,
+       "E_kwh": 5.604963804559656,
+       "retention": 1.0006089538703147,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 176.25
+      },
+      "qacm": {
+       "group": 8,
+       "V": 24.541176470588237,
+       "E_kwh": 5.604963804559656,
+       "retention": 1.0006089538703147,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 176.25
+      }
+     }
+    },
+    "1": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.08235213385627284,
+     "AA_matched": true,
+     "AA_energy_shortfall": 0.005502246745068828,
+     "V_AA": 105.3210332103321,
+     "V_ref": 78.19926199261992,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 0.34682899207248025,
+     "V_AA_minus_V_ref": 27.12177121771218,
+     "lb90_diff": 18.62207357859532,
+     "Lambda_ci90": [
+      0.19552795031055897,
+      0.5281289506953226
+     ],
+     "R_static": 0.0,
+     "R_static_arm": "prio:ES>SliceGuarantee",
+     "c1": false,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 333.83025830258305,
+       "E_kwh": 9.708233201998443,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -8.42530612244898,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 442.64944649446494,
+       "E_kwh": 8.908739481839556,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -12.437551020408161,
+       "changes": 40.5
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 78.19926199261992,
+       "E_kwh": 9.710198445843599,
+       "retention": -0.002458110421136398,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 269.125
+      },
+      "noarb": {
+       "group": 3,
+       "V": 105.3210332103321,
+       "E_kwh": 8.913138493559002,
+       "retention": 0.9944977532549312,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 386.625
+      },
+      "prio:ES>SliceGuarantee": {
+       "group": 5,
+       "V": 105.3210332103321,
+       "E_kwh": 8.913138493559002,
+       "retention": 0.9944977532549312,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 386.625
+      },
+      "prio:SliceGuarantee>ES": {
+       "group": 5,
+       "V": 105.3210332103321,
+       "E_kwh": 8.913138493559002,
+       "retention": 0.9944977532549312,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 386.625
+      },
+      "cell:ES>SliceGuarantee": {
+       "group": 6,
+       "V": 116.61254612546125,
+       "E_kwh": 8.912928447623042,
+       "retention": 0.9947604769395136,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.41632653061224467,
+       "changes": 347.625
+      },
+      "cell:SliceGuarantee>ES": {
+       "group": 6,
+       "V": 124.49446494464945,
+       "E_kwh": 8.518108814781263,
+       "retention": 1.4885975426807108,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.7069387755102041,
+       "changes": 397.25
+      },
+      "lock": {
+       "group": 7,
+       "V": 105.3210332103321,
+       "E_kwh": 8.913138493559002,
+       "retention": 0.9944977532549312,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 386.625
+      },
+      "qacm": {
+       "group": 8,
+       "V": 113.44649446494465,
+       "E_kwh": 8.889773805328025,
+       "retention": 1.0237221081708585,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.29959183673469386,
+       "changes": 388.5
+      }
+     }
+    },
+    "2": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.2680414915247859,
+     "AA_matched": true,
+     "AA_energy_shortfall": -6.679912980800395e-05,
+     "V_AA": 20.28688524590164,
+     "V_ref": 13.967213114754099,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 0.4524647887323944,
+     "V_AA_minus_V_ref": 6.3196721311475414,
+     "lb90_diff": 3.734939759036143,
+     "Lambda_ci90": [
+      0.1932367149758453,
+      0.8073527902633251
+     ],
+     "R_static": 0.0,
+     "R_static_arm": "prio:ES>SliceGuarantee",
+     "c1": false,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 14.237704918032787,
+       "E_kwh": 7.92398978452877,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.9571984435797667,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 31.524590163934427,
+       "E_kwh": 5.800031743856511,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -1.7782101167315174,
+       "changes": 40.0
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 13.967213114754099,
+       "E_kwh": 7.9239625238101565,
+       "retention": 1.2834866833806606e-05,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 139.875
+      },
+      "noarb": {
+       "group": 3,
+       "V": 20.28688524590164,
+       "E_kwh": 5.799889865307645,
+       "retention": 1.000066799129808,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 196.0
+      },
+      "prio:ES>SliceGuarantee": {
+       "group": 5,
+       "V": 20.28688524590164,
+       "E_kwh": 5.799889865307645,
+       "retention": 1.000066799129808,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 196.0
+      },
+      "prio:SliceGuarantee>ES": {
+       "group": 5,
+       "V": 20.28688524590164,
+       "E_kwh": 5.799889865307645,
+       "retention": 1.000066799129808,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 196.0
+      },
+      "cell:ES>SliceGuarantee": {
+       "group": 6,
+       "V": 23.360655737704917,
+       "E_kwh": 5.798214946507121,
+       "retention": 1.0008553828816764,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.4863813229571981,
+       "changes": 176.125
+      },
+      "cell:SliceGuarantee>ES": {
+       "group": 6,
+       "V": 22.081967213114755,
+       "E_kwh": 5.719650933967955,
+       "retention": 1.0378448200714523,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.2840466926070038,
+       "changes": 196.125
+      },
+      "lock": {
+       "group": 7,
+       "V": 20.28688524590164,
+       "E_kwh": 5.799889865307645,
+       "retention": 1.000066799129808,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 196.0
+      },
+      "qacm": {
+       "group": 8,
+       "V": 20.28688524590164,
+       "E_kwh": 5.799889865307645,
+       "retention": 1.000066799129808,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 196.0
+      }
+     }
+    },
+    "3": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.09449155113308072,
+     "AA_matched": true,
+     "AA_energy_shortfall": 0.013567588762249505,
+     "V_AA": 92.16326530612245,
+     "V_ref": 53.51020408163265,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 0.7223493516399697,
+     "V_AA_minus_V_ref": 38.653061224489804,
+     "lb90_diff": 25.22038539553752,
+     "Lambda_ci90": [
+      0.42920353982300896,
+      1.103024309950781
+     ],
+     "R_static": 0.0,
+     "R_static_arm": "prio:ES>SliceGuarantee",
+     "c1": true,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 249.91836734693877,
+       "E_kwh": 9.64495123595621,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -4.08130939809926,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 353.53061224489795,
+       "E_kwh": 8.733584833067784,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -6.761879619852163,
+       "changes": 44.125
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 53.51020408163265,
+       "E_kwh": 9.643136080700742,
+       "retention": 0.001991685506196729,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 219.875
+      },
+      "noarb": {
+       "group": 3,
+       "V": 92.16326530612245,
+       "E_kwh": 8.745949877633905,
+       "retention": 0.9864324112377505,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 366.625
+      },
+      "prio:ES>SliceGuarantee": {
+       "group": 5,
+       "V": 92.16326530612245,
+       "E_kwh": 8.745949877633905,
+       "retention": 0.9864324112377505,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 366.625
+      },
+      "prio:SliceGuarantee>ES": {
+       "group": 5,
+       "V": 92.16326530612245,
+       "E_kwh": 8.745949877633905,
+       "retention": 0.9864324112377505,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 366.625
+      },
+      "cell:ES>SliceGuarantee": {
+       "group": 6,
+       "V": 99.87755102040816,
+       "E_kwh": 8.74548757068933,
+       "retention": 0.9869396791632639,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.19957761351636727,
+       "changes": 320.375
+      },
+      "cell:SliceGuarantee>ES": {
+       "group": 6,
+       "V": 114.10204081632654,
+       "E_kwh": 8.322301777951415,
+       "retention": 1.451281782840441,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.5675818373812037,
+       "changes": 379.375
+      },
+      "lock": {
+       "group": 7,
+       "V": 92.16326530612245,
+       "E_kwh": 8.745949877633905,
+       "retention": 0.9864324112377505,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 366.625
+      },
+      "qacm": {
+       "group": 8,
+       "V": 97.44897959183673,
+       "E_kwh": 8.726309803555583,
+       "retention": 1.0079825517916219,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.13674762407602933,
+       "changes": 364.625
+      },
+      "oracle": {
+       "group": 10,
+       "V": 77.34693877551021,
+       "E_kwh": 8.607458256555072,
+       "retention": 1.1383928309327336,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.3833157338965152,
+       "changes": 283.75
+      }
+     },
+     "R_or": 0.0,
+     "R_or_ci90": [
+      0.0,
+      0.0
+     ],
+     "c2": false,
+     "rho_sign": 0.547085201793722,
+     "n_deviations": 223,
+     "c4": false
+    }
+   },
+   "verdict": "DEAD (not recoverable)"
+  },
+  "P2": {
+   "rows": {
+    "0": {
+     "complete": false,
+     "missing": [
+      "sub:PowerES",
+      "sub:Coverage",
+      "noarb",
+      "prio:PowerES>Coverage",
+      "prio:Coverage>PowerES",
+      "cell:PowerES>Coverage",
+      "cell:Coverage>PowerES",
+      "lock",
+      "qacm"
+     ]
+    },
+    "1": {
+     "complete": false,
+     "missing": [
+      "sub:PowerES",
+      "sub:Coverage",
+      "noarb",
+      "prio:PowerES>Coverage",
+      "prio:Coverage>PowerES",
+      "cell:PowerES>Coverage",
+      "cell:Coverage>PowerES",
+      "lock",
+      "qacm"
+     ]
+    },
+    "2": {
+     "complete": false,
+     "missing": [
+      "sub:PowerES",
+      "sub:Coverage",
+      "noarb",
+      "prio:PowerES>Coverage",
+      "prio:Coverage>PowerES",
+      "cell:PowerES>Coverage",
+      "cell:Coverage>PowerES",
+      "lock",
+      "qacm"
+     ]
+    },
+    "3": {
+     "complete": false,
+     "missing": [
+      "sub:PowerES",
+      "sub:Coverage",
+      "noarb",
+      "prio:PowerES>Coverage",
+      "prio:Coverage>PowerES",
+      "cell:PowerES>Coverage",
+      "cell:Coverage>PowerES",
+      "lock",
+      "qacm"
+     ]
+    }
+   },
+   "verdict": "NOT SCREENABLE (inert xApp, M4)"
+  },
+  "P3": {
+   "rows": {
+    "0": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.31132190799556225,
+     "AA_matched": true,
+     "AA_energy_shortfall": 0.002237666430567886,
+     "V_AA": 32.94117647058823,
+     "V_ref": 9.2,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 2.580562659846547,
+     "V_AA_minus_V_ref": 23.741176470588233,
+     "lb90_diff": 17.282868525896415,
+     "Lambda_ci90": [
+      1.5842138003636712,
+      4.121495327102803
+     ],
+     "R_static": 0.3617443012884043,
+     "R_static_arm": "sub:ES+SliceGuarantee",
+     "c1": false,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 9.2,
+       "E_kwh": 7.849315964406904,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 74.68235294117648,
+       "E_kwh": 5.606329679738767,
+       "retention": 0.9178783433469672,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -1.758176412289396,
+       "changes": 33.0
+      },
+      "sub:PowerES": {
+       "group": 2,
+       "V": 11.176470588235293,
+       "E_kwh": 7.398403723413182,
+       "retention": 0.1845230100546171,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.9167492566897919,
+       "changes": 65.0
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 9.2,
+       "E_kwh": 7.849317475115947,
+       "retention": -6.18214708743593e-07,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 94.375
+      },
+      "noarb": {
+       "group": 3,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "sub:PowerES+SliceGuarantee": {
+       "group": 4,
+       "V": 10.988235294117647,
+       "E_kwh": 7.398399594582803,
+       "retention": 0.18452469966102006,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.9246778989098117,
+       "changes": 172.625
+      },
+      "sub:ES+SliceGuarantee": {
+       "group": 4,
+       "V": 24.352941176470587,
+       "E_kwh": 5.604990368695491,
+       "retention": 0.918426418299557,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.3617443012884043,
+       "changes": 180.375
+      },
+      "sub:ES+PowerES": {
+       "group": 4,
+       "V": 148.3764705882353,
+       "E_kwh": 5.4056519419077205,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -4.862239841427156,
+       "changes": 123.75
+      },
+      "prio:ES>PowerES>SliceGuarantee": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "prio:ES>SliceGuarantee>PowerES": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "prio:PowerES>ES>SliceGuarantee": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "prio:PowerES>SliceGuarantee>ES": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "prio:SliceGuarantee>ES>PowerES": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "prio:SliceGuarantee>PowerES>ES": {
+       "group": 5,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "cell:ES>PowerES>SliceGuarantee": {
+       "group": 6,
+       "V": 49.55294117647059,
+       "E_kwh": 5.39251390483992,
+       "retention": 1.0053763680059271,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.6997026759167495,
+       "changes": 233.125
+      },
+      "cell:ES>SliceGuarantee>PowerES": {
+       "group": 6,
+       "V": 38.32941176470588,
+       "E_kwh": 5.291383761329422,
+       "retention": 1.0467610029554857,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.22695738354806752,
+       "changes": 268.5
+      },
+      "cell:PowerES>ES>SliceGuarantee": {
+       "group": 6,
+       "V": 51.129411764705885,
+       "E_kwh": 5.4019628396376405,
+       "retention": 1.0015096601808242,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.7661050545094156,
+       "changes": 242.5
+      },
+      "cell:PowerES>SliceGuarantee>ES": {
+       "group": 6,
+       "V": 49.294117647058826,
+       "E_kwh": 5.385854143425012,
+       "retention": 1.0081016859520897,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.6888007928642224,
+       "changes": 258.25
+      },
+      "cell:SliceGuarantee>ES>PowerES": {
+       "group": 6,
+       "V": 44.141176470588235,
+       "E_kwh": 5.2731126433012045,
+       "retention": 1.0542379383524931,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.47175421209117957,
+       "changes": 272.0
+      },
+      "cell:SliceGuarantee>PowerES>ES": {
+       "group": 6,
+       "V": 41.129411764705885,
+       "E_kwh": 5.321403709742073,
+       "retention": 1.0344761928767463,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.34489593657086254,
+       "changes": 287.375
+      },
+      "lock": {
+       "group": 7,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      },
+      "qacm": {
+       "group": 8,
+       "V": 32.94117647058823,
+       "E_kwh": 5.4111200468584535,
+       "retention": 0.9977623335694321,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 302.875
+      }
+     }
+    },
+    "1": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.13282559557823218,
+     "AA_matched": true,
+     "AA_energy_shortfall": -0.009865650543643634,
+     "V_AA": 149.2250922509225,
+     "V_ref": 79.08487084870849,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 0.886898096304591,
+     "V_AA_minus_V_ref": 70.14022140221401,
+     "lb90_diff": 30.0,
+     "Lambda_ci90": [
+      0.2681901759915943,
+      1.7313997983808618
+     ],
+     "R_static": 0.08743686868686841,
+     "R_static_arm": "cell:ES>SliceGuarantee>PowerES",
+     "c1": true,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 333.83025830258305,
+       "E_kwh": 9.708233201998443,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -2.6319444444444455,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 442.64944649446494,
+       "E_kwh": 8.908739481839556,
+       "retention": 0.620001992069132,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -4.183396464646465,
+       "changes": 40.5
+      },
+      "sub:PowerES": {
+       "group": 2,
+       "V": 603.5202952029521,
+       "E_kwh": 8.907671213084152,
+       "retention": 0.6208304272897166,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -6.476957070707073,
+       "changes": 70.25
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 79.08487084870849,
+       "E_kwh": 9.71009727712778,
+       "retention": -0.0014455777005044986,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 272.375
+      },
+      "noarb": {
+       "group": 3,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "sub:PowerES+SliceGuarantee": {
+       "group": 4,
+       "V": 105.1660516605166,
+       "E_kwh": 8.926291563610818,
+       "retention": 0.6063904709417614,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.6281565656565657,
+       "changes": 367.375
+      },
+      "sub:ES+SliceGuarantee": {
+       "group": 4,
+       "V": 105.74169741697418,
+       "E_kwh": 8.913130195365847,
+       "retention": 0.6165970233192033,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.6199494949494948,
+       "changes": 394.25
+      },
+      "sub:ES+PowerES": {
+       "group": 4,
+       "V": 656.9667896678967,
+       "E_kwh": 8.418731344930633,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -7.238952020202022,
+       "changes": 121.25
+      },
+      "prio:ES>PowerES>SliceGuarantee": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "prio:ES>SliceGuarantee>PowerES": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "prio:PowerES>ES>SliceGuarantee": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "prio:PowerES>SliceGuarantee>ES": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "prio:SliceGuarantee>ES>PowerES": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "prio:SliceGuarantee>PowerES>ES": {
+       "group": 5,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "cell:ES>PowerES>SliceGuarantee": {
+       "group": 6,
+       "V": 148.69372693726936,
+       "E_kwh": 8.423989803865704,
+       "retention": 0.9959221005334353,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.007575757575757626,
+       "changes": 391.875
+      },
+      "cell:ES>SliceGuarantee>PowerES": {
+       "group": 6,
+       "V": 143.09225092250924,
+       "E_kwh": 8.324328271369303,
+       "retention": 1.0732089473496305,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.08743686868686841,
+       "changes": 440.5
+      },
+      "cell:PowerES>ES>SliceGuarantee": {
+       "group": 6,
+       "V": 186.99630996309963,
+       "E_kwh": 8.456304757072905,
+       "retention": 0.9708620720968082,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.5385101010101012,
+       "changes": 401.5
+      },
+      "cell:PowerES>SliceGuarantee>ES": {
+       "group": 6,
+       "V": 168.55350553505534,
+       "E_kwh": 8.239140839025898,
+       "retention": 1.13927122704042,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.27556818181818177,
+       "changes": 425.25
+      },
+      "cell:SliceGuarantee>ES>PowerES": {
+       "group": 6,
+       "V": 144.86346863468634,
+       "E_kwh": 8.085218585456836,
+       "retention": 1.2586368973769204,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.0621843434343434,
+       "changes": 471.5
+      },
+      "cell:SliceGuarantee>PowerES>ES": {
+       "group": 6,
+       "V": 190.80442804428046,
+       "E_kwh": 8.181241877008777,
+       "retention": 1.1841714818944749,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.5928030303030307,
+       "changes": 499.0
+      },
+      "lock": {
+       "group": 7,
+       "V": 149.2250922509225,
+       "E_kwh": 8.40600957023342,
+       "retention": 1.0098656505436436,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 510.875
+      },
+      "qacm": {
+       "group": 8,
+       "V": 149.3579335793358,
+       "E_kwh": 8.410625513989281,
+       "retention": 1.006286017268546,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.0018939393939395078,
+       "changes": 510.375
+      },
+      "oracle": {
+       "group": 10,
+       "V": 87.45387453874538,
+       "E_kwh": 7.953215151760523,
+       "retention": 1.3610046706164833,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.8806818181818183,
+       "changes": 394.375
+      }
+     },
+     "R_or": 0.0,
+     "R_or_ci90": [
+      0.0,
+      0.0
+     ],
+     "c2": false,
+     "rho_sign": 0.6068376068376068,
+     "n_deviations": 234,
+     "c4": false
+    },
+    "2": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.31984272876642633,
+     "AA_matched": true,
+     "AA_energy_shortfall": -0.0001146115523082969,
+     "V_AA": 29.459016393442624,
+     "V_ref": 13.991803278688524,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 1.1054481546572936,
+     "V_AA_minus_V_ref": 15.4672131147541,
+     "lb90_diff": 11.641434262948207,
+     "Lambda_ci90": [
+      0.6647887323943662,
+      1.8685446009389672
+     ],
+     "R_static": 0.0,
+     "R_static_arm": "prio:ES>PowerES>SliceGuarantee",
+     "c1": false,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 14.237704918032787,
+       "E_kwh": 7.92398978452877,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.9841017488076311,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 31.524590163934427,
+       "E_kwh": 5.800031743856511,
+       "retention": 0.8380415354714233,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -0.13354531001589817,
+       "changes": 40.0
+      },
+      "sub:PowerES": {
+       "group": 2,
+       "V": 17.33606557377049,
+       "E_kwh": 7.416503592939967,
+       "retention": 0.2002367744962675,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.7837837837837839,
+       "changes": 64.375
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 13.991803278688524,
+       "E_kwh": 7.923945087355181,
+       "retention": 1.763598304115562e-05,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 142.25
+      },
+      "noarb": {
+       "group": 3,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "sub:PowerES+SliceGuarantee": {
+       "group": 4,
+       "V": 16.278688524590162,
+       "E_kwh": 7.416548593849723,
+       "retention": 0.20021901866927488,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.8521462639109699,
+       "changes": 212.0
+      },
+      "sub:ES+SliceGuarantee": {
+       "group": 4,
+       "V": 20.483606557377048,
+       "E_kwh": 5.7996442146853315,
+       "retention": 0.8381944412894462,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 0.5802861685214628,
+       "changes": 197.5
+      },
+      "sub:ES+PowerES": {
+       "group": 4,
+       "V": 60.049180327868854,
+       "E_kwh": 5.389559269127801,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -1.9777424483306834,
+       "changes": 123.375
+      },
+      "prio:ES>PowerES>SliceGuarantee": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "prio:ES>SliceGuarantee>PowerES": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "prio:PowerES>ES>SliceGuarantee": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "prio:PowerES>SliceGuarantee>ES": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "prio:SliceGuarantee>ES>PowerES": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "prio:SliceGuarantee>PowerES>ES": {
+       "group": 5,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "cell:ES>PowerES>SliceGuarantee": {
+       "group": 6,
+       "V": 30.39344262295082,
+       "E_kwh": 5.392328225807869,
+       "retention": 0.9989074639595593,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.060413354531001405,
+       "changes": 251.375
+      },
+      "cell:ES>SliceGuarantee>PowerES": {
+       "group": 6,
+       "V": 32.33606557377049,
+       "E_kwh": 5.389687432975616,
+       "retention": 0.9999494309088232,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.1860095389507152,
+       "changes": 277.75
+      },
+      "cell:PowerES>ES>SliceGuarantee": {
+       "group": 6,
+       "V": 34.89344262295082,
+       "E_kwh": 5.440261124068805,
+       "retention": 0.9799947741187206,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.35135135135135137,
+       "changes": 250.25
+      },
+      "cell:PowerES>SliceGuarantee>ES": {
+       "group": 6,
+       "V": 40.99180327868852,
+       "E_kwh": 5.461106784238842,
+       "retention": 0.9717697862789024,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.7456279809220983,
+       "changes": 264.875
+      },
+      "cell:SliceGuarantee>ES>PowerES": {
+       "group": 6,
+       "V": 37.18032786885246,
+       "E_kwh": 5.267336849083097,
+       "retention": 1.0482248060469581,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.4992050874403814,
+       "changes": 309.5
+      },
+      "cell:SliceGuarantee>PowerES>ES": {
+       "group": 6,
+       "V": 38.704918032786885,
+       "E_kwh": 5.425031818138034,
+       "retention": 0.9860037397771702,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.5977742448330682,
+       "changes": 305.375
+      },
+      "lock": {
+       "group": 7,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      },
+      "qacm": {
+       "group": 8,
+       "V": 29.459016393442624,
+       "E_kwh": 5.389268794112214,
+       "retention": 1.0001146115523083,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 308.125
+      }
+     }
+    },
+    "3": {
+     "complete": true,
+     "screenable": true,
+     "E_saving_A_frac": 0.1910963714276821,
+     "AA_matched": true,
+     "AA_energy_shortfall": 0.012615337664432347,
+     "V_AA": 135.77551020408163,
+     "V_ref": 53.244897959183675,
+     "ref_arm": "sub:SliceGuarantee",
+     "Lambda": 1.5500191644308163,
+     "V_AA_minus_V_ref": 82.53061224489795,
+     "lb90_diff": 55.93979443600975,
+     "Lambda_ci90": [
+      0.8623195199217271,
+      2.6731738035264487
+     ],
+     "R_static": 0.007665677546983165,
+     "R_static_arm": "qacm",
+     "c1": true,
+     "arms": {
+      "freeze": {
+       "group": 1,
+       "V": 249.91836734693877,
+       "E_kwh": 9.64495123595621,
+       "retention": 0.0,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": -1.383036597428289,
+       "changes": 0.0
+      },
+      "sub:ES": {
+       "group": 2,
+       "V": 353.53061224489795,
+       "E_kwh": 8.733584833067784,
+       "retention": 0.4944706716675664,
+       "matched": false,
+       "guard": false,
+       "eligible": false,
+       "R": -2.6384767556874382,
+       "changes": 44.125
+      },
+      "sub:PowerES": {
+       "group": 2,
+       "V": 480.16326530612247,
+       "E_kwh": 8.62080491581611,
+       "retention": 0.5556605084415634,
+       "matched": false,
+       "guard": false,
+       "eligible": false,
+       "R": -4.172848664688428,
+       "changes": 67.875
+      },
+      "sub:SliceGuarantee": {
+       "group": 2,
+       "V": 53.244897959183675,
+       "E_kwh": 9.643219966094716,
+       "retention": 0.0009393172367755239,
+       "matched": false,
+       "guard": true,
+       "eligible": false,
+       "R": 1.0,
+       "changes": 218.75
+      },
+      "noarb": {
+       "group": 3,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "sub:PowerES+SliceGuarantee": {
+       "group": 4,
+       "V": 87.44897959183673,
+       "E_kwh": 8.619461045072944,
+       "retention": 0.5563896385333705,
+       "matched": false,
+       "guard": false,
+       "eligible": false,
+       "R": 0.5855588526211671,
+       "changes": 283.125
+      },
+      "sub:ES+SliceGuarantee": {
+       "group": 4,
+       "V": 91.91836734693878,
+       "E_kwh": 8.745962454315322,
+       "retention": 0.487755073339035,
+       "matched": false,
+       "guard": false,
+       "eligible": false,
+       "R": 0.531404549950544,
+       "changes": 363.5
+      },
+      "sub:ES+PowerES": {
+       "group": 4,
+       "V": 607.9795918367347,
+       "E_kwh": 7.80183605216804,
+       "retention": 1.0,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -5.721562809099901,
+       "changes": 119.25
+      },
+      "prio:ES>PowerES>SliceGuarantee": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "prio:ES>SliceGuarantee>PowerES": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "prio:PowerES>ES>SliceGuarantee": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "prio:PowerES>SliceGuarantee>ES": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "prio:SliceGuarantee>ES>PowerES": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "prio:SliceGuarantee>PowerES>ES": {
+       "group": 5,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "cell:ES>PowerES>SliceGuarantee": {
+       "group": 6,
+       "V": 143.48979591836735,
+       "E_kwh": 7.900068341099504,
+       "retention": 0.9467031199159427,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.09347181008902088,
+       "changes": 345.875
+      },
+      "cell:ES>SliceGuarantee>PowerES": {
+       "group": 6,
+       "V": 131.40816326530611,
+       "E_kwh": 7.9553105032127895,
+       "retention": 0.9167309496472641,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.052917903066271046,
+       "changes": 363.625
+      },
+      "cell:PowerES>ES>SliceGuarantee": {
+       "group": 6,
+       "V": 177.6326530612245,
+       "E_kwh": 7.840699269527348,
+       "retention": 0.9789143848951255,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": -0.5071711177052425,
+       "changes": 351.0
+      },
+      "cell:PowerES>SliceGuarantee>ES": {
+       "group": 6,
+       "V": 179.6734693877551,
+       "E_kwh": 7.61305327064407,
+       "retention": 1.102425927139271,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.5318991097922848,
+       "changes": 383.0
+      },
+      "cell:SliceGuarantee>ES>PowerES": {
+       "group": 6,
+       "V": 149.14285714285714,
+       "E_kwh": 7.589020413733413,
+       "retention": 1.1154651864986678,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": -0.16196834817012862,
+       "changes": 436.75
+      },
+      "cell:SliceGuarantee>PowerES>ES": {
+       "group": 6,
+       "V": 125.93877551020408,
+       "E_kwh": 7.404140471807606,
+       "retention": 1.215773590201263,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.11918892185954495,
+       "changes": 441.625
+      },
+      "lock": {
+       "group": 7,
+       "V": 135.77551020408163,
+       "E_kwh": 7.8250875725659705,
+       "retention": 0.9873846623355677,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.0,
+       "changes": 441.875
+      },
+      "qacm": {
+       "group": 8,
+       "V": 135.14285714285714,
+       "E_kwh": 7.83012216288138,
+       "retention": 0.9846530965822752,
+       "matched": true,
+       "guard": true,
+       "eligible": true,
+       "R": 0.007665677546983165,
+       "changes": 443.125
+      },
+      "oracle": {
+       "group": 10,
+       "V": 81.79591836734694,
+       "E_kwh": 7.378115819282936,
+       "retention": 1.2298935175685703,
+       "matched": true,
+       "guard": false,
+       "eligible": false,
+       "R": 0.6540553907022749,
+       "changes": 366.0
+      }
+     },
+     "R_or": 0.0,
+     "R_or_ci90": [
+      0.0,
+      0.0
+     ],
+     "c2": false,
+     "rho_sign": 0.6583333333333333,
+     "n_deviations": 240,
+     "c4": false
+    }
+   },
+   "verdict": "DEAD (not recoverable)"
+  }
+ }
+}

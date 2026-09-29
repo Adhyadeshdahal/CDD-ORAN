@@ -1,0 +1,44 @@
+"""Mirror of e6p_v2_state.json (cloud.py bundles only *.py). Written by e6p_v2.py init-state / summary --write-state; do not edit."""
+STATE = r'''{
+ "cells": [
+  [
+   "P1",
+   3
+  ],
+  [
+   "P3",
+   1
+  ],
+  [
+   "P3",
+   3
+  ]
+ ],
+ "inherited_from": "e6p_state.json (E6P-v1 stage 0a / 0b)",
+ "l_feasible": {
+  "L10": true,
+  "L40": true
+ },
+ "load_factor": {
+  "L10": 0.7875,
+  "L40": 1.7554687500000001
+ },
+ "not_screenable_pairs": [
+  "P2"
+ ],
+ "v1_stage1_crit1": [
+  [
+   "P1",
+   3
+  ],
+  [
+   "P3",
+   1
+  ],
+  [
+   "P3",
+   3
+  ]
+ ],
+ "written_utc": "2026-09-29T04:47:35Z"
+}'''

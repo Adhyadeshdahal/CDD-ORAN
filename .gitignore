@@ -40,3 +40,28 @@ artifacts/
 
 # herdr orchestration trail (local only)
 .herdr/
+
+# scratchpad: local working area (~600 MB, mostly large run dumps). Track only what the team needs to
+# reproduce and review the E6-P / xTRUCE screens: drivers, decision memos, frozen-screen raw results.
+scratchpad/*
+!scratchpad/e6_dev/
+scratchpad/e6_dev/*
+!scratchpad/e6_dev/*.py
+!scratchpad/e6_dev/*.json
+!scratchpad/e6_dev/*.md
+!scratchpad/e6_dev/*.txt
+!scratchpad/e6_dev/decision/
+!scratchpad/e6_dev/runs/
+scratchpad/e6_dev/runs/*
+!scratchpad/e6_dev/runs/e6p-*/
+!scratchpad/e6_dev/runs/xts-*/
+scratchpad/e6_dev/runs/*/*
+!scratchpad/e6_dev/runs/*/all.jsonl
+!scratchpad/e6_dev/runs/*/summary.json
+!scratchpad/decision_stack/
+scratchpad/decision_stack/*
+!scratchpad/decision_stack/*.md
+!scratchpad/decision_stack/*.py
+!scratchpad/decision_stack/req_pilot/
+!scratchpad/decision_stack/diag_rank/
+scratchpad/decision_stack/diag_rank/*.pkl
