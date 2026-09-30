@@ -210,7 +210,7 @@ The consequence is disclosed: incumbent units that open in [0, 90) are logged an
 
 ### 4.1 PMRT (primary method): the v4 artifact
 
-- Artifact: `docs/benchmark/artifacts/E6P_PMRT_V4.json`, sha256 `PMRT_SHA_TBD`. It is the label-only
+- Artifact: `docs/benchmark/artifacts/E6P_PMRT_V4.json`, sha256 `9991c390df3a53ef12b553990da52c6adab25d4087bb029f1427e20a898e6a91`. It is the label-only
   successor of the frozen v4 artifact `E6P_MSCRPLUS_V4_FROZEN.json` (sha256
   `4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba`): the same learned content (checked field by
   field at build time), new labels and the code sha256s of the renamed modules; it records the old artifact in
@@ -679,7 +679,7 @@ runs there.
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-placebo-1 e6p_conf_placebo.py 1
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-gt-1 e6p_conf_gt.py 2
     # discovery analysis (Kaggle job)
-    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-discan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-1-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_PMRT_V4.json scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --sources bishalpanta/e6p-conf-dev-1-a,bishalpanta/e6p-conf-disc-1-a,bishalpanta/e6p-conf-disc-1-b,bishalpanta/e6p-conf-placebo-1-a,bishalpanta/e6p-conf-gt-1-a,bishalpanta/e6p-conf-gt-1-b
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-discan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-2-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_PMRT_V4.json scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --sources bishalpanta/e6p-conf-dev-2-a,bishalpanta/e6p-conf-disc-1-a,bishalpanta/e6p-conf-disc-1-b,bishalpanta/e6p-conf-placebo-1-a,bishalpanta/e6p-conf-gt-1-a,bishalpanta/e6p-conf-gt-1-b
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py pull e6p-conf-discan-1
     # freeze 2 (local): build + verify, git add -f the artifact and its .sha256, MAPS_SHA256 in e6p_conf.py, commit
     PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_conf_analyze.py build --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json
@@ -726,3 +726,10 @@ The study freezes only after (a) the v4 verdict is known and (b) the driver and 
    at freeze 1.
 7. If a baseline fails on Kaggle, its error is recorded and `build` refuses to write the maps artifact (no silent arm
    drops).
+8. dev_conf ran as Kaggle kernel `e6p-conf-dev-2-a` (the `e6p-conf-dev-1` code dataset never became ready); the
+   analysis commands in section 12 read `e6p-conf-dev-2-a`. Result: 71 s/ep; 6.5 sleep units/ep (3.9 tested, 1.3
+   rejects); K1 projection for 600 DISC episodes 2340 tested sleep units / 780 rejects; repro checks bit-exact.
+9. K1 thresholds are FIXED at freeze 1 at the provisional values (>= 500 tested sleep units, >= 75 rejects): the
+   dev_conf projection clears them about 4.7x / 10x, so no re-tuning is needed.
+10. The primary method runs from `E6P_PMRT_V4.json` (the label-only successor of the frozen v4 artifact; equivalence
+    in `E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md`).
