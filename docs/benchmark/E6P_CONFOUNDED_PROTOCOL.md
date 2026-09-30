@@ -2,6 +2,8 @@
 
 FROZEN: no
 
+> **Naming (2026-09-30):** the discovery method is **PMRT** (Predictable Matched-Filter Randomization Test; docs/benchmark/METHOD_NAMES.md). It is the method labelled "MSCR+" in protocol v4 and in the frozen artifact E6P_MSCRPLUS_V4_FROZEN.json.
+
 **Status: DRAFT (2026-09-30).** Written after the kill tests K-A, K-A2 and K-B (section 2) and before any seed of the
 study blocks below is simulated. The file must be frozen (this line set to "FROZEN: yes", the file's LF-normalised
 sha256 recorded in the freeze commit message, in `.tmp/PLAN.md` AND in `scratchpad/e6_dev/e6p_conf.py` as
@@ -12,24 +14,24 @@ allowed before the first freeze.
 
 Sources: `scratchpad/e6_dev/decision/OPTION_A_PLAN.md` (plan + amendment), `.tmp/PLAN.md` (K-A, K-A2, K-B entries),
 `scratchpad/e6_dev/decision/opta_ka_summary.json`, `opta_ka2_summary.json`, `opta_kb.json`,
-`docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md` (MSCR+ frozen artifact, v4 criteria), `cdd_oran/decision/mapgate.py`
+`docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md` (PMRT frozen artifact, v4 criteria), `cdd_oran/decision/mapgate.py`
 (MapGateV2), `cdd_oran/decision/collect_p.py` (IncumbentPolicy / PlaceboIncumbent),
-`cdd_oran/decision/crt_units_plus.py` + `mscr_multi.py` (MSCR+), `scratchpad/e6_dev/e6p_step2_dev.py` (R, eligibility).
+`cdd_oran/decision/crt_units_plus.py` + `mscr_multi.py` (PMRT), `scratchpad/e6_dev/e6p_step2_dev.py` (R, eligibility).
 
 ## 0. Disclosure: what was developed on which data
 
-### 0.1 Discovery method (MSCR / MSCR+)
+### 0.1 Discovery method (MSCR / PMRT)
 
 | attempt | method | data | verdict |
 |---|---|---|---|
 | v1 (`E6P_DISCOVERY_PROTOCOL.md`) | MSCR-CRT v1 | EVAL 60 eps | KILL (indirect recall 3/8; sign bug) |
 | v2 (`..._V2.md`) | MSCR-CRT v2 | eval_v2 480 eps | KILL near miss (premise z 2.67 not declared) |
 | v3 (`..._V3.md`) | MSCR-CRT v2, n 1200 | eval_v3 1200 eps | PARTIAL (P1 pass, P2 fail); validity only approximate (agent V: sleep null-outcome rejection .143) |
-| MSCR+ development | 29 statistic arms (agent S), 13 declaration layers (agent M), 9 combinations (agent I) | fitted on ev2 + DEV, SELECTED on ev3 slices vs the pooled GT | `loadsp_c` + `wby1s` chosen; selection optimism about .02-.05 F1 |
-| v4 (`..._V4.md`, frozen at 4fc2cd9) | frozen MSCR+ artifact (sha256 `4735a85a...d14ba`) | fresh 188000-189999, pi0 .5/.5 from t = 0 | pending at the time of writing; its verdict is reported next to this study |
+| PMRT development | 29 statistic arms (agent S), 13 declaration layers (agent M), 9 combinations (agent I) | fitted on ev2 + DEV, SELECTED on ev3 slices vs the pooled GT | `loadsp_c` + `wby1s` chosen; selection optimism about .02-.05 F1 |
+| v4 (`..._V4.md`, frozen at 4fc2cd9) | frozen PMRT artifact (sha256 `4735a85a...d14ba`) | fresh 188000-189999, pi0 .5/.5 from t = 0 | pending at the time of writing; its verdict is reported next to this study |
 
-MSCR+ enters this study as the v4 frozen artifact, unchanged: nothing is re-fitted on confounded data. K-B (section 2)
-used MSCR-CRT v2, not MSCR+; this study is the first time MSCR+ sees incumbent logs.
+PMRT enters this study as the v4 frozen artifact, unchanged: nothing is re-fitted on confounded data. K-B (section 2)
+used MSCR-CRT v2, not PMRT; this study is the first time PMRT sees incumbent logs.
 
 ### 0.2 Referee and study design
 
@@ -62,20 +64,20 @@ Setting: the E6-P cell P3 surge-L40. An operator has only logs of a CONFOUNDED i
 - its per-request propensities are logged;
 - load and protection pressure also drive the KPIs.
 
-**Q-disc.** Does MSCR+ (design-based, it uses the logged propensities) recover a causal map from these logs that is
+**Q-disc.** Does PMRT (design-based, it uses the logged propensities) recover a causal map from these logs that is
 valid (placebo / null-outcome) and correct on the cells a referee reads? Do associational baselines produce wrong
 maps (DEV-calibrated) or empty maps (placebo-calibrated) from the same logs?
 
 **Q-dec.** A single frozen referee rule, MapGateV2, is identical for every map and acts on-policy from t = 0. Is it
-better when driven by the MSCR+ map than when driven by any associational map? And where does it stand against:
+better when driven by the PMRT map than when driven by any associational map? And where does it stand against:
 
 - the incumbent;
 - accept-all;
 - the static rules;
 - the GT map (ceiling)?
 
-Primary claims (section 7): **K0** (+ K0n): MSCR+ validity on confounded logs; **E**: the MSCR+-map referee is
-eligible; **D1**: R(MSCR+ map) - R(best associational map) >= .10 with paired LB90 > 0; **D2**: the MSCR+ map beats
+Primary claims (section 7): **K0** (+ K0n): PMRT validity on confounded logs; **E**: the PMRT-map referee is
+eligible; **D1**: R(PMRT map) - R(best associational map) >= .10 with paired LB90 > 0; **D2**: the PMRT map beats
 EACH associational map (one-sided, Holm). PASS = K0 & K0n & E & D1 & D2. Everything else is secondary or descriptive,
 including the comparison with never_sleep, which is reported in full whatever it shows (section 7.3).
 
@@ -148,7 +150,7 @@ The MSCR v2 map had no wrong-sign edge, yet it flipped 19.75 decisions per episo
 Consequences:
 
 - map magnitudes are part of the method and are fixed in section 4.3;
-- MSCR+ power at the DISC size matters (section 8).
+- PMRT power at the DISC size matters (section 8).
 
 ## 3. Plant, incumbent and logging design
 
@@ -198,7 +200,7 @@ records every second.
 
 ## 4. Discovery: methods and maps
 
-All methods run on the SAME unit table: the MSCR+ window rule, H = 90, H_pre = 90 (`disc_bench.load_pool(H=90,
+All methods run on the SAME unit table: the PMRT window rule, H = 90, H_pre = 90 (`disc_bench.load_pool(H=90,
 H_pre=90)`), so units with t0 < 90 are not tested. This keeps the frozen artifact's feature distribution and the
 exclusion-by-t0 argument of v4.
 
@@ -206,7 +208,7 @@ The option-(a) plan's H_pre = 60 is NOT used: the artifact was never fitted on u
 The consequence is disclosed: incumbent units that open in [0, 90) are logged and enter later units only through the
 `hist` feature and the skeleton; about 2 sleep units per episode (v4 DEV smoke) are untested.
 
-### 4.1 MSCR+ (primary method): the frozen v4 artifact
+### 4.1 PMRT (primary method): the frozen v4 artifact
 
 - Artifact: `docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json`, sha256
   `4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba`.
@@ -227,7 +229,7 @@ everywhere, so NO change to crt_units_plus / mscr_multi / mscr_integrate_bench i
   - the conditional re-draws `crt_units.PiAssignment.mode_draws` (cumulative sums of `probs[rows]`, one independent
     uniform per unit).
 - Both UnitData builders prefer the unit's logged `probs` over a record's `pi0_table`:
-  - `disc_bench.episode_arrays` (the path MSCR+ uses);
+  - `disc_bench.episode_arrays` (the path PMRT uses);
   - `crt_units.build_unit_data`.
 - The `hist` feature uses the same per-unit rows of past units.
 
@@ -249,7 +251,7 @@ Three items are REQUIRED in the study code (not in the statistic):
   because the weights are fixed before the data.
 
 One wording correction, in documentation only: the `crt_units` docstring calls per-unit-row re-draws "the exact
-conditional law". That holds under the whole-trajectory sharp null. For a single (f, rel, kpi) null the MSCR+
+conditional law". That holds under the whole-trajectory sharp null. For a single (f, rel, kpi) null the PMRT
 argument is the asymptotic martingale one.
 
 ### 4.2 Associational baselines and the two tau variants
@@ -277,21 +279,21 @@ A map M: {(f, rel, kpi): beta} over the declared hypotheses with a nonzero sign.
 +1 knob-direction step (the "dir" orientation). Only kpi in {pv, v, rlf, e} and rel in {own, nbr, far} are read by
 MapGateV2.
 
-- **MSCR+ map.** Declared edges from the primary combination on the pooled DISC data. beta = the design-based slope
+- **PMRT map.** Declared edges from the primary combination on the pooled DISC data. beta = the design-based slope
   beta_hat = sum_u v_u r_u / sum_u v_u^2 over the family's tested units, where:
-  - v_u is the MSCR+ design-centred treatment with the unit's own row;
-  - r_u = the plain target y(rel, kpi) (H 90 post - pre) minus its PREDICTABLE running centre (the MSCR+ "pred" arm
+  - v_u is the PMRT design-centred treatment with the unit's own row;
+  - r_u = the plain target y(rel, kpi) (H 90 post - pre) minus its PREDICTABLE running centre (the PMRT "pred" arm
     residual, `eprocess_units.predictable_residuals`).
 
   It is design-unbiased for a linear level effect, because E[v_u c_u] = 0 for any predictable c_u. The sign of the
-  declared edge is the MSCR+ sign; if the beta_hat sign disagrees, the edge keeps the MSCR+ sign with |beta_hat| (and
+  declared edge is the PMRT sign; if the beta_hat sign disagrees, the edge keeps the PMRT sign with |beta_hat| (and
   the disagreement is counted and reported). The same y scale as the baselines.
 - **Baseline maps.** beta = the method's sign x |naive OLS slope of y on x = level * sgn| over the family's units. This
   is K-B's `map_from_declared`, the associational effect size of the method's own world view.
 - **GT map (privileged ceiling).** `map_from_gt(gt_conf cells, true_only=True)`: TRUE edges of the fresh gt_conf "dir"
   table (frozen gt_p rule), beta = the edge mean. This is the construction of K-A / K-A2 M_GT.
-- **Random map.** `random_sized_map(M_MSCR+, gt_conf cells, tag 6623)` with the new key `default_rng([6623, 3])`
-  (K-A2 used [6623, 2]). It has |M_MSCR+| random keys of the 60-cell universe, random signs, and |beta| = that GT
+- **Random map.** `random_sized_map(M_PMRT, gt_conf cells, tag 6623)` with the new key `default_rng([6623, 3])`
+  (K-A2 used [6623, 2]). It has |M_PMRT| random keys of the 60-cell universe, random signs, and |beta| = that GT
   cell's |mean|.
 - **Decision signature** (for aliasing and reporting) = for each of the 8 (f, d), the tuple
   (harm, energy == "costly", harmful rels, conflict) of `MapGateV2.classify`. These are the only map-dependent inputs
@@ -320,7 +322,7 @@ Scoring is unchanged: the plant's warm-up is unscored.
 | | never_sleep | K-A static: reject every pico sleep request (prop > cur) from t = 0. It is also the **best DEV static**: the highest-R eligible static on DEV 184200-239 (never_sleep .217 > M2 .102 > M1 .098; B1 / B2 / blanket2 ineligible). The two named references are one arm. |
 | | blanket2 | MapGateV2(blanket_saving_map()): the no-map control |
 | | B2 (descriptive) | step-2 static envelope (reject ptx-up, sleep, macro carrier-off after the warm-up). Highest raw DEV R (.361) but DEV-ineligible (rlf 1.27). Included because the static envelope is the known competitor. |
-| maps | MG:MSCR+ | MapGateV2(M_MSCR+) |
+| maps | MG:PMRT | MapGateV2(M_PMRT) |
 | | MG:GT | MapGateV2(M_GT_conf): privileged ceiling |
 | | MG:rand | MapGateV2(random map): chance control |
 | | MG:<b> for b in A | 13 associational maps (section 4.2) |
@@ -336,7 +338,7 @@ table is part of the maps artifact.
 | K-B (done) | 186000-186079 | 80 | placebo / incumbent | kill test (section 2); never re-used |
 | dev_conf | 186080-186099 | 20 | incumbent | before the freeze: plumbing, unit counts, K1 projection, baselines' @dev tau, alias repro check (2 seeds) |
 | disc | 186100-186699 | 600 | incumbent | discovery data: every method's map; K0n |
-| placebo | 186700-186899 | 200 | PlaceboIncumbent | MSCR+ K0; baselines' @plc tau; placebo declarations |
+| placebo | 186700-186899 | 200 | PlaceboIncumbent | PMRT K0; baselines' @plc tau; placebo declarations |
 | gt | 186900-186939 | 40 | incumbent base + knockouts | fresh GT: discovery scoring and the GT map |
 | reserve | 186940-186999 | - | - | unused unless a disclosed amendment |
 | eval | 187000-187159 | 160 | every arm of section 5.2 | the decision test; paired by seed |
@@ -359,12 +361,12 @@ table is part of the maps artifact.
 
 | id | criterion | rule | data |
 |---|---|---|---|
-| K0 | MSCR+ placebo validity | v4 rule: P(Binom(m, .05) >= n_reject) >= .01 over the p's wby1s uses AND <= 1 declaration (n_target 200) | placebo |
-| K0n | MSCR+ null-outcome validity | v4 recipe on DISC: 10 groups of 60 consecutive DISC episodes x 4 cyclic series shifts = 40 variants, B 999. Pooled rate of used p <= .05 is <= .075, every family <= .10, and variants with >= 1 declaration <= 5 of 40 | disc (series shifted) |
+| K0 | PMRT placebo validity | v4 rule: P(Binom(m, .05) >= n_reject) >= .01 over the p's wby1s uses AND <= 1 declaration (n_target 200) | placebo |
+| K0n | PMRT null-outcome validity | v4 recipe on DISC: 10 groups of 60 consecutive DISC episodes x 4 cyclic series shifts = 40 variants, B 999. Pooled rate of used p <= .05 is <= .075, every family <= .10, and variants with >= 1 declaration <= 5 of 40 | disc (series shifted) |
 | K1 | support | >= 500 tested sleep units with >= 75 rejects in DISC (provisional; re-projected from dev_conf before the freeze, see section 13) | disc |
 | G | premise in GT | gt sleep -> nbr pv TRUE(+) (frozen gt_p rule, "dir") | gt |
-| X1 | premise recovered | MSCR+ declares sleep -> nbr pv (+) on pooled DISC | disc vs gt |
-| X2 | referee-relevant map quality | over the MSCR+ declarations with kpi in {pv, v, rlf, e}, scored against gt (INDET excluded): precision (TRUE with the declared sign) >= .80 AND sign accuracy >= .90 | disc vs gt |
+| X1 | premise recovered | PMRT declares sleep -> nbr pv (+) on pooled DISC | disc vs gt |
+| X2 | referee-relevant map quality | over the PMRT declarations with kpi in {pv, v, rlf, e}, scored against gt (INDET excluded): precision (TRUE with the declared sign) >= .80 AND sign accuracy >= .90 | disc vs gt |
 | X3 | chain | >= min(3, \|C*\|) of C* declared with the GT sign (C = the v2 chain set) | disc vs gt |
 
 Discovery label (reported; not part of PASS):
@@ -400,9 +402,9 @@ value inside the bootstrap.
 
 | id | claim | rule |
 |---|---|---|
-| E | MSCR+ referee eligible | MG:MSCR+ eligible (point); retention and guard 90 % CIs reported |
-| D1 | beats the best associational map | Delta1 = R*(MSCR+) - max_{b in A} R*(b) >= .10 AND LB90 > 0. LB90 = the 5th percentile of R_boot(MSCR+) - max_b R*_boot(b), with the max RE-SELECTED in every resample (accounts for picking the best of 13) |
-| D2 | beats each associational map | for every b in A: one-sided paired bootstrap p_b = (1 + #{R_boot(MSCR+) - R*_boot(b) <= 0}) / (N_BOOT + 1). Holm at alpha .05 over the DISTINCT signatures of A (aliased maps are one hypothesis: their outcomes are identical by construction). Pass iff every one is rejected. A map with the same signature as MG:MSCR+ has dR = 0 and fails D2 honestly |
+| E | PMRT referee eligible | MG:PMRT eligible (point); retention and guard 90 % CIs reported |
+| D1 | beats the best associational map | Delta1 = R*(PMRT) - max_{b in A} R*(b) >= .10 AND LB90 > 0. LB90 = the 5th percentile of R_boot(PMRT) - max_b R*_boot(b), with the max RE-SELECTED in every resample (accounts for picking the best of 13) |
+| D2 | beats each associational map | for every b in A: one-sided paired bootstrap p_b = (1 + #{R_boot(PMRT) - R*_boot(b) <= 0}) / (N_BOOT + 1). Holm at alpha .05 over the DISTINCT signatures of A (aliased maps are one hypothesis: their outcomes are identical by construction). Pass iff every one is rejected. A map with the same signature as MG:PMRT has dR = 0 and fails D2 honestly |
 | K0 | validity | section 7.1 (K0 and K0n) |
 
 **Verdict precedence**
@@ -424,14 +426,14 @@ protocol, v4 artifact and code, maps artifact, mapgate.py.
 **Pre-registered expectation, stated so it cannot be re-framed later.** On DEV the GT map was about equal to
 never_sleep: -.008 [-.16, .15].
 
-- The study does NOT expect, and will NOT claim, that the MSCR+ map beats the best static rule.
-- The paired contrast R(MSCR+) - R(never_sleep) is reported with its 90 % CI and the non-inferiority read (LB90 >
+- The study does NOT expect, and will NOT claim, that the PMRT map beats the best static rule.
+- The paired contrast R(PMRT) - R(never_sleep) is reported with its 90 % CI and the non-inferiority read (LB90 >
   -.10), whatever it shows. It is reported in the abstract-level summary alongside D1 / D2.
 
 The other contrasts:
 
-- R(MSCR+) - R(c) with 90 % CI for c in {noarb, incumbent, blanket2, never_sleep, B2, MG:GT, MG:rand};
-- map efficiency R(MSCR+) / R(MG:GT);
+- R(PMRT) - R(c) with 90 % CI for c in {noarb, incumbent, blanket2, never_sleep, B2, MG:GT, MG:rand};
+- map efficiency R(PMRT) / R(MG:GT);
 - every arm's R, retention, guard ratios with CIs, and the eligibility flag;
 - per-family / direction defer counts and the decision table of every map.
 
@@ -442,8 +444,8 @@ The other contrasts:
 - K-B-style OFFLINE replay on the DISC logged contexts: flips per episode vs the GT map, "~clean" (wrong-edge),
   "GT+plc" (placebo-edge).
 - The @dev maps with the step-1 unconfounded DEV tau (K-B's calibration): offline replay only.
-- MSCR+ beta sign disagreements (section 4.3).
-- The other 8 MSCR+ combinations and MSCR-CRT v2 + BY on DISC.
+- PMRT beta sign disagreements (section 4.3).
+- The other 8 PMRT combinations and MSCR-CRT v2 + BY on DISC.
 - Two honest competitors that use the logged propensities (plan section 2), discovery only, no EVAL arm: an IPW-Wald
   test and Granger with ctx conditioners. See section 13.
 
@@ -451,7 +453,7 @@ The other contrasts:
 
 **DISC n = 600.**
 
-- MSCR+ premise declaration on the ev3 bench (old design: pi0 .5/.2/.3 after the warm-up, effective Var(v) about .21):
+- PMRT premise declaration on the ev3 bench (old design: pi0 .5/.2/.3 after the warm-up, effective Var(v) about .21):
   2/10 at n 60, 5/10 at n 120, 4/4 at n 300.
 - Model: mean premise z = z* kappa sqrt(n / 120), with z* the declaration threshold (about 3-3.5 under wby1s).
   kappa = sqrt(Var_inc / Var_old) x sqrt(r), and r = the ratio of tested sleep units per episode.
@@ -491,8 +493,8 @@ With SD .86, a single contrast gives:
 The Holm figure is for the least favourable case. Holm over distinct signatures and highly correlated near-empty maps
 make D2 closer to the single-contrast figure.
 
-If the MSCR+ map reproduces the GT map's decisions (DEV: delta about .21 vs noarb), P(PASS) is about .65-.85 at
-n = 160. It is about .5 if the MSCR+ map recovers only part of the GT map (delta .15). This is stated in advance: a
+If the PMRT map reproduces the GT map's decisions (DEV: delta about .21 vs noarb), P(PASS) is about .65-.85 at
+n = 160. It is about .5 if the PMRT map recovers only part of the GT map (delta .15). This is stated in advance: a
 FAIL at delta <= .15 is NOT evidence that confounding does not matter. The wrong-map contrasts (K-B DEV-tau maps) are
 powered at > .99.
 
@@ -512,7 +514,7 @@ powered at > .99.
 3. **Collection (Kaggle).** disc, placebo and gt, run concurrently. Every stage refuses to run unless frozen and
    registered.
 4. **Discovery analysis (Kaggle job).** `e6p_conf_analyze.py disc`:
-   - caches, artifact verify, the probs / p_mismatch assertions, MSCR+ (pooled DISC, placebo, K0n);
+   - caches, artifact verify, the probs / p_mismatch assertions, PMRT (pooled DISC, placebo, K0n);
    - baselines x tau variants, the GT table, all maps (section 4.3), signatures, the alias table, offline replay;
    - output: `disc_conf.json` + the discovery label. If INVALID: stop and report.
 5. **Freeze 2: maps artifact.**
@@ -537,7 +539,7 @@ powered at > .99.
 | disc | 600 | 14.2 |
 | placebo | 200 | 4.7 |
 | gt | 40 | 24-28 |
-| discovery analysis (MSCR+ B 9999 pooled + placebo, K0n 40 x B 999, baselines at n 600: SHAP / two-tower dominate, about 15x K-B's 493 s) | - | 3-5 |
+| discovery analysis (PMRT B 9999 pooled + placebo, K0n 40 x B 999, baselines at n 600: SHAP / two-tower dominate, about 15x K-B's 493 s) | - | 3-5 |
 | eval, 160 seeds; per seed: anchors about 354 s + references about 294 s + 3 map arms + distinct associational maps at about 72 s | 160 | 58 (about 6 distinct associational signatures) to 80 (no aliasing) |
 | eval analysis | - | < .2 |
 | **total** | | **about 105-133 (central about 115)** |
@@ -556,7 +558,7 @@ about 78-95 CPU-h.
 **If PASS.**
 
 > "On simulated confounded logs of an incumbent WG3 arbiter with logged propensities (E6-P cell P3 surge-L40), a
-> design-based causal discovery method (MSCR+, frozen before the study) produced a map that, fed to a fixed map-driven
+> design-based causal discovery method (PMRT, frozen before the study) produced a map that, fed to a fixed map-driven
 > referee (MapGateV2, identical for every map), gave R = x [90 % CI] and was eligible (energy and guardrails). It
 > exceeded the best associational-map referee by Delta1 [LB90] and each of 13 associational maps (Holm, one-sided
 > .05). Associational maps were either wrong (DEV-calibrated) or nearly empty (placebo-calibrated). The knockout-GT
@@ -570,7 +572,7 @@ The never_sleep sentence is mandatory in every outcome.
 
 - One simulated cell, one incumbent design, one referee rule. The rule was developed on DEV seeds (MapGate v1 -> v2
   after K-A) and frozen before this study.
-- MSCR+ REQUIRES the incumbent's per-request propensities to be logged and bounded away from 0 / 1. Without logged
+- PMRT REQUIRES the incumbent's per-request propensities to be logged and bounded away from 0 / 1. Without logged
   propensities the method does not apply.
 - Validity is asymptotic (martingale CLT), checked by K0 / K0n, not exact.
 - The comparison is against associational methods that ignore the propensities. The IPW-type competitors are
@@ -591,7 +593,7 @@ section 8 power statement to separate "underpowered at the realised delta" from 
 All paths are repo-relative; local commands run from the repo root with `PYTHONPATH=.` and `.venv/Scripts/python.exe`.
 Kaggle collection kernels are built by `scratchpad/e6_dev/cloud.py` through `kaggle_run.py` (BARE script names; 4
 shards per kernel); analyses run through `kaggle_job.py`. The cloud bundle of every `e6p_conf*` script carries this
-doc, `SEED_REGISTRY.json` and `docs/benchmark/artifacts/*` (v4 MSCR+ artifact, maps artifact), so every guard also
+doc, `SEED_REGISTRY.json` and `docs/benchmark/artifacts/*` (v4 PMRT artifact, maps artifact), so every guard also
 runs there.
 
 1. **Driver `scratchpad/e6_dev/e6p_conf.py`**, with wrappers `e6p_conf_{dev,disc,placebo,gt,eval}.py` (stage
@@ -613,7 +615,7 @@ runs there.
      - `MG:allaccept` (MapGateV2({})) and `noarb`.
      In the smoke (seed 18, 120 s scored) both differences were 0 (bit identical).
    - eval arms: the anchors (`e6p_step2_dev`), incumbent, never_sleep (`e6p_opta_ka`), B2, and the map arms blanket2,
-     MG:MSCR+, MG:GT, MG:rand and MG:<b> x 13. One job per distinct signature (`alias_table`); an all-accept signature
+     MG:PMRT, MG:GT, MG:rand and MG:<b> x 13. One job per distinct signature (`alias_table`); an all-accept signature
      is aliased to noarb only if the repro check says so. Records "e6p-optaka2-rec/1" + `signature`, `aliases`,
      `conf_stage`.
    - Guards (`guard_run`; smoke runs are exempt):
@@ -632,10 +634,10 @@ runs there.
      - every dev_conf / disc / placebo unit of FAMILIES must carry a valid row (accept / reject, sum 1, entries in
        [.15, .85], p = probs[mode]), pi0_table must be null and every pool must have p_mismatch == 0; otherwise the
        analysis stops;
-     - MSCR+ on pooled DISC, placebo K0, K0n (v4 recipe on the 10 DISC groups), K1, G, X1-X3, the discovery label;
+     - PMRT on pooled DISC, placebo K0, K0n (v4 recipe on the 10 DISC groups), K1, G, X1-X3, the discovery label;
      - baselines @dev (dev_conf far-FPR), @plc (placebo tau; granger: partial r^2 transfer, tau_r2 = the
        (MAX_FP + 1)-th largest placebo r^2), granger_by;
-     - maps (section 4.3; `design_slope` for MSCR+), signatures / aliases, offline replay;
+     - maps (section 4.3; `design_slope` for PMRT), signatures / aliases, offline replay;
      - descriptive: the other combinations, MSCR-CRT v2 + BY, IPW-Wald, Granger+ctx, the `--dev-step1` maps;
      - output `disc_conf.json`.
    - `build` writes the maps artifact. It refuses INVALID, failed row checks, a non-full analysis and missing arms.
@@ -685,7 +687,7 @@ runs there.
 ## 13. Open items to settle before freeze 1
 
 1. **Directional collection.** DISC uses the K-B wrapper (a reject unit also rejects the opposite direction for
-   60 s); MapGateV2 is directional. Keep K-B's collection (the proven bite; MSCR+ artifact semantics), or collect with
+   60 s); MapGateV2 is directional. Keep K-B's collection (the proven bite; PMRT artifact semantics), or collect with
    `DirectionalUnitArbiter` so the discovered effect matches the referee's action? The default here is K-B's.
 2. **Placebo size.** 200 with n-free granger transfer (default), or matched to DISC (600, +9.4 CPU-h)?
 3. **GT labelling of the warm-up.** Label sleep units in [60, 90) too, for the GT MAP only (not for discovery
