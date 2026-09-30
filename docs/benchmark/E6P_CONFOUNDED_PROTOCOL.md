@@ -2,7 +2,7 @@
 
 FROZEN: no
 
-> **Naming (2026-09-30):** the discovery method is **PMRT** (Predictable Matched-Filter Randomization Test; docs/benchmark/METHOD_NAMES.md). It is the method labelled "MSCR+" in protocol v4 and in the frozen artifact E6P_MSCRPLUS_V4_FROZEN.json.
+> **Naming (2026-09-30):** the discovery method is **PMRT** (Predictable Matched-Filter Randomization Test; docs/benchmark/METHOD_NAMES.md). It is the method labelled "MSCR+" in protocol v4 and in the frozen artifact E6P_MSCRPLUS_V4_FROZEN.json; this study uses its label-only successor E6P_PMRT_V4.json (docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md).
 
 **Status: DRAFT (2026-09-30).** Written after the kill tests K-A, K-A2 and K-B (section 2) and before any seed of the
 study blocks below is simulated. The file must be frozen (this line set to "FROZEN: yes", the file's LF-normalised
@@ -16,7 +16,7 @@ Sources: `scratchpad/e6_dev/decision/OPTION_A_PLAN.md` (plan + amendment), `.tmp
 `scratchpad/e6_dev/decision/opta_ka_summary.json`, `opta_ka2_summary.json`, `opta_kb.json`,
 `docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md` (PMRT frozen artifact, v4 criteria), `cdd_oran/decision/mapgate.py`
 (MapGateV2), `cdd_oran/decision/collect_p.py` (IncumbentPolicy / PlaceboIncumbent),
-`cdd_oran/decision/crt_units_plus.py` + `mscr_multi.py` (PMRT), `scratchpad/e6_dev/e6p_step2_dev.py` (R, eligibility).
+`cdd_oran/decision/pmrt.py` + `fdr_layer.py` (PMRT; formerly `crt_units_plus.py` + `mscr_multi.py`), `scratchpad/e6_dev/e6p_step2_dev.py` (R, eligibility).
 
 ## 0. Disclosure: what was developed on which data
 
@@ -208,24 +208,28 @@ The option-(a) plan's H_pre = 60 is NOT used: the artifact was never fitted on u
 The consequence is disclosed: incumbent units that open in [0, 90) are logged and enter later units only through the
 `hist` feature and the skeleton; about 2 sleep units per episode (v4 DEV smoke) are untested.
 
-### 4.1 PMRT (primary method): the frozen v4 artifact
+### 4.1 PMRT (primary method): the v4 artifact
 
-- Artifact: `docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json`, sha256
-  `4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba`.
+- Artifact: `docs/benchmark/artifacts/E6P_PMRT_V4.json`, sha256 `PMRT_SHA_TBD`. It is the label-only
+  successor of the frozen v4 artifact `E6P_MSCRPLUS_V4_FROZEN.json` (sha256
+  `4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba`): the same learned content (checked field by
+  field at build time), new labels and the code sha256s of the renamed modules; it records the old artifact in
+  `supersedes` (docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md).
 - Combination: `loadsp_c` + `wby1s` (q .05, weights / directions from the artifact, n_target = the number of
   episodes of the analysed set: 600 for DISC, 200 for the placebo).
 - p-values: B = 9999. RNG and splits as v4: `default_rng([0, 6616, 3, family_idx, split])`; split 0 for pooled DISC,
   9 for the placebo, 0 for the K0n variants (B 999).
 - Support rule as v2: >= 30 units, >= 5 accepted, >= 5 rejected, >= 3 episodes.
-- Before any use, the analyzer runs `mscr_plus_artifacts.py verify`, and it refuses to run on an artifact or code
+- Before any use, the analyzer runs `pmrt_artifacts.py verify`, and it refuses to run on an artifact or code
   sha256 mismatch (as v4).
 
 **Validity under the context-dependent incumbent (code audit, 2026-09-30).** The statistic already uses per-unit rows
-everywhere, so NO change to crt_units_plus / mscr_multi / mscr_integrate_bench is required.
+everywhere, so NO change to pmrt / fdr_layer / pmrt_bench (formerly crt_units_plus / mscr_multi /
+mscr_integrate_bench) is required.
 
 - Every design quantity comes from `UnitData.probs[rows]`, the per-unit row:
   - `v_design` / `v_var` (v_u = sgn_u (L(mode_u) - probs_u . L), Var = probs_u . L^2 - (probs_u . L)^2);
-  - the re-draw mean `mu = ud.probs[rows] @ LEVEL_V2_ARR` in `mscr_integrate_bench.integrated_family`;
+  - the re-draw mean `mu = ud.probs[rows] @ LEVEL_V2_ARR` in `pmrt_bench.integrated_family`;
   - the conditional re-draws `crt_units.PiAssignment.mode_draws` (cumulative sums of `probs[rows]`, one independent
     uniform per unit).
 - Both UnitData builders prefer the unit's logged `probs` over a record's `pi0_table`:
@@ -630,7 +634,7 @@ runs there.
    the spec).
    - `disc`:
      - the v4 artifact is checked by its sha256 and its embedded code sha256s (`e6p_disc_analyze_v4.artifact_status`).
-       `mscr_plus_artifacts.py verify` needs the params pickle, which no bundle carries;
+       `pmrt_artifacts.py verify` needs the params pickle, which no bundle carries;
      - every dev_conf / disc / placebo unit of FAMILIES must carry a valid row (accept / reject, sum 1, entries in
        [.15, .85], p = probs[mode]), pi0_table must be null and every pool must have p_mismatch == 0; otherwise the
        analysis stops;
@@ -651,8 +655,8 @@ runs there.
      <=> identical policies; `signature_key`, `all_accept_signature`;
    - `map_to_json` / `map_from_json`.
    **`cdd_oran/decision/collect_p.py`** (additive): `run_collection(arbiter_cls=None)`.
-4. `design_slope` and the n-free granger transfer live in the analyzer. crt_units_plus is untouched: the v4 artifact's
-   code sha256s still match.
+4. `design_slope` and the n-free granger transfer live in the analyzer. pmrt (formerly crt_units_plus) is untouched
+   beyond the label-only rename: the PMRT v4 artifact's code sha256s match.
 5. `docs/benchmark/SEED_REGISTRY.json`: the confounded note carries the section 6 layout; the tag notes of 6623 (key 3)
    and 6624 (DISC [6624, 10, ...], EVAL [6624, 20, n_seeds]) are updated.
 6. `scratchpad/e6_dev/cloud.py` bundles this doc, the registry and `docs/benchmark/artifacts/*` for `e6p_conf*`.
@@ -675,7 +679,7 @@ runs there.
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-placebo-1 e6p_conf_placebo.py 1
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-gt-1 e6p_conf_gt.py 2
     # discovery analysis (Kaggle job)
-    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-discan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-1-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --sources bishalpanta/e6p-conf-dev-1-a,bishalpanta/e6p-conf-disc-1-a,bishalpanta/e6p-conf-disc-1-b,bishalpanta/e6p-conf-placebo-1-a,bishalpanta/e6p-conf-gt-1-a,bishalpanta/e6p-conf-gt-1-b
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-discan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-1-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_PMRT_V4.json scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --sources bishalpanta/e6p-conf-dev-1-a,bishalpanta/e6p-conf-disc-1-a,bishalpanta/e6p-conf-disc-1-b,bishalpanta/e6p-conf-placebo-1-a,bishalpanta/e6p-conf-gt-1-a,bishalpanta/e6p-conf-gt-1-b
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py pull e6p-conf-discan-1
     # freeze 2 (local): build + verify, git add -f the artifact and its .sha256, MAPS_SHA256 in e6p_conf.py, commit
     PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_conf_analyze.py build --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json

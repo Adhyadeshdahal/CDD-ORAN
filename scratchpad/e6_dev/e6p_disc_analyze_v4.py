@@ -1,9 +1,10 @@
-"""E6-P discovery v4 ANALYZER: frozen MSCR+ on small fresh slices (protocol docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md,
+"""E6-P discovery v4 ANALYZER: frozen PMRT on small fresh slices (protocol docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md,
 sections 3-6). Runs on Kaggle (scratchpad/e6_dev/kaggle_job.py, --sources = the v4 collection kernels); a local DRY RUN
 on small DEV data is possible (never a verdict).
 
   python scratchpad/e6_dev/e6p_disc_analyze_v4.py analyze --eval SPEC --placebo SPEC --gt SPEC --dev SPEC
-         [--artifact docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json] [--out DIR] [--cache-dir DIR]
+         [--artifact docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json | E6P_PMRT_V4.json] [--out DIR]
+         [--cache-dir DIR]
          [--B 9999] [--B-null 999] [--null-group 60] [--null-shifts 4] [--workers 4]
          [--desc-methods shap_gbdt,int,qacm,two_tower] [--desc-splits pooled,300,120] [--no-v2] [--no-null]
          [--dry-run] [--slice-sizes 60,120,300] [--allow-smoke] [--allow-artifact-mismatch]
@@ -13,10 +14,14 @@ also be a disc_bench gtref .json (DB.save_ref). Each JSONL input is streamed int
 reference is disc_bench.gt_reference_files over every gt_v4 episode (gt_p.summarize, frozen rule, orientation "dir").
 Output: OUT/analysis_v4.json (everything) + OUT/verdict_v4.json (criteria + verdict) + the log on stdout.
 
-METHOD (frozen; section 3). The artifact (``ARTIFACT_SHA256``, checked; its embedded code sha256s are checked against
-the running files) is loaded by mscr_plus_artifacts.load_artifact; the statistic is mscr_integrate_bench.run_integrated
+METHOD (frozen; section 3). The artifact is the protocol's frozen E6P_MSCRPLUS_V4_FROZEN.json (``ARTIFACT_SHA256``;
+method label "MSCR+") or its label-only successor E6P_PMRT_V4.json (``PMRT_ARTIFACT_SHA256``; same learned content,
+docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md); ``artifact_status`` checks its sha256 and its embedded code
+sha256s against the running files (for the frozen artifact under the renamed code: via the PMRT artifact's
+``supersedes`` / ``legacy_code_sha256`` / ``renamed_from`` chain, ``code_via`` "supersession"). It is loaded by
+pmrt_artifacts.load_artifact; the statistic is pmrt_bench.run_integrated
 (arms plain_c / loadsp_c / max, B conditional re-draws, RNG default_rng([0, 6616, 3, family_idx, split])), the layer
-mscr_multi.declare with the artifact's ev2 prior (q .05, floor .2, thr 3, cap 5) and n_target = the slice size. PRIMARY
+fdr_layer.declare with the artifact's ev2 prior (q .05, floor .2, thr 3, cap 5) and n_target = the slice size. PRIMARY
 = loadsp_c + wby1s; the other 8 combinations are descriptive. Unit window rule H = 90, H_pre = 90 (t0 >= 90).
 Slices (section 4; ``slice_plan``): eval_v4 j = seed - 188100; pooled (split 0, n_target 600), slice60 i = j // 60
 (split 20 + i, n_target 60), slice120 k = j // 120 (split 40 + k, n_target 120); descriptive slice300 m = j // 300
@@ -32,8 +37,8 @@ CRITERIA (section 5; PRIMARY combination only; C = chain set, C* = members TRUE 
   G    gt_v4 sleep -> nbr pv TRUE with sign +1
   P1   in >= 3 of the 5 120-slices: premise (sleep -> nbr pv) declared + AND >= min(3, |C*|) members of C* declared
        with the GT sign
-  P2   indirect (nbr) F1 of MSCR+ >= the baseline's in >= 6 of 10 60-slices AND >= 3 of 5 120-slices, for EACH of corr,
-       granger (DEV-v4 far-FPR tau) and granger_by; ties count for MSCR+; an undefined MSCR+ F1 is a loss (an undefined
+  P2   indirect (nbr) F1 of PMRT >= the baseline's in >= 6 of 10 60-slices AND >= 3 of 5 120-slices, for EACH of corr,
+       granger (DEV-v4 far-FPR tau) and granger_by; ties count for PMRT; an undefined PMRT F1 is a loss (an undefined
        baseline F1 counts as 0, as edge_score.p2_check)
   P3   pooled 600: premise declared +, >= min(3, |C*|) hits, overall precision >= .80, overall sign accuracy >= .90
   S    pooled sign accuracy >= .90 AND the mean over the 120-slices with a defined sign accuracy (>= 1 TP) >= .90
@@ -74,8 +79,11 @@ from cdd_oran.decision.crt_units import FAMILIES, MODES  # noqa: E402
 
 PROTOCOL_DOC_V4 = "docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md"
 DRIVER = "scratchpad/e6_dev/e6p_discovery.py"
-ARTIFACT = "docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json"
+ARTIFACT = "docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json"          # the protocol's frozen artifact ("MSCR+")
 ARTIFACT_SHA256 = "4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba"
+PMRT_ARTIFACT = "docs/benchmark/artifacts/E6P_PMRT_V4.json"                    # label-only successor (PMRT)
+PMRT_ARTIFACT_SHA256 = "TBD"
+KNOWN_ARTIFACTS = {ARTIFACT_SHA256: ARTIFACT, PMRT_ARTIFACT_SHA256: PMRT_ARTIFACT}
 PRIMARY = ("loadsp_c", "wby1s")
 SUB = "v4"
 SEEDS = {"dev": (188000, 20), "eval": (188100, 600), "placebo": (188700, 40), "gt": (188800, 40)}
@@ -156,17 +164,51 @@ def protocol_status(root: str = ROOT) -> dict:
             "frozen": bool(line.lower().startswith("frozen: yes") and want is not None and sha == want)}
 
 
-def artifact_status(path: str, root: str = ROOT) -> dict:
-    """sha256 of the artifact vs ARTIFACT_SHA256 and its embedded code sha256s vs the running files."""
-    a = json.load(open(path))
-    sha = sha_lf(path)
+def _code_direct(want: dict, root: str) -> dict:
     code = {}
-    for rel, want in (a.get("code_sha256") or {}).items():
+    for rel, w in (want or {}).items():
         p = os.path.join(root, *rel.split("/"))
         have = sha_lf(p) if os.path.exists(p) else None
-        code[rel] = {"want": want, "have": have, "ok": have == want}
-    return {"path": path, "sha256": sha, "expected": ARTIFACT_SHA256, "sha_ok": sha == ARTIFACT_SHA256,
-            "schema": a.get("schema"), "version": a.get("version"), "code": code,
+        code[rel] = {"want": w, "have": have, "ok": have == w}
+    return code
+
+
+def _code_via_pmrt(a: dict, sha: str, root: str) -> dict | None:
+    """The frozen (legacy-label) artifact's code check under the renamed code: the PMRT artifact (sha
+    PMRT_ARTIFACT_SHA256) must supersede exactly this artifact, its ``legacy_code_sha256`` must equal this artifact's
+    code_sha256, and every running (renamed) file must match the PMRT artifact's code_sha256. Keys = the OLD paths."""
+    pm = os.path.join(root, *PMRT_ARTIFACT.split("/"))
+    if not os.path.exists(pm) or sha_lf(pm) != PMRT_ARTIFACT_SHA256:
+        return None
+    b = json.load(open(pm))
+    old = a.get("code_sha256") or {}
+    ren = b.get("renamed_from") or {}
+    if ((b.get("supersedes") or {}).get("sha256") != sha or b.get("legacy_code_sha256") != old
+            or sorted(ren.get(n, n) for n in b.get("code_sha256", {})) != sorted(old)):
+        return None
+    code = {}
+    for new, w in b["code_sha256"].items():
+        rel = ren.get(new, new)
+        p = os.path.join(root, *new.split("/"))
+        have = sha_lf(p) if os.path.exists(p) else None
+        code[rel] = {"want": old[rel], "have": have, "running": new, "want_renamed": w, "ok": have == w}
+    return code
+
+
+def artifact_status(path: str, root: str = ROOT) -> dict:
+    """sha256 of the artifact vs the known v4 artifacts (``KNOWN_ARTIFACTS``: the frozen one and its PMRT successor)
+    and its embedded code sha256s vs the running files; for the frozen artifact under the renamed code, the check goes
+    through the PMRT artifact's supersession record (``_code_via_pmrt``; ``code_via`` "supersession")."""
+    a = json.load(open(path))
+    sha = sha_lf(path)
+    code, via = _code_direct(a.get("code_sha256"), root), "direct"
+    if sha == ARTIFACT_SHA256 and not (code and all(v["ok"] for v in code.values())):
+        chained = _code_via_pmrt(a, sha, root)
+        if chained is not None:
+            code, via = chained, "supersession"
+    return {"path": path, "sha256": sha, "expected": sorted(KNOWN_ARTIFACTS), "sha_ok": sha in KNOWN_ARTIFACTS,
+            "artifact": KNOWN_ARTIFACTS.get(sha), "schema": a.get("schema"), "version": a.get("version"),
+            "legacy_version": a.get("legacy_version"), "code": code, "code_via": via,
             "code_ok": bool(code) and all(v["ok"] for v in code.values()), "source": a.get("source")}
 
 
@@ -359,7 +401,7 @@ def _win(m, b) -> bool:
 
 
 def p2_check(f1_60: list, f1_120: list, base60: dict, base120: dict, rule=P2_RULE) -> dict:
-    """``f1_*``: MSCR+ indirect F1 per slice (slice order); ``base*`` {baseline: [F1 per slice]}."""
+    """``f1_*``: PMRT indirect F1 per slice (slice order); ``base*`` {baseline: [F1 per slice]}."""
     per = {}
     for b in base60:
         w60 = [_win(m, x) for m, x in zip(f1_60, base60[b], strict=True)]
@@ -368,7 +410,7 @@ def p2_check(f1_60: list, f1_120: list, base60: dict, base120: dict, rule=P2_RUL
                   "win60": w60, "win120": w120,
                   "ok": bool(sum(w60) >= rule["min_60"] and sum(w120) >= rule["min_120"])}
     return {"pass": bool(per) and all(v["ok"] for v in per.values()), "per_baseline": per, "rule": dict(rule),
-            "ties": "count for MSCR+; undefined MSCR+ F1 = loss; undefined baseline F1 = 0"}
+            "ties": "count for PMRT; undefined PMRT F1 = loss; undefined baseline F1 = 0"}
 
 
 def p3_check(decl: dict, ref: dict, rule=P3_RULE) -> dict:
@@ -478,39 +520,39 @@ def shift_variants(recs: list, shifts: int) -> list:
 
 
 def run_k0n(recs: list, groups: list, params, priors, cfg, shifts: int, log_=log) -> dict:
-    import mscr_integrate_bench as IB
+    import pmrt_bench as PB
 
-    from cdd_oran.decision import crt_units_plus as CP
+    from cdd_oran.decision import pmrt as PM
     tmp = tempfile.mkdtemp(prefix="k0n_v4_")
-    per = {IB.cname(s, lay): {"p": [], "fam": [], "var_decl": []} for s, lay in IB.COMBOS}
+    per = {PB.cname(s, lay): {"p": [], "fam": [], "var_decl": []} for s, lay in PB.COMBOS}
     names = []
     for gi, idx in enumerate(groups):
         sub = [recs[i] for i in idx]
         for name, rr in shift_variants(sub, shifts):
             t = time.time()
-            pd = CP.plus_data_from_records(rr, tmp)
-            run = IB.run_integrated(pd, params, cfg, SPLIT["null"])
-            for (s, lay), d in IB.declare_all(run, priors, len(sub)).items():
-                o = per[IB.cname(s, lay)]
+            pd = PM.pmrt_data_from_records(rr, tmp)
+            run = PB.run_integrated(pd, params, cfg, SPLIT["null"])
+            for (s, lay), d in PB.declare_all(run, priors, len(sub)).items():
+                o = per[PB.cname(s, lay)]
                 o["var_decl"].append(int(sum(bool(v["declared"]) for v in d.values())))
                 for h, v in d.items():
                     if v.get("status") != "undetermined" and np.isfinite(v.get("p", np.nan)):
                         o["p"].append(float(v["p"]))
                         o["fam"].append(h[0])
             names.append(f"g{gi}:{name}")
-            pc = per[IB.cname(*PRIMARY)]
+            pc = per[PB.cname(*PRIMARY)]
             log_(f"  K0n g{gi} {name}: units {pd.n}, primary decl {pc['var_decl'][-1]} ({time.time() - t:.0f} s)")
             del pd, rr
     res = {k: k0n_check(o["p"], o["fam"], o["var_decl"]) for k, o in per.items()}
-    return {"variants": names, "combos": res, "primary": res[IB.cname(*PRIMARY)]}
+    return {"variants": names, "combos": res, "primary": res[PB.cname(*PRIMARY)]}
 
 
 # ============================================================================================ analyze
 def analyze(a) -> dict:
-    import mscr_integrate_bench as IB
-    import mscr_plus_artifacts as MPA
+    import pmrt_bench as PB
+    import pmrt_artifacts as PAR
 
-    from cdd_oran.decision import crt_units_plus as CP
+    from cdd_oran.decision import pmrt as PM
     t_all = time.time()
     out = a.out or os.environ.get("JOB_OUT") or "."
     os.makedirs(out, exist_ok=True)
@@ -521,13 +563,13 @@ def analyze(a) -> dict:
     # ---- artifact
     ast = artifact_status(a.artifact)
     rep["artifact"] = ast
-    log(f"artifact {a.artifact}: sha {ast['sha256']} (expected {ARTIFACT_SHA256}) ok {ast['sha_ok']}; code ok "
-        f"{ast['code_ok']} {[k for k, v in ast['code'].items() if not v['ok']]}")
+    log(f"artifact {a.artifact}: sha {ast['sha256']} ({ast['artifact']}) ok {ast['sha_ok']}; code ok "
+        f"{ast['code_ok']} via {ast['code_via']} {[k for k, v in ast['code'].items() if not v['ok']]}")
     if not (ast["sha_ok"] and ast["code_ok"]) and not a.allow_artifact_mismatch:
         raise SystemExit("artifact sha256 / code sha256 mismatch (pass --allow-artifact-mismatch for a dry run)")
-    params, priors = MPA.load_artifact(a.artifact)
-    cfg = MPA.plus_config(params, a.B)
-    cfg_null = MPA.plus_config(params, a.B_null)
+    params, priors = PAR.load_artifact(a.artifact)
+    cfg = PAR.pmrt_config(params, a.B)
+    cfg_null = PAR.pmrt_config(params, a.B_null)
     sizes = tuple(int(x) for x in a.slice_sizes.split(","))
     # ---- caches
     t = time.time()
@@ -540,8 +582,8 @@ def analyze(a) -> dict:
         caches["eval"], ev_stage = caches["dev"], "dev"
     if not caches["eval"] or not caches["placebo"] or not caches["dev"]:
         raise SystemExit(f"missing inputs: { {k: len(v) for k, v in caches.items()} }")
-    pool = CP.load_plus_pool(caches["eval"], stages={ev_stage})
-    ppool = CP.load_plus_pool(caches["placebo"], stages={"placebo"})
+    pool = PM.load_pmrt_pool(caches["eval"], stages={ev_stage})
+    ppool = PM.load_pmrt_pool(caches["placebo"], stages={"placebo"})
     dpool = DB.load_pool(caches["dev"], H=H, H_pre=H_PRE, stages={"dev"})
     if not a.allow_smoke and any(bool(np.any(p.eps["smoke"])) for p in (pool, ppool, dpool)):
         raise SystemExit("smoke records in the inputs (pass --allow-smoke for a dry run)")
@@ -598,11 +640,11 @@ def analyze(a) -> dict:
         v2cfg = V2.UnitCRTConfigV2(B=a.B)
     # ---- K0 (placebo)
     t = time.time()
-    pdp = CP.plus_data(ppool)
-    run_p = IB.run_integrated(pdp, params, cfg, SPLIT["placebo"])
-    decl_p = IB.declare_all(run_p, priors, int(ppool.n_eps))
+    pdp = PM.pmrt_data(ppool)
+    run_p = PB.run_integrated(pdp, params, cfg, SPLIT["placebo"])
+    decl_p = PB.declare_all(run_p, priors, int(ppool.n_eps))
     K0 = k0_check(decl_p[PRIMARY])
-    plc = {IB.cname(*k): k0_check(d) for k, d in decl_p.items()}
+    plc = {PB.cname(*k): k0_check(d) for k, d in decl_p.items()}
     for b, m in list(bmeth.items()) + list(dmeth.items()):
         try:
             plc[b] = DB.placebo_check(m, pdp.ud, SPLIT["placebo"])
@@ -625,9 +667,9 @@ def analyze(a) -> dict:
         if not len(sl["episodes"]):
             continue
         t = time.time()
-        pd = CP.plus_data(pool, sl["episodes"])
-        run = IB.run_integrated(pd, params, cfg, sl["split"])
-        decls = {IB.cname(*k): d for k, d in IB.declare_all(run, priors, sl["n_target"]).items()}
+        pd = PM.pmrt_data(pool, sl["episodes"])
+        run = PB.run_integrated(pd, params, cfg, sl["split"])
+        decls = {PB.cname(*k): d for k, d in PB.declare_all(run, priors, sl["n_target"]).items()}
         for b, m in bmeth.items():
             decls[b] = m(pd.ud, sl["split"])
         if v2cfg is not None:
@@ -646,10 +688,10 @@ def analyze(a) -> dict:
             mets[k] = mm
         res[sl["name"]] = {"kind": sl["kind"], "index": sl["index"], "split": sl["split"], "n_target": sl["n_target"],
                            "n_episodes": int(len(sl["episodes"])), "units": unit_counts(pd.ud), "metrics": mets,
-                           "hyp": hyp_table(run, decls[IB.cname(*PRIMARY)]), "wall_s": round(time.time() - t, 1)}
-        pm = mets[IB.cname(*PRIMARY)]
+                           "hyp": hyp_table(run, decls[PB.cname(*PRIMARY)]), "wall_s": round(time.time() - t, 1)}
+        pm = mets[PB.cname(*PRIMARY)]
         if sl["kind"] == "pooled":
-            pooled_decl = decls[IB.cname(*PRIMARY)]
+            pooled_decl = decls[PB.cname(*PRIMARY)]
         log(f"{sl['name']:>9} ({len(sl['episodes'])} eps, {pd.n} units, {res[sl['name']]['wall_s']} s): primary chain "
             f"{pm['chain_hits']}/{pm['chain_true']} premise {pm['premise_hit']:.0f} indF1 {pm['ind_f1']:.2f} ovP "
             f"{pm['ov_precision']:.2f} sign {pm['sign_acc']:.2f} #dec {pm['n_declared']} | "
@@ -682,7 +724,7 @@ def analyze(a) -> dict:
     else:
         rep["K0n"] = None
     # ---- criteria
-    P = IB.cname(*PRIMARY)
+    P = PB.cname(*PRIMARY)
     s60 = [res[s["name"]] for s in plan if s["kind"] == "60" and s["name"] in res]
     s120 = [res[s["name"]] for s in plan if s["kind"] == "120" and s["name"] in res]
     K1 = k1_check({f"s120_{r['index']}": {"sleep_units": r["units"]["sleep_units"],

@@ -1,25 +1,26 @@
-"""INTEGRATED MSCR+ bench (agent I, 2026-09-30; scratch, NOT frozen): statistic arms {plain_c, loadsp_c, max(plain_c,
-loadsp_c)} (cdd_oran/decision/crt_units_plus.py, params fitted by agent S on ev2 + DEV) x declaration layers {by,
-wby1s, dagger1s} (cdd_oran/decision/mscr_multi.py) with the prior (weights / directions) recomputed from the SAME
-statistic on the 480 ev2 episodes. Pre-specification: .tmp/mscr_plus/I/PRESPEC.md (written before the first run).
+"""INTEGRATED PMRT bench (agent I, 2026-09-30): statistic arms {plain_c, loadsp_c, max(plain_c, loadsp_c)}
+(cdd_oran/decision/pmrt.py, params fitted by agent S on ev2 + DEV) x declaration layers {by, wby1s, dagger1s}
+(cdd_oran/decision/fdr_layer.py) with the prior (weights / directions) recomputed from the SAME statistic on the 480 ev2
+episodes. Pre-specification: .tmp/mscr_plus/I/PRESPEC.md (written before the first run). Formerly
+``mscr_integrate_bench.py`` (method label "MSCR+"; the rename is label-only, docs/benchmark/METHOD_NAMES.md).
 
-  python scratchpad/e6_dev/mscr_integrate_bench.py bench --cache DIR --small DIR --params P.pkl --out DIR [--B 9999]
+  python scratchpad/e6_dev/pmrt_bench.py bench --cache DIR --small DIR --params P.pkl --out DIR [--B 9999]
          [--sizes 60,120,300,1200] [--R 60:10,120:10] [--baselines v2,corr,granger,granger_by] [--max-subsets 0]
-  python scratchpad/e6_dev/mscr_integrate_bench.py null --pi0 F[,F] --params P.pkl --prior prior_ev2.json --out DIR
+  python scratchpad/e6_dev/pmrt_bench.py null --pi0 F[,F] --params P.pkl --prior prior_ev2.json --out DIR
          [--group 60] [--shifts 4] [--B 999]
-  python scratchpad/e6_dev/mscr_integrate_bench.py smoke --small DIR --params P.pkl [--B 199]          (local, small)
-  python scratchpad/e6_dev/mscr_integrate_bench.py table --bench bench_int.json [--null null_int.json]   (local)
+  python scratchpad/e6_dev/pmrt_bench.py smoke --small DIR --params P.pkl [--B 199]          (local, small)
+  python scratchpad/e6_dev/pmrt_bench.py table --bench bench_int.json [--null null_int.json]   (local)
 
 Statistic (``integrated_family``): the predictable weighted residual columns of the arms plain / plain_c / loadsp_c are
-built by ``lean_columns`` (only the needed kernels; bit-identical to crt_units_plus.family_columns, checked by
-``smoke``); ONE set of B conditional re-draws of the family's modes (crt_units_plus._stream: the same stream as
-family_tests_plus, so the two-sided p equal agent S's) gives, per target and arm, the two-sided p (|z|), and the
+built by ``lean_columns`` (only the needed kernels; bit-identical to pmrt.family_columns, checked by
+``smoke``); ONE set of B conditional re-draws of the family's modes (pmrt._stream: the same stream as
+family_tests_pmrt, so the two-sided p equal agent S's) gives, per target and arm, the two-sided p (|z|), and the
 one-sided p_plus / p_minus of the EFFECT direction: the arm's effect sign is sign(z) x o with o = +1 for plain-type
 kernels and o = the training sign of the kernel's plain mean for loadsp (0 if |z_plain_train| < 2: no one-sided p,
 the layer falls back to the two-sided p - valid). The max arm: two-sided max |z|, one-sided max of o z over the two
 arms (NaN if an o is 0); its sign = the sign of the arm attaining the max |z|.
-Prior: the same statistic on ev2 (480 eps, split 0): signed effect z per hypothesis -> mscr_multi.Prior(n_prior 480).
-Subsets: EXACTLY agent S's (mscr_plus_bench.subsets on the ev3 episodes: n 60 x 10, 120 x 10 random disjoint,
+Prior: the same statistic on ev2 (480 eps, split 0): signed effect z per hypothesis -> fdr_layer.Prior(n_prior 480).
+Subsets: EXACTLY agent S's (pmrt_arms_bench.subsets on the ev3 episodes: n 60 x 10, 120 x 10 random disjoint,
 300 = the 4 v3 folds) + n 1200 = all of ev3 (split 0). Baselines on the same subsets: MSCR-CRT v2 (+ BY), corr /
 granger (DEV-tuned tau) and granger_by (disc_bench.method_baseline). Placebo: placebo1 / plxc2 (split 9, n_target 20).
 Null-outcome check (``null``): agent S's recipe (validity_check.variants: groups of G ev3 episodes, cyclic shifts of
@@ -44,10 +45,10 @@ for p in (ROOT, HERE):
 
 import numpy as np  # noqa: E402
 
-from cdd_oran.decision import crt_units_plus as CP  # noqa: E402
+from cdd_oran.decision import pmrt as PM  # noqa: E402
 from cdd_oran.decision import crt_units_v2 as V2  # noqa: E402
 from cdd_oran.decision import disc_bench as DB  # noqa: E402
-from cdd_oran.decision import mscr_multi as MM  # noqa: E402
+from cdd_oran.decision import fdr_layer as FL  # noqa: E402
 from cdd_oran.decision.crt_units import FAMILIES, LEVEL_ARR, PiAssignment  # noqa: E402
 from cdd_oran.decision.crt_units_v2 import LEVEL_V2_ARR  # noqa: E402
 from cdd_oran.decision.eprocess_units import unit_order  # noqa: E402
@@ -83,7 +84,7 @@ class _Stub:
 
 
 def load_params_nogb(path: str) -> dict:
-    """crt_units_plus.load_params without the GBDT objects (hp["gb"] = None)."""
+    """pmrt.load_params without the GBDT objects (hp["gb"] = None)."""
     import pickle
 
     class U(pickle.Unpickler):
@@ -100,8 +101,8 @@ def load_params_nogb(path: str) -> dict:
 
 # ================================================================================================ statistic
 def arm_sdir(a, core) -> float:
-    base = CP.split_arm(a)[0]
-    if base in ("pred",) + CP.SIGN_FROM_S:
+    base = PM.split_arm(a)[0]
+    if base in ("pred",) + PM.SIGN_FROM_S:
         return 1.0
     if abs(core["z_plain"]) < 2.0:
         return 0.0
@@ -109,14 +110,14 @@ def arm_sdir(a, core) -> float:
 
 
 def lean_columns(pd, f, params, cfg, arms=COL_ARMS):
-    """(rows, W (n, n_targets * n_arms), targets, meta) like crt_units_plus.family_columns restricted to ``arms``
+    """(rows, W (n, n_targets * n_arms), targets, meta) like pmrt.family_columns restricted to ``arms``
     (no GBDT, only the needed kernels; params may be a frozen artifact holding only those)."""
     ud = pd.ud
     rows = unit_order(ud, ud.rows_of(f))
     rho = {g: np.array(params["rho"][g]) for g in params["rho"]}
     ep, sg = ud.episode[rows], ud.sgn[rows]
     targets = [(r, k) for r in ud.relations for k in ud.kpis]
-    need = sorted({CP.split_arm(a)[0] for a in arms})
+    need = sorted({PM.split_arm(a)[0] for a in arms})
     cols, meta = [], []
     for rel, kpi in targets:
         hp = params["hyp"].get(f"{f}|{rel}|{kpi}")
@@ -126,16 +127,16 @@ def lean_columns(pd, f, params, cfg, arms=COL_ARMS):
             meta.append(None)
             continue
         core = hp["core"]
-        P, X, okp = CP.hyp_design(pd, rows, f, rel, kpi, rho, params["ctx_keys"])
-        E = np.nan_to_num(P) - CP._xs(core, X) @ core["B"]
+        P, X, okp = PM.hyp_design(pd, rows, f, rel, kpi, rho, params["ctx_keys"])
+        E = np.nan_to_num(P) - PM._xs(core, X) @ core["B"]
         has3 = okp[:, 3]
         k = {nm: np.where(has3, E @ core["K"][nm][0], E @ core["K"][nm][1]) for nm in need}
-        r = {nm: CP.running_center(k[nm], ep, sg, cfg.n0, cfg.n1,
+        r = {nm: PM.running_center(k[nm], ep, sg, cfg.n0, cfg.n1,
                                    {1: [core["prior"][nm][1]], -1: [core["prior"][nm][-1]]}) for nm in need}
         W = {}
         for a in arms:
-            base, mod = CP.split_arm(a)
-            W[a] = CP.modified(r[base], mod, hp["h"][base], core, X, cfg)
+            base, mod = PM.split_arm(a)
+            W[a] = PM.modified(r[base], mod, hp["h"][base], core, X, cfg)
         cols.append(np.column_stack([W[a] for a in arms]))
         meta.append({"o": {a: arm_sdir(a, core) for a in arms}, "z_plain_train": float(core["z_plain"])})
     return rows, np.column_stack(cols), targets, meta
@@ -156,8 +157,8 @@ def integrated_family(pd, f, params, cfg, split):
     rows, W, targets, meta = lean_columns(pd, f, params, cfg)
     na = len(COL_ARMS)
     nt = len(targets)
-    v = CP.v_design(ud.mode[rows], ud.probs[rows], ud.sgn[rows])
-    var = CP.v_var(ud.probs[rows])
+    v = PM.v_design(ud.mode[rows], ud.probs[rows], ud.sgn[rows])
+    var = PM.v_var(ud.probs[rows])
     sd = np.sqrt(var @ (W * W))
     sd_safe = np.where(sd > 0, sd, 1.0)
     z_obs = (v @ W) / sd_safe
@@ -174,7 +175,7 @@ def integrated_family(pd, f, params, cfg, split):
     tol = 1e-9 * (1.0 + np.abs(z_obs))
     tolm = 1e-9 * (1.0 + tmax_obs)
     pa = PiAssignment(ud)
-    rng = CP._stream(cfg, fi, split)
+    rng = PM._stream(cfg, fi, split)
     ch = int(max(1, min(cfg.chunk, cfg.max_chunk_bytes // (8 * max(len(rows), 1)))))
     c2 = np.zeros(W.shape[1], np.int64)
     cp = np.zeros(W.shape[1], np.int64)
@@ -239,29 +240,29 @@ def hypstats(run: dict, stat: str) -> dict:
     for h, o in run.items():
         key = tuple(h.split("|"))
         if o.get("status") != "tested":
-            out[key] = MM.HypStats()
+            out[key] = FL.HypStats()
             continue
         s = o[stat]
-        out[key] = MM.HypStats(p2=float(s["p2"]), sign=int(s["sign"]), p_plus=float(s["p_plus"]),
+        out[key] = FL.HypStats(p2=float(s["p2"]), sign=int(s["sign"]), p_plus=float(s["p_plus"]),
                                p_minus=float(s["p_minus"]))
     return out
 
 
-def prior_from_run(run: dict, stat: str, n_prior: int = N_PRIOR) -> MM.Prior:
+def prior_from_run(run: dict, stat: str, n_prior: int = N_PRIOR) -> FL.Prior:
     d = {}
     for h, o in run.items():
         if o.get("status") != "tested":
             d[h] = {"status": "undetermined"}
         else:
             d[h] = {"z": float(o[stat]["z"]), "status": "tested"}
-    return MM.Prior.from_stats(d, n_prior=n_prior, source=f"ev2 {stat}")
+    return FL.Prior.from_stats(d, n_prior=n_prior, source=f"ev2 {stat}")
 
 
 def declare_all(run: dict, priors: dict, n_target: int) -> dict:
     """{(stat, layer): decl dict in edge_score format}."""
     out = {}
     for s, lay in COMBOS:
-        dec = MM.declare(hypstats(run, s), lay, priors[s], n_target=n_target, q=Q, floor=FLOOR, thr=THR)
+        dec = FL.declare(hypstats(run, s), lay, priors[s], n_target=n_target, q=Q, floor=FLOOR, thr=THR)
         for h, v in dec.items():
             o = run.get("|".join(h), {})
             v["z_approx"] = o.get(s, {}).get("z") if o.get("status") == "tested" else None
@@ -292,7 +293,7 @@ def expand(spec):
 
 def load_priors(path):
     d = json.load(open(path))
-    return {s: MM.Prior.from_stats(d["z"][s], n_prior=d["n_prior"], source=f"ev2 {s}") for s in STATS}
+    return {s: FL.Prior.from_stats(d["z"][s], n_prior=d["n_prior"], source=f"ev2 {s}") for s in STATS}
 
 
 def prior_json(run_ev2, n_eps):
@@ -313,12 +314,12 @@ def agg(rows):
 
 # ================================================================================================ bench
 def cmd_bench(a):
-    import mscr_plus_bench as SB                                   # agent S's subset draw (identical subsets)
+    import pmrt_arms_bench as SB                                   # agent S's subset draw (identical subsets)
     os.makedirs(a.out, exist_ok=True)
-    cfg = CP.PlusConfig(B=a.B)
+    cfg = PM.PmrtConfig(B=a.B)
     files = expand(a.cache) + [os.path.join(a.small, "dev1.npz")]
     t = time.time()
-    pool = CP.load_plus_pool(files, stages=None)
+    pool = PM.load_pmrt_pool(files, stages=None)
     log(f"pool {len(files)} files, {pool.n_eps} eps [{time.time() - t:.0f} s]")
     params = load_params_nogb(a.params)
     ev2, ev3 = SB.select(pool, "sub=v2"), SB.select(pool, "sub=v3")
@@ -335,18 +336,18 @@ def cmd_bench(a):
     if a.prior:
         pj = json.load(open(a.prior))
     else:
-        pd2 = CP.plus_data(pool, ev2)
-        run2 = run_integrated(pd2, params, CP.PlusConfig(B=a.B_prior), 0)
+        pd2 = PM.pmrt_data(pool, ev2)
+        run2 = run_integrated(pd2, params, PM.PmrtConfig(B=a.B_prior), 0)
         del pd2
         pj = json.loads(json.dumps(prior_json(run2, len(ev2)), default=DB._js))
         json.dump(pj, open(os.path.join(a.out, "prior_ev2.json"), "w"))
     if a.op == "prior":
         log(f"prior written [{time.time() - t:.0f} s]")
         return
-    priors = {s: MM.Prior.from_stats(pj["z"][s], n_prior=pj["n_prior"]) for s in STATS}
-    res["prior"] = {s: {"directions": {"|".join(h): d for h, d in MM.prior_directions(priors[s], THR).items() if d},
+    priors = {s: FL.Prior.from_stats(pj["z"][s], n_prior=pj["n_prior"]) for s in STATS}
+    res["prior"] = {s: {"directions": {"|".join(h): d for h, d in FL.prior_directions(priors[s], THR).items() if d},
                         "weights": {str(n): {"|".join(h): round(w, 3) for h, w in
-                                             MM.prior_weights(priors[s], n, Q, FLOOR).items()}
+                                             FL.prior_weights(priors[s], n, Q, FLOOR).items()}
                                     for n in (20, 60, 120, 300, 600, 1200)}} for s in STATS}
     log(f"prior ev2 done [{time.time() - t:.0f} s]; directions: "
         + ", ".join(f"{s} {len(res['prior'][s]['directions'])}" for s in STATS)
@@ -359,7 +360,7 @@ def cmd_bench(a):
     ref = g["ref"]
     # 2. placebo
     for nm in ("placebo1", "plxc2"):
-        pdp = CP.plus_data(CP.load_plus_pool([os.path.join(a.small, f"{nm}.npz")]))
+        pdp = PM.pmrt_data(PM.load_pmrt_pool([os.path.join(a.small, f"{nm}.npz")]))
         run = run_integrated(pdp, params, cfg, 9)
         decl = declare_all(run, priors, 20)
         pr = {}
@@ -391,7 +392,7 @@ def cmd_bench(a):
         rows = {}
         for s in subs:
             t = time.time()
-            pd = CP.plus_data(pool, s["episodes"])
+            pd = PM.pmrt_data(pool, s["episodes"])
             run = run_integrated(pd, params, cfg, s["split"])
             decls = {cname(*k): v for k, v in declare_all(run, priors, n).items()}
             if "v2" in bl:
@@ -433,7 +434,7 @@ def cmd_null(a):
     os.makedirs(a.out, exist_ok=True)
     params = load_params_nogb(a.params)
     priors = load_priors(a.prior)
-    cfg = CP.PlusConfig(B=a.B)
+    cfg = PM.PmrtConfig(B=a.B)
     recs = VC.load(a.pi0, set(a.stages.split(",")))
     G = a.group
     n_g = len(recs) // G
@@ -448,7 +449,7 @@ def cmd_null(a):
         sub = recs[g * G:(g + 1) * G]
         for name, rr in VC.variants(sub, [], a.shifts, 0):
             t = time.time()
-            pd = CP.plus_data_from_records(rr, tmp)
+            pd = PM.pmrt_data_from_records(rr, tmp)
             run = run_integrated(pd, params, cfg, 0)
             for (s, lay), d in declare_all(run, priors, G).items():
                 o = per[cname(s, lay)]
@@ -486,16 +487,16 @@ def cmd_null(a):
 # ================================================================================================ smoke (local)
 def cmd_smoke(a):
     params = load_params_nogb(a.params)
-    cfg = CP.PlusConfig(B=a.B)
-    pdd = CP.plus_data(CP.load_plus_pool([os.path.join(a.small, "dev1.npz")]))
+    cfg = PM.PmrtConfig(B=a.B)
+    pdd = PM.pmrt_data(PM.load_pmrt_pool([os.path.join(a.small, "dev1.npz")]))
     run_d = run_integrated(pdd, params, cfg, 0)
     priors = {s: prior_from_run(run_d, s, 20) for s in STATS}
     for nm in ("placebo1", "plxc2"):
-        pdp = CP.plus_data(CP.load_plus_pool([os.path.join(a.small, f"{nm}.npz")]))
+        pdp = PM.pmrt_data(PM.load_pmrt_pool([os.path.join(a.small, f"{nm}.npz")]))
         t = time.time()
         run = run_integrated(pdp, params, cfg, 9)
         log(f"{nm}: integrated {time.time() - t:.1f} s")
-        ref = CP.run_crt_units_plus(pdp, params, cfg, 9)
+        ref = PM.run_pmrt(pdp, params, cfg, 9)
         for r in ref["results"]:
             if r["status"] != "tested":
                 continue
@@ -503,7 +504,7 @@ def cmd_smoke(a):
             for s in MAX_OF:
                 assert abs(o[s]["p2"] - r["arms"][s]["p"]) < 1e-12, (nm, r["family"], r["relation"], r["kpi"], s)
                 assert o[s]["sign"] == r["arms"][s]["sign"], ("sign", r["family"], r["relation"], r["kpi"], s)
-        log(f"{nm}: two-sided p / sign of plain_c, loadsp_c identical to crt_units_plus.family_tests_plus")
+        log(f"{nm}: two-sided p / sign of plain_c, loadsp_c identical to pmrt.family_tests_pmrt")
         for (s, lay), d in declare_all(run, priors, 20).items():
             ps = used_p(d)
             log(f"  {cname(s, lay):>18}: declared {sum(v['declared'] for v in d.values())} rate05 "

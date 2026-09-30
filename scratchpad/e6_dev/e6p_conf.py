@@ -30,7 +30,7 @@ true. dev_conf repro jobs (protocol section 9.1; seeds REPRO_SEEDS = 186080, 186
 EVAL arms (one job = one (seed, arm), seed-major, resumable): anchors freeze, sub:ES+PowerES, noarb, sub:ES,
 sub:PowerES, sub:SliceGuarantee (exactly e6p_step2_dev); references incumbent (DirectionalUnitArbiter(IncumbentPolicy)
 from t = 0, T 60, feasible: the dev_conf logging arbiter), never_sleep (e6p_opta_ka), B2 (e6p_step2_dev static
-envelope); map arms blanket2, MG:MSCR+, MG:GT, MG:rand and MG:<b> for the 13 associational maps: mapgate_v2_arbiter(M),
+envelope); map arms blanket2, MG:PMRT, MG:GT, MG:rand and MG:<b> for the 13 associational maps: mapgate_v2_arbiter(M),
 built from the frozen maps artifact, ONE job per distinct decision signature (``alias_table``; the artifact's "jobs"),
 records carry ``signature`` and ``aliases``. An all-accept signature is aliased to noarb only when the artifact says
 so (repro check).
@@ -109,7 +109,7 @@ REFS = ("incumbent", "never_sleep", "B2")
 ASSOC = ("corr@dev", "corr@plc", "granger@dev", "granger@plc", "shap_gbdt@dev", "shap_gbdt@plc", "int@dev",
          "int@plc", "qacm@dev", "qacm@plc", "two_tower@dev", "two_tower@plc", "granger_by")
 ASSOC_ARMS = tuple(f"MG:{b}" for b in ASSOC)                           # the associational map set A (13)
-MAP_ARMS = ("MG:MSCR+", "MG:GT", "MG:rand", "blanket2") + ASSOC_ARMS  # canonical order (alias targets = first)
+MAP_ARMS = ("MG:PMRT", "MG:GT", "MG:rand", "blanket2") + ASSOC_ARMS  # canonical order (alias targets = first)
 ALL_ARMS = ANCHORS + REFS + MAP_ARMS                                   # the 26 named arms of section 5.2
 
 # ---- layout self-checks (import time)
@@ -230,7 +230,7 @@ def alias_table(maps: dict, theta: float = THETA, noarb_alias: bool = False) -> 
 def smoke_maps() -> dict:
     """Plumbing-only map set for eval smoke runs without a frozen artifact (K-A's gt_ext map and variants)."""
     M = KA.M_GT
-    ms = {"MG:MSCR+": MG.own_only(M), "MG:GT": M, "MG:rand": MG.random_sized_map(M, KA._cells(), RAND_TAG, RAND_KEY),
+    ms = {"MG:PMRT": MG.own_only(M), "MG:GT": M, "MG:rand": MG.random_sized_map(M, KA._cells(), RAND_TAG, RAND_KEY),
           "blanket2": MG.blanket_saving_map()}
     for i, b in enumerate(ASSOC_ARMS):
         ms[b] = MG.sign_flip(M, ("carrier",)) if i % 3 == 0 else ({} if i % 3 == 1 else M)

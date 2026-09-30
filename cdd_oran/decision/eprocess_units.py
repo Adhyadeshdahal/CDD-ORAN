@@ -1,5 +1,5 @@
 """mscr-eproc-units-v1: design-based sequential e-process test on the E6-P unit table (the EXACT companion of
-mscr-crt-units-v2; MSCR+ agent V, 2026-09-30, not frozen).
+mscr-crt-units-v2; PMRT research, agent V, 2026-09-30, not frozen).
 
 Why (the skeleton gap of crt_units / crt_units_v2): which units of a knob family exist, when, and with which request
 direction sgn depends on the family's OWN past modes (a reject leaves the request pending -> a new unit ~60 s later; an

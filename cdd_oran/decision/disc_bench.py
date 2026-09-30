@@ -1,4 +1,4 @@
-"""Data-efficiency BENCH for E6-P causal discovery methods (MSCR+ research; runner scratchpad/e6_dev/disc_bench_run.py).
+"""Data-efficiency BENCH for E6-P causal discovery methods (PMRT research; runner scratchpad/e6_dev/disc_bench_run.py).
 
 1. CACHE (``build_cache``): STREAMS "e6p-disc-rec/1" episode records (one episode at a time; only compact per-unit
    arrays are kept) into one compressed npz per source file. One row per logged unit of a knob family in

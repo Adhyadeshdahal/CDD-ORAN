@@ -3,7 +3,7 @@ scratchpad/e6_dev/e6p_conf.py). ``disc`` and ``eval`` run as Kaggle jobs (scratc
 and ``verify`` (the maps artifact, freeze 2) are light and run locally.
 
   python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev SPEC --disc SPEC --placebo SPEC --gt SPEC [--out DIR]
-         [--artifact docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json] [--cache-dir DIR] [--B 9999] [--B-null 999]
+         [--artifact docs/benchmark/artifacts/E6P_PMRT_V4.json] [--cache-dir DIR] [--B 9999] [--B-null 999]
          [--null-group 60] [--null-shifts 4] [--workers 4] [--methods shap_gbdt,corr,granger,two_tower,int,qacm]
          [--no-ann] [--no-v2] [--no-null] [--dev-step1 SPEC] [--dry-run] [--allow-smoke] [--allow-artifact-mismatch]
   python scratchpad/e6_dev/e6p_conf_analyze.py build --disc-json OUT/disc_conf.json
@@ -16,12 +16,12 @@ SPEC = comma list of JSONL files / directories (recursive res_*.jsonl or all.jso
 
 disc (section 9 step 4):
   checks     the v4 artifact (sha256 + embedded code sha256s, e6p_disc_analyze_v4.artifact_status; the params pickle
-             that ``mscr_plus_artifacts.py verify`` needs is not in any bundle, so the sha checks stand in for it, as in
+             that ``pmrt_artifacts.py verify`` needs is not in any bundle, so the sha checks stand in for it, as in
              the v4 analyzer); every dev_conf / disc / placebo record: every unit of crt_units.FAMILIES carries its own
              ``probs`` row (keys accept / reject, sums to 1, entries in [.15, .85], p = probs[mode]), pi0_table null,
              directional collection; UnitData.meta["p_mismatch"] == 0 on every pool (section 4.1 (a), (b)). Any
              failure stops the analysis (no maps).
-  MSCR+      frozen artifact, PRIMARY loadsp_c + wby1s; pooled DISC (split 0, n_target = #DISC episodes), placebo K0
+  PMRT       v4 artifact (E6P_PMRT_V4.json), PRIMARY loadsp_c + wby1s; pooled DISC (split 0, n_target = #DISC episodes), placebo K0
              (split 9, n_target = #placebo episodes), K0n = the v4 recipe on DISC (groups of 60 consecutive episodes
              j // 60, 4 cyclic series shifts, B 999). K1 (>= 500 tested sleep units, >= 75 rejects), G, X1, X2 (kpi in
              pv / v / rlf / e, INDET excluded: precision >= .80, sign accuracy >= .90), X3 (chain >= min(3, |C*|)),
@@ -30,14 +30,14 @@ disc (section 9 step 4):
              (MAX_FP + 1)-th largest finite placebo score over the declarable relations (K-B placebo_tau), except
              granger: n-free transfer (partial r^2 = F / (F + df); tau_r2 = the (MAX_FP + 1)-th largest placebo r^2,
              declare at DISC iff r^2 > tau_r2, sign unchanged); granger_by untuned.
-  maps       (section 4.3) MG:MSCR+ = declared edges, beta = design-based slope sum v r / sum v^2 (v = MSCR+ design-
+  maps       (section 4.3) MG:PMRT = declared edges, beta = design-based slope sum v r / sum v^2 (v = PMRT design-
              centred treatment with the unit's own row, r = y - predictable running centre, eprocess_units.
-             predictable_residuals; sign disagreements keep the MSCR+ sign, counted); MG:<b> = sign x |naive OLS
+             predictable_residuals; sign disagreements keep the PMRT sign, counted); MG:<b> = sign x |naive OLS
              slope| (K-B map_from_declared); MG:GT = TRUE edges of the fresh gt table ("dir"); MG:rand =
-             random_sized_map(M_MSCR+, gt cells, 6623, key 3); blanket2 = blanket_saving_map(). Signatures and the alias
+             random_sized_map(M_PMRT, gt cells, 6623, key 3); blanket2 = blanket_saving_map(). Signatures and the alias
              table (e6p_conf.alias_table; noarb alias iff the dev_conf repro check shows all-accept MapGateV2 == noarb
              bit for bit). Offline replay on the DISC logged contexts (K-B pairs vs GT, ~clean, GT+plc; bootstrap
-             default_rng([6624, 10, pair_idx])). Descriptive: the 8 other MSCR+ combinations, MSCR-CRT v2 + BY,
+             default_rng([6624, 10, pair_idx])). Descriptive: the 8 other PMRT combinations, MSCR-CRT v2 + BY,
              IPW-Wald and Granger+ctx (both BY q .05; discovery only), the @dev maps with the step-1 DEV tau
              (--dev-step1, offline replay only).
   output     OUT/disc_conf.json (everything, including every map and the discovery label). INVALID -> build refuses.
@@ -49,7 +49,7 @@ eval (section 7.2): Gate A stats (e6p_step2_dev definitions) of every arm on ONE
   (N_BOOT 10000, default_rng([6624, 20, n_seeds])) over the seeds with every arm (aliased arms expanded from their
   simulated target); eligibility held at its point value; R* = R if eligible else min(R, 0). E, D1 (Delta1 >= .10 and
   LB90 > 0, the best associational map RE-SELECTED per resample), D2 (one-sided p per distinct associational
-  signature, Holm alpha .05), never_sleep report (R(MSCR+) - R(never_sleep), 90 % CI, non-inferiority LB90 > -.10),
+  signature, Holm alpha .05), never_sleep report (R(PMRT) - R(never_sleep), 90 % CI, non-inferiority LB90 > -.10),
   secondary contrasts, verdict precedence INVALID > NOT ELIGIBLE > PASS / PARTIAL / FAIL; "NOT A VERDICT" unless the
   data are complete and every sha256 matches. Output OUT/eval_conf.json + OUT/verdict_conf.json.
 """
@@ -84,7 +84,8 @@ SCHEMA_EVAL = "e6p-conf-eval/1"
 ANALYZER = "scratchpad/e6_dev/e6p_conf_analyze.py"
 DRIVER = "scratchpad/e6_dev/e6p_conf.py"
 MAPGATE = "cdd_oran/decision/mapgate.py"
-V4_ARTIFACT = A4.ARTIFACT
+V4_ARTIFACT = A4.PMRT_ARTIFACT                 # PMRT v4 artifact (label-only successor of the frozen v4 one)
+V4_ARTIFACT_SHA256 = A4.PMRT_ARTIFACT_SHA256
 PRIMARY = A4.PRIMARY
 H = H_PRE = 90
 SPLIT = {"pooled": 0, "placebo": 9, "null": 0}
@@ -101,7 +102,7 @@ D1_MARGIN = 0.10
 ALPHA_D2 = 0.05
 NONINF = -0.10
 SECONDARY = ("noarb", "incumbent", "blanket2", "never_sleep", "B2", "MG:GT", "MG:rand")
-PRIMARY_ARM = "MG:MSCR+"
+PRIMARY_ARM = "MG:PMRT"
 TUNED = BD.TUNED
 log = A4.log
 
@@ -196,10 +197,10 @@ def platform_key(env: dict | None) -> tuple:
 
 # ============================================================================================ maps (sec. 4.3)
 def design_slope(ud, f: str, rel: str, kpi: str) -> dict:
-    """MSCR+ map beta: sum v r / sum v^2 over the family's tested units in information order; v = sgn (L(mode) -
-    probs . L) with the unit's own row, r = y(rel, kpi) - its predictable running centre (the MSCR+ "pred" residual,
+    """PMRT map beta: sum v r / sum v^2 over the family's tested units in information order; v = sgn (L(mode) -
+    probs . L) with the unit's own row, r = y(rel, kpi) - its predictable running centre (the PMRT "pred" residual,
     eprocess_units.predictable_residuals). Design-unbiased for a linear level effect (E[v c] = 0 for predictable c)."""
-    from cdd_oran.decision.crt_units_plus import v_design
+    from cdd_oran.decision.pmrt import v_design
     from cdd_oran.decision.eprocess_units import EProcConfig, predictable_residuals, unit_order
     rows = unit_order(ud, ud.rows_of(f))
     if len(rows) < 2:
@@ -212,7 +213,7 @@ def design_slope(ud, f: str, rel: str, kpi: str) -> dict:
     return {"beta": float(v @ r / vv) if vv > 0 else 0.0, "n": int(len(rows)), "vv": vv}
 
 
-def mscr_map(decl: dict, ud) -> tuple[dict, list]:
+def pmrt_map(decl: dict, ud) -> tuple[dict, list]:
     """Declared (nonzero-sign) edges of the primary layer -> {h: sign * |design slope|}; the list of sign
     disagreements (h, declared sign, slope)."""
     M, dis = {}, []
@@ -474,10 +475,10 @@ def data_status(checks: dict, gt_seeds: list, dry: bool) -> dict:
 
 
 def cmd_disc(a) -> dict:
-    import mscr_integrate_bench as IB
-    import mscr_plus_artifacts as MPA
+    import pmrt_bench as PB
+    import pmrt_artifacts as PAR
 
-    from cdd_oran.decision import crt_units_plus as CP
+    from cdd_oran.decision import pmrt as PM
     t_all = time.time()
     out = a.out or os.environ.get("JOB_OUT") or "."
     os.makedirs(out, exist_ok=True)
@@ -491,8 +492,8 @@ def cmd_disc(a) -> dict:
     log(f"v4 artifact sha ok {ast['sha_ok']}, code ok {ast['code_ok']} {[k for k, v in ast['code'].items() if not v['ok']]}")
     if not (ast["sha_ok"] and ast["code_ok"]) and not a.allow_artifact_mismatch:
         raise SystemExit("v4 artifact sha256 / code sha256 mismatch (--allow-artifact-mismatch for a dry run only)")
-    params, priors = MPA.load_artifact(a.artifact)
-    cfg, cfg_null = MPA.plus_config(params, a.B), MPA.plus_config(params, a.B_null)
+    params, priors = PAR.load_artifact(a.artifact)
+    cfg, cfg_null = PAR.pmrt_config(params, a.B), PAR.pmrt_config(params, a.B_null)
     # ---- records: section 4.1 (a) checks + light DISC records (K0n, replay)
     t = time.time()
     files = {k: A4.expand(getattr(a, k)) for k in ("dev", "disc", "placebo", "gt")}
@@ -524,8 +525,8 @@ def cmd_disc(a) -> dict:
     caches = {k: A4.build_caches(files[k], stage_of[k], os.path.join(cache_dir, k), k, a.workers)
               for k in ("dev", "disc", "placebo")}
     timing["caches"] = round(time.time() - t, 1)
-    pool = CP.load_plus_pool(caches["disc"], stages={"eval"})
-    ppool = CP.load_plus_pool(caches["placebo"], stages={"placebo"})
+    pool = PM.load_pmrt_pool(caches["disc"], stages={"eval"})
+    ppool = PM.load_pmrt_pool(caches["placebo"], stages={"placebo"})
     dpool = DB.load_pool(caches["dev"], H=H, H_pre=H_PRE, stages={"dev"})
     for nm, p in (("disc", pool), ("placebo", ppool), ("dev", dpool)):
         subs = sorted(set(str(s) for s in p.eps["sub"]))
@@ -533,7 +534,7 @@ def cmd_disc(a) -> dict:
             raise SystemExit(f"{nm}: episodes of subs {subs} (only '{C.SUB}' allowed)")
         if not a.allow_smoke and bool(np.any(p.eps["smoke"])):
             raise SystemExit(f"{nm}: smoke records (pass --allow-smoke for a dry run)")
-    pdisc, pplc = CP.plus_data(pool), CP.plus_data(ppool)
+    pdisc, pplc = PM.pmrt_data(pool), PM.pmrt_data(ppool)
     dud = dpool.unit_data()
     rep["units"] = {"disc": A4.unit_counts(pdisc.ud), "placebo": A4.unit_counts(pplc.ud), "dev": A4.unit_counts(dud)}
     pm = {"disc": pdisc.ud.meta["p_mismatch"], "placebo": pplc.ud.meta["p_mismatch"], "dev": dud.meta["p_mismatch"]}
@@ -554,28 +555,28 @@ def cmd_disc(a) -> dict:
     dry = bool(a.dry_run)
     rep["data"] = data_status(rep["record_checks"], g.get("seeds", []), dry)
     log(f"GT {g['n_episodes']} eps, {g['n_labels']} labels; G {G['pass']}; data {rep['data']}")
-    # ---- MSCR+ placebo (K0)
+    # ---- PMRT placebo (K0)
     t = time.time()
     n_plc, n_disc = int(ppool.n_eps), int(pool.n_eps)
-    run_p = IB.run_integrated(pplc, params, cfg, SPLIT["placebo"])
-    decl_p_all = IB.declare_all(run_p, priors, n_plc)
+    run_p = PB.run_integrated(pplc, params, cfg, SPLIT["placebo"])
+    decl_p_all = PB.declare_all(run_p, priors, n_plc)
     K0 = A4.k0_check(decl_p_all[PRIMARY])
     rep["K0"] = K0
     rep["placebo_hyp"] = A4.hyp_table(run_p, decl_p_all[PRIMARY])
-    rep["placebo_combos"] = {IB.cname(*k): A4.k0_check(d) for k, d in decl_p_all.items()}
+    rep["placebo_combos"] = {PB.cname(*k): A4.k0_check(d) for k, d in decl_p_all.items()}
     timing["k0"] = round(time.time() - t, 1)
     log(f"K0 {K0['pass']}: m {K0['m']} reject {K0['n_reject']} tail {K0['binom_tail']:.3g} declared "
         f"{K0['declared']} [{timing['k0']} s]")
-    # ---- MSCR+ pooled DISC
+    # ---- PMRT pooled DISC
     t = time.time()
-    run = IB.run_integrated(pdisc, params, cfg, SPLIT["pooled"])
-    decls_all = IB.declare_all(run, priors, n_disc)
+    run = PB.run_integrated(pdisc, params, cfg, SPLIT["pooled"])
+    decls_all = PB.declare_all(run, priors, n_disc)
     decl = decls_all[PRIMARY]
     rep["disc_hyp"] = A4.hyp_table(run, decl)
-    rep["mscr_combos"] = {IB.cname(*k): {"metrics": DB.subset_metrics(d, ref), "declared": decl_list(d)}
+    rep["pmrt_combos"] = {PB.cname(*k): {"metrics": DB.subset_metrics(d, ref), "declared": decl_list(d)}
                           for k, d in decls_all.items()}
-    timing["mscr_disc"] = round(time.time() - t, 1)
-    log(f"MSCR+ DISC ({n_disc} eps): declared {decl_list(decl)} [{timing['mscr_disc']} s]")
+    timing["pmrt_disc"] = round(time.time() - t, 1)
+    log(f"PMRT DISC ({n_disc} eps): declared {decl_list(decl)} [{timing['pmrt_disc']} s]")
     # ---- K0n
     K0n = None
     if not a.no_null:
@@ -616,16 +617,16 @@ def cmd_disc(a) -> dict:
     # ---- maps
     t = time.time()
     maps, prov, plc_maps, bl_rep = {}, {}, {}, {}
-    M_mscr, disagree = mscr_map(decl, pdisc.ud)
-    maps["MG:MSCR+"] = M_mscr
-    prov["MG:MSCR+"] = {"method": "MSCR+ " + "+".join(PRIMARY), "declared": decl_list(decl),
+    M_pmrt, disagree = pmrt_map(decl, pdisc.ud)
+    maps["MG:PMRT"] = M_pmrt
+    prov["MG:PMRT"] = {"method": "PMRT " + "+".join(PRIMARY), "declared": decl_list(decl),
                         "beta": "design-based slope (section 4.3)", "sign_disagreements": disagree}
-    plc_maps["MG:MSCR+"] = KBA.map_from_declared(decl_p_all[PRIMARY], pplc.ud)[0]
+    plc_maps["MG:PMRT"] = KBA.map_from_declared(decl_p_all[PRIMARY], pplc.ud)[0]
     maps["MG:GT"] = MG.map_from_gt(cells, true_only=True)
     prov["MG:GT"] = {"method": "knockout GT, TRUE edges ('dir'), beta = the edge mean", "gt_seeds": g.get("seeds")}
-    maps["MG:rand"] = MG.random_sized_map(M_mscr, cells, C.RAND_TAG, C.RAND_KEY)
-    prov["MG:rand"] = {"method": f"random_sized_map(M_MSCR+, gt cells, tag {C.RAND_TAG}, key {C.RAND_KEY})",
-                       "n_edges": len(M_mscr)}
+    maps["MG:rand"] = MG.random_sized_map(M_pmrt, cells, C.RAND_TAG, C.RAND_KEY)
+    prov["MG:rand"] = {"method": f"random_sized_map(M_PMRT, gt cells, tag {C.RAND_TAG}, key {C.RAND_KEY})",
+                       "n_edges": len(M_pmrt)}
     maps["blanket2"] = MG.blanket_saving_map()
     prov["blanket2"] = {"method": "blanket_saving_map() (no-map control)"}
     gp = gd = None
@@ -833,7 +834,7 @@ def verify_artifact(path: str, disc_json: str | None = None, allow_dry: bool = F
            "mapgate_consts": (a["mapgate"]["theta"], a["mapgate"]["k_conf"]) == (C.THETA, C.K_CONF),
            "analyzer_sha": a["sha256"][ANALYZER] == A4.sha_lf(os.path.join(ROOT, ANALYZER)),
            "driver_sha": a["sha256"][DRIVER] == A4.sha_lf(os.path.join(ROOT, DRIVER)),
-           "v4_artifact_sha": a["sha256"]["v4_artifact"] == A4.ARTIFACT_SHA256,
+           "v4_artifact_sha": a["sha256"]["v4_artifact"] == V4_ARTIFACT_SHA256,
            "mode_full": a["mode"] == "full" or allow_dry, "not_invalid": a["discovery_label"] != "INVALID"}
     if disc_json:
         d = json.load(open(disc_json))
@@ -1035,7 +1036,7 @@ def cmd_eval(a) -> dict:
     if ns:
         ns = dict(ns, noninferior_lb90_gt=NONINF, noninferior=bool(ns["ci90"][0] is not None
                                                                    and ns["ci90"][0] > NONINF),
-                  statement="pre-registered: the study does NOT expect and will NOT claim that the MSCR+ map beats "
+                  statement="pre-registered: the study does NOT expect and will NOT claim that the PMRT map beats "
                             "the best static rule; reported whatever it shows")
     eff = None
     if PRIMARY_ARM in P and "MG:GT" in P:
@@ -1089,7 +1090,7 @@ def cmd_eval(a) -> dict:
     log(f"E {E['pass']}  D1 {D1['pass']} (delta1 {D1.get('delta1')}, LB90 {D1.get('lb90')}, best {D1.get('best_point')})"
         f"  D2 {D2['pass']}")
     if ns:
-        log(f"R(MSCR+) - R(never_sleep) = {ns['dR']:+.3f} [{f(ns['ci90'][0])},{f(ns['ci90'][1])}] noninferior "
+        log(f"R(PMRT) - R(never_sleep) = {ns['dR']:+.3f} [{f(ns['ci90'][0])},{f(ns['ci90'][1])}] noninferior "
             f"{ns['noninferior']}")
     log(f"VERDICT: {V['label']}")
     A4.dump(rep, os.path.join(out, "eval_conf.json"))

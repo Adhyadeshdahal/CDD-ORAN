@@ -264,10 +264,10 @@ def test_design_slope_is_unbiased_where_the_naive_slope_is_confounded():
     decl = {("sleep", "nbr", "pv"): {"declared": True, "sign": 1}, ("sleep", "own", "pv"): {"declared": True,
                                                                                            "sign": 0},
             ("sleep", "far", "pv"): {"declared": False, "sign": 1}}
-    M, dis = AN.mscr_map(decl, ud)
+    M, dis = AN.pmrt_map(decl, ud)
     assert list(M) == [("sleep", "nbr", "pv")] and 1.5 < M[("sleep", "nbr", "pv")] < 2.5 and dis == []
-    M2, dis2 = AN.mscr_map({("sleep", "nbr", "pv"): {"declared": True, "sign": -1}}, ud)
-    assert M2[("sleep", "nbr", "pv")] < 0 and len(dis2) == 1                  # MSCR+ sign kept, disagreement counted
+    M2, dis2 = AN.pmrt_map({("sleep", "nbr", "pv"): {"declared": True, "sign": -1}}, ud)
+    assert M2[("sleep", "nbr", "pv")] < 0 and len(dis2) == 1                  # PMRT sign kept, disagreement counted
 
 
 def test_granger_n_free_placebo_transfer():
@@ -316,13 +316,13 @@ def test_signature_equal_iff_identical_policies_and_alias_table():
     empty = {("carrier", "own", "e"): 5.0}                                            # no harm anywhere
     assert MG.decision_signature(empty) == MG.all_accept_signature() == MG.decision_signature({})
     assert set(_decisions(empty, ctxs)) == {"accept"} and set(_decisions({}, ctxs)) == {"accept"}
-    maps = {"MG:MSCR+": M1, "MG:GT": M2, "MG:rand": M3, "blanket2": {}, "MG:corr@dev": {}, "MG:corr@plc": M1}
+    maps = {"MG:PMRT": M1, "MG:GT": M2, "MG:rand": M3, "blanket2": {}, "MG:corr@dev": {}, "MG:corr@plc": M1}
     al = C.alias_table(maps)
-    assert al["alias_of"] == {"MG:MSCR+": "MG:MSCR+", "MG:GT": "MG:MSCR+", "MG:rand": "MG:rand",
-                              "blanket2": "blanket2", "MG:corr@dev": "blanket2", "MG:corr@plc": "MG:MSCR+"}
-    assert al["jobs"] == ["MG:MSCR+", "MG:rand", "blanket2"]
+    assert al["alias_of"] == {"MG:PMRT": "MG:PMRT", "MG:GT": "MG:PMRT", "MG:rand": "MG:rand",
+                              "blanket2": "blanket2", "MG:corr@dev": "blanket2", "MG:corr@plc": "MG:PMRT"}
+    assert al["jobs"] == ["MG:PMRT", "MG:rand", "blanket2"]
     al2 = C.alias_table(maps, noarb_alias=True)
-    assert al2["alias_of"]["blanket2"] == "noarb" and al2["jobs"] == ["MG:MSCR+", "MG:rand"]
+    assert al2["alias_of"]["blanket2"] == "noarb" and al2["jobs"] == ["MG:PMRT", "MG:rand"]
 
 
 def _disc_json(maps, label="DISC-PASS", mode="full", missing=()):
@@ -331,7 +331,7 @@ def _disc_json(maps, label="DISC-PASS", mode="full", missing=()):
             "record_checks": {k: {"ok": True} for k in ("dev_conf", "disc", "placebo")},
             "maps": {a: MG.map_to_json(M) for a, M in maps.items()}, "provenance": {a: {"m": a} for a in maps},
             "repro": {"noarb_alias": False}, "protocol": {"frozen": False}, "K0": {"pass": True},
-            "K0n": {"pass": True}, "artifact": {"sha256": AN.A4.ARTIFACT_SHA256}, "code_sha256": {},
+            "K0n": {"pass": True}, "artifact": {"sha256": AN.V4_ARTIFACT_SHA256}, "code_sha256": {},
             "platform": {"keys": []}}
 
 
@@ -472,9 +472,9 @@ def test_eval_verdict_precedence_and_not_a_verdict_label():
 
 def test_load_eval_expands_aliases(tmp_path):
     recs = [{"kind": "job", "schema": C.SCHEMA_EVAL, "sub": C.SUB, "conf_stage": "eval", "seed": 187000,
-             "arm": a, "prot_viol": 1.0, "smoke": False} for a in ("MG:MSCR+", "blanket2")]
+             "arm": a, "prot_viol": 1.0, "smoke": False} for a in ("MG:PMRT", "blanket2")]
     f = tmp_path / "e.jsonl"
     f.write_text("\n".join(json.dumps(r) for r in recs) + "\n", encoding="utf-8")
-    R, _ = AN.load_eval([str(f)], {"MG:MSCR+": "MG:MSCR+", "MG:GT": "MG:MSCR+", "blanket2": "blanket2",
+    R, _ = AN.load_eval([str(f)], {"MG:PMRT": "MG:PMRT", "MG:GT": "MG:PMRT", "blanket2": "blanket2",
                                    "MG:corr@dev": "noarb"})
-    assert R[187000]["MG:GT"]["alias_of"] == "MG:MSCR+" and "MG:corr@dev" not in R[187000]
+    assert R[187000]["MG:GT"]["alias_of"] == "MG:PMRT" and "MG:corr@dev" not in R[187000]

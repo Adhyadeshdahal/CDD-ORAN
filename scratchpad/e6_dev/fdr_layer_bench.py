@@ -1,6 +1,7 @@
-"""MSCR+ agent M: bench of the DECLARATION layer (cdd_oran/decision/mscr_multi.py) on MSCR-CRT v2 statistics.
+"""Agent M (PMRT research): bench of the DECLARATION layer (cdd_oran/decision/fdr_layer.py; formerly
+mscr_multi.py / mscr_multi_bench.py) on MSCR-CRT v2 statistics.
 
-  python scratchpad/e6_dev/mscr_multi_bench.py stats --cache DIR --small DIR [--B 9999] [--out DIR]     (Kaggle)
+  python scratchpad/e6_dev/fdr_layer_bench.py stats --cache DIR --small DIR [--B 9999] [--out DIR]     (Kaggle)
         1. PRIOR: MSCR-CRT v2 on the 480 ev2 episodes (sub "v2", stage eval) -> per-hypothesis z_approx / sign / p.
         2. EVAL subsets drawn from the 1200 ev3 episodes ONLY (sub "v3"): n = 60 x 10 and 120 x 10 (disjoint random,
            default_rng([6690, n, R, 0, 71])), n = 300 = the four v3 EVAL folds, n = 1200 = all of v3.
@@ -8,8 +9,8 @@
            (p2 identical to crt_units_v2.run_crt_units_v2: asserted), beta / sign / z; and agent V's e-process e-values
            (eprocess_units, default config): two-sided grapa and one-sided (+ / -) grapa.
         -> DIR/mscr_multi_stats.json (small; everything the declaration layer needs).
-  python scratchpad/e6_dev/mscr_multi_bench.py eval --stats F --gtref F [--out DIR]                        (local)
-        applies every procedure of mscr_multi.PROCEDURES and scores it with disc_bench.subset_metrics.
+  python scratchpad/e6_dev/fdr_layer_bench.py eval --stats F --gtref F [--out DIR]                        (local)
+        applies every procedure of fdr_layer.PROCEDURES and scores it with disc_bench.subset_metrics.
 """
 from __future__ import annotations
 
@@ -188,35 +189,35 @@ def cmd_local(a):
 
 
 def cmd_eval(a):
-    from cdd_oran.decision import mscr_multi as MM
+    from cdd_oran.decision import fdr_layer as FL
     S = json.load(open(a.stats))
     ref = DB.load_ref(a.gtref)["ref"]
-    prior = MM.Prior.from_stats(S["prior"]["hyp"], n_prior=S["prior"]["n_eps"], source="ev2 MSCR-CRT v2 (480 eps)")
-    procs = MM.PROCEDURES if not a.procs else a.procs.split(",")
+    prior = FL.Prior.from_stats(S["prior"]["hyp"], n_prior=S["prior"]["n_eps"], source="ev2 MSCR-CRT v2 (480 eps)")
+    procs = FL.PROCEDURES if not a.procs else a.procs.split(",")
     out = {"prior": {"n": prior.n_prior, "z": {"|".join(h): v for h, v in prior.z.items()}},
            "procedures": {}, "config": dict(q=a.q, floor=a.floor, thr=a.thr)}
     for n in (20, 60, 120, 300, 1200):
-        w = MM.prior_weights(prior, n, a.q, a.floor)
+        w = FL.prior_weights(prior, n, a.q, a.floor)
         top = sorted(w.items(), key=lambda kv: -kv[1])[:12]
         out.setdefault("weights", {})[str(n)] = {"|".join(h): round(v, 3) for h, v in w.items()}
         log(f"weights n={n}: top " + ", ".join(f"{'|'.join(h)} {v:.2f}" for h, v in top)
             + f"; premise {w[DB.PREMISE]:.2f}; #floor {sum(v < a.floor + 1e-6 for v in w.values())}")
-    dirs = MM.prior_directions(prior, a.thr)
+    dirs = FL.prior_directions(prior, a.thr)
     out["directions"] = {"|".join(h): d for h, d in dirs.items() if d}
     log(f"directions (|z_ev2| >= {a.thr}): {len(out['directions'])}: {out['directions']}")
     table = []
     for pr in procs:
         rows_by_n = {}
         for s in S["subsets"]:
-            stats = MM.stats_from_json(s["hyp"])
-            decl = MM.declare(stats, pr, prior, n_target=s["n"], q=a.q, floor=a.floor, thr=a.thr)
+            stats = FL.stats_from_json(s["hyp"])
+            decl = FL.declare(stats, pr, prior, n_target=s["n"], q=a.q, floor=a.floor, thr=a.thr)
             m = DB.subset_metrics(decl, ref)
             m.update(name=s["name"])
             rows_by_n.setdefault(s["n"], []).append(m)
         plc = {}
         for nm, s in S["placebo"].items():
-            stats = MM.stats_from_json(s["hyp"])
-            decl = MM.declare(stats, pr, prior, n_target=20, q=a.q, floor=a.floor, thr=a.thr)
+            stats = FL.stats_from_json(s["hyp"])
+            decl = FL.declare(stats, pr, prior, n_target=20, q=a.q, floor=a.floor, thr=a.thr)
             plc[nm] = sorted("|".join(h) for h, v in decl.items() if v["declared"])
             key = "e" if "e" in next(iter(decl.values())) else "p"
             if key == "p":

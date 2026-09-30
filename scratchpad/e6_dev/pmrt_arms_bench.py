@@ -1,14 +1,15 @@
-"""MSCR+ bench job (agent S; cdd_oran/decision/crt_units_plus.py). Kaggle only for the big pool (1680 eps).
+"""PMRT arms bench job (agent S; cdd_oran/decision/pmrt.py; formerly mscr_plus_bench.py, method label "MSCR+").
+Kaggle only for the big pool (1680 eps).
 
-  python scratchpad/e6_dev/mscr_plus_bench.py all --cache DIR_OR_FILES --small DIR --out DIR
+  python scratchpad/e6_dev/pmrt_arms_bench.py all --cache DIR_OR_FILES --small DIR --out DIR
          [--train sub=v2,stage=dev] [--eval sub=v3] [--sizes 60,120,300] [--R 60:10,120:10] [--B 9999]
          [--cv-reps 3] [--no-gb] [--params P.pkl (skip fit)] [--baselines v2,eproc] [--max-subsets 0]
 
-1. FIT (training = episodes matching --train: ev2 sub "v2" + DEV stage "dev"): crt_units_plus.fit_plus -> out/params.pkl
+1. FIT (training = episodes matching --train: ev2 sub "v2" + DEV stage "dev"): pmrt.fit_pmrt -> out/params.pkl
    (+ params.json summary: per hypothesis the CV z of every variant, the chosen "best", in-sample z).
 2. BENCH on --eval episodes only (ev3 sub "v3"; never seen by the fit): n = 60 x R, 120 x R disjoint random subsets
    (seeded default_rng([6690, n, R, seed]), split 20 + i), n = 300 = the four v3 folds (split 1 + k). Per subset one
-   CRT per family gives every MSCR+ arm / combo; each arm is scored after BY (disc_bench.subset_metrics vs gtref);
+   CRT per family gives every PMRT arm / combo; each arm is scored after BY (disc_bench.subset_metrics vs gtref);
    baselines on the same subsets: mscr-crt-units-v2 (B) and V's e-process (eprocess_units, e-BH).
 3. PLACEBO (placebo1, plxc2 from --small): per arm #BY declarations, rate p <= .05.
 Writes out/bench_plus.json (+ progress in stdout).
@@ -30,7 +31,7 @@ if ROOT not in sys.path:
 
 import numpy as np  # noqa: E402
 
-from cdd_oran.decision import crt_units_plus as CP  # noqa: E402
+from cdd_oran.decision import pmrt as PM  # noqa: E402
 from cdd_oran.decision import crt_units_v2 as V2  # noqa: E402
 from cdd_oran.decision import disc_bench as DB  # noqa: E402
 from cdd_oran.decision import eprocess_units as EP  # noqa: E402
@@ -117,31 +118,31 @@ def main(argv=None):
     os.makedirs(a.out, exist_ok=True)
     files = expand(a.cache) + ([] if a.no_dev else [os.path.join(a.small, "dev1.npz")])
     t = time.time()
-    pool = CP.load_plus_pool(files, stages=None)
+    pool = PM.load_pmrt_pool(files, stages=None)
     log(f"pool {len(files)} files, {pool.n_eps} eps, {len(pool.u['gep'])} units, subs "
         f"{ {s: int((pool.eps['sub'] == s).sum()) for s in sorted(set(pool.eps['sub'].tolist()))} } "
         f"[{time.time() - t:.0f} s]")
     tr, ev = select(pool, a.train), select(pool, a.eval)
     assert not set(tr.tolist()) & set(ev.tolist()), "train / eval overlap"
     log(f"train eps {len(tr)}, eval eps {len(ev)}")
-    cfg = CP.PlusConfig(B=a.B, cv_reps=a.cv_reps, gb=not a.no_gb, h_pow=a.h_pow)
+    cfg = PM.PmrtConfig(B=a.B, cv_reps=a.cv_reps, gb=not a.no_gb, h_pow=a.h_pow)
     if a.params:
-        params = CP.load_params(a.params)
+        params = PM.load_params(a.params)
     else:
         t = time.time()
-        pdt = CP.plus_data(pool, tr)
-        log(f"train PlusData {pdt.n} units")
-        params = CP.fit_plus(pdt, cfg, log=log)
+        pdt = PM.pmrt_data(pool, tr)
+        log(f"train PmrtData {pdt.n} units")
+        params = PM.fit_pmrt(pdt, cfg, log=log)
         params["train_eps"] = len(tr)
         del pdt
-        CP.save_params(params, os.path.join(a.out, "params.pkl"))
+        PM.save_params(params, os.path.join(a.out, "params.pkl"))
         log(f"fit done {time.time() - t:.0f} s")
     if a.op == "fit":
         return
     g = DB.load_ref(os.path.join(a.small, "gtref_gt1_gtx3.json"))
     ref = g["ref"]
     res = {"config": {k: (list(v) if isinstance(v, tuple) else v) for k, v in vars(a).items()},
-           "plus_config": CP.dataclasses.asdict(cfg), "sizes": {}, "placebo": {},
+           "pmrt_config": PM.dataclasses.asdict(cfg), "sizes": {}, "placebo": {},
            "best": {h: p["best"] for h, p in params["hyp"].items()}}
     Rm = {int(k): int(v) for k, v in (x.split(":") for x in a.R.split(","))}
     bl = [b for b in a.baselines.split(",") if b]
@@ -153,11 +154,11 @@ def main(argv=None):
     # placebo first (fast)
     for nm in ("placebo1", "plxc2"):
         f = os.path.join(a.small, f"{nm}.npz")
-        pdp = CP.plus_data(CP.load_plus_pool([f]))
-        run = CP.run_crt_units_plus(pdp, params, cfg, split=9)
+        pdp = PM.pmrt_data(PM.load_pmrt_pool([f]))
+        run = PM.run_pmrt(pdp, params, cfg, split=9)
         pr = {}
         for arm in run["arms"]:
-            e = CP.edges_plus(run, arm)
+            e = PM.edges_pmrt(run, arm)
             ps = [v["p"] for v in e.values() if np.isfinite(v["p"])]
             pr[arm] = {"n_declared": int(sum(v["declared"] for v in e.values())),
                        "declared": sorted("|".join(h) for h, v in e.items() if v["declared"]),
@@ -180,9 +181,9 @@ def main(argv=None):
         rows = {}
         for s in subs:
             t = time.time()
-            pd = CP.plus_data(pool, s["episodes"])
-            run = CP.run_crt_units_plus(pd, params, cfg, split=s["split"])
-            decls = {arm: CP.edges_plus(run, arm, cfg.q) for arm in run["arms"]}
+            pd = PM.pmrt_data(pool, s["episodes"])
+            run = PM.run_pmrt(pd, params, cfg, split=s["split"])
+            decls = {arm: PM.edges_pmrt(run, arm, cfg.q) for arm in run["arms"]}
             if "v2" in bl:
                 decls["v2"] = V2.edges_from_crt_v2(V2.run_crt_units_v2(pd.ud, V2.UnitCRTConfigV2(B=a.B), s["split"]))
             if "eproc" in bl:

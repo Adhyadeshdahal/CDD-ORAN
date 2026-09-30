@@ -1,4 +1,4 @@
-"""Runner of the data-efficiency BENCH (cdd_oran/decision/disc_bench.py; MSCR+ research).
+"""Runner of the data-efficiency BENCH (cdd_oran/decision/disc_bench.py; PMRT research).
 
   python scratchpad/e6_dev/disc_bench_run.py cache --inputs PATHS --stage eval --out DIR [--workers 4]
         PATHS: comma list of JSONL files / directories (recursive res_*.jsonl, /bundle/ skipped) / globs. One npz per

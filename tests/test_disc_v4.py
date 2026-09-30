@@ -19,7 +19,7 @@ for _p in (ROOT, E6DEV):
 import e6p_disc_analyze_v4 as A  # noqa: E402
 import e6p_discovery as D  # noqa: E402
 
-from cdd_oran.decision import collect_p as CP  # noqa: E402
+from cdd_oran.decision import collect_p as PM  # noqa: E402
 from cdd_oran.decision.edge_score import HYPOTHESES  # noqa: E402
 
 pytestmark = pytest.mark.filterwarnings("ignore::RuntimeWarning")
@@ -27,15 +27,15 @@ pytestmark = pytest.mark.filterwarnings("ignore::RuntimeWarning")
 
 # ============================================================================================ collection
 def test_pi0_v4_table_and_draws():
-    assert set(CP.PI0_V4) == {"ES", "PowerES", "SliceGuarantee"}
-    assert all(t == {"accept": 0.5, "reject": 0.5} for t in CP.PI0_V4.values())
-    assert CP.PI0["v4"] is CP.PI0_V4 and "PI0_V4" in CP.__all__
-    assert CP.PI0_HIGH_NO_RB["ES"] == {"accept": 0.5, "half": 0.2, "reject": 0.3}          # old table untouched
-    pol = CP.RandomizedUnitPolicy(7, tables=CP.PI0_V4)
+    assert set(PM.PI0_V4) == {"ES", "PowerES", "SliceGuarantee"}
+    assert all(t == {"accept": 0.5, "reject": 0.5} for t in PM.PI0_V4.values())
+    assert PM.PI0["v4"] is PM.PI0_V4 and "PI0_V4" in PM.__all__
+    assert PM.PI0_HIGH_NO_RB["ES"] == {"accept": 0.5, "half": 0.2, "reject": 0.3}          # old table untouched
+    pol = PM.RandomizedUnitPolicy(7, tables=PM.PI0_V4)
     modes = [pol({"c": c, "x": "ES", "x_idx": 0, "t0": t})[0] for c in range(5) for t in range(200)]
     assert set(modes) == {"accept", "reject"}
     assert abs(np.mean([m == "accept" for m in modes]) - 0.5) < 0.05
-    pl = CP.PlaceboPolicy(7, tables=CP.PI0_V4)
+    pl = PM.PlaceboPolicy(7, tables=PM.PI0_V4)
     u = {"c": 1, "x": "ES", "x_idx": 0, "t0": 3}
     assert pl(dict(u)) == ("accept", 1.0)
     uu = dict(u)
@@ -74,12 +74,12 @@ def test_jobs_v4_seed_map():
 
 def test_make_policy_v4():
     p, name, tab = D.make_policy("eval", "v4", 5)
-    assert isinstance(p, CP.RandomizedUnitPolicy) and not isinstance(p, CP.PlaceboPolicy)
-    assert name == "pi0" and tab is CP.PI0_V4 and p.tables is CP.PI0_V4
+    assert isinstance(p, PM.RandomizedUnitPolicy) and not isinstance(p, PM.PlaceboPolicy)
+    assert name == "pi0" and tab is PM.PI0_V4 and p.tables is PM.PI0_V4
     p, name, tab = D.make_policy("placebo", "v4", 5)
-    assert isinstance(p, CP.PlaceboPolicy) and name == "placebo" and p.tables is CP.PI0_V4
+    assert isinstance(p, PM.PlaceboPolicy) and name == "placebo" and p.tables is PM.PI0_V4
     p, name, tab = D.make_policy("eval", "v2", 5)                                         # old stages: old table
-    assert tab is CP.PI0_HIGH_NO_RB
+    assert tab is PM.PI0_HIGH_NO_RB
 
 
 def test_registry_v4():
@@ -225,11 +225,11 @@ def test_p2_check_ties_and_nan():
     nan = float("nan")
     f60 = [0.5] * 6 + [0.1] * 4
     f120 = [0.5] * 3 + [0.1] * 2
-    base60 = {"corr": [0.5] * 10, "granger": [0.4] * 10, "granger_by": [nan] * 10}      # ties count for MSCR+
+    base60 = {"corr": [0.5] * 10, "granger": [0.4] * 10, "granger_by": [nan] * 10}      # ties count for PMRT
     base120 = {"corr": [0.5] * 5, "granger": [0.4] * 5, "granger_by": [nan] * 5}
     r = A.p2_check(f60, f120, base60, base120)
     assert r["pass"] and r["per_baseline"]["corr"]["wins60"] == 6 and r["per_baseline"]["granger_by"]["wins60"] == 10
-    f60b = [nan] + f60[1:]                                                           # undefined MSCR+ F1 = loss
+    f60b = [nan] + f60[1:]                                                           # undefined PMRT F1 = loss
     assert not A.p2_check(f60b, f120, base60, base120)["per_baseline"]["corr"]["ok"]
     base120["granger"] = [0.6] * 5
     r = A.p2_check(f60, f120, base60, base120)
@@ -284,21 +284,21 @@ def test_verdict_precedence():
 
 # ============================================================================================ analyzer: artifact
 def test_artifact_load_and_verify(tmp_path):
-    import mscr_integrate_bench as IB
-    import mscr_plus_artifacts as MPA
+    import pmrt_bench as PB
+    import pmrt_artifacts as PAR
 
-    from cdd_oran.decision import mscr_multi as MM
+    from cdd_oran.decision import fdr_layer as FL
     path = os.path.join(ROOT, A.ARTIFACT)
     st = A.artifact_status(path)
-    assert st["sha_ok"] and st["schema"] == MPA.ARTIFACT_SCHEMA
+    assert st["sha_ok"] and st["schema"] == PAR.ARTIFACT_SCHEMA
     assert st["code_ok"], {k: v for k, v in st["code"].items() if not v["ok"]}
     side = open(path + ".sha256").read().split()[0]
     assert side == A.ARTIFACT_SHA256
-    params, priors = MPA.load_artifact(path)
-    assert len(params["hyp"]) == 60 and set(priors) == set(IB.STATS)
-    dirs = MM.prior_directions(priors["loadsp_c"], IB.THR)
+    params, priors = PAR.load_artifact(path)
+    assert len(params["hyp"]) == 60 and set(priors) == set(PB.STATS)
+    dirs = FL.prior_directions(priors["loadsp_c"], PB.THR)
     assert sum(1 for d in dirs.values() if d) == 33                       # protocol section 3: 33 of 60 one-sided
-    cfg = MPA.plus_config(params, 19)
+    cfg = PAR.pmrt_config(params, 19)
     assert cfg.B == 19 and cfg.min_units == 30 and cfg.min_reject == 5
     bad = tmp_path / "tampered.json"
     raw = open(path, "rb").read()
@@ -309,14 +309,14 @@ def test_artifact_load_and_verify(tmp_path):
 @pytest.mark.skipif(not os.path.exists(os.path.join(ROOT, ".tmp", "mscr_plus", "infra", "cache", "placebo1.npz")),
                     reason="small local placebo cache not present")
 def test_artifact_statistic_runs_on_small_cache():
-    import mscr_integrate_bench as IB
-    import mscr_plus_artifacts as MPA
+    import pmrt_bench as PB
+    import pmrt_artifacts as PAR
 
-    from cdd_oran.decision import crt_units_plus as CPL
-    params, priors = MPA.load_artifact(os.path.join(ROOT, A.ARTIFACT))
-    pd = CPL.plus_data(CPL.load_plus_pool([os.path.join(ROOT, ".tmp", "mscr_plus", "infra", "cache", "placebo1.npz")]))
-    run = IB.run_integrated(pd, params, MPA.plus_config(params, 19), A.SPLIT["placebo"])
-    decl = IB.declare_all(run, priors, 20)[A.PRIMARY]
+    from cdd_oran.decision import pmrt as PM
+    params, priors = PAR.load_artifact(os.path.join(ROOT, A.ARTIFACT))
+    pd = PM.pmrt_data(PM.load_pmrt_pool([os.path.join(ROOT, ".tmp", "mscr_plus", "infra", "cache", "placebo1.npz")]))
+    run = PB.run_integrated(pd, params, PAR.pmrt_config(params, 19), A.SPLIT["placebo"])
+    decl = PB.declare_all(run, priors, 20)[A.PRIMARY]
     k0 = A.k0_check(decl)
     assert k0["m"] > 0 and all(v["procedure"] == "wby1s" for v in decl.values())
     tab = A.hyp_table(run, decl)

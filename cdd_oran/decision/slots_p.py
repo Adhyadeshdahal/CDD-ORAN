@@ -1,4 +1,4 @@
-"""E6-P FIXED-SLOT decision units (MSCR+ agent V, 2026-09-30; an OPTION for fresh collection, not the frozen design;
+"""E6-P FIXED-SLOT decision units (PMRT research, agent V, 2026-09-30; an OPTION for fresh collection, not the frozen design;
 units_p.py is unchanged).
 
 Why. In units_p a unit opens at x's first request on c when no (c, x) unit is active, so WHICH units exist (and their
