@@ -35,6 +35,22 @@ Freeze: eval / gt (non-smoke) refuse to run unless docs/benchmark/E6P_DISCOVERY_
 (LF-normalised) equals FROZEN_SHA256 (None until frozen). cloud.py bundles that doc (and SEED_REGISTRY.json) for
 e6p_disc_* scripts, so the same check runs in the cloud bundle.
 
+Discovery v4 (docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md sections 2, 4, 9; added 2026-09-30). Fresh block
+188000-189999 (V4_BLOCK; registered E6 dev_reserved "e6p_discovery_v4_episodes"; check_seed(seed, v4=True) accepts
+ONLY this block for the v4 stages and asserts it is outside V4_FORBIDDEN; the v1-v3 stages keep the old block / check):
+  dev_v4      188000-188019 (j 0-19)    records stage "dev",     sub "v4"          (allowed before the freeze)
+  eval_v4     188100-188699 (j 0-599)   records stage "eval",    sub "v4", fold = j // 120, slice60 = j // 60,
+                                        slice120 = j // 120                        (FROZEN v4 protocol required)
+  placebo_v4  188700-188739 (j 0-39)    records stage "placebo", sub "v4"          (FROZEN v4 protocol required)
+  gt_v4       188800-188839 (j 0-39)    records stage "gt",      sub "v4"          (FROZEN v4 protocol required)
+  (188900-189999 reserve, unused). Policy collect_p.PI0_V4 (accept .5 / reject .5 for ES, PowerES, SliceGuarantee;
+  placebo: PlaceboPolicy(tables=PI0_V4)); run_collection(arb_warmup_s=0.0, count_all=True): randomized from t = 0, the
+  tap's cumulative arrays count warm-up seconds (both logged in the header consts and in every record). GT hook: units
+  with t0 < V4_T0_MIN = 90 are not labelled (counts "skipped_early"). Freeze check per stage: the v4 frozen stages need
+  docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md with LF-normalised sha256 == FROZEN_SHA256_V4 (None until frozen: refuse).
+  Registry: v4 stages also require the v4 block to be registered. Extra record keys (v4 only): arb_warmup_s, count_all,
+  slice60 / slice120 (eval_v4; else null); counts.skipped_early (gt_v4).
+
 RECORD FORMAT (schema "e6p-disc-rec/1"). JSONL; line kinds: "header" (one per run call: plan, consts, freeze and
 registry status, code / numeric env), "episode" (one per episode, below), "close". Arrays are ENC dicts
 {"b64": base64(zlib(little-endian float32 C-order bytes)), "shape": [...], "dtype": "float32"}; decode with
@@ -106,8 +122,10 @@ PAIR, STRATUM = "P3", 3                 # P3 surge-L40
 SEED_BLOCK = (180000, 183999)
 FORBIDDEN = ((150200, 150399), (155200, 155399), (160000, 179999))
 CELL_BASE, PB_BASE = 183300, 183400     # P3 s3 block; placebo + profiles block
-STAGES = ("dev", "eval", "eval_ext", "eval_v2", "eval_v3", "placebo", "placebo_ext", "gt", "gt_ext", "prof")
-FROZEN_STAGES = ("eval", "eval_ext", "eval_v2", "eval_v3", "gt", "gt_ext")
+V4_STAGES = ("dev_v4", "eval_v4", "placebo_v4", "gt_v4")
+STAGES = ("dev", "eval", "eval_ext", "eval_v2", "eval_v3", "placebo", "placebo_ext", "gt", "gt_ext", "prof") + V4_STAGES
+FROZEN_STAGES_V4 = ("eval_v4", "gt_v4", "placebo_v4")
+FROZEN_STAGES = ("eval", "eval_ext", "eval_v2", "eval_v3", "gt", "gt_ext") + FROZEN_STAGES_V4
 GT_EXT_BASE = 183520                    # v2 re-test GT (added 2026-09-30, after the v1 verdict; records are "gt")
 J_RANGE = {"dev": range(0, 20), "eval": range(20, 80), "gt": range(80, 100)}
 N_PLACEBO, N_PROF = 20, 8
@@ -120,10 +138,40 @@ TAGS = {6612: "pi0 draws", 6613: "label sampling", 6614: "region probes", 6615: 
         6617: "GT bootstrap"}
 K1 = dict(min_sleep_units=60, min_sleep_rejects=15)
 
+# ---- discovery v4 (module docstring, "Discovery v4")
+PROTOCOL_DOC_V4 = "docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md"
+FROZEN_SHA256_V4 = "6857466c91afa296a5cbaabd8fe0be9cb036dd35358736e855adfc540faf84ec"                 # set to the V4 doc's LF-normalised sha256 at the freeze (user)
+V4_BLOCK = (188000, 189999)
+V4_FORBIDDEN = ((150000, 150399), (155000, 155399), (160000, 179999), (180000, 187999), (190000, 190399))
+V4_SUB = "v4"
+V4_BASE = {"dev_v4": 188000, "eval_v4": 188100, "placebo_v4": 188700, "gt_v4": 188800}
+V4_N = {"dev_v4": 20, "eval_v4": 600, "placebo_v4": 40, "gt_v4": 40}
+V4_RECORD_STAGE = {"dev_v4": "dev", "eval_v4": "eval", "placebo_v4": "placebo", "gt_v4": "gt"}
+V4_ARB_WARMUP_S = 0.0                   # arbiter randomizes from t = 0 (the plant warm-up stays 120 s)
+V4_COUNT_ALL = True                     # tap cumulative arrays include warm-up seconds
+V4_T0_MIN = 90                          # GT labels only for units with t0 >= 90 (the tested population, H_pre = 90)
+TABLE_V4 = CP.PI0_V4
+for _lo, _hi in V4_FORBIDDEN:           # the v4 block must be disjoint from every forbidden block
+    assert V4_BLOCK[1] < _lo or V4_BLOCK[0] > _hi, f"V4_BLOCK {V4_BLOCK} overlaps forbidden [{_lo}, {_hi}]"
+_v4r = sorted((V4_BASE[_s], V4_BASE[_s] + V4_N[_s] - 1) for _s in V4_STAGES)
+assert all(V4_BLOCK[0] <= a <= b <= V4_BLOCK[1] for a, b in _v4r), _v4r          # every v4 stage inside the block
+assert all(a[1] < b[0] for a, b in zip(_v4r, _v4r[1:], strict=False)), _v4r                 # stages pairwise disjoint
+
+
+def is_v4(stage: str | None) -> bool:
+    return stage in V4_STAGES
+
 
 # ---------------------------------------------------------------------------------------------- seeds / jobs
-def check_seed(seed: int) -> int:
+def check_seed(seed: int, v4: bool = False) -> int:
+    """v1-v3 stages: the 180000-183999 block minus FORBIDDEN (unchanged). v4 stages (``v4``): ONLY 188000-189999,
+    never inside V4_FORBIDDEN."""
     seed = int(seed)
+    if v4:
+        assert V4_BLOCK[0] <= seed <= V4_BLOCK[1], f"seed {seed} outside the e6p_discovery_v4 block {V4_BLOCK}"
+        for lo, hi in V4_FORBIDDEN:
+            assert not lo <= seed <= hi, f"seed {seed} inside a forbidden block [{lo}, {hi}]"
+        return seed
     assert SEED_BLOCK[0] <= seed <= SEED_BLOCK[1], f"seed {seed} outside the e6p_discovery block {SEED_BLOCK}"
     for lo, hi in FORBIDDEN:
         assert not lo <= seed <= hi, f"seed {seed} inside a forbidden block [{lo}, {hi}]"
@@ -154,6 +202,10 @@ def jobs(stage: str) -> list:
     if stage == "prof":
         return [(stage, x, check_seed(PB_BASE + N_PLACEBO + N_PROF * pi + e), e, None)
                 for pi, x in enumerate(PROFILES) for e in range(N_PROF)]
+    if is_v4(stage):          # discovery v4 (protocol V4 section 4): records stage dev / eval / placebo / gt, sub "v4"
+        rs = V4_RECORD_STAGE[stage]
+        return [(rs, V4_SUB, check_seed(V4_BASE[stage] + j, v4=True), j, j // 120 if rs == "eval" else None)
+                for j in range(V4_N[stage])]
     raise SystemExit(f"--stage in {STAGES}")
 
 
@@ -161,16 +213,20 @@ def _sha_lf(path):
     return hashlib.sha256(open(path, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
 
 
-def freeze_status() -> dict:
-    path = os.path.join(S.ROOT, PROTOCOL_DOC)
+def freeze_status(stage: str | None = None) -> dict:
+    """Freeze status of the protocol doc governing ``stage`` (v4 stages: PROTOCOL_DOC_V4 vs FROZEN_SHA256_V4; every
+    other stage: PROTOCOL_DOC vs FROZEN_SHA256, unchanged)."""
+    doc, want = (PROTOCOL_DOC_V4, FROZEN_SHA256_V4) if is_v4(stage) else (PROTOCOL_DOC, FROZEN_SHA256)
+    path = os.path.join(S.ROOT, doc)
     have = os.path.exists(path)
     sha = _sha_lf(path) if have else None
-    return {"doc": PROTOCOL_DOC, "exists": have, "sha256": sha, "frozen_sha256": FROZEN_SHA256,
-            "frozen": bool(have and FROZEN_SHA256 is not None and sha == FROZEN_SHA256)}
+    return {"doc": doc, "exists": have, "sha256": sha, "frozen_sha256": want,
+            "frozen": bool(have and want is not None and sha == want)}
 
 
-def registry_check() -> dict | None:
-    """{block, tags} registered in SEED_REGISTRY.json (None when the file is absent, e.g. an older bundle)."""
+def registry_check(stage: str | None = None) -> dict | None:
+    """{block, tags} registered in SEED_REGISTRY.json (None when the file is absent, e.g. an older bundle). v4 stages
+    also need the v4 block (key "block_188000_189999")."""
     path = os.path.join(S.ROOT, REGISTRY_DOC)
     if not os.path.exists(path):
         return None
@@ -187,8 +243,11 @@ def registry_check() -> dict | None:
             for v in o.values():
                 walk(v)
     walk(d.get("E6", {}))
-    return {"block_180000_183999": any(lo <= SEED_BLOCK[0] and hi >= SEED_BLOCK[1] for lo, hi in rngs),
-            "tags_6612_6617": all(t in d.get("rng_stream_tags", []) for t in TAGS)}
+    out = {"block_180000_183999": any(lo <= SEED_BLOCK[0] and hi >= SEED_BLOCK[1] for lo, hi in rngs),
+           "tags_6612_6617": all(t in d.get("rng_stream_tags", []) for t in TAGS)}
+    if is_v4(stage):
+        out["block_188000_189999"] = any(lo <= V4_BLOCK[0] and hi >= V4_BLOCK[1] for lo, hi in rngs)
+    return out
 
 
 # ---------------------------------------------------------------------------------------------- policies
@@ -203,6 +262,12 @@ class ProfilePolicy:
 
 
 def make_policy(stage, sub, sd):
+    if sub == V4_SUB:                     # discovery v4: PI0_V4 (accept .5 / reject .5)
+        if stage in ("dev", "eval", "gt"):
+            return CP.RandomizedUnitPolicy(sd, tables=TABLE_V4), "pi0", TABLE_V4
+        if stage == "placebo":
+            return CP.PlaceboPolicy(sd, tables=TABLE_V4), "placebo", TABLE_V4
+        raise SystemExit(f"no v4 policy for record stage {stage}")
     if stage in ("dev", "eval", "gt"):
         return CP.RandomizedUnitPolicy(sd, tables=TABLE), "pi0", TABLE
     if stage == "placebo":
@@ -237,7 +302,8 @@ def unit_record(i, u, n_app):
 
 
 def episode_job(stage, sub, seed, j, fold, lf, smoke=False, short=None, max_labels=None):
-    check_seed(seed)
+    v4 = sub == V4_SUB
+    check_seed(seed, v4=v4)
     sd = S._seed(seed, smoke)
     cfg = S.make_cfg(PAIR, STRATUM, sd, lf)
     if smoke and short:
@@ -246,11 +312,16 @@ def episode_job(stage, sub, seed, j, fold, lf, smoke=False, short=None, max_labe
     env = E6Env(cfg, log=False, wg3=True, trace=True)
     lab = LP.Labeller(ks=G.GT_KS, H=G.GT_H, T=T, cells=True) if stage == "gt" else None
     cnt = {"labels": 0, "skipped_end": 0, "skipped_cap": 0}
+    if v4:
+        cnt["skipped_early"] = 0
 
     def hook(env_, obs, snap, opened):
         for u in opened:
             rate = G.GT_RATE.get(u["knob"])
             if rate is None or not LP.sampled(sd, u, rate):
+                continue
+            if v4 and u["t0"] < V4_T0_MIN:          # v4: untested (t0 < 90) units are not labelled
+                cnt["skipped_early"] += 1
                 continue
             if u["t0"] + G.GT_H > env_.total_s:
                 cnt["skipped_end"] += 1
@@ -263,7 +334,8 @@ def episode_job(stage, sub, seed, j, fold, lf, smoke=False, short=None, max_labe
 
     t_wall = time.time()
     res = CP.run_collection(cfg, policy, T=T, labeller=hook if lab is not None else None, env=env,
-                            open_rule=OPEN_RULE)
+                            open_rule=OPEN_RULE, arb_warmup_s=V4_ARB_WARMUP_S if v4 else None,
+                            count_all=V4_COUNT_ALL if v4 else False)
     t_p = time.process_time()
     trace = env.get_trace()
     panel = F.build_panel_p(trace, step_s=STEP_S, episode=seed, drop_degenerate=False)
@@ -293,7 +365,11 @@ def episode_job(stage, sub, seed, j, fold, lf, smoke=False, short=None, max_labe
     es = next((x for x in env.xapps if x.name == "ES"), None)
     st = env.static()
     label_cpu = lab.cpu_s if lab is not None else 0.0
-    return {"kind": "episode", "schema": SCHEMA, "key": [stage, sub, seed], "stage": stage, "sub": sub, "seed": seed,
+    extra = {}
+    if v4:
+        extra = {"arb_warmup_s": V4_ARB_WARMUP_S, "count_all": V4_COUNT_ALL,
+                 "slice60": j // 60 if stage == "eval" else None, "slice120": j // 120 if stage == "eval" else None}
+    return {**extra, "kind": "episode", "schema": SCHEMA, "key": [stage, sub, seed], "stage": stage, "sub": sub, "seed": seed,
             "cfg_seed": sd, "j": j, "fold": fold, "smoke": smoke, "short": short, "policy": pol_name,
             "pi0_table": table, "T": T, "open_rule": OPEN_RULE, "load_factor": lf, "episode_s": env.total_s,
             "warmup_s": cfg.warmup_s, "n_cells": int(pl.nc), "step_s": STEP_S,
@@ -319,20 +395,27 @@ def run(stage, part, out, smoke=False, short=None, max_labels=None):
         raise SystemExit(f"--stage in {STAGES}")
     if (short or max_labels) and not smoke:
         raise SystemExit("--short / --max-labels are smoke-only")
-    fz = freeze_status()
+    fz = freeze_status(stage)
     if stage in FROZEN_STAGES and not smoke and not fz["frozen"]:
-        raise SystemExit(f"stage {stage} needs the frozen protocol {PROTOCOL_DOC} with a matching FROZEN_SHA256: {fz}")
-    reg = registry_check()
+        want = "FROZEN_SHA256_V4" if is_v4(stage) else "FROZEN_SHA256"
+        raise SystemExit(f"stage {stage} needs the frozen protocol {fz['doc']} with a matching {want}: {fz}")
+    reg = registry_check(stage)
     if not smoke and not (reg is not None and all(reg.values())) and not os.environ.get("E6P_DISC_ALLOW_UNREGISTERED"):
         raise SystemExit(f"seed block / RNG tags not registered in {REGISTRY_DOC}: {reg}")
     state = S.load_state()
     lf = S.lf_of(state, STRATUM)
     i, k = map(int, part.split("/"))
     head = S.header(stage, part, smoke, state)
+    v4 = is_v4(stage)
     head.update(kind="header", schema=SCHEMA, plan=PLAN, driver="e6p_discovery", freeze=fz, registry=reg,
-                protocol=f"{PROTOCOL_DOC} (plant config: e6p_screen.make_cfg, frozen E6P values)",
+                protocol=f"{fz['doc']} (plant config: e6p_screen.make_cfg, frozen E6P values)",
                 consts={"pair": PAIR, "stratum": STRATUM, "load_factor": lf, "T": T, "open_rule": OPEN_RULE,
-                        "step_s": STEP_S, "pi0_table": TABLE, "profiles": PROFILES, "cell_base": CELL_BASE,
+                        "step_s": STEP_S, "pi0_table": TABLE_V4 if v4 else TABLE,
+                        "arb_warmup_s": V4_ARB_WARMUP_S if v4 else None, "count_all": V4_COUNT_ALL if v4 else False,
+                        "v4": {"block": V4_BLOCK, "forbidden": V4_FORBIDDEN, "base": V4_BASE, "n": V4_N,
+                               "record_stage": V4_RECORD_STAGE, "sub": V4_SUB, "gt_t0_min": V4_T0_MIN}
+                        if v4 else None,
+                        "profiles": PROFILES, "cell_base": CELL_BASE,
                         "pb_base": PB_BASE, "j_range": {s: [r.start, r.stop - 1] for s, r in J_RANGE.items()},
                         "gt": {"ks": G.GT_KS, "H": G.GT_H, "modes": G.GT_MODES, "rate": G.GT_RATE,
                                "kpis": LP.CELL_KPIS}, "tags": TAGS, "series_fields": CP.SERIES_FIELDS,
@@ -445,7 +528,9 @@ def summary(paths, json_out=None, allow_smoke=False):
 def list_jobs():
     print("plan:", PLAN)
     print("freeze:", freeze_status())
+    print("freeze v4:", freeze_status("eval_v4"))
     print("registry:", registry_check())
+    print("registry v4:", registry_check("eval_v4"))
     for st in STAGES:
         J = jobs(st)
         print(f"{st}: {len(J)} episodes; seeds {J[0][2]}..{J[-1][2]}"

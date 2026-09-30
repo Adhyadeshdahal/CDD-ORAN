@@ -90,7 +90,10 @@ def low_table(high: dict, accept: float = LOW_ACCEPT, p_min: float | None = P_MI
 
 
 PI0_LOW = {x: low_table(t) for x, t in PI0_HIGH.items()}
-PI0 = {"high": PI0_HIGH, "low": PI0_LOW, "high_no_rb": PI0_HIGH_NO_RB}
+# Discovery v4 (docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md section 2; additive, 2026-09-30): accept .5 / reject .5,
+# no "half" mode, for ES, PowerES and SliceGuarantee (same draw key / PI0_ORDER as every pi0 table).
+PI0_V4 = {x: {"accept": 0.5, "reject": 0.5} for x in ("ES", "PowerES", "SliceGuarantee")}
+PI0 = {"high": PI0_HIGH, "low": PI0_LOW, "high_no_rb": PI0_HIGH_NO_RB, "v4": PI0_V4}
 
 
 def regime_for(j: int) -> str:
@@ -380,6 +383,6 @@ def run_collection(cfg, policy, T: float = T_UNIT, labeller=None, churn_cap=None
 
 __all__ = ["EXT_FIELDS", "INCUMBENT_TABLE", "INC_FLOOR", "INC_ORDER", "INC_SAVING_DIR", "INC_S_HI",
            "INC_SG_RAISE_FRAC", "INC_TAG", "P_MIN", "PI0", "PI0_HIGH", "PI0_HIGH_NO_RB", "PI0_LOW", "PI0_ORDER",
-           "PI0_TAG", "SERIES_FIELDS", "CellKPITap", "IncumbentPolicy", "PlaceboIncumbent", "PlaceboPolicy",
+           "PI0_TAG", "PI0_V4", "SERIES_FIELDS", "CellKPITap", "IncumbentPolicy", "PlaceboIncumbent", "PlaceboPolicy",
            "RandomizedUnitPolicy", "dec", "enc", "finalize_units", "get_tap", "incumbent_class", "incumbent_pressure",
            "install_tap", "low_table", "regime_for", "run_collection"]

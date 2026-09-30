@@ -155,7 +155,7 @@ def drv():
 
 
 def test_driver_seed_map_and_guards(drv):
-    seeds = {st: [j[2] for j in drv.jobs(st)] for st in drv.STAGES}
+    seeds = {st: [j[2] for j in drv.jobs(st)] for st in ("dev", "eval", "gt", "placebo", "prof")}   # v1 stages only
     assert seeds["dev"] == list(range(183300, 183320)) and seeds["gt"] == list(range(183380, 183400))
     assert seeds["eval"] == list(range(183320, 183380))
     assert [j[4] for j in drv.jobs("eval")][::20] == [0, 1, 2]
