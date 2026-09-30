@@ -18,22 +18,35 @@ under `runs/EnvironmentI..IV/`.
   (`cdd_oran.envs.legacy.*`); `envs/__init__.py` loads no legacy. Full code removal is deferred (gated on
   porting the kept baselines — QACM et al. — to `V2Env`; see `plans/012`, `plans/014`).
 
-## 2. E-SERIES redesign — E1 / E2 / E3 / E4 / E5 — the LIVE benchmark
+## 2. E-SERIES: E1-E5 (abstract structural worlds, closed) and E6 / E6-P (live)
 
-Env classes: `v2/base.py` (`V2Env`), `v2/e1.py`..`v2/e4.py` (`E1V2Env`..`E4V2Env`).
-Pipelines: `cdd_oran/e1slice/`, `cdd_oran/e2slice/`. Gates: `scripts/e{2,3,4}_*_gate.py`.
-Docs & contracts: `docs/benchmark/` (`SEMANTICS.md`, `SPEC.md`, `GATES.md`,
-`E2_DISCOVERY_PROTOCOL.md`, `GATE_CONTRACT_E{2,3,4}.md`), plans `plans/006`, `plans/007`.
+Full map: `docs/ARCHITECTURE.md` sections 0-2.
 
-| Env | Scientific question | Build status |
-|-----|---------------------|--------------|
-| **E1** | Clean sanity — recover an identifiable graph + correct predictions | **DONE** (recovery gate passed via v2 partial-correlation discovery) |
-| **E2** | Shared-control conflict — can complete causal fan-out prevent a harmful shared-knob action? | **Current frontier.** Env built; discovery method banked + tested (`e2slice`); the discovery **run is parked** (~5–18 d on a 16 GiB box — needs a bigger machine). Decision gate = recorded NULL (frozen). |
-| **E3** | Temporal decision — avoid immediate reward that creates larger delayed harm | **Scaffolded** — `v2/e3.py` + `scripts/e3_*_gate.py` exist; no `e3slice` discovery/decision pipeline yet |
-| **E4** | Confounded decision — recover the right intervention when association has the wrong sign | **Scaffolded** — `v2/e4.py` + `scripts/e4_structural_gate.py` exist; no `e4slice` yet |
-| **E5** | Integrated stress — E2–E4 mechanisms combined + moderate observation noise | **Research-only** — design notes; not built |
+### 2a. E1-E5: `v2/` (no longer developed; kept for reproduction)
 
-## Firewall note
+Env classes: `v2/base.py` (`V2Env`), `v2/e1.py`..`v2/e5.py`. Pipelines: `cdd_oran/e1slice/`, `cdd_oran/e2slice/`.
+Gates: `scripts/e{2,3,4}_*_gate.py`. Docs & contracts: `docs/benchmark/` (`SEMANTICS.md`, `SPEC.md`, `GATES.md`,
+`E2_DISCOVERY_PROTOCOL.md`, `GATE_CONTRACT_E{2,3,4,5}.md`). Discovery method: MSCR (`cdd_oran/discovery/mscr.py`).
+
+| Env | Scientific question | Status |
+|-----|---------------------|--------|
+| **E1** | Clean sanity: recover an identifiable graph + correct predictions | Done (recovery gate passed) |
+| **E2** | Shared-control conflict: can complete causal fan-out prevent a harmful shared-knob action? | Closed; decision gate = recorded NULL (frozen) |
+| **E3** | Temporal decision: avoid immediate reward that creates larger delayed harm | Decision DEV only (2026-09-24/25, not pre-registered; `docs/ARCHITECTURE.md` section 8); no `e3slice` pipeline |
+| **E4** | Confounded decision: recover the right intervention when association has the wrong sign | Scaffolded only (`v2/e4.py` + `scripts/e4_structural_gate.py`); no `e4slice` pipeline; superseded by E6 |
+| **E5** | Integrated stress: E2-E4 mechanisms + observation noise | Frozen structure-only (`GATE_CONTRACT_E5.md`) |
+
+### 2b. E6 / E6-P: `e6/` (live, since 2026-09-26)
+
+System-level near-RT RIC plant with multiple xApps and a WG3 conflict arbiter; E6-P (`E6PConfig`) adds the power /
+protected-slice extension used by the discovery and option (a) studies. Discovery method: **PMRT**
+(`cdd_oran/decision/pmrt.py`; `docs/benchmark/METHOD_NAMES.md`). Protocols: `docs/benchmark/E6P_*.md`.
+
+### 2c. `xtruce/`
+
+Re-implementation of the xTRUCE plant (`docs/benchmark/XTRUCE_SIM_SPEC.md`); screen done, kept as a cross-check plant.
+
+## Firewall note (as of 2026-09-05)
 
 The E-series discovery modules import **no** environment ground truth (verified by tests such as
 `test_e2slice_discovery.py`). One remaining *import-time* seam still causes the E-series evaluators to
