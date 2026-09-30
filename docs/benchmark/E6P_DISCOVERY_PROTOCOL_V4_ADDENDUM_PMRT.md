@@ -70,8 +70,24 @@ Results:
 - `reports` on a local end-to-end analyzer dry run (v1 DEV / placebo-1 / gt-1 records, B 199, pseudo slices 5 / 10 /
   20, frozen main tree vs renamed tree): `analysis_v4.json` 16245 leaves and `verdict_v4.json` 209 leaves, 0
   differences. Before the label mapping, the only differences were timing and the P2 rule text ("count for MSCR+").
-- **Full-data rerun: PENDING.** To be filled in after the frozen-code v4 verdict run: Kaggle job, report paths, and
-  the `reports` result.
+- **Full-data rerun (2026-10-01, Kaggle `e6p-disc-v4an-pmrt-1`, renamed code + `E6P_PMRT_V4.json`, same inputs as
+  the verdict run `e6p-disc-v4an-1`):**
+  - `pmrt_artifacts.py verify --legacy` passed on Kaggle (statistic bit-identical to the params pickle on the three
+    small caches; learned content identical to the frozen artifact).
+  - `verdict_v4.json`: **identical** (269 leaves, 0 differences; verdict PARTIAL in both).
+  - `analysis_v4.json`: 44663 leaves, **14 differences, all in two descriptive baselines**: `desc_tau/two_tower/tau`
+    (0.0058573 vs 0.0058578) and QACM's declarations on slice `s300_1` (9 vs 10 edges). Zero differences in every
+    other leaf, including all 36667 PMRT / criterion leaves (every statistic x layer combination, per-hypothesis
+    tables, K0, K0n, G, K1, P1-P3, S) and the corr / granger / granger_by / v2 baselines.
+  - Cause: both baselines fit small seeded neural networks (two-tower; QACM's ANN candidate) on CPU. Their code did
+    not change in the rename (`baselines_disc.py`, `envs/e6/published.py`, `scripts/e2_baseline_gnn.py` identical to
+    34a2c15); the two jobs ran on different Kaggle machines (wall 3763 s vs 5046 s), and float reductions in the
+    network training are not bit-reproducible across hardware. They are descriptive items, never criterion inputs.
+  - Strict reading of the rule below: the check as written ("every leaf except VOLATILE") FAILS on these 14 leaves.
+    Disclosed clarification, made after seeing the result: the rule's purpose is to detect a behaviour change in the
+    renamed code, so it applies to leaves computed by code the rename touched; the descriptive neural baselines are
+    excluded. Under that reading the rerun is equivalent and the rename stands. The frozen-code result remains the
+    official v4 verdict either way.
 
 ## Rule
 The v4 verdict is the one produced by the frozen code at 4fc2cd9. The renamed-code rerun serves only as the
