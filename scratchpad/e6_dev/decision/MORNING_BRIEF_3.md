@@ -1,76 +1,111 @@
-# Morning brief 3: overnight 2026-09-29/30 (step 1: can our method find the cause-effect map?)
+# Morning brief 3: overnight 2026-09-29/30
 
-**Status: IN PROGRESS (last update 00:55 NST).** Everything is committed locally only; nothing is pushed.
+**Status: FINAL for the night (06:05 NST),** except one pending number (marked ⏳). Everything is committed locally
+on feat/v2; **nothing is pushed** (you said: push in the morning). No Colab machine is left running, and no Kaggle
+job is running.
 
 ## The short version
-1. **Step 1, first try: KILL.**
-   - Our discovery method (MSCR) looked at randomized logs to find which xApp actions hurt which cells.
-   - The **ground truth** comes from the simulator's "what if we had said no" replays. It shows that the conflict
-     chain is real: when a small (pico) cell goes to sleep, its neighbours get more load and more protected-user
-     violations.
-   - MSCR found 3 of the 8 true "neighbour" links. The bar was 6 of 8.
-2. **Why it missed.** Four independent agents looked into it. Their verdict: mostly **not enough data, not a broken
-   method.**
-   - With 60 episodes, only about 3 of the 8 links are strong enough for *any* method of this kind to see.
-   - MSCR found exactly those 3. The key link (sleep → neighbour protected violations) is real but faint: a signal
-     of about 1.5 against a noise bar of 3.
-   - There was also **one real bug.** MSCR mixed "raise" and "lower" requests when reading the direction of an
-     effect, so it got one sign backwards.
-   - Two smaller issues: the "half" action was treated as half, but it actually acts almost fully; and the "far
-     cells" we used as a no-effect control are in fact affected.
-   - **The comparison methods are not honest either.** On fake data where nothing has any effect, they still
-     "found" 10-18 links. MSCR found 0 there.
-3. **What I did, as you authorised.**
-   - Wrote an improved **MSCR v2**: the sign bug fixed, correct dose for "half", and noise reduced using each
-     outcome's own before-window.
-   - Wrote a new, disclosed rulebook: `docs/benchmark/E6P_DISCOVERY_PROTOCOL_V2.md`.
-   - Started a **fresh test on brand-new seeds**: 480 episodes (8× more, sized by the power analysis), plus a fresh
-     ground truth and fresh fake data. The old data is used only for development, never for the final score.
-4. **Result of the fresh test:** pending (see below).
+1. **Step 1 (can our method find the cause-effect map?): yes, with enough data. Verdict PARTIAL** (PASS is still
+   possible, ⏳).
+   - On 1,200 brand-new episodes, MSCR found the whole conflict chain with the right signs: when a pico cell goes to
+     sleep, its neighbours get more load, more violations, and more *protected-user* violations.
+   - It found 7 of the 8 true neighbour links and made no wrong neighbour claims.
+   - It is also the only method that stays honest on fake data where nothing happens. Every other method (SHAP,
+     Granger, correlation, QACM, ...) "finds" 6-16 links there.
+   - **Caveat: this was the third attempt.** The first failed on too little data plus a bug; the second just missed
+     on too little data. Each attempt had its rulebook frozen beforehand and used brand-new seeds. Any write-up must
+     show all three.
+2. **Step 2 (a referee that uses the map to beat the others): on this scenario it most likely cannot. This needs
+   your decision.**
+   - The winning moves here are simple fixed rules, mainly "stop PowerES turning power back up", and they don't need
+     a causal map.
+   - The safe version of such a rule recovers only ~10 % of the loss. The version that recovers ~30 % breaks a safety
+     guardrail (+27 % radio-link failures).
+   - So I did **not** spend the ~110 CPU-hours on a full step-2 evaluation.
+3. **What I suggest we discuss** (details at the end): move the referee test to a setting where the *map* is what
+   makes the difference, or make the discovery result itself the contribution.
 
-## Step 2 (the referee): an early warning, which needs your decision
-I did not wait for step 1 to finish before checking whether step 2 can win at all. I ran the plan's cheapest
-go/no-go check, then had three agents argue it out: a forensics agent, an advocate and a skeptic.
-- **The go/no-go check failed badly.** After the 2-minute warm-up there is little left for a referee to decide:
-  about 2.6 carrier-offs, 2.7 power-downs and 0.4 pico sleeps per episode. Predicted recovery is about 3 % of the
-  loss, against the 35 % needed.
-- **The advocate could not make the case either.** It tried hard, including 60 small simulations on development
-  seeds.
-  - The best referee it found recovers about 23 %, very noisily, and breaks the latency guardrail.
-  - Its one working lever is a simple fixed rule, "don't let PowerES raise power in already-full cells", and that
-    rule needs no causal map.
-- **The skeptic's numbers.**
-  - About half of the "cheating referee's" 1.35 comes from seeing the future. Without that it is worth about 0.64,
-    and even that needs a full simulator for planning ahead.
-  - The one learnable signal (protected-user load on the cell itself) never changes a decision.
-  - So "referee with our map" vs "no map" vs "SHAP map" would likely come out identical. The step-3 comparison could
-    not show that the map matters on this scenario.
-- **The forensics agent found what the "cheating referee" actually does.** It re-ran the oracle and recorded its
-  choices.
-  - Mostly it **blocks PowerES from turning power back up**, about 149 of 156 times per episode, so in effect it is
-    a fixed rule. It also damps the slice-protection xApp a little.
-  - A plain fixed rule on development seeds, "after warm-up, block power-restores, pico sleeps and carrier-offs",
-    already recovers about 30 % of the loss with the guardrails passing. That is very noisy (CI 1-55 %), but it
-    beats the best fixed rule we had tested (26 %), and it uses no causal map at all.
-- **My reading.** On P3 surge-L40, a causal-map referee is unlikely to beat a well-chosen fixed rule. Even if it
-  did, the map would not be the reason. The discovery half (step 1) can still stand on its own.
-- **Options for you, from the skeptic, which I think are worth discussing:**
-  1. A test world where map quality decides the outcome: logs that are *not* randomised, so the correlation-based
-     methods pick the wrong links (they already invent 10-18 links on fake data) and a referee built on their map
-     makes wrong calls.
-  2. A scenario where the neighbour chain is the only fix, for example a load dip then a surge, so there are many
-     sleep decisions after warm-up.
-  3. A diagnosis/attribution claim: "which xApp harms which KPI, with error control". MSCR's precision 1.00, correct
-     signs and honest placebo behaviour support this; the baselines don't.
-- I did **not** spend the ~110 CPU-h step-2 evaluation. The evidence says it would most likely fail, and a pivot is
-  your call.
+## Step 1 in detail: three attempts
 
-## Timeline
-- 23:30 The full step-1 analysis started on Colab. Colab took the machine back halfway, so I re-ran it on the laptop
-  as a separate, light process.
-- 23:55 Ground truth computed. The key chain is real (the premise check passes).
-- 00:00 Four diagnosis agents launched. All four agreed: mainly a data-size limit, plus the sign bug.
-- 00:30 Fresh data collection launched: Kaggle (ground truth, 3 jobs; test set, 2 jobs) and Colab (fake data).
-  Kaggle's upload service was flaky, which cost about 20 minutes.
-- 00:50 A builder agent is writing MSCR v2. The v2 rulebook is drafted, and will be frozen before any fresh data is
-  opened.
+| attempt | data (fresh each time) | what changed | result |
+|---|---|---|---|
+| v1 (frozen yesterday) | 60 episodes | — | **KILL.** Found 3 of 8 neighbour links (bar: 6). One sign backwards. |
+| v2 | 480 episodes | fixed the sign bug; noise reduction; "half" counted as acting | **KILL, just.** Everything passed except the key link (p = .007 vs a bar of about .004). |
+| v3 | 1,200 episodes | only the amount of data | **Main criterion PASS.** Key link found at z 6.1. |
+
+**Why v1 missed.** Four agents independently diagnosed it.
+- Mainly **too little data**: with 60 episodes, only about 3 of the 8 links are strong enough for *any* method of
+  this kind to see, and MSCR found exactly those.
+- Plus **one real bug.** MSCR mixed "raise" and "lower" requests when reading an effect's direction.
+- Also: the "far cells" we used as a no-effect control are actually affected (sleeping picos push users two hops
+  away), so that control was wrong.
+
+**Why v2 just missed.** Its sample size came from v1's estimate of the key effect (+15). The fresh ground truth says
+the effect is smaller (+9), the same "first estimates are too optimistic" effect as before. v3 was sized from v2's
+real result.
+
+**v3 numbers** (1,200 episodes, fresh ground truth, fresh fake data):
+- Pico sleep → neighbour protected violations: estimated **+10.3** (truth +9.1), z 6.1.
+- Pico sleep → neighbour load: z 29.5. Pico sleep → neighbour violations: z 14.8. PowerES → neighbour load: z −21.3.
+- Neighbour links: 7 of 8 found, 0 wrong. Overall precision 0.92, signs 100 % right. 0 false links on fake data.
+- ⏳ The comparison against the other methods (it decides PASS vs PARTIAL) was still running at 06:05. It is written
+  to `.tmp/disc_v3/full.log` and then to `STEP1_V3_RESULT.md`.
+
+**v2 comparison with the other methods** (480 episodes; v3's is pending):
+
+| method | overall score (F1) | precision | false links on fake data |
+|---|---|---|---|
+| **MSCR v2** | **0.82** | **0.95** | **0** |
+| Granger | 0.69 | 0.64 | 13 |
+| correlation | 0.54 | 0.85 | 16 |
+| SHAP | 0.47 | 0.90 | 6 |
+| QACM / two-tower / PACIFISTA-style | 0.28-0.51 | | 6-11 |
+
+On the one pre-registered head-to-head (neighbour links only), Granger edged MSCR in v2 (0.71 vs 0.67). It did so by
+claiming many links (36), a lot of them false, with signs right only 71 % of the time.
+
+## Step 2 in detail: why I stopped before the big run
+1. **The cheapest go/no-go check failed.** After the 2-minute warm-up there is little left to referee (about 2.6
+   carrier-offs, 2.7 power-downs and 0.4 pico sleeps per episode). Predicted recovery was 3 %; the bar is 35 %.
+2. **Three agents argued it out** (forensics, advocate, skeptic). They agreed:
+   - The "cheating referee" that recovered 135 % mostly blocks PowerES power-restores, which is in effect a fixed
+     rule, plus luck: about half of its gain comes from seeing the future.
+   - The one signal a learner could use (protected load on the cell itself) never changes a decision. So a referee
+     with our map, without a map, or with a SHAP map would behave the same. The planned step-3 comparison could not
+     show that the map matters here.
+3. **A 40-seed development test on Kaggle** (7.4 CPU-h) settled it:
+
+   | rule | share of the loss recovered | safety guardrails |
+   |---|---|---|
+   | block all PowerES power-restores | 30 % (CI −2 to 62 %) | **fail** (radio-link failures +27 %) |
+   | same plus block sleeps and carrier-offs | 36 % (CI 4 to 69 %) | **fail** (+27 %) |
+   | map-guided: block only in full cells | 10 % | pass |
+   | map-guided plus latency guard | 10 % (CI 2 to 19 %) | pass |
+
+   Nothing safe gets near the 35 % bar.
+
+## Decisions for you
+1. **Push?** About 20 local commits since d819c5a (the last pushed commit) are waiting. Say "push" and I'll push
+   feat/v2.
+2. **Where should the referee (step 2/3) live?** My suggestions, from the skeptic agent plus the results:
+   - **(a) A test where map quality decides the outcome.** Use logs that are *not* randomised, as in real networks.
+     The association-based methods then pick wrong links (they already invent 6-16 on fake data), and a referee built
+     on their map makes wrong calls. MSCR's calibrated map should not. This keeps the causal claim central.
+   - **(b) A scenario where the neighbour chain is the only fix,** for example a load dip followed by a surge, so
+     there are many pico sleeps after warm-up.
+   - **(c) Make discovery the contribution:** "which xApp harms which KPI, with error control", validated against
+     simulator ground truth, with the honest-on-fake-data result.
+   - These can be combined; (c) is nearly ready now.
+3. **The "far cells" control** turned out not to be a clean control. Future protocols should use the fake-data
+   (placebo) check instead, as v2/v3 do.
+
+## Where things are
+- **Results:** `scratchpad/e6_dev/decision/`:
+  - STEP1_V1_RESULT.md, STEP1_V2_RESULT.md, STEP1_V3_RESULT.md (plus their JSON files);
+  - STEP2_DEV_RESULT.md, STEP2_REFEREE_PLAN.md.
+- **Rulebooks:** `docs/benchmark/E6P_DISCOVERY_PROTOCOL.md`, `_V2.md` and `_V3.md` (each frozen before its data).
+- **New method:** `cdd_oran/decision/crt_units_v2.py` (12 tests); analyzer `scratchpad/e6_dev/e6p_disc_analyze_v2.py`.
+- **Agent reports** (diagnosis A-D, step-2 debate F/G/H): summarised in `.tmp/PLAN.md`; scripts in `.tmp/diag/` and
+  `.tmp/step2debate/`.
+- **Night hiccups:** Colab took a machine back once (re-run on the laptop). Kaggle's upload service rejected new
+  bundles for about 20 minutes. My own path mistake broke one round of cloud jobs; fixed in `cloud.py`.
