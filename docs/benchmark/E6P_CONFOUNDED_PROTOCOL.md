@@ -586,65 +586,101 @@ The never_sleep sentence is mandatory in every outcome.
 **If PARTIAL / FAIL / NOT ELIGIBLE.** Report the failing criterion first, then the D-contrasts with CIs. Use the
 section 8 power statement to separate "underpowered at the realised delta" from "no advantage".
 
-## 12. Code still to write (none exists yet unless noted)
+## 12. Code (built 2026-09-30, before freeze 1; exact files and commands)
 
-1. **`scratchpad/e6_dev/e6p_conf.py`** (driver).
-   - Stages: `dev_conf`, `disc`, `placebo`, `gt`, `eval`; commands `run --stage S --part i/k --out F.jsonl [--smoke]
-     [--short S]`, `summary`, `list`.
-   - Wrappers `e6p_conf_{dev,disc,placebo,gt,eval}.py` for cloud.py (pass bare script names to kaggle_run).
-   - Collection stages reuse `e6p_opta_kb.episode_job` / `unit_record`: `probs`, `inc`, pi0_table null, arb_warmup_s
-     0, count_all true. Records get sub "conf", stage names dev / eval / placebo / gt so disc_bench readers accept
-     them, and `conf_stage`.
-   - The gt stage reuses the `e6p_discovery` GT hook (Labeller ks 1-3, H 90, AA continuation, t0 >= 90 skip) with
-     IncumbentPolicy as the base.
-   - The eval stage:
-     - reuses `e6p_step2_dev` anchors and `e6p_opta_ka` never_sleep, B2 and incumbent (UnitArbiter(IncumbentPolicy));
-     - builds MapGateV2 arms from the maps artifact, one job per distinct signature;
-     - writes records in the e6p-optaka2-rec/1 format plus `signature` and `aliases`.
-   - Guards:
-     - `check_seed` against the section 6 table and FORBIDDEN blocks;
-     - the registry check;
-     - `FROZEN_SHA256_CONF` for disc / placebo / gt / eval;
-     - `MAPS_SHA256` for eval;
-     - the platform fingerprint in every header.
-2. **`scratchpad/e6_dev/e6p_conf_analyze.py`** (Kaggle job), in two parts.
+All paths are repo-relative; local commands run from the repo root with `PYTHONPATH=.` and `.venv/Scripts/python.exe`.
+Kaggle collection kernels are built by `scratchpad/e6_dev/cloud.py` through `kaggle_run.py` (BARE script names; 4
+shards per kernel); analyses run through `kaggle_job.py`. The cloud bundle of every `e6p_conf*` script carries this
+doc, `SEED_REGISTRY.json` and `docs/benchmark/artifacts/*` (v4 MSCR+ artifact, maps artifact), so every guard also
+runs there.
+
+1. **Driver `scratchpad/e6_dev/e6p_conf.py`**, with wrappers `e6p_conf_{dev,disc,placebo,gt,eval}.py` (stage
+   `dev_conf` / `disc` / `placebo` / `gt` / `eval` baked in).
+   - Commands: `run --stage S --part i/k --out F.jsonl [--smoke] [--short S] [--max-labels N] [--arms a,b]
+     [--maps FILE]`; `summary --in FILES [--json OUT] [--allow-smoke]` (unit counts, tested sleep units / rejects per
+     episode, the K1 projection to 600 episodes, missing rows, the repro checks); `list`.
+   - Collection (dev_conf, disc, placebo, gt): `collect_p.run_collection(open_rule="feasible", arb_warmup_s=0.0,
+     count_all=True, arbiter_cls=mapgate.DirectionalUnitArbiter)`. This is lead decision 1 (the DIRECTIONAL
+     arbiter); the K-B wrapper of section 3 is not used. Policies `IncumbentPolicy` / `PlaceboIncumbent`. Records
+     "e6p-disc-rec/1" via `e6p_opta_kb.unit_record` (`probs`, `inc`), `pi0_table` null, sub "conf", record stages
+     dev / eval / placebo / gt, plus `conf_stage`, `directional` and `passed`.
+   - The gt hook is the v4 hook (Labeller ks 1-3, H 90, AA continuation, GT_RATE, tag 6613, t0 < 90 not labelled)
+     with IncumbentPolicy as the base. Its rollouts fork the directional arbiter, so a knockout "reject" defers the
+     opening direction only (the same action as MapGateV2's).
+   - dev_conf also runs the repro jobs of section 9.1 on 186080-186081:
+     - `incumbent` = the EVAL incumbent arm (DirectionalUnitArbiter(IncumbentPolicy) from t = 0); it must reproduce
+       the logging trajectory;
+     - `MG:allaccept` (MapGateV2({})) and `noarb`.
+     In the smoke (seed 18, 120 s scored) both differences were 0 (bit identical).
+   - eval arms: the anchors (`e6p_step2_dev`), incumbent, never_sleep (`e6p_opta_ka`), B2, and the map arms blanket2,
+     MG:MSCR+, MG:GT, MG:rand and MG:<b> x 13. One job per distinct signature (`alias_table`); an all-accept signature
+     is aliased to noarb only if the repro check says so. Records "e6p-optaka2-rec/1" + `signature`, `aliases`,
+     `conf_stage`.
+   - Guards (`guard_run`; smoke runs are exempt):
+     - `check_seed(seed, stage)`: the section 6 ranges; the K-B block, the reserves and every other registered block
+       are forbidden;
+     - the registry: block, tags 6622-6624, and the section 6 ranges in the note;
+     - `FROZEN_SHA256_CONF` (+ "FROZEN: yes") for disc / placebo / gt / eval;
+     - `MAPS_SHA256` (LF sha256 of `docs/benchmark/artifacts/E6P_CONF_MAPS.json`) for eval;
+     - Linux numerics for the frozen stages;
+     - the numeric env (`cloud.numeric_env`) in every header.
+2. **Analyzer `scratchpad/e6_dev/e6p_conf_analyze.py`**: `disc`, `build`, `verify`, `eval` (the module docstring is
+   the spec).
    - `disc`:
-     - build caches (`disc_bench.build_cache`) and the gt reference (`gt_reference_files`, "dir");
-     - `mscr_plus_artifacts.py verify` and sha checks;
-     - the probs / p_mismatch assertions (section 4.1 (b));
-     - MSCR+ via `mscr_integrate_bench.run_integrated` + `declare_all` (reuse the v4 analyzer functions): pooled DISC
-       (n_target 600), placebo K0 (n_target 200), K0n (v4 recipe on DISC groups);
-     - K1, G, X1-X3;
-     - baselines: @dev tau on dev_conf (far-FPR), @plc tau on the placebo (K-B `placebo_tau`, plus the n-free granger
-       transfer), granger_by;
-     - maps (section 4.3, including the new MSCR+ beta), signatures, the alias table, offline replay (reuse the K-B
-       replay code);
-     - writes `disc_conf.json` and the maps artifact (build + verify subcommands).
-   - `eval`:
-     - `e6p_step2_dev.arm_stats` generalised to many arms on one bootstrap index matrix, so every contrast is paired
-       on the same resamples;
-     - R*, E, D1 with the per-resample max, D2 with Holm over distinct signatures, section 7.3 / 7.4, the verdict.
+     - the v4 artifact is checked by its sha256 and its embedded code sha256s (`e6p_disc_analyze_v4.artifact_status`).
+       `mscr_plus_artifacts.py verify` needs the params pickle, which no bundle carries;
+     - every dev_conf / disc / placebo unit of FAMILIES must carry a valid row (accept / reject, sum 1, entries in
+       [.15, .85], p = probs[mode]), pi0_table must be null and every pool must have p_mismatch == 0; otherwise the
+       analysis stops;
+     - MSCR+ on pooled DISC, placebo K0, K0n (v4 recipe on the 10 DISC groups), K1, G, X1-X3, the discovery label;
+     - baselines @dev (dev_conf far-FPR), @plc (placebo tau; granger: partial r^2 transfer, tau_r2 = the
+       (MAX_FP + 1)-th largest placebo r^2), granger_by;
+     - maps (section 4.3; `design_slope` for MSCR+), signatures / aliases, offline replay;
+     - descriptive: the other combinations, MSCR-CRT v2 + BY, IPW-Wald, Granger+ctx, the `--dev-step1` maps;
+     - output `disc_conf.json`.
+   - `build` writes the maps artifact. It refuses INVALID, failed row checks, a non-full analysis and missing arms.
+     `verify` re-derives the signatures and aliases, checks every sha256 and prints the `MAPS_SHA256` line.
+   - `eval`: one bootstrap index matrix (N 10000, `default_rng([6624, 20, n_seeds])`) for every arm; R*, E, D1 (max
+     re-selected per resample), D2 (Holm over the distinct signatures of A), the never_sleep report, the secondary
+     contrasts, the verdict. Outputs `eval_conf.json` and `verdict_conf.json`.
 3. **`cdd_oran/decision/mapgate.py`** (additive):
-   - `random_sized_map(..., key=2)` argument (default keeps K-A2 bit-identical);
-   - `decision_signature(M, theta)`;
+   - `random_sized_map(..., key=2)`; the default is K-A2's (checked against the K-A2 header map);
+   - `decision_signature`: the section 4.3 tuple with the inputs `decide` never reads dropped, so equal signatures
+     <=> identical policies; `signature_key`, `all_accept_signature`;
    - `map_to_json` / `map_from_json`.
-4. **The MSCR+ map beta** `design_slope(pd, f, rel, kpi)`: section 4.3, per-unit rows, predictable centring. Put it
-   in the analyzer, NOT in `crt_units_plus`: that file's sha256 is pinned in the v4 artifact's `code_sha256`, and any
-   edit would invalidate the artifact.
-5. **The n-free granger tau transfer** (analyzer).
-6. **`docs/benchmark/SEED_REGISTRY.json`**: replace the planned-layout note with section 6 (tags unchanged).
-7. **`scratchpad/e6_dev/cloud.py`**: bundle this doc, `docs/benchmark/artifacts/*` (v4 artifact + maps artifact) and
-   SEED_REGISTRY.json for `e6p_conf*` scripts.
-8. **`tests/test_conf.py`**:
-   - an incumbent record -> UnitData with n_probs_rows = n and p_mismatch 0; a record missing a row fails the
-     assertion;
-   - placebo relabel;
-   - `design_slope` unbiased on a synthetic confounded design where the naive slope is biased;
-   - signature / aliasing (equal signatures give equal policy decisions on random ctx);
-   - an all-accept map gives only accept;
-   - D1 per-resample max and Holm on synthetic arms;
-   - seed / freeze / maps-sha refusals;
-   - `random_sized_map` default key unchanged.
+   **`cdd_oran/decision/collect_p.py`** (additive): `run_collection(arbiter_cls=None)`.
+4. `design_slope` and the n-free granger transfer live in the analyzer. crt_units_plus is untouched: the v4 artifact's
+   code sha256s still match.
+5. `docs/benchmark/SEED_REGISTRY.json`: the confounded note carries the section 6 layout; the tag notes of 6623 (key 3)
+   and 6624 (DISC [6624, 10, ...], EVAL [6624, 20, n_seeds]) are updated.
+6. `scratchpad/e6_dev/cloud.py` bundles this doc, the registry and `docs/benchmark/artifacts/*` for `e6p_conf*`.
+7. **Tests `tests/test_opta_study.py`** (17):
+   - seed layout and guards; freeze and maps-sha refusals;
+   - the directional arbiter and its fork; directional incumbent and placebo collection rows;
+   - per-unit rows through the disc_bench cache, and a missing row caught;
+   - `design_slope` unbiased where the naive slope is confounded; the granger transfer;
+   - signature equality <=> identical decisions; the alias table; artifact build refusals and verify;
+   - X / K1 / label precedence; R*; D1 re-selection; Holm / D2; verdict precedence; alias expansion.
+
+**Commands.** The NAMEs are examples; each launch needs a new NAME. At most 5 Kaggle sessions run at once.
+
+    # pre-freeze (allowed now)
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-dev-1 e6p_conf_dev.py 1
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py pull e6p-conf-dev-1 1
+    PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_conf.py summary --in scratchpad/e6_dev/runs/e6p-conf-dev-1/all.jsonl
+    # freeze 1 (user): "FROZEN: yes" here, FROZEN_SHA256_CONF in e6p_conf.py, commit; then
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-disc-1 e6p_conf_disc.py 2
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-placebo-1 e6p_conf_placebo.py 1
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-gt-1 e6p_conf_gt.py 2
+    # discovery analysis (Kaggle job)
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-discan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-1-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --sources bishalpanta/e6p-conf-dev-1-a,bishalpanta/e6p-conf-disc-1-a,bishalpanta/e6p-conf-disc-1-b,bishalpanta/e6p-conf-placebo-1-a,bishalpanta/e6p-conf-gt-1-a,bishalpanta/e6p-conf-gt-1-b
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py pull e6p-conf-discan-1
+    # freeze 2 (local): build + verify, git add -f the artifact and its .sha256, MAPS_SHA256 in e6p_conf.py, commit
+    PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_conf_analyze.py build --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json
+    PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_conf_analyze.py verify --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json
+    # EVAL + decision analysis
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-conf-eval-1 e6p_conf_eval.py 3
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-conf-evalan-1 --cmd "python scratchpad/e6_dev/e6p_conf_analyze.py eval --records $JOB_SRC/e6p-conf-eval-1-a,$JOB_SRC/e6p-conf-eval-1-b,$JOB_SRC/e6p-conf-eval-1-c --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json --out $JOB_OUT" --paths docs/benchmark/artifacts/E6P_CONF_MAPS.json scratchpad/e6_dev/runs/e6p-conf-discan-1/out/disc_conf.json --sources bishalpanta/e6p-conf-eval-1-a,bishalpanta/e6p-conf-eval-1-b,bishalpanta/e6p-conf-eval-1-c
 
 ## 13. Open items to settle before freeze 1
 
@@ -670,3 +706,17 @@ section 8 power statement to separate "underpowered at the realised delta" from 
 6. A v4 verdict of INVALID blocks this study; a v4 KILL on power alone does not.
 7. PASS also requires K0n (the null-outcome check).
 The study freezes only after (a) the v4 verdict is known and (b) the driver and analyzer below are built and tested.
+
+## Implementation notes (builder, before freeze 1; these override any conflicting text above)
+1. Directional arbiter everywhere (lead decision 1): DISC collection, the incumbent reference arm (so the repro check
+   holds), and the GT knockout rollouts. The GT estimand is therefore "defer the opening direction" (differs from the
+   gt_ext GT used in K-A/K-A2; reported side by side where both exist). Section 3's non-directional wording is superseded.
+2. Artifact verification: the v4 artifact is checked by its sha256 and embedded code sha256s (the params pickle is not
+   bundled); the maps artifact by its own sha256 (MAPS_SHA256, freeze 2).
+3. Decision signature: only inputs the MapGateV2 rule actually reads (equal signatures <=> identical policies, tested).
+4. Granger placebo tau: the second-largest placebo partial r^2 (at most one placebo declaration in r^2).
+5. Precision = TRUE edges with the right sign / declared non-INDET edges; sign accuracy over declared GT-TRUE edges.
+6. K1 thresholds (500 sleep units / 75 rejects in DISC) are provisional until the dev_conf projection; they are fixed
+   at freeze 1.
+7. If a baseline fails on Kaggle, its error is recorded and `build` refuses to write the maps artifact (no silent arm
+   drops).

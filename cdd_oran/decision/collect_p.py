@@ -343,8 +343,11 @@ def _kpi(tap, u, t_end, trunc):
 
 
 def run_collection(cfg, policy, T: float = T_UNIT, labeller=None, churn_cap=None, env=None,
-                   open_rule: str = "first", arb_warmup_s: float | None = None, count_all: bool = False):
-    """One collection episode under ``wg3=True``: ``UnitArbiter(policy)`` + the KPI tap.
+                   open_rule: str = "first", arb_warmup_s: float | None = None, count_all: bool = False,
+                   arbiter_cls=None):
+    """One collection episode under ``wg3=True``: ``UnitArbiter(policy)`` + the KPI tap. ``arbiter_cls`` (default
+    ``UnitArbiter``): a UnitArbiter subclass with the same constructor, e.g. ``mapgate.DirectionalUnitArbiter`` (a
+    reject unit defers only its opening direction; option-(a) study, additive).
 
     ``labeller(env, obs, snap, opened)`` (optional) is called every second in which units opened, after the arbiter
     decided and BEFORE ``env.step_apply``: ``env`` carries the pending requests (``env.copy`` replays them) and ``snap``
@@ -355,7 +358,7 @@ def run_collection(cfg, policy, T: float = T_UNIT, labeller=None, churn_cap=None
     env = env if env is not None else E6Env(cfg, log=False, wg3=True, churn_cap=churn_cap)
     tap = install_tap(env, count_all=count_all)
     wu = float(cfg.warmup_s) if arb_warmup_s is None else float(arb_warmup_s)
-    arb = UnitArbiter(policy, T=T, warmup_s=wu, open_rule=open_rule)
+    arb = (arbiter_cls or UnitArbiter)(policy, T=T, warmup_s=wu, open_rule=open_rule)
     live = []
     while env.sec < env.total_s:
         obs = env.step_propose()

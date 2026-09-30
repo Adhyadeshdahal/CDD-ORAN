@@ -248,12 +248,13 @@ def decision_table_v2(M: dict, theta: float = THETA) -> dict:
     return out
 
 
-def random_sized_map(M_ref: dict, cells, tag: int = 6623) -> dict:
-    """Random map with |M_ref| edges: default_rng([tag, 2]) draws |M_ref| distinct (family, relation, kpi) keys from
-    ``cells`` (a gt_p "cells" list = the map universe) and a random sign each; |beta| = |mean| of that cell."""
+def random_sized_map(M_ref: dict, cells, tag: int = 6623, key: int = 2) -> dict:
+    """Random map with |M_ref| edges: default_rng([tag, key]) draws |M_ref| distinct (family, relation, kpi) keys from
+    ``cells`` (a gt_p "cells" list = the map universe) and a random sign each; |beta| = |mean| of that cell. key 2 =
+    K-A2 (default, unchanged); the option-(a) study uses key 3."""
     import numpy as np
 
-    rng = np.random.default_rng([int(tag), 2])
+    rng = np.random.default_rng([int(tag), int(key)])
     keys = [(c["family"], c["relation"], c["kpi"]) for c in cells]
     mag = {(c["family"], c["relation"], c["kpi"]): abs(float(c["mean"])) for c in cells}
     idx = sorted(int(j) for j in rng.choice(len(keys), size=len(M_ref), replace=False))
@@ -275,7 +276,57 @@ def blanket_saving_map() -> dict:
     return M
 
 
+# ---------------------------------------------------------------------------------------------- signatures / io
+# (option-(a) study, docs/benchmark/E6P_CONFOUNDED_PROTOCOL.md section 4.3; additive)
+def decision_signature(M: dict, theta: float = THETA) -> tuple:
+    """The map-dependent inputs of ``MapGateV2.decide`` and of its duty bound, per (family, d) in FAMILIES x (+1, -1):
+    the protocol's (harm, energy == "costly", harmful rels, conflict) with the inputs ``decide`` never reads dropped,
+    so equal signatures <=> identical policies:
+      ("accept",)                       no harm, or harm that is neither costly nor tied to an own / nbr pressure
+                                        (far-only harm: pressure 0, never > theta);
+      ("defer", conflict)               harm and costly (the harmful rels are not read);
+      ("defer_iff", harmful, conflict)  harm, not costly: defer iff the max pressure over ``harmful`` > theta.
+    theta is part of the signature (it is a rule constant, identical for every map of the study)."""
+    g = MapGateV2(M, theta)
+    out = []
+    for f in FAMILIES:
+        for d in (1, -1):
+            c = g.classify(f, d)
+            if not c["harm"]:
+                s = ("accept",)
+            elif c["energy"] == "costly" or float(theta) < 0.0:        # pressure >= 0 > theta: always defers
+                s = ("defer", bool(c["conflict"]))
+            elif c["harmful"]:
+                s = ("defer_iff", tuple(c["harmful"]), bool(c["conflict"]))
+            else:
+                s = ("accept",)
+            out.append((f, d, s))
+    return (("theta", float(theta)),) + tuple(out)
+
+
+def signature_key(sig: tuple) -> str:
+    """Stable string form of a ``decision_signature`` (JSON-able; equal keys <=> equal signatures)."""
+    import json
+
+    return json.dumps(sig, separators=(",", ":"))
+
+
+def all_accept_signature(theta: float = THETA) -> tuple:
+    """The signature of a map that never defers (e.g. the empty map)."""
+    return decision_signature({}, theta)
+
+
+def map_to_json(M: dict) -> list:
+    """[[family, relation, kpi, beta | None], ...] sorted by key (exact float repr through json)."""
+    return [[k[0], k[1], k[2], None if v is None else float(v)] for k, v in sorted(M.items())]
+
+
+def map_from_json(rows) -> dict:
+    """Inverse of ``map_to_json``."""
+    return {(str(f), str(r), str(k)): (None if b is None else float(b)) for f, r, k, b in rows}
+
+
 __all__ = ["FAMILIES", "GUARDS_V2", "K_CONF", "PRESSURE", "PRIORITY_V2", "RELS", "RELS_V2", "SAVING_DIR", "THETA",
-           "DirectionalUnitArbiter", "MapGate", "MapGateV2", "blanket_saving_map", "decision_table",
-           "decision_table_v2", "map_from_gt", "mapgate_arbiter", "mapgate_v2_arbiter", "own_only", "random_sized_map",
-           "sign_flip"]
+           "DirectionalUnitArbiter", "MapGate", "MapGateV2", "all_accept_signature", "blanket_saving_map",
+           "decision_signature", "decision_table", "decision_table_v2", "map_from_gt", "map_from_json", "map_to_json",
+           "mapgate_arbiter", "mapgate_v2_arbiter", "own_only", "random_sized_map", "sign_flip", "signature_key"]

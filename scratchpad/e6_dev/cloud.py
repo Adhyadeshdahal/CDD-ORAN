@@ -4,8 +4,9 @@
   .venv/Scripts/python.exe scratchpad/e6_dev/cloud.py fingerprint        # numeric fingerprint of THIS machine (JSON)
 OUTDIR/dataset/: <NAME>_bundle.zip (cdd_oran/{__init__,envs/__init__,envs/e6/*,envs/xtruce/*,decision/**}.py,
                  e6dev/*.py, MANIFEST.json with git HEAD + sha256 + local_env + local_fp) + dataset-metadata.json;
-                 SCRIPT e6p_disc_*.py also bundles docs/benchmark/{E6P_DISCOVERY_PROTOCOL.md,
-                 E6P_DISCOVERY_PROTOCOL_V4.md,SEED_REGISTRY.json} and docs/benchmark/artifacts/*
+                 SCRIPT e6p_disc_*.py / e6p_conf*.py also bundles docs/benchmark/{E6P_DISCOVERY_PROTOCOL.md,
+                 E6P_DISCOVERY_PROTOCOL_V4.md,E6P_CONFOUNDED_PROTOCOL.md,SEED_REGISTRY.json} and
+                 docs/benchmark/artifacts/* (v4 MSCR+ artifact, option-(a) maps artifact)
 OUTDIR/kernel_<tag>/: 4 shards per kernel, one per CPU; one process per shard, single native thread each.
 
 NUMERIC REPRODUCIBILITY DECISION (2026-09-28; probe scratchpad/decision_stack/diag_rank/k_numpy_repro.py):
@@ -180,9 +181,9 @@ def main(out, name, script="grid.py", kernels="3", pin="match"):
         files["cdd_oran/envs/e6/" + os.path.basename(f)] = f
     for f in glob.glob(os.path.join(ROOT, "cdd_oran", "envs", "xtruce", "*.py")):   # xTRUCE plant (additive)
         files["cdd_oran/envs/xtruce/" + os.path.basename(f)] = f
-    if script.startswith("e6p_disc"):      # E6-P discovery only: its freeze / registry checks run in the bundle too
+    if script.startswith(("e6p_disc", "e6p_conf")):   # E6-P discovery / option (a): freeze, registry, maps checks
         for rel in ("docs/benchmark/E6P_DISCOVERY_PROTOCOL.md", "docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md",
-                    "docs/benchmark/SEED_REGISTRY.json"):
+                    "docs/benchmark/E6P_CONFOUNDED_PROTOCOL.md", "docs/benchmark/SEED_REGISTRY.json"):
             if os.path.exists(os.path.join(ROOT, *rel.split("/"))):
                 files[rel] = os.path.join(ROOT, *rel.split("/"))
         for f in glob.glob(os.path.join(ROOT, "docs", "benchmark", "artifacts", "*")):   # v4 frozen artifact (+ .sha256)
