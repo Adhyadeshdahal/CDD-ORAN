@@ -116,5 +116,166 @@ def decision_table(M: dict, theta: float = THETA) -> dict:
     return out
 
 
-__all__ = ["FAMILIES", "PRESSURE", "RELS", "THETA", "MapGate", "decision_table", "map_from_gt", "mapgate_arbiter",
-           "own_only", "sign_flip"]
+# ============================================================================================== MapGate v2
+# Option-(a) iteration on DEV (after K-A, 2026-09-30; NOT frozen). v1 read only the pv (fallback v) and e edges,
+# counted a family with no energy edge as "costly" (every prot_min lowering was deferred), deferred costly-harmful
+# requests forever, and its reject units also rejected the OPPOSITE direction (1036 collateral prot_min raises on DEV).
+#
+# MapGateV2(M, theta, k_conf). Same map format, same inputs: at unit open it reads unit["ctx"] and the request's knob
+# cell unit["c"] (the knob identity, used by the duty bound only). For a request of family f, d = sign(step):
+#   total effect    D_k = d * sum_{rel in own, nbr, far} beta(f, rel, k)  (None / undeclared -> 0). The scored KPIs
+#                   (pv, e, svr, rlf) are network totals, so a request's sign is its TOTAL effect; far enters the
+#                   signs only (there is no far pressure field).
+#   KPI priority    P = (pv, v, rlf): pv is the SLA; v (all-UE violation, the svr / non-protected eMBB proxy) and rlf
+#                   are the guardrail proxies. k* = first k in P with D_k != 0.
+#   harm            D_{k*} > 0. No harm (k* is a benefit, or the map is silent on P) -> ACCEPT: a request the map says
+#                   restores capacity / protects users on the highest-priority KPI it speaks about is never deferred.
+#   energy class    saving D_e < 0 | costly D_e > 0 | neutral D_e = 0 (no declared energy edge -> NOT costly).
+#   harmful rels    H = {r in (own, nbr): d * beta(f, r, k*) > 0}; pressure = max over H of own_prot_below_frac /
+#                   nbr_max_prot_below_frac (NaN -> 0; H empty, i.e. far-only harm -> 0).
+#   defer           harm and (costly or pressure > theta): a costly-harmful request (spends energy AND hurts k*) is
+#                   deferred; a saving or neutral harmful request only where the map says it hurts AND pressure is high.
+#   guard conflict  g* = first k in (v, rlf) with D_k != 0; conflict iff harm and D_{g*} < 0: the map says ACCEPTING
+#                   helps the top guardrail it speaks about, so deferring trades that guardrail for k*.
+#   duty bound      a conflicted deferral on knob (c, f) is released (accepted) when the knob's run of consecutive
+#                   deferred units is already >= k_conf (K_CONF = 1: a conflicted "defer" delays by at most one unit T,
+#                   then yields one unit); an accepted unit on the knob resets the run. Unconflicted deferrals: no bound.
+#   direction       mapgate_v2_arbiter = DirectionalUnitArbiter: a reject unit defers its OPENING direction only;
+#                   opposite-direction requests of the same (cell, xApp) inside the unit are accepted (no collateral).
+# Constants (P, (v, rlf), rels, theta = .05, k_conf = 1, T = 60 s) are fixed before any v2 run; identical for every map.
+RELS_V2 = ("own", "nbr", "far")
+PRIORITY_V2 = ("pv", "v", "rlf")
+GUARDS_V2 = ("v", "rlf")
+K_CONF = 1
+
+
+def _sgn(x: float) -> int:
+    return (x > 0) - (x < 0)
+
+
+class MapGateV2:
+    """UnitArbiter policy ``policy(unit) -> (mode, propensity)``; see the v2 block comment. ``self.n`` counts unit
+    decisions per family ("defer_<f>", "accept_<f>", "release_<f>" = a conflicted deferral released by the bound)."""
+
+    def __init__(self, M: dict, theta: float = THETA, k_conf: int = K_CONF):
+        self.M, self.theta, self.k_conf = dict(M), float(theta), int(k_conf)
+        self.n, self.run = {}, {}
+
+    def _beta(self, f, rel, kpi) -> float:
+        b = self.M.get((f, rel, kpi))
+        return 0.0 if b is None else float(b)
+
+    def classify(self, f, d: int) -> dict:
+        """The map-only part of the rule for family f and direction d (no ctx)."""
+        D = {k: d * sum(self._beta(f, r, k) for r in RELS_V2) for k in PRIORITY_V2 + ("e",)}
+        kstar = next((k for k in PRIORITY_V2 if _sgn(D[k]) != 0), None)
+        harm = bool(d != 0 and kstar is not None and D[kstar] > 0)
+        energy = {-1: "saving", 0: "neutral", 1: "costly"}[_sgn(D["e"])]
+        harmful = [r for r in RELS if harm and d * self._beta(f, r, kstar) > 0]
+        g = next((k for k in GUARDS_V2 if _sgn(D[k]) != 0), None)
+        conflict = bool(harm and g is not None and D[g] < 0)
+        return {"d": d, "D": D, "kpi": kstar, "harm": harm, "energy": energy, "harmful": harmful, "guard": g,
+                "conflict": conflict}
+
+    def decide(self, ctx) -> tuple[bool, dict]:
+        """(defer BEFORE the duty bound, why) from a unit context (knob, step and the two pressure fields)."""
+        why = self.classify(ctx["knob"], _sgn(float(ctx["step"])))
+        pressure = max((_nz(ctx.get(PRESSURE[r], float("nan"))) for r in why["harmful"]), default=0.0)
+        why["pressure"] = pressure
+        return bool(why["harm"] and (why["energy"] == "costly" or pressure > self.theta)), why
+
+    def __call__(self, unit):
+        ctx = unit["ctx"]
+        f = str(ctx["knob"])
+        key = (int(unit["c"]), f)
+        defer, why = self.decide(ctx)
+        tag = "defer_" if defer else "accept_"
+        if defer and why["conflict"] and self.run.get(key, 0) >= self.k_conf:
+            defer, tag = False, "release_"
+        self.run[key] = self.run.get(key, 0) + 1 if defer else 0
+        self.n[tag + f] = self.n.get(tag + f, 0) + 1
+        return ("reject" if defer else "accept"), 1.0
+
+
+class DirectionalUnitArbiter(UnitArbiter):
+    """UnitArbiter whose reject units defer only the direction of their opening request: a request of the unit's
+    (cell, xApp) with another direction is accepted. ``self.passed`` counts those requests."""
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self.passed = 0
+
+    def __call__(self, obs):
+        out = super().__call__(obs)
+        dec = list(out["decisions"])
+        for i, (r, d) in enumerate(zip(obs["requests"], dec, strict=True)):
+            if d != "reject":
+                continue
+            u = self.active.get((int(r["knob"][1]), r["xapp"]))
+            if u is not None and _sgn(float(r["prop"] - r["cur"])) != _sgn(float(u["ctx"]["step"])):
+                dec[i] = "accept"
+                self.passed += 1
+        out["decisions"] = dec
+        return out
+
+
+def mapgate_v2_arbiter(M: dict, theta: float = THETA, k_conf: int = K_CONF, T: float = T_UNIT,
+                       open_rule: str = "feasible", record: bool = False) -> DirectionalUnitArbiter:
+    """DirectionalUnitArbiter(MapGateV2(M, theta, k_conf)) active from t = 0, T = 60 s, open_rule "feasible"."""
+    assert open_rule in OPEN_RULES
+    return DirectionalUnitArbiter(MapGateV2(M, theta, k_conf), T=T, warmup_s=0.0, record=record, open_rule=open_rule)
+
+
+def decision_table_v2(M: dict, theta: float = THETA) -> dict:
+    """{(family, d): "accept" | "defer" | "defer iff <rels> pressure > theta" | "accept (far-only harm)"}; a
+    guard-conflicted deferral gets " [bounded]" (duty bound k_conf)."""
+    g = MapGateV2(M, theta)
+    out = {}
+    for f in FAMILIES:
+        for d in (1, -1):
+            c = g.classify(f, d)
+            if not c["harm"]:
+                s = "accept"
+            elif c["energy"] == "costly":
+                s = "defer"
+            elif c["harmful"]:
+                s = "defer iff " + "/".join(c["harmful"]) + " pressure > theta"
+            else:
+                s = "accept (far-only harm)"
+            if s.startswith("defer") and c["conflict"]:
+                s += " [bounded]"
+            out[(f, d)] = s
+    return out
+
+
+def random_sized_map(M_ref: dict, cells, tag: int = 6623) -> dict:
+    """Random map with |M_ref| edges: default_rng([tag, 2]) draws |M_ref| distinct (family, relation, kpi) keys from
+    ``cells`` (a gt_p "cells" list = the map universe) and a random sign each; |beta| = |mean| of that cell."""
+    import numpy as np
+
+    rng = np.random.default_rng([int(tag), 2])
+    keys = [(c["family"], c["relation"], c["kpi"]) for c in cells]
+    mag = {(c["family"], c["relation"], c["kpi"]): abs(float(c["mean"])) for c in cells}
+    idx = sorted(int(j) for j in rng.choice(len(keys), size=len(M_ref), replace=False))
+    sg = rng.choice([-1.0, 1.0], size=len(M_ref))
+    return {keys[i]: float(s * mag[keys[i]]) for i, s in zip(idx, sg, strict=True)}
+
+
+# direction of the energy-SAVING request per family (+1 = the knob's +1 step): carrier off, sleep, ptx down
+SAVING_DIR = {"carrier": -1, "sleep": 1, "ptx": -1}
+
+
+def blanket_saving_map() -> dict:
+    """No-map control: every energy-saving request (SAVING_DIR) hurts own and nbr pv (|beta| = 1) and saves own e."""
+    M = {}
+    for f, s in SAVING_DIR.items():
+        M[(f, "own", "pv")] = float(s)
+        M[(f, "nbr", "pv")] = float(s)
+        M[(f, "own", "e")] = float(-s)
+    return M
+
+
+__all__ = ["FAMILIES", "GUARDS_V2", "K_CONF", "PRESSURE", "PRIORITY_V2", "RELS", "RELS_V2", "SAVING_DIR", "THETA",
+           "DirectionalUnitArbiter", "MapGate", "MapGateV2", "blanket_saving_map", "decision_table",
+           "decision_table_v2", "map_from_gt", "mapgate_arbiter", "mapgate_v2_arbiter", "own_only", "random_sized_map",
+           "sign_flip"]

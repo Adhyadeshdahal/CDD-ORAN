@@ -136,3 +136,127 @@ def test_unit_arbiter_from_t0_and_hold():
     assert out["decisions"] == ["reject"] and arb.units[0]["mode"] == "reject"
     assert arb(_obs(30, [sl], cfg))["decisions"] == ["reject"]          # held for the unit
     assert arb(_obs(61, [dict(sl, cur=1.0, prop=0.0)], cfg))["decisions"] == ["accept"]   # new unit: wake accepted
+
+
+# ============================================================================================== MapGate v2
+class OnlyCtxC(dict):
+    """A unit that raises on any key but "ctx" and "c" (the request's knob cell)."""
+
+    def __getitem__(self, k):
+        if k not in ("ctx", "c"):
+            raise AssertionError(f"MapGateV2 read unit[{k!r}]")
+        return dict.__getitem__(self, k)
+
+    def get(self, k, default=None):
+        raise AssertionError(f"MapGateV2 read unit.get({k!r})")
+
+
+def test_v2_reads_only_ctx_and_cell():
+    g = MG.MapGateV2({("sleep", "nbr", "pv"): 1.0, ("sleep", "nbr", "e"): 1.0})
+    assert g(OnlyCtxC(ctx=ctx("sleep", 1), c=2)) == ("reject", 1.0)
+    assert g(OnlyCtxC(ctx=ctx("sleep", -1), c=2)) == ("accept", 1.0)
+    assert g.n == {"defer_sleep": 1, "accept_sleep": 1}
+
+
+@pytest.mark.parametrize("M, step, own, nbr, defer", [
+    # costly and harmful -> defer regardless of pressure; other direction -> accept
+    ({("x", "own", "pv"): 2.0, ("x", "own", "e"): 5.0}, 1, 0.0, 0.0, True),
+    ({("x", "own", "pv"): 2.0, ("x", "own", "e"): 5.0}, -1, 1.0, 1.0, False),
+    # saving and harmful -> defer iff the harmful relation's pressure > theta
+    ({("x", "own", "pv"): 2.0, ("x", "own", "e"): -5.0}, 1, 0.05, 0.0, False),
+    ({("x", "own", "pv"): 2.0, ("x", "own", "e"): -5.0}, 1, 0.06, 0.0, True),
+    ({("x", "own", "pv"): 2.0, ("x", "own", "e"): -5.0}, 1, 0.0, 0.9, False),
+    ({("x", "nbr", "pv"): 2.0, ("x", "own", "e"): -5.0}, 1, 0.0, 0.9, True),
+    # NO energy edge -> neutral (NOT costly, unlike v1): pressure-conditional
+    ({("x", "own", "pv"): 1.0}, 1, 0.0, 0.0, False),
+    ({("x", "own", "pv"): 1.0}, 1, 0.5, 0.0, True),
+    ({("x", "own", "pv"): 1.0, ("x", "own", "e"): None}, 1, 0.0, 0.0, False),
+    # far counts for the SIGNS: own harm cancelled by far benefit -> accept; far energy makes it costly
+    ({("x", "own", "pv"): 1.0, ("x", "far", "pv"): -2.0, ("x", "own", "e"): 1.0}, 1, 1.0, 1.0, False),
+    ({("x", "own", "pv"): 1.0, ("x", "far", "e"): 3.0}, 1, 0.0, 0.0, True),
+    # far-only harm: no pressure field -> a saving request is accepted, a costly one deferred
+    ({("x", "far", "pv"): 1.0, ("x", "own", "e"): -1.0}, 1, 1.0, 1.0, False),
+    ({("x", "far", "pv"): 1.0, ("x", "own", "e"): 1.0}, 1, 0.0, 0.0, True),
+    # lexicographic KPI priority pv > v > rlf: pv benefit wins over v harm; silent pv -> v; silent pv, v -> rlf
+    ({("x", "own", "pv"): -1.0, ("x", "own", "v"): 9.0, ("x", "own", "e"): 1.0}, 1, 1.0, 1.0, False),
+    ({("x", "own", "v"): 3.0, ("x", "own", "e"): 1.0}, 1, 0.0, 0.0, True),
+    ({("x", "own", "pv"): None, ("x", "own", "v"): 3.0, ("x", "own", "e"): 1.0}, 1, 0.0, 0.0, True),
+    ({("x", "own", "rlf"): 0.1, ("x", "own", "e"): 1.0}, 1, 0.0, 0.0, True),
+    ({("x", "own", "rlf"): -0.1, ("x", "own", "e"): 1.0}, 1, 0.0, 0.0, False),
+    # zero step, NaN pressure, empty map
+    ({("x", "own", "pv"): 1.0, ("x", "own", "e"): 1.0}, 0, 1.0, 1.0, False),
+    ({("x", "own", "pv"): 1.0, ("x", "own", "e"): -1.0}, 1, math.nan, math.nan, False),
+    ({}, 1, 1.0, 1.0, False),
+])
+def test_v2_decision_synthetic(M, step, own, nbr, defer):
+    assert MG.MapGateV2(M, 0.05).decide(ctx("x", step, own, nbr))[0] is defer
+
+
+def test_v2_guard_conflict_and_duty_bound():
+    # accepting hurts pv but HELPS v (the top guardrail it speaks about): conflicted -> bounded (k_conf = 1)
+    Mc = {("x", "own", "pv"): 1.0, ("x", "own", "v"): -5.0, ("x", "own", "rlf"): 1.0, ("x", "own", "e"): 1.0}
+    assert MG.MapGateV2(Mc).classify("x", 1)["conflict"] is True
+    g = MG.MapGateV2(Mc)
+    u = lambda c, s=1: {"ctx": ctx("x", s), "c": c}                          # noqa: E731
+    seq = [g(u(0))[0] for _ in range(5)]
+    assert seq == ["reject", "accept", "reject", "accept", "reject"]          # at most one deferred unit in a row
+    assert g(u(1))[0] == "reject" and g(u(1))[0] == "accept"                  # per knob (cell, family)
+    assert g.n == {"defer_x": 4, "release_x": 3}
+    g2 = MG.MapGateV2(Mc, k_conf=2)
+    assert [g2(u(0))[0] for _ in range(4)] == ["reject", "reject", "accept", "reject"]
+    # an accepted unit (other direction) resets the run
+    g3 = MG.MapGateV2(Mc)
+    assert [g3(u(0, s))[0] for s in (1, -1, 1)] == ["reject", "accept", "reject"]
+    # unconflicted (v harmed too, first guardrail = v > 0): unbounded
+    Mu = {**Mc, ("x", "own", "v"): 5.0, ("x", "own", "rlf"): -1.0}
+    gu = MG.MapGateV2(Mu)
+    assert not gu.classify("x", 1)["conflict"] and [gu(u(0))[0] for _ in range(4)] == ["reject"] * 4
+
+
+def test_v2_directional_units():
+    M = {("ptx", "own", "pv"): 1.0, ("ptx", "own", "e"): 1.0}                 # ptx-up: harmful + costly -> defer
+    arb = MG.mapgate_v2_arbiter(M, record=True)
+    assert isinstance(arb, MG.DirectionalUnitArbiter) and arb.warmup_s == 0.0 and arb.T == 60.0
+    cfg = {("carrier", 0): 2.0, ("carrier", 1): 2.0, ("sleep", 2): 0.0, ("prot_min", 0): 0.1, ("ptx", 0): 40.0}
+    up = {"xapp": "PowerES", "ver": 1, "knob": ("ptx", 0), "cur": 40.0, "prop": 41.0, "t": 0.0}
+    assert arb(_obs(0, [up], cfg))["decisions"] == ["reject"]
+    assert arb(_obs(20, [up], cfg))["decisions"] == ["reject"]               # same direction: held
+    down = dict(up, prop=39.0)
+    assert arb(_obs(30, [down], cfg))["decisions"] == ["accept"]             # opposite direction: passes
+    assert arb.passed == 1 and len(arb.units) == 1
+    # v1 arbiter on the same sequence rejects the opposite direction (unchanged behaviour)
+    a1 = MG.mapgate_arbiter(M)
+    a1(_obs(0, [up], cfg))
+    assert a1(_obs(30, [down], cfg))["decisions"] == ["reject"]
+
+
+# ptx-up's guard conflict is a KNIFE EDGE: own+nbr+far v = 41.8 - 31.3 - 20.5 = -9.9 in gt_ext (bounded) but
+# 56.4 - 26.2 - 26.3 = +4.0 in gt1 (unbounded); ptx -> rlf is INDET in both, so no map declares the RLF risk.
+@pytest.mark.parametrize("name, ptx_up", [("gt_ext", "defer [bounded]"), ("gt1", "defer")])
+def test_v2_gt_map_implications(name, ptx_up):
+    M = _gt_map(name)
+    T = MG.decision_table_v2(M, 0.05)
+    assert T[("sleep", 1)] == "defer" and T[("sleep", -1)] == "accept"      # sleep: costly on nbr+far e, unbounded
+    assert T[("carrier", 1)] == "accept" and T[("carrier", -1)] == "defer iff own pressure > theta"
+    assert T[("ptx", 1)] == ptx_up
+    assert T[("ptx", -1)] == "accept" and T[("prot_min", 1)] == "accept"
+    assert T[("prot_min", -1)] == "defer iff own pressure > theta"          # no energy edge: not costly
+    To = MG.decision_table_v2(MG.own_only(M), 0.05)
+    assert To[("sleep", 1)] == "accept" and To[("ptx", 1)] == "defer"
+    Tf = MG.decision_table_v2(MG.sign_flip(M, ("carrier",)), 0.05)
+    assert Tf[("carrier", 1)] == "defer iff own pressure > theta" and Tf[("carrier", -1)] == "accept"
+
+
+def test_v2_random_and_blanket_maps():
+    cells = [{"family": f, "relation": r, "kpi": k, "mean": 1.0 + i}
+             for i, (f, r, k) in enumerate((f, r, k) for f in MG.FAMILIES for r in ("own", "nbr", "far")
+                                           for k in ("pv", "v", "e"))]
+    ref = {(f, "own", "pv"): 1.0 for f in MG.FAMILIES}
+    R1, R2 = MG.random_sized_map(ref, cells), MG.random_sized_map(ref, cells)
+    assert R1 == R2 and len(R1) == len(ref) and MG.random_sized_map(ref, cells, tag=1) != R1
+    assert all(abs(v) == 1.0 + next(i for i, c in enumerate(cells) if (c["family"], c["relation"], c["kpi"]) == k)
+               for k, v in R1.items())
+    T = MG.decision_table_v2(MG.blanket_saving_map())
+    for f, s in MG.SAVING_DIR.items():
+        assert T[(f, s)] == "defer iff own/nbr pressure > theta" and T[(f, -s)] == "accept"
+    assert T[("prot_min", 1)] == T[("prot_min", -1)] == "accept"
