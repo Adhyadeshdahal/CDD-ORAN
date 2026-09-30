@@ -31,10 +31,10 @@ if ROOT not in sys.path:
 
 import numpy as np  # noqa: E402
 
-from cdd_oran.decision import pmrt as PM  # noqa: E402
 from cdd_oran.decision import crt_units_v2 as V2  # noqa: E402
 from cdd_oran.decision import disc_bench as DB  # noqa: E402
 from cdd_oran.decision import eprocess_units as EP  # noqa: E402
+from cdd_oran.decision import pmrt as PM  # noqa: E402
 
 
 def log(s):

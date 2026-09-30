@@ -200,8 +200,8 @@ def design_slope(ud, f: str, rel: str, kpi: str) -> dict:
     """PMRT map beta: sum v r / sum v^2 over the family's tested units in information order; v = sgn (L(mode) -
     probs . L) with the unit's own row, r = y(rel, kpi) - its predictable running centre (the PMRT "pred" residual,
     eprocess_units.predictable_residuals). Design-unbiased for a linear level effect (E[v c] = 0 for predictable c)."""
-    from cdd_oran.decision.pmrt import v_design
     from cdd_oran.decision.eprocess_units import EProcConfig, predictable_residuals, unit_order
+    from cdd_oran.decision.pmrt import v_design
     rows = unit_order(ud, ud.rows_of(f))
     if len(rows) < 2:
         return {"beta": 0.0, "n": int(len(rows)), "vv": 0.0}
@@ -475,8 +475,8 @@ def data_status(checks: dict, gt_seeds: list, dry: bool) -> dict:
 
 
 def cmd_disc(a) -> dict:
-    import pmrt_bench as PB
     import pmrt_artifacts as PAR
+    import pmrt_bench as PB
 
     from cdd_oran.decision import pmrt as PM
     t_all = time.time()

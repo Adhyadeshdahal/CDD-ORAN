@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 
 from cdd_oran.decision import crt_units as CU
-from cdd_oran.decision import pmrt as PM
 from cdd_oran.decision import disc_bench as DB
+from cdd_oran.decision import pmrt as PM
 from cdd_oran.decision.crt_units_v2 import residualise
 
 pytestmark = pytest.mark.filterwarnings("ignore::RuntimeWarning", "ignore::UserWarning")

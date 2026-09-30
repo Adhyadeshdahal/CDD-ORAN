@@ -82,7 +82,7 @@ DRIVER = "scratchpad/e6_dev/e6p_discovery.py"
 ARTIFACT = "docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json"          # the protocol's frozen artifact ("MSCR+")
 ARTIFACT_SHA256 = "4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba"
 PMRT_ARTIFACT = "docs/benchmark/artifacts/E6P_PMRT_V4.json"                    # label-only successor (PMRT)
-PMRT_ARTIFACT_SHA256 = "TBD"
+PMRT_ARTIFACT_SHA256 = "9991c390df3a53ef12b553990da52c6adab25d4087bb029f1427e20a898e6a91"
 KNOWN_ARTIFACTS = {ARTIFACT_SHA256: ARTIFACT, PMRT_ARTIFACT_SHA256: PMRT_ARTIFACT}
 PRIMARY = ("loadsp_c", "wby1s")
 SUB = "v4"
@@ -549,8 +549,8 @@ def run_k0n(recs: list, groups: list, params, priors, cfg, shifts: int, log_=log
 
 # ============================================================================================ analyze
 def analyze(a) -> dict:
-    import pmrt_bench as PB
     import pmrt_artifacts as PAR
+    import pmrt_bench as PB
 
     from cdd_oran.decision import pmrt as PM
     t_all = time.time()

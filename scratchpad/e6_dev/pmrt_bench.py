@@ -45,10 +45,10 @@ for p in (ROOT, HERE):
 
 import numpy as np  # noqa: E402
 
-from cdd_oran.decision import pmrt as PM  # noqa: E402
 from cdd_oran.decision import crt_units_v2 as V2  # noqa: E402
 from cdd_oran.decision import disc_bench as DB  # noqa: E402
 from cdd_oran.decision import fdr_layer as FL  # noqa: E402
+from cdd_oran.decision import pmrt as PM  # noqa: E402
 from cdd_oran.decision.crt_units import FAMILIES, LEVEL_ARR, PiAssignment  # noqa: E402
 from cdd_oran.decision.crt_units_v2 import LEVEL_V2_ARR  # noqa: E402
 from cdd_oran.decision.eprocess_units import unit_order  # noqa: E402
@@ -314,7 +314,7 @@ def agg(rows):
 
 # ================================================================================================ bench
 def cmd_bench(a):
-    import pmrt_arms_bench as SB                                   # agent S's subset draw (identical subsets)
+    import pmrt_arms_bench as SB  # agent S's subset draw (identical subsets)
     os.makedirs(a.out, exist_ok=True)
     cfg = PM.PmrtConfig(B=a.B)
     files = expand(a.cache) + [os.path.join(a.small, "dev1.npz")]

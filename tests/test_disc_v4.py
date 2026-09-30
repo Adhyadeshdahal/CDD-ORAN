@@ -283,17 +283,20 @@ def test_verdict_precedence():
 
 
 # ============================================================================================ analyzer: artifact
-def test_artifact_load_and_verify(tmp_path):
-    import pmrt_bench as PB
+@pytest.mark.parametrize("which", ["frozen", "pmrt"])
+def test_artifact_load_and_verify(tmp_path, which):
     import pmrt_artifacts as PAR
+    import pmrt_bench as PB
 
     from cdd_oran.decision import fdr_layer as FL
-    path = os.path.join(ROOT, A.ARTIFACT)
+    rel, sha, schema, via = {"frozen": (A.ARTIFACT, A.ARTIFACT_SHA256, PAR.LEGACY_SCHEMA, "supersession"),
+                             "pmrt": (A.PMRT_ARTIFACT, A.PMRT_ARTIFACT_SHA256, PAR.ARTIFACT_SCHEMA, "direct")}[which]
+    path = os.path.join(ROOT, rel)
     st = A.artifact_status(path)
-    assert st["sha_ok"] and st["schema"] == PAR.ARTIFACT_SCHEMA
+    assert st["sha_ok"] and st["schema"] == schema and st["code_via"] == via
     assert st["code_ok"], {k: v for k, v in st["code"].items() if not v["ok"]}
     side = open(path + ".sha256").read().split()[0]
-    assert side == A.ARTIFACT_SHA256
+    assert side == sha
     params, priors = PAR.load_artifact(path)
     assert len(params["hyp"]) == 60 and set(priors) == set(PB.STATS)
     dirs = FL.prior_directions(priors["loadsp_c"], PB.THR)
@@ -309,8 +312,8 @@ def test_artifact_load_and_verify(tmp_path):
 @pytest.mark.skipif(not os.path.exists(os.path.join(ROOT, ".tmp", "mscr_plus", "infra", "cache", "placebo1.npz")),
                     reason="small local placebo cache not present")
 def test_artifact_statistic_runs_on_small_cache():
-    import pmrt_bench as PB
     import pmrt_artifacts as PAR
+    import pmrt_bench as PB
 
     from cdd_oran.decision import pmrt as PM
     params, priors = PAR.load_artifact(os.path.join(ROOT, A.ARTIFACT))
