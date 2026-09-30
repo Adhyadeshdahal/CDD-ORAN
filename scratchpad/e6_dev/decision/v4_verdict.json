@@ -1,0 +1,422 @@
+{
+ "mode": "full",
+ "verdict": {
+  "verdict": "PARTIAL",
+  "label": "PARTIAL",
+  "precedence": "INVALID (K0 or K0n) > NO-CHAIN (G) > UNDERPOWERED (K1) > PASS (P1 P2 P3 S) / PARTIAL (P3 S) / KILL"
+ },
+ "K0": {
+  "pass": true,
+  "m": 60,
+  "n_reject": 7,
+  "rate": 0.11666666666666667,
+  "binom_tail": 0.02969410195488331,
+  "n_declared": 0,
+  "declared": [],
+  "rule": {
+   "alpha": 0.05,
+   "binom_level": 0.01,
+   "max_decl": 1
+  },
+  "min_p": 0.0076
+ },
+ "K0n": {
+  "pass": true,
+  "n_variants": 40,
+  "n_p": 2400,
+  "rate05": 0.0525,
+  "rate05_family": {
+   "carrier": 0.051666666666666666,
+   "prot_min": 0.051666666666666666,
+   "ptx": 0.06,
+   "sleep": 0.04666666666666667
+  },
+  "n_variants_with_decl": 0,
+  "n_decl": 0,
+  "rule": {
+   "rate": 0.075,
+   "family_rate": 0.1,
+   "max_var_decl": 5,
+   "alpha": 0.05
+  }
+ },
+ "G": {
+  "pass": true,
+  "cell": {
+   "family": "sleep",
+   "relation": "nbr",
+   "kpi": "pv",
+   "mean": 20.555555555555554,
+   "ci": [
+    14.097027308105204,
+    28.86603618603619
+   ],
+   "n": 231,
+   "n_eps": 39,
+   "delta": 1.0277777777777777,
+   "status": "TRUE",
+   "sign": 1,
+   "why": "CI excludes 0, |mean| >= delta"
+  },
+  "rule": "gt_v4 sleep -> nbr pv TRUE(+) (dir, frozen gt_p rule)"
+ },
+ "K1": {
+  "pass": true,
+  "slices": {
+   "s120_0": {
+    "sleep_units": 545,
+    "sleep_rejects": 246,
+    "ok": true
+   },
+   "s120_1": {
+    "sleep_units": 653,
+    "sleep_rejects": 343,
+    "ok": true
+   },
+   "s120_2": {
+    "sleep_units": 655,
+    "sleep_rejects": 325,
+    "ok": true
+   },
+   "s120_3": {
+    "sleep_units": 626,
+    "sleep_rejects": 316,
+    "ok": true
+   },
+   "s120_4": {
+    "sleep_units": 593,
+    "sleep_rejects": 293,
+    "ok": true
+   }
+  },
+  "rule": {
+   "min_sleep_units": 60,
+   "min_sleep_rejects": 15
+  }
+ },
+ "P1": {
+  "pass": true,
+  "n_ok": 5,
+  "n_slices": 5,
+  "slices": [
+   {
+    "name": "s120_0",
+    "premise": true,
+    "chain_hits": 4,
+    "chain_true": 4,
+    "need": 3,
+    "ok": true
+   },
+   {
+    "name": "s120_1",
+    "premise": true,
+    "chain_hits": 4,
+    "chain_true": 4,
+    "need": 3,
+    "ok": true
+   },
+   {
+    "name": "s120_2",
+    "premise": true,
+    "chain_hits": 4,
+    "chain_true": 4,
+    "need": 3,
+    "ok": true
+   },
+   {
+    "name": "s120_3",
+    "premise": true,
+    "chain_hits": 4,
+    "chain_true": 4,
+    "need": 3,
+    "ok": true
+   },
+   {
+    "name": "s120_4",
+    "premise": true,
+    "chain_hits": 4,
+    "chain_true": 4,
+    "need": 3,
+    "ok": true
+   }
+  ],
+  "rule": {
+   "min_slices": 3,
+   "chain_min": 3
+  }
+ },
+ "P2": {
+  "pass": false,
+  "per_baseline": {
+   "corr": {
+    "wins60": 10,
+    "n60": 10,
+    "wins120": 5,
+    "n120": 5,
+    "win60": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "win120": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "ok": true
+   },
+   "granger": {
+    "wins60": 10,
+    "n60": 10,
+    "wins120": 5,
+    "n120": 5,
+    "win60": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "win120": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "ok": true
+   },
+   "granger_by": {
+    "wins60": 2,
+    "n60": 10,
+    "wins120": 4,
+    "n120": 5,
+    "win60": [
+     false,
+     false,
+     false,
+     false,
+     true,
+     false,
+     false,
+     true,
+     false,
+     false
+    ],
+    "win120": [
+     true,
+     true,
+     true,
+     true,
+     false
+    ],
+    "ok": false
+   }
+  },
+  "rule": {
+   "min_60": 6,
+   "min_120": 3
+  },
+  "ties": "count for MSCR+; undefined MSCR+ F1 = loss; undefined baseline F1 = 0"
+ },
+ "P3": {
+  "pass": true,
+  "parts": {
+   "premise_declared_plus": true,
+   "chain_hits": true,
+   "overall_precision": true,
+   "sign_accuracy": true
+  },
+  "rule": {
+   "chain_min": 3,
+   "precision": 0.8,
+   "sign_acc": 0.9
+  },
+  "values": {
+   "chain_true": 4,
+   "chain_need": 3,
+   "chain_hits": 4,
+   "overall_precision": 0.92,
+   "sign_accuracy": 1.0,
+   "far_declared": 4,
+   "ind_recall": 0.9
+  },
+  "chain": {
+   "sleep|nbr|load": {
+    "gt_true": true,
+    "hit": true,
+    "p": 0.0001,
+    "z": 32.75126126111604
+   },
+   "sleep|nbr|pv": {
+    "gt_true": true,
+    "hit": true,
+    "p": 0.0001,
+    "z": 8.658681209747149
+   },
+   "sleep|nbr|v": {
+    "gt_true": true,
+    "hit": true,
+    "p": 0.0001,
+    "z": 20.80643429352155
+   },
+   "ptx|nbr|load": {
+    "gt_true": true,
+    "hit": true,
+    "p": 0.0001,
+    "z": -28.011726719876563
+   }
+  }
+ },
+ "S": {
+  "pass": true,
+  "pooled": 1.0,
+  "mean120": 1.0,
+  "n_defined120": 5,
+  "pooled_ok": true,
+  "mean120_ok": true,
+  "rule": {
+   "sign_acc": 0.9
+  }
+ },
+ "protocol": {
+  "doc": "docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md",
+  "exists": true,
+  "line": "FROZEN: yes (2026-09-30)",
+  "sha256": "6857466c91afa296a5cbaabd8fe0be9cb036dd35358736e855adfc540faf84ec",
+  "driver_sha256": "6857466c91afa296a5cbaabd8fe0be9cb036dd35358736e855adfc540faf84ec",
+  "frozen": true
+ },
+ "artifact": {
+  "path": "docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json",
+  "sha256": "4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba",
+  "expected": "4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba",
+  "sha_ok": true,
+  "schema": "e6p-mscrplus-frozen/1",
+  "version": "mscr-crt-units-plus-v0",
+  "code": {
+   "cdd_oran/decision/crt_units_plus.py": {
+    "want": "c78276b5c5f533ca6fa9e654c92939dbbdaffbbbe06719e409d786b14dd7f571",
+    "have": "c78276b5c5f533ca6fa9e654c92939dbbdaffbbbe06719e409d786b14dd7f571",
+    "ok": true
+   },
+   "cdd_oran/decision/mscr_multi.py": {
+    "want": "3c701a156162fb63b54698c4ab6468bcccd29b956252aacf5a8bca335d7944ad",
+    "have": "3c701a156162fb63b54698c4ab6468bcccd29b956252aacf5a8bca335d7944ad",
+    "ok": true
+   },
+   "cdd_oran/decision/eprocess_units.py": {
+    "want": "17eba255168b3b8191bc5232eee579e14562e852a9c9244755432f593d3d35d9",
+    "have": "17eba255168b3b8191bc5232eee579e14562e852a9c9244755432f593d3d35d9",
+    "ok": true
+   },
+   "cdd_oran/decision/crt_units.py": {
+    "want": "e5b85b90e56c6ebd3fa471fc09bd30ef6bcb00df07607be3f92d98b3996193e8",
+    "have": "e5b85b90e56c6ebd3fa471fc09bd30ef6bcb00df07607be3f92d98b3996193e8",
+    "ok": true
+   },
+   "cdd_oran/decision/crt_units_v2.py": {
+    "want": "9c47e939d140e9223aea57c4ce8b53a79813640f4b48ce16f80b9283883948a3",
+    "have": "9c47e939d140e9223aea57c4ce8b53a79813640f4b48ce16f80b9283883948a3",
+    "ok": true
+   },
+   "cdd_oran/decision/disc_bench.py": {
+    "want": "46912b47041df1bb906ae91201f75e9466a75eefddc207168e7289502375ae24",
+    "have": "46912b47041df1bb906ae91201f75e9466a75eefddc207168e7289502375ae24",
+    "ok": true
+   },
+   "scratchpad/e6_dev/mscr_integrate_bench.py": {
+    "want": "bebe76407fac826695902e1c7e3647e118803522e095996a7828c14c02642b45",
+    "have": "bebe76407fac826695902e1c7e3647e118803522e095996a7828c14c02642b45",
+    "ok": true
+   },
+   "scratchpad/e6_dev/mscr_plus_artifacts.py": {
+    "want": "d40833af3cbbe5d829ec6d9819c20e1682f64b4dc96d8bc1d443932bbf26b1a2",
+    "have": "d40833af3cbbe5d829ec6d9819c20e1682f64b4dc96d8bc1d443932bbf26b1a2",
+    "ok": true
+   }
+  },
+  "code_ok": true,
+  "source": {
+   "params": "scratchpad/e6_dev/runs/mscrplus-s-2/out/params.pkl",
+   "params_sha256": "0ef7cf7b356f867cc81f87ace9c3b02d69031339f9960d6d5e7e0b2f7edea131",
+   "prior": "scratchpad/e6_dev/runs/e6p-mscri-2/out/prior_ev2.json",
+   "prior_sha256": "b6db889c1c0b102280bdb5f6b3089c0db892100c48010399a74abf013bd36ac8",
+   "fit": "agent S, Kaggle kernel bishalpanta/mscrplus-s-2 (train = ev2 sub v2 480 eps + DEV 20 eps)",
+   "prior_run": "agent I, integrated statistic on ev2 (480 eps), split 0"
+  }
+ },
+ "data": {
+  "eval": {
+   "ok": true,
+   "n": 600,
+   "subs": [
+    "v4"
+   ],
+   "smoke": false,
+   "seed_range": [
+    188100,
+    188699
+   ],
+   "expected": [
+    188100,
+    188699
+   ]
+  },
+  "placebo": {
+   "ok": true,
+   "n": 40,
+   "subs": [
+    "v4"
+   ],
+   "smoke": false,
+   "seed_range": [
+    188700,
+    188739
+   ],
+   "expected": [
+    188700,
+    188739
+   ]
+  },
+  "dev": {
+   "ok": true,
+   "n": 20,
+   "subs": [
+    "v4"
+   ],
+   "smoke": false,
+   "seed_range": [
+    188000,
+    188019
+   ],
+   "expected": [
+    188000,
+    188019
+   ]
+  },
+  "gt": {
+   "ok": true,
+   "n": 40,
+   "expected": [
+    188800,
+    188839
+   ]
+  },
+  "all_ok": true
+ }
+}

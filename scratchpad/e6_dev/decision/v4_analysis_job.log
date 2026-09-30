@@ -1,0 +1,113 @@
+[job] bundle: unzipped dataset at /kaggle/input/datasets/bishalpanta/e6p-disc-v4an-1-code -> /tmp/job_root
+[job] /kaggle/input: 129 listing lines -> job_inputs.txt
+[job] sources -> /tmp/src/<slug>: {'e6p-disc-v4ev-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4ev-1-a', 'e6p-disc-v4ev-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4ev-1-b', 'e6p-disc-v4plc-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4plc-1-a', 'e6p-disc-v4gt-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4gt-1-a', 'e6p-disc-v4gt-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4gt-1-b', 'e6p-disc-v4dev-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4dev-1-a', 'mscrplus-s-2': '/kaggle/input/notebooks/bishalpanta/mscrplus-s-2', 'e6p-mscri-2': '/kaggle/input/notebooks/bishalpanta/e6p-mscri-2', 'disc-bench-1': '/kaggle/input/notebooks/bishalpanta/disc-bench-1'}; missing []
+[job] git 34a2c15af922e5ea7cde73ca012072cf5cd6a644 dirty True; pin match; kaggle had {'numpy': '2.0.2', 'scipy': '1.16.3'}; now 2.4.2 1.18.1 3.12.13; want 2.4.2/1.18.1; install [(['numpy==2.4.2', 'scipy==1.18.1'], 0)]
+[job] cpus 4; CMD: A=docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json; python scratchpad/e6_dev/mscr_plus_artifacts.py verify --artifact $A --params $JOB_SRC/mscrplus-s-2/out/params.pkl --prior $JOB_SRC/e6p-mscri-2/out/prior_ev2.json --small $JOB_SRC/disc-bench-1/out/cache_small && python scratchpad/e6_dev/e6p_disc_analyze_v4.py analyze --artifact $A --eval $JOB_SRC/e6p-disc-v4ev-1-a,$JOB_SRC/e6p-disc-v4ev-1-b --placebo $JOB_SRC/e6p-disc-v4plc-1-a --gt $JOB_SRC/e6p-disc-v4gt-1-a,$JOB_SRC/e6p-disc-v4gt-1-b --dev $JOB_SRC/e6p-disc-v4dev-1-a --out $JOB_OUT --workers 4
+placebo1: artifact statistic bit-identical to the params pickle (2435 units)
+plxc2: artifact statistic bit-identical to the params pickle (2440 units)
+dev1: artifact statistic bit-identical to the params pickle (2630 units)
+layer: weights / directions identical to the prior json
+sha256 4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba
+[18:34:04] artifact docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json: sha 4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba (expected 4735a85a1975edc6ddea412972be2f972a4ade9015844f153ae45d82f47d14ba) ok True; code ok True []
+[18:34:29] caches: {'eval': 8, 'placebo': 4, 'dev': 4} [24.5 s]
+[18:34:36] GT: 40 eps, 3697 labels, counts {'TRUE': 29, 'NULL': 21, 'INDET': 10}, nbr TRUE [('ptx', 'e', -1), ('ptx', 'load', -1), ('ptx', 'pv', -1), ('ptx', 'rlf', -1), ('ptx', 'v', -1), ('sleep', 'e', 1), ('sleep', 'load', 1), ('sleep', 'pv', 1), ('sleep', 'rlf', 1), ('sleep', 'v', 1)]; G PASS [2.0 s]
+[18:34:36] slices: pooled:600, s60_0:60, s60_1:60, s60_2:60, s60_3:60, s60_4:60, s60_5:60, s60_6:60, s60_7:60, s60_8:60, s60_9:60, s120_0:120, s120_1:120, s120_2:120, s120_3:120, s120_4:120, s300_0:300, s300_1:300
+[18:34:44] desc shap_gbdt: tau 0.02443062109476682 [8 s]
+[18:34:44] desc int: tau 0.19423924758297004 [0 s]
+[18:35:41] desc qacm: tau 0.11060725315609408 [57 s]
+[18:35:49] desc two_tower: tau 0.0058573167771101 [8 s]
+[18:36:53] K0 PASS: m 60 reject 7 tail 0.0297 declared 0 [] [64.0 s]
+[18:56:24]    pooled (600 eps, 89067 units, 1171.2 s): primary chain 4/4 premise 1 indF1 0.95 ovP 0.92 sign 1.00 #dec 28 | corr:0.33 granger:0.67 granger_by:0.67
+[18:56:28]     s60_0 (60 eps, 8780 units, 4.2 s): primary chain 4/4 premise 1 indF1 0.62 ovP 0.85 sign 1.00 #dec 22 | corr:0.46 granger:0.33 granger_by:0.74
+[18:56:32]     s60_1 (60 eps, 8600 units, 4.2 s): primary chain 3/4 premise 0 indF1 0.57 ovP 0.82 sign 1.00 #dec 19 | corr:0.33 granger:0.33 granger_by:0.59
+[18:56:37]     s60_2 (60 eps, 9058 units, 4.3 s): primary chain 4/4 premise 1 indF1 0.57 ovP 0.88 sign 1.00 #dec 19 | corr:0.33 granger:0.46 granger_by:0.74
+[18:56:41]     s60_3 (60 eps, 8982 units, 4.3 s): primary chain 3/4 premise 0 indF1 0.57 ovP 0.89 sign 1.00 #dec 20 | corr:0.33 granger:0.33 granger_by:0.67
+[18:56:45]     s60_4 (60 eps, 9020 units, 4.3 s): primary chain 4/4 premise 1 indF1 0.67 ovP 0.89 sign 1.00 #dec 20 | corr:0.46 granger:0.33 granger_by:0.62
+[18:56:50]     s60_5 (60 eps, 8969 units, 4.5 s): primary chain 4/4 premise 1 indF1 0.57 ovP 0.89 sign 1.00 #dec 20 | corr:0.46 granger:0.33 granger_by:0.74
+[18:56:54]     s60_6 (60 eps, 8826 units, 4.2 s): primary chain 4/4 premise 1 indF1 0.67 ovP 0.94 sign 1.00 #dec 20 | corr:0.33 granger:0.33 granger_by:0.71
+[18:56:58]     s60_7 (60 eps, 8871 units, 4.2 s): primary chain 4/4 premise 1 indF1 0.78 ovP 0.90 sign 1.00 #dec 22 | corr:0.33 granger:0.33 granger_by:0.67
+[18:57:03]     s60_8 (60 eps, 9093 units, 4.4 s): primary chain 4/4 premise 1 indF1 0.67 ovP 0.90 sign 1.00 #dec 22 | corr:0.46 granger:0.33 granger_by:0.74
+[18:57:07]     s60_9 (60 eps, 8868 units, 4.4 s): primary chain 3/4 premise 0 indF1 0.57 ovP 0.94 sign 1.00 #dec 18 | corr:0.33 granger:0.33 granger_by:0.73
+[19:00:20]    s120_0 (120 eps, 17380 units, 192.8 s): primary chain 4/4 premise 1 indF1 0.78 ovP 0.86 sign 1.00 #dec 24 | corr:0.33 granger:0.46 granger_by:0.63
+[19:04:10]    s120_1 (120 eps, 18040 units, 229.8 s): primary chain 4/4 premise 1 indF1 0.67 ovP 0.89 sign 1.00 #dec 21 | corr:0.33 granger:0.46 granger_by:0.67
+[19:07:35]    s120_2 (120 eps, 17989 units, 205.5 s): primary chain 4/4 premise 1 indF1 0.75 ovP 0.89 sign 1.00 #dec 21 | corr:0.46 granger:0.46 granger_by:0.74
+[19:10:52]    s120_3 (120 eps, 17697 units, 197.1 s): primary chain 4/4 premise 1 indF1 0.82 ovP 0.95 sign 1.00 #dec 22 | corr:0.33 granger:0.46 granger_by:0.76
+[19:14:09]    s120_4 (120 eps, 17961 units, 197.2 s): primary chain 4/4 premise 1 indF1 0.67 ovP 0.90 sign 1.00 #dec 22 | corr:0.33 granger:0.46 granger_by:0.73
+[19:23:49]    s300_0 (300 eps, 44440 units, 579.8 s): primary chain 4/4 premise 1 indF1 0.82 ovP 0.91 sign 1.00 #dec 25 | corr:0.33 granger:0.62 granger_by:0.64
+[19:33:12]    s300_1 (300 eps, 44627 units, 562.6 s): primary chain 4/4 premise 1 indF1 0.82 ovP 0.91 sign 1.00 #dec 24 | corr:0.33 granger:0.67 granger_by:0.70
+[19:33:16] K0n: 600 records, 10 groups of 60, 4 shifts, B 999
+[19:33:20]   K0n g0 shift1: units 8780, primary decl 0 (4 s)
+[19:33:24]   K0n g0 shift2: units 8780, primary decl 0 (4 s)
+[19:33:28]   K0n g0 shift3: units 8780, primary decl 0 (4 s)
+[19:33:32]   K0n g0 shift4: units 8780, primary decl 0 (4 s)
+[19:33:36]   K0n g1 shift1: units 8600, primary decl 0 (4 s)
+[19:33:40]   K0n g1 shift2: units 8600, primary decl 0 (4 s)
+[19:33:44]   K0n g1 shift3: units 8600, primary decl 0 (4 s)
+[19:33:48]   K0n g1 shift4: units 8600, primary decl 0 (4 s)
+[19:33:53]   K0n g2 shift1: units 9058, primary decl 0 (4 s)
+[19:33:57]   K0n g2 shift2: units 9058, primary decl 0 (4 s)
+[19:34:01]   K0n g2 shift3: units 9058, primary decl 0 (4 s)
+[19:34:06]   K0n g2 shift4: units 9058, primary decl 0 (4 s)
+[19:34:10]   K0n g3 shift1: units 8982, primary decl 0 (4 s)
+[19:34:14]   K0n g3 shift2: units 8982, primary decl 0 (4 s)
+[19:34:18]   K0n g3 shift3: units 8982, primary decl 0 (4 s)
+[19:34:23]   K0n g3 shift4: units 8982, primary decl 0 (4 s)
+[19:34:27]   K0n g4 shift1: units 9020, primary decl 0 (4 s)
+[19:34:31]   K0n g4 shift2: units 9020, primary decl 0 (4 s)
+[19:34:35]   K0n g4 shift3: units 9020, primary decl 0 (4 s)
+[19:34:40]   K0n g4 shift4: units 9020, primary decl 0 (4 s)
+[19:34:44]   K0n g5 shift1: units 8969, primary decl 0 (4 s)
+[19:34:48]   K0n g5 shift2: units 8969, primary decl 0 (4 s)
+[19:34:52]   K0n g5 shift3: units 8969, primary decl 0 (4 s)
+[19:34:57]   K0n g5 shift4: units 8969, primary decl 0 (4 s)
+[19:35:01]   K0n g6 shift1: units 8826, primary decl 0 (4 s)
+[19:35:05]   K0n g6 shift2: units 8826, primary decl 0 (4 s)
+[19:35:09]   K0n g6 shift3: units 8826, primary decl 0 (4 s)
+[19:35:13]   K0n g6 shift4: units 8826, primary decl 0 (4 s)
+[19:35:18]   K0n g7 shift1: units 8871, primary decl 0 (4 s)
+[19:35:22]   K0n g7 shift2: units 8871, primary decl 0 (4 s)
+[19:35:26]   K0n g7 shift3: units 8871, primary decl 0 (4 s)
+[19:35:31]   K0n g7 shift4: units 8871, primary decl 0 (4 s)
+[19:35:35]   K0n g8 shift1: units 9093, primary decl 0 (4 s)
+[19:35:40]   K0n g8 shift2: units 9093, primary decl 0 (4 s)
+[19:35:44]   K0n g8 shift3: units 9093, primary decl 0 (4 s)
+[19:35:48]   K0n g8 shift4: units 9093, primary decl 0 (4 s)
+[19:35:53]   K0n g9 shift1: units 8868, primary decl 0 (5 s)
+[19:35:58]   K0n g9 shift2: units 8868, primary decl 0 (5 s)
+[19:36:03]   K0n g9 shift3: units 8868, primary decl 0 (5 s)
+[19:36:08]   K0n g9 shift4: units 8868, primary decl 0 (5 s)
+[19:36:08] K0n PASS: 40 variants, rate 0.0525 families {'carrier': 0.051666666666666666, 'prot_min': 0.051666666666666666, 'ptx': 0.06, 'sleep': 0.04666666666666667} variants with decl 0 [175.9 s]
+[19:36:08] 
+[19:36:08]     split   loadsp_c+wby1s             corr          granger       granger_by   (ind F1)
+[19:36:08]    pooled            0.947            0.333            0.667            0.667
+[19:36:08]     s60_0            0.625            0.462            0.333            0.737
+[19:36:08]     s60_1            0.571            0.333            0.333            0.588
+[19:36:08]     s60_2            0.571            0.333            0.462            0.737
+[19:36:08]     s60_3            0.571            0.333            0.333            0.667
+[19:36:08]     s60_4            0.667            0.462            0.333            0.625
+[19:36:08]     s60_5            0.571            0.462            0.333            0.737
+[19:36:08]     s60_6            0.667            0.333            0.333            0.706
+[19:36:08]     s60_7            0.778            0.333            0.333            0.667
+[19:36:08]     s60_8            0.667            0.462            0.333            0.737
+[19:36:08]     s60_9            0.571            0.333            0.333            0.727
+[19:36:08]    s120_0            0.778            0.333            0.462            0.632
+[19:36:08]    s120_1            0.667            0.333            0.462            0.667
+[19:36:08]    s120_2            0.750            0.462            0.462            0.737
+[19:36:08]    s120_3            0.824            0.333            0.462            0.762
+[19:36:08]    s120_4            0.667            0.333            0.462            0.727
+[19:36:08]    s300_0            0.824            0.333            0.625            0.636
+[19:36:08]    s300_1            0.824            0.333            0.667            0.696
+[19:36:08]   K0: PASS
+[19:36:08]  K0n: PASS
+[19:36:08]    G: PASS
+[19:36:08]   K1: PASS
+[19:36:08]   P1: PASS
+[19:36:08]   P2: FAIL
+[19:36:08]   P3: PASS  {'premise_declared_plus': True, 'chain_hits': True, 'overall_precision': True, 'sign_accuracy': True}
+[19:36:08]    S: PASS
+[19:36:08] P2 per baseline: {'corr': (10, 5), 'granger': (10, 5), 'granger_by': (2, 4)}
+[19:36:08] mode full; data {'eval': True, 'placebo': True, 'dev': True, 'gt': True}; protocol FROZEN: yes (2026-09-30) (frozen True)
+[19:36:08] VERDICT: PARTIAL
+[19:36:08] timing {'caches': 24.5, 'gt': 2.0, 'k0': 64.0, 'slices': 3379.0, 'k0n': 175.9, 'total': 3723.4}; peak RSS 2894.0 MB
+[19:36:08] wrote /kaggle/working/out/analysis_v4.json
+[job] exit code 0; wall 3763.2 s
