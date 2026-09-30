@@ -22,6 +22,13 @@ series (t0 - H_pre >= 0 and t0 + H <= len(series); others are dropped and counte
               hypotheses; the batched null below relies on it). NaN -> column median, degenerate columns dropped
               (``crt._conditioners``).
 
+Per-unit rows (option (a), 2026-09-30): a unit that carries ``probs`` (its logged mode-probability row, e.g.
+``collect_p.IncumbentPolicy``: context-dependent, drawn independently per unit from a keyed uniform) gets THAT row as
+its ``probs`` (preferred over ``pi0_table[x]``; the p / row consistency check ``p_mismatch`` is unchanged). The
+conditional draws below re-draw each unit from its own row, which is the exact conditional law under the family's
+sharp null as long as the row is a function of pre-assignment obs only (then the trajectory, contexts and rows are
+invariant to the family's assignments).
+
 Assignment model (``PiAssignment``): pi0 is context-free and draws every unit independently (collect_p: one uniform
 per unit, key [seed, 6612, c, x_idx, t0]). Conditional draws for family f: every f unit's mode is re-drawn from the
 LOGGED table of its xApp (``pi0_table[x]``), every other family's modes are held fixed (they are not in the
@@ -175,7 +182,7 @@ def build_unit_data(records, H: int = H_UNIT, relations=RELATIONS, kpis=KPIS, H_
     ycell, precell, masks, ctxs = {k: [] for k in kpis}, {k: [] for k in kpis}, {r: [] for r in relations}, []
     n_cells = None
     dropped = {"window": 0, "family": 0}
-    p_mismatch, n_rows = 0, 0
+    p_mismatch, n_rows, n_probs_rows = 0, 0, 0
     eps = []
     for e, rec in enumerate(records):
         nc = int(rec["n_cells"])
@@ -209,7 +216,13 @@ def build_unit_data(records, H: int = H_UNIT, relations=RELATIONS, kpis=KPIS, H_
                 m = np.zeros(nc, bool)
                 m[rel[r]] = True
                 masks[r].append(m)
-            if table is not None:
+            row = u.get("probs")
+            if row is not None:                                       # per-unit logged row (context-dependent pi0)
+                pr = np.array([float(row.get(m, 0.0)) for m in MODES])
+                if set(row) - set(MODES) or abs(pr.sum() - 1.0) > 1e-6:
+                    raise ValueError(f"unit probs row {row} is not a distribution over {MODES}")
+                n_probs_rows += 1
+            elif table is not None:
                 tab = table[u["x"]]
                 pr = np.array([float(tab.get(m, 0.0)) for m in MODES])
             else:                                                     # deterministic policy (profiles): no CRT
@@ -248,6 +261,7 @@ def build_unit_data(records, H: int = H_UNIT, relations=RELATIONS, kpis=KPIS, H_
                     rel_mask=mask_a, z=z, prev=arr["prev"].astype(int), n_cells=n_cells, H=H, H_pre=H_pre,
                     relations=relations, kpis=kpis,
                     meta={"episodes": eps, "dropped": dropped, "p_mismatch": p_mismatch, "n_units": n,
+                          "n_probs_rows": n_probs_rows,
                           "conditioners": list(z)})
 
 

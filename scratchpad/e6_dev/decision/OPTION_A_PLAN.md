@@ -77,3 +77,10 @@ from t = 0 on the unchanged P3 surge-L40 is legitimate; the warm-up stays unscor
 1. The lever is small, or the guards fail (K-A).
 2. Granger+ctx ties MSCR under C1, narrowing the claim to C2.
 3. Critiques ("acting in warm-up", "MapGate rigged") and the warm-up tap plumbing.
+
+## Amendment before K-B data (2026-09-30, no K-B data exists yet)
+The K-B kill rule "a baseline map flips >= 1 MapGate decision per episode vs the GT map" is passed trivially by an
+empty or underpowered map, because missing edges also flip decisions. PRIMARY rule, therefore: `label_attributable`
+counts only flips caused by WRONG edges. It is the max of (a) the map vs the same map with only its correct edges (GT
+TRUE, right sign), and (b) the GT map plus the method's placebo-declared edges vs the GT map. KILL if MSCR K0 fails,
+or if no baseline has >= 1 attributable flip per episode. The literal rule is reported as `label`.

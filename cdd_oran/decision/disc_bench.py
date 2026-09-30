@@ -91,7 +91,9 @@ def episode_arrays(rec, Hs=HS, kpis=KPIS) -> dict:
     for i, u in enumerate(us):
         t0 = int(round(float(u["t0"])))
         step = float(u.get("step", u["ctx"].get("step", 0.0)))
-        if table is not None:
+        if u.get("probs") is not None:             # per-unit logged row preferred (as crt_units.build_unit_data)
+            pr = np.array([float(u["probs"].get(m, 0.0)) for m in MODES])
+        elif table is not None:
             tab = table[u["x"]]
             pr = np.array([float(tab.get(m, 0.0)) for m in MODES])
         else:

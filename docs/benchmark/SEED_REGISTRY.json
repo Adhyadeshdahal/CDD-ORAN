@@ -140,9 +140,13 @@
     6614,
     6615,
     6616,
-    6617
+    6617,
+    6622,
+    6623,
+    6624
   ],
   "rng_stream_notes": {
+    "E6-P option (a) confounded tags 6622-6624": "6622 confounded incumbent logging draws default_rng([seed, 6622, c, x_idx, int(t0)]) (decision.collect_p.IncumbentPolicy / PlaceboIncumbent); 6623 MapGate random-size map default_rng([6623, 2]) (decision.mapgate.random_sized_map, K-A2); 6624 option (a) analysis bootstraps default_rng([6624, ...]) (scratchpad/e6_dev/e6p_opta_kb_analyze.py). Registered 2026-09-30.",
     "E5_NOISE_DETECT observation noise": "default_rng([seed, 5, int(round(1000*kappa))]), kappa in {0.1, 0.3} -> tags (5, 100) and (5, 300)",
     "E6-P discovery / arbiter tags 6612-6617": "6612 pi0 draws default_rng([seed, 6612, c, x_idx, int(t0)]) (decision.collect_p); 6613 label sampling default_rng([seed, 6613, c, x_idx, int(t0)]) (decision.labels_p.sampled; also the E6-P discovery GT unit sampling); 6614 region probes default_rng([seed, 6614, c, x_idx, int(t0)]) (labels_p.region_sampled); 6615 G0c bootstrap default_rng([6615, pair_idx, stratum]) (e6p_arbiter_pilot); 6616 CRT draws (E6-P discovery crt_units); 6617 GT bootstrap default_rng([6617, family_idx, relation_idx, kpi_idx, orient_idx]) (decision.gt_p). Numeric overlap: E6-P v2 used 6612 for its descriptive bootstrap default_rng([6612, pair_idx, stratum]) (3-element key, no episode seed), a different key shape from the pi0 draws."
   },
@@ -251,7 +255,14 @@
         185999
       ]
     ],
-    "e6p_referee_note": "Reserved 2026-09-30 for E6-P step 2 (regime referee; scratchpad/e6_dev/decision/STEP2_REFEREE_PLAN.md). 184000-184199 targeted knockouts, 184200-184239 DEV on-policy (step-2 DEV arms driver scratchpad/e6_dev/e6p_step2_dev.py), 185000-185099 EVAL (after a frozen protocol only), 185100-185159 power extension, 185200-185299 step-3 fallback. Tags 6618-6621 reserved (not yet used). DEV only; never TEST."
+    "e6p_referee_note": "Reserved 2026-09-30 for E6-P step 2 (regime referee; scratchpad/e6_dev/decision/STEP2_REFEREE_PLAN.md). 184000-184199 targeted knockouts, 184200-184239 DEV on-policy (step-2 DEV arms driver scratchpad/e6_dev/e6p_step2_dev.py), 185000-185099 EVAL (after a frozen protocol only), 185100-185159 power extension, 185200-185299 step-3 fallback. Tags 6618-6621 reserved (not yet used). DEV only; never TEST.",
+    "e6p_confounded_episodes": [
+      [
+        186000,
+        187999
+      ]
+    ],
+    "e6p_confounded_note": "Reserved 2026-09-30 for E6-P option (a): confounded incumbent logs + map-driven referee (scratchpad/e6_dev/decision/OPTION_A_PLAN.md). Cell P3 surge-L40. 186000-186079 kill test K-B (driver scratchpad/e6_dev/e6p_opta_kb.py: 186000-186039 PLACEBO (PlaceboIncumbent), 186040-186079 APPLIED (IncumbentPolicy)); planned: DISC 186100-186699, placebo 186700-186739, GT 186740-186759, EVAL 187000-187079 (+ extension 187080-187159, after a frozen protocol only). Tags 6622-6624 (see rng_stream_notes). Checked free of every other registered block on 2026-09-30. DEV only; never TEST."
   },
   "XTRUCE": {
     "used": [

@@ -30,6 +30,24 @@ Discovery study (scratchpad/e6_dev/decision/STEP1_MSCR_PLAN.md): ``PI0_HIGH_NO_R
 like ``RandomizedUnitPolicy`` but the arbiter APPLIES accept: a sharp null; after ``run_collection`` a placebo unit
 carries mode / p = the pi0 draw and ``applied_mode`` = "accept"). ``enc`` / ``dec`` = the record array codec
 (base64(zlib(little-endian float32 C-order bytes)) + shape).
+
+Option (a) confounded logging (scratchpad/e6_dev/decision/OPTION_A_PLAN.md section 1; additive, 2026-09-30):
+``IncumbentPolicy`` is a CONTEXT-DEPENDENT logging policy (accept / reject only) that reads ONLY the unit's obs-only
+``ctx`` (never its own past modes). Pressure s = max(ctx own_prb_util, ctx nbr_max_prb_util) (NaN ignored; none -> 0).
+Request class from ctx knob / step (d = sign(step), 0 -> +1 as crt_units' sgn): saving = carrier off (d -1), sleep
+(d +1), ptx down (d -1); restore = the opposite directions; SG raise / SG lower = prot_min d +1 / -1. P(accept):
+
+  | saving  | s < .6: .85 | s >= .6: .15 |      | SG raise | own_prot_below_frac > .05: .85 | else .30 |
+  | restore | s < .6: .35 | s >= .6: .85 |      | SG lower | own_prot_below_frac == 0:  .85 | else .20 |
+
+(NaN own_prot_below_frac -> 0), clipped to [INC_FLOOR, 1 - INC_FLOOR] = [.15, .85]. Draw: one uniform
+``default_rng([seed, 6622, c, x_idx, int(t0)])``, accept iff u < P(accept). The unit's FULL mode-probability row is
+logged as ``unit["probs"]`` ({"accept": pa, "reject": 1 - pa}; crt_units.build_unit_data prefers it over a record's
+``pi0_table``) and the class / pressure as ``unit["inc"]``. ``PlaceboIncumbent`` draws and logs exactly like it but
+applies accept (sharp null; ``finalize_units`` relabels as for ``PlaceboPolicy``). For these policies the arbiter may
+act from t = 0: ``run_collection(arb_warmup_s=0.0)``; ``count_all=True`` makes the tap's cumulative arrays (hence the
+units' privileged ``kpi`` window sums) count EVERY second, warm-up included (default: scored seconds only, unchanged).
+The per-second ``series`` always records every second.
 """
 from __future__ import annotations
 
@@ -121,6 +139,94 @@ class PlaceboPolicy(RandomizedUnitPolicy):
         return "accept", 1.0
 
 
+# -------------------------------------------------------------------------------------------- confounded incumbent
+INC_TAG = 6622
+INC_FLOOR = 0.15
+INC_S_HI = 0.6                       # pressure threshold on s = max(own_prb_util, nbr_max_prb_util)
+INC_SG_RAISE_FRAC = 0.05             # SG raise "condition met": own_prot_below_frac > .05
+INC_ORDER = ("accept", "reject")
+INCUMBENT_TABLE = {"saving": {"lo": 0.85, "hi": 0.15}, "restore": {"lo": 0.35, "hi": 0.85},
+                   "sg_raise": {"met": 0.85, "else": 0.30}, "sg_lower": {"met": 0.85, "else": 0.20}}
+INC_SAVING_DIR = {"carrier": -1, "sleep": 1, "ptx": -1}      # d of the energy-SAVING request per knob family
+
+
+def _nz(x) -> float:
+    try:
+        x = float(x)
+    except (TypeError, ValueError):
+        return 0.0
+    return 0.0 if not np.isfinite(x) else x
+
+
+def incumbent_class(ctx) -> str:
+    """"saving" | "restore" | "sg_raise" | "sg_lower" from the unit context's knob family and step."""
+    f = str(ctx["knob"])
+    d = 1 if float(ctx["step"]) >= 0 else -1
+    if f == "prot_min":
+        return "sg_raise" if d > 0 else "sg_lower"
+    if f in INC_SAVING_DIR:
+        return "saving" if d == INC_SAVING_DIR[f] else "restore"
+    raise ValueError(f"IncumbentPolicy: no rule for knob family {f!r}")
+
+
+def incumbent_pressure(ctx) -> float:
+    """s = max(own_prb_util, nbr_max_prb_util) over the finite ones (none -> 0)."""
+    vals = [float(ctx.get(k, np.nan)) for k in ("own_prb_util", "nbr_max_prb_util")]
+    vals = [v for v in vals if np.isfinite(v)]
+    return max(vals) if vals else 0.0
+
+
+class IncumbentPolicy:
+    """Context-dependent confounded logging policy (module docstring, "Option (a)"). ``policy(unit) -> (mode, p)``;
+    reads only ``unit["ctx"]`` and the RNG key fields (c, x_idx, t0); logs ``unit["probs"]`` and ``unit["inc"]``."""
+
+    def __init__(self, seed: int, table: dict | None = None, floor: float = INC_FLOOR, s_hi: float = INC_S_HI,
+                 sg_raise_frac: float = INC_SG_RAISE_FRAC):
+        self.seed, self.table = int(seed), dict(table or INCUMBENT_TABLE)
+        self.floor, self.s_hi, self.sg_raise_frac = float(floor), float(s_hi), float(sg_raise_frac)
+        if not 0.0 < self.floor <= 0.5:
+            raise ValueError("floor in (0, .5]")
+
+    def accept_prob(self, ctx) -> tuple[float, dict]:
+        cls = incumbent_class(ctx)
+        s = incumbent_pressure(ctx)
+        below = _nz(ctx.get("own_prot_below_frac", np.nan))
+        t = self.table[cls]
+        if cls in ("saving", "restore"):
+            key = "hi" if s >= self.s_hi else "lo"
+        elif cls == "sg_raise":
+            key = "met" if below > self.sg_raise_frac else "else"
+        else:
+            key = "met" if below == 0.0 else "else"
+        pa = float(min(max(float(t[key]), self.floor), 1.0 - self.floor))
+        return pa, {"cls": cls, "key": key, "s": s, "below": below}
+
+    def row(self, unit) -> dict:
+        pa, _ = self.accept_prob(unit["ctx"])
+        return {"accept": pa, "reject": 1.0 - pa}
+
+    def draw_u(self, unit) -> float:
+        return float(np.random.default_rng([self.seed, INC_TAG, int(unit["c"]), int(unit["x_idx"]),
+                                            int(unit["t0"])]).random())
+
+    def __call__(self, unit):
+        pa, info = self.accept_prob(unit["ctx"])
+        row = {"accept": pa, "reject": 1.0 - pa}
+        unit["probs"], unit["inc"] = row, info
+        m = "accept" if self.draw_u(unit) < pa else "reject"
+        return m, float(row[m])
+
+
+class PlaceboIncumbent(IncumbentPolicy):
+    """Sharp-null placebo of ``IncumbentPolicy``: same draw, same logged row, but the arbiter applies accept
+    (``finalize_units`` relabels mode / p = the incumbent draw, applied_mode = "accept")."""
+
+    def __call__(self, unit):
+        m, p = super().__call__(unit)
+        unit["pi0_mode"], unit["pi0_p"] = m, p
+        return "accept", 1.0
+
+
 def finalize_units(units) -> None:
     """Placebo relabel (in place): a unit with ``pi0_mode`` gets mode / p = its pi0 draw and applied_mode = the mode
     the arbiter applied. Other units are left untouched."""
@@ -147,8 +253,9 @@ def dec(d) -> np.ndarray:
 class CellKPITap:
     """Per-cell cumulative scored KPIs + per-second series; installed as ``plant.take_counters`` (module docstring)."""
 
-    def __init__(self, plant, n_sec: int | None = None):
+    def __init__(self, plant, n_sec: int | None = None, count_all: bool = False):
         self.plant = plant
+        self.count_all = bool(count_all)          # True: cumulative arrays count warm-up seconds too
         n = plant.nc
         self.pv, self.v, self.e = np.zeros(n), np.zeros(n), np.zeros(n)
         self.rlf, self.load, self.prb = np.zeros(n), np.zeros(n), np.zeros(n)
@@ -172,7 +279,7 @@ class CellKPITap:
         rlf_s = np.asarray(c["rlf"], float)
         used_s = np.asarray(c["prb_used"], float).sum(1) / ticks
         ue_s = np.bincount(serv, minlength=n)
-        if scored:
+        if scored or self.count_all:
             self.pv += pv_s
             self.v += v_s
             self.e += c["energy_j"]
@@ -207,10 +314,11 @@ class CellKPITap:
                 "data": self.ser[:n].copy()}
 
 
-def install_tap(env) -> CellKPITap:
+def install_tap(env, count_all: bool = False) -> CellKPITap:
+    """Install (or return the already installed) tap; ``count_all`` applies to a NEW tap only."""
     if isinstance(env.plant.__dict__.get("take_counters"), CellKPITap):
         return env.plant.take_counters
-    tap = CellKPITap(env.plant)
+    tap = CellKPITap(env.plant, count_all=count_all)
     env.plant.take_counters = tap
     return tap
 
@@ -232,16 +340,19 @@ def _kpi(tap, u, t_end, trunc):
 
 
 def run_collection(cfg, policy, T: float = T_UNIT, labeller=None, churn_cap=None, env=None,
-                   open_rule: str = "first"):
+                   open_rule: str = "first", arb_warmup_s: float | None = None, count_all: bool = False):
     """One collection episode under ``wg3=True``: ``UnitArbiter(policy)`` + the KPI tap.
 
     ``labeller(env, obs, snap, opened)`` (optional) is called every second in which units opened, after the arbiter
     decided and BEFORE ``env.step_apply``: ``env`` carries the pending requests (``env.copy`` replays them) and ``snap``
-    is an arbiter fork taken before this second's call. Returns {"env", "arb", "tap", "units", "cpu_s"}."""
+    is an arbiter fork taken before this second's call. ``arb_warmup_s`` (default ``cfg.warmup_s``): the arbiter's
+    all-accept / no-unit period (0.0 = units from t = 0, option (a)); ``count_all``: tap flag (``CellKPITap``).
+    Returns {"env", "arb", "tap", "units", "cpu_s"}."""
     t_cpu = time.process_time()
     env = env if env is not None else E6Env(cfg, log=False, wg3=True, churn_cap=churn_cap)
-    tap = install_tap(env)
-    arb = UnitArbiter(policy, T=T, warmup_s=float(cfg.warmup_s), open_rule=open_rule)
+    tap = install_tap(env, count_all=count_all)
+    wu = float(cfg.warmup_s) if arb_warmup_s is None else float(arb_warmup_s)
+    arb = UnitArbiter(policy, T=T, warmup_s=wu, open_rule=open_rule)
     live = []
     while env.sec < env.total_s:
         obs = env.step_propose()
@@ -267,6 +378,8 @@ def run_collection(cfg, policy, T: float = T_UNIT, labeller=None, churn_cap=None
     return {"env": env, "arb": arb, "tap": tap, "units": arb.units, "cpu_s": time.process_time() - t_cpu}
 
 
-__all__ = ["EXT_FIELDS", "P_MIN", "PI0", "PI0_HIGH", "PI0_HIGH_NO_RB", "PI0_LOW", "PI0_ORDER", "PI0_TAG",
-           "SERIES_FIELDS", "CellKPITap", "PlaceboPolicy", "RandomizedUnitPolicy", "dec", "enc", "finalize_units",
-           "get_tap", "install_tap", "low_table", "regime_for", "run_collection"]
+__all__ = ["EXT_FIELDS", "INCUMBENT_TABLE", "INC_FLOOR", "INC_ORDER", "INC_SAVING_DIR", "INC_S_HI",
+           "INC_SG_RAISE_FRAC", "INC_TAG", "P_MIN", "PI0", "PI0_HIGH", "PI0_HIGH_NO_RB", "PI0_LOW", "PI0_ORDER",
+           "PI0_TAG", "SERIES_FIELDS", "CellKPITap", "IncumbentPolicy", "PlaceboIncumbent", "PlaceboPolicy",
+           "RandomizedUnitPolicy", "dec", "enc", "finalize_units", "get_tap", "incumbent_class", "incumbent_pressure",
+           "install_tap", "low_table", "regime_for", "run_collection"]
