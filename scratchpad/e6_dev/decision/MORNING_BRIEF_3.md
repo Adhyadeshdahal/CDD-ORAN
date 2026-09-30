@@ -1,12 +1,11 @@
 # Morning brief 3: overnight 2026-09-29/30
 
-**Status: FINAL for the night (06:05 NST),** except one pending number (marked ⏳). Everything is committed locally
+**Status: FINAL for the night (06:30 NST).** Everything is committed locally
 on feat/v2; **nothing is pushed** (you said: push in the morning). No Colab machine is left running, and no Kaggle
 job is running.
 
 ## The short version
-1. **Step 1 (can our method find the cause-effect map?): yes, with enough data. Verdict PARTIAL** (PASS is still
-   possible, ⏳).
+1. **Step 1 (can our method find the cause-effect map?): yes, with enough data. Final verdict: PARTIAL.**
    - On 1,200 brand-new episodes, MSCR found the whole conflict chain with the right signs: when a pico cell goes to
      sleep, its neighbours get more load, more violations, and more *protected-user* violations.
    - It found 7 of the 8 true neighbour links and made no wrong neighbour claims.
@@ -48,10 +47,15 @@ real result.
 - Pico sleep → neighbour protected violations: estimated **+10.3** (truth +9.1), z 6.1.
 - Pico sleep → neighbour load: z 29.5. Pico sleep → neighbour violations: z 14.8. PowerES → neighbour load: z −21.3.
 - Neighbour links: 7 of 8 found, 0 wrong. Overall precision 0.92, signs 100 % right. 0 false links on fake data.
-- ⏳ The comparison against the other methods (it decides PASS vs PARTIAL) was still running at 06:05. It is written
-  to `.tmp/disc_v3/full.log` and then to `STEP1_V3_RESULT.md`.
+- **Against the other methods: why PARTIAL, not PASS.**
+  - On all 1,200 episodes pooled, MSCR beats every method on neighbour links: 0.93 vs the best, correlation, at
+    0.67. Its overall score (0.87) is also the best.
+  - The rule also required winning in 3 of 4 separate quarters of 300 episodes, and MSCR won only 1. In the smaller
+    slices Granger scores higher (0.71-0.75 vs MSCR's 0.55-0.86) by claiming many more links, a third or more of
+    them wrong, and it "finds" 13 links on fake data.
+  - So MSCR needs more data to reach its full strength, but it never claims false links.
 
-**v2 comparison with the other methods** (480 episodes; v3's is pending):
+**v2 comparison with the other methods** (480 episodes; v3 is above):
 
 | method | overall score (F1) | precision | false links on fake data |
 |---|---|---|---|
@@ -85,7 +89,7 @@ claiming many links (36), a lot of them false, with signs right only 71 % of the
    Nothing safe gets near the 35 % bar.
 
 ## Decisions for you
-1. **Push?** About 20 local commits since d819c5a (the last pushed commit) are waiting. Say "push" and I'll push
+1. **Push?** About 15 local commits since d819c5a (the last pushed commit) are waiting. Say "push" and I'll push
    feat/v2.
 2. **Where should the referee (step 2/3) live?** My suggestions, from the skeptic agent plus the results:
    - **(a) A test where map quality decides the outcome.** Use logs that are *not* randomised, as in real networks.

@@ -54,3 +54,63 @@ placebo declarations (validity): {'mscr_crt_v2': {'placebo': 0}}
 VERDICT: PARTIAL [P2v2 not evaluated: --no-baselines]
 timing (s): {'k0_placebo': 0.6, 'unit_tables': 17.3, 'crt_v2_pooled': 26.0, 'crt_v2_fold0': 5.9, 'crt_v2_fold1': 6.1, 'crt_v2_fold2': 6.1, 'crt_v2_fold3': 6.0, 'total': 73.5}; peak RSS 2251.8 MB
 ```
+
+## Pass 2 (baselines; v1 code path + DEV far-FPR tau; local): P2v2 FAIL (folds 1/4) -> FINAL VERDICT PARTIAL
+
+Pooled: MSCR v2 indirect F1 .93 vs best baseline .67 (corr). Per 300-episode fold, Granger(-BY) wins indirect F1 in
+3/4 folds (.71-.75 vs MSCR .55-.86) with overall precision .61-.71 and 9-13 placebo declarations.
+
+```
+        method   split  ind P  ind R ind F1   ov P     F1   sign  far  #dec  plc
+   mscr_crt_v2  pooled   1.00   0.88   0.93   0.92   0.87   1.00    6    28    0
+   mscr_crt_v2   fold0   1.00   0.50   0.67   0.94   0.74   1.00    2    20     
+   mscr_crt_v2   fold1   1.00   0.50   0.67   0.95   0.77   1.00    2    21     
+   mscr_crt_v2   fold2   1.00   0.38   0.55   0.94   0.74   1.00    2    20     
+   mscr_crt_v2   fold3   1.00   0.75   0.86   0.95   0.79   1.00    3    23     
+     shap_gbdt  pooled   1.00   0.25   0.40   0.89   0.43   1.00    0     9    6
+     shap_gbdt   fold0   1.00   0.25   0.40   0.90   0.47   1.00    0    11     
+     shap_gbdt   fold1   1.00   0.25   0.40   0.90   0.47   1.00    0    10     
+     shap_gbdt   fold2   1.00   0.25   0.40   0.90   0.47   1.00    0    10     
+     shap_gbdt   fold3   1.00   0.25   0.40   0.90   0.47   1.00    0    10     
+          corr  pooled   1.00   0.50   0.67   0.86   0.57   1.00    0    16   16
+          corr   fold0   1.00   0.50   0.67   0.86   0.57   1.00    0    16     
+          corr   fold1   1.00   0.50   0.67   0.86   0.57   1.00    0    16     
+          corr   fold2   1.00   0.50   0.67   0.86   0.57   1.00    0    16     
+          corr   fold3   1.00   0.38   0.55   0.86   0.57   1.00    1    16     
+       granger  pooled   0.55   0.75   0.63   0.61   0.70   0.78   10    42   13
+       granger   fold0   0.67   0.75   0.71   0.70   0.72   0.81    5    35     
+       granger   fold1   0.75   0.75   0.75   0.66   0.67   0.79    6    33     
+       granger   fold2   0.56   0.62   0.59   0.69   0.73   0.77    7    36     
+       granger   fold3   0.67   0.75   0.71   0.62   0.67   0.80    6    34     
+    granger_by  pooled   0.55   0.75   0.63   0.62   0.71   0.78    9    41    9
+    granger_by   fold0   0.75   0.75   0.75   0.71   0.71   0.80    4    30     
+    granger_by   fold1   0.71   0.62   0.67   0.69   0.67   0.83    4    28     
+    granger_by   fold2   0.62   0.62   0.62   0.69   0.70   0.80    6    31     
+    granger_by   fold3   0.67   0.75   0.71   0.65   0.68   0.80    6    33     
+     two_tower  pooled    nan   0.00   0.00   0.57   0.23   1.00    3     8   10
+     two_tower   fold0    nan   0.00   0.00   0.64   0.36   1.00    3    13     
+     two_tower   fold1    nan   0.00   0.00   0.67   0.24   1.00    2     7     
+     two_tower   fold2   1.00   0.12   0.22   0.70   0.37   0.86    2    11     
+     two_tower   fold3   0.00   0.00   0.00   0.58   0.35   1.00    3    15     
+           int  pooled   1.00   0.25   0.40   0.86   0.34   1.00    0     7    6
+           int   fold0   1.00   0.12   0.22   0.83   0.29   1.00    0     6     
+           int   fold1   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+           int   fold2   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+           int   fold3   1.00   0.25   0.40   0.86   0.34   1.00    0     7     
+          qacm  pooled    nan   0.00   0.00   0.88   0.39   1.00    0     8   11
+          qacm   fold0    nan   0.00   0.00   0.90   0.47   1.00    0    10     
+          qacm   fold1    nan   0.00   0.00   0.90   0.47   1.00    0    10     
+          qacm   fold2    nan   0.00   0.00   0.88   0.39   1.00    0     9     
+          qacm   fold3    nan   0.00   0.00   0.86   0.34   1.00    0     7     
+chain set C (pooled MSCR-CRT v2):
+   sleep|nbr|load     exp +1 GT TRUE(+1) declared True sign +1 p 0.0001 beta 593.1 z 29.53
+   sleep|nbr|pv       exp +1 GT TRUE(+1) declared True sign +1 p 0.0001 beta 10.27 z 6.11
+   sleep|nbr|v        exp +1 GT TRUE(+1) declared True sign +1 p 0.0001 beta 258 z 14.80
+   ptx|nbr|load       exp -1 GT TRUE(-1) declared True sign -1 p 0.0001 beta -182.5 z -21.25
+P1v2 PASS {'premise_edge_declared_plus': True, 'chain_hits': True, 'overall_precision': True, 'sign_accuracy': True} values {'chain_true': 4, 'chain_need': 3, 'chain_hits': 4, 'overall_precision': 0.92, 'sign_accuracy': 1.0, 'far_declared (reported, not a criterion)': 6, 'indirect_recall_all_gt_true_nbr': 0.875}
+P2v2 FAIL (folds ok 1/4); pooled MSCR v2 0.9333333333333333 vs best 0.6666666666666666 (corr)
+placebo declarations (validity): {'mscr_crt_v2': {'placebo': 0}, 'shap_gbdt': {'placebo': 6}, 'corr': {'placebo': 16}, 'granger': {'placebo': 13}, 'granger_by': {'placebo': 9}, 'two_tower': {'placebo': 10}, 'int': {'placebo': 6}, 'qacm': {'placebo': 11}}
+VERDICT: PARTIAL
+timing (s): {'k0_placebo': 0.5, 'unit_tables': 16.7, 'crt_v2_pooled': 27.4, 'crt_v2_fold0': 6.9, 'crt_v2_fold1': 6.9, 'crt_v2_fold2': 6.4, 'crt_v2_fold3': 6.1, 'baselines': 3347.6, 'total': 3424.1}; peak RSS 2935.1 MB
+placebo declarations (validity): {'mscr_crt_v2': {'placebo': 0}, 'shap_gbdt': {'placebo': 6}, 'corr': {'placebo': 16}, 'granger': {'placebo': 13}, 'granger_by': {'placebo': 9}, 'two_tower': {'placebo': 10}, 'int': {'placebo': 6}, 'qacm': {'placebo': 11}}
+```
