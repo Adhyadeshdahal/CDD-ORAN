@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step-1 discovery and step-2 DEV</title>
+<style>
+  :root{--bg:#faf9f6;--card:#fff;--ink:#20242a;--soft:#5c6470;--line:#e6e3db;--good:#1f8a5b;--bad:#c0492f;
+    --acc:#2a6cc0;--amb:#a66d12;--accbg:#eaf0f8;--goodbg:#e8f5ee;--badbg:#faeae4;--ambbg:#faf1df;--mono:#f2f0ea;
+    --eq:#dbe8f8;--fig:#ffffff}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  }
+  :root[data-theme="dark"]{--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 16px 100px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
+  .kick{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  h1{font-size:1.85rem;line-height:1.22;margin:8px 0 6px;letter-spacing:-0.01em}
+  .meta{color:var(--soft);font-size:.9rem}
+  h2{font-size:1.28rem;margin:46px 0 12px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-0.01em}
+  h3{font-size:1.05rem;margin:26px 0 8px}
+  p{margin:0 0 14px} strong{font-weight:650}
+  a{color:var(--acc)}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.86em;
+    background:var(--mono);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+  pre{background:var(--mono);padding:12px 14px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--amb);
+    border-radius:10px;padding:18px 22px;margin:20px 0}
+  .tag{display:inline-block;background:var(--badbg);color:var(--bad);font-weight:700;font-size:.74rem;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin:0 6px 8px 0}
+  .tag.amb{background:var(--ambbg);color:var(--amb)} .tag.acc{background:var(--accbg);color:var(--acc)}
+  .tag.good{background:var(--goodbg);color:var(--good)}
+  .verdict p{margin:0 0 8px;font-size:1.0rem}
+  .plain{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:18px 0}
+  .plain p{margin:0 0 10px} .plain p:last-child{margin:0}
+  figure{margin:22px 0;padding:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--fig);padding:4px}
+  figcaption{color:var(--soft);font-size:.88rem;margin-top:8px;padding-left:2px}
+  .tw{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:.83rem;font-variant-numeric:tabular-nums}
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:right;vertical-align:top}
+  th:first-child,td:first-child,td.l,th.l{text-align:left}
+  thead th{background:var(--mono);font-weight:650}
+  td.no{color:var(--bad);font-weight:600} td.yes{color:var(--good);font-weight:600} td.am{color:var(--amb);font-weight:600}
+  td.eq{background:var(--eq)}
+  .m{font-size:.72rem;color:var(--bad);font-weight:700}
+  .call{border-left:4px solid var(--acc);background:var(--accbg);padding:13px 18px;border-radius:0 8px 8px 0;margin:18px 0}
+  .call.amb{border-color:var(--amb);background:var(--ambbg)} .call.bad{border-color:var(--bad);background:var(--badbg)}
+  .call .k{font-weight:700;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc);
+    display:block;margin-bottom:4px} .call.amb .k{color:var(--amb)} .call.bad .k{color:var(--bad)}
+  .call p:last-child{margin-bottom:0}
+  ul,ol{margin:0 0 14px;padding-left:24px} li{margin:5px 0}
+  .foot{color:var(--soft);font-size:.84rem;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+  @media(max-width:700px){.four{grid-template-columns:1fr 1fr}}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .kv b{display:block;font-size:1.35rem;letter-spacing:-0.01em} .kv span{color:var(--soft);font-size:.82rem}
+  .ph{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--amb);
+    border:1.5px solid var(--amb);border-radius:4px;padding:0 6px;margin-right:6px;vertical-align:1px}
+  .toc{font-size:.9rem;columns:2;column-gap:28px;margin:10px 0 0;padding-left:20px}
+  @media(max-width:620px){.toc{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kick">CDD-ORAN · E6-P step 1 (causal discovery) and step 2 (referee, DEV) · overnight 2026-09-29/30 · archival</div>
+  <h1>Step 1 ends PARTIAL on its third attempt; step 2 finds no map-driven lever on this scenario</h1>
+  <div class="meta">Report written 2026-09-30 · sequel to
+    <a href="../2026-09-29-e6p-v2-otape-and-status/index.html"><code>2026-09-29-e6p-v2-otape-and-status</code></a>
+    · plant E6-P P3 surge-L40 (ES × PowerES × SliceGuarantee, load factor 1.75546875) · three frozen discovery protocols:
+    v1 <code>E6P_DISCOVERY_PROTOCOL.md</code> (sha256 f9d87740…, commit <code>9164518</code>), v2 <code>_V2.md</code>
+    (fea6488c…, <code>3919ac6</code>), v3 <code>_V3.md</code> (1107dc99…, <code>80ae4c3</code>) · step 2 is DEV only
+    and was never frozen · every step-1 score, criterion and GT count and every step-2 arm number is recomputed by
+    <code>make_figs.py</code> from the analyzers' result JSONs and the raw step-2 records, written to
+    <code>figures_data.json</code>, and asserted equal to the stored values (all agree); agent findings are quoted
+    from <code>.tmp/PLAN.md</code> and checked against the agents' output files where those exist · confirmation seeds
+    untouched · nothing pushed</div>
+</header>
+
+<div class="verdict">
+  <span class="tag amb">Step 1: PARTIAL (third attempt)</span><span class="tag">Step 2: negative at DEV</span><span class="tag acc">step 2 not evaluated</span>
+  <p><strong>Step 1 (discovery): PARTIAL, on the third attempt.</strong> v1 (60 episodes) was KILL and v2 (480 fresh
+  episodes, amended method) was KILL by a near miss. v3 (1 200 fresh episodes, same method as v2) passes the primary
+  criterion P1v2: MSCR-CRT v2 declares the whole chain with the right signs, including the premise edge pico sleep →
+  neighbour protected violations (β +10.27 vs fresh GT +9.07, z 6.11). It recovers 7 of 8 GT-TRUE neighbour edges at
+  indirect precision 1.00, overall precision 0.92 and sign accuracy 1.00, and declares nothing on the sharp-null
+  placebo, where every baseline declares 6-16 edges. It fails the head-to-head P2v2: it wins pooled (indirect F1 0.93
+  vs 0.67) but only 1 of 4 folds of 300 episodes (it needs 3).</p>
+  <p style="margin:0"><strong>Step 2 (referee): negative at DEV, not evaluated.</strong> The K-L0 check predicted R
+  0.033 (bar 0.35). Three debate agents agreed that the winning moves on this scenario are static envelopes that need
+  no causal map. A 40-seed DEV run confirmed it: blanket "reject PowerES ptx-up" recovers R 0.30-0.36 but breaks the
+  RLF guardrail (1.27× accept-all), and the eligible map-informed gates recover R ≈ 0.10. The ~110 CPU-h evaluation
+  was not launched. Where the referee should be tested is the user's decision.</p>
+</div>
+
+<div class="four">
+  <div class="kv"><b>7 / 8</b><span>GT-TRUE neighbour edges declared in v3, none of them against a GT-NULL edge</span></div>
+  <div class="kv"><b>z 6.11</b><span>premise edge sleep → nbr pv in v3 (v2: 2.67, p .007, not declared)</span></div>
+  <div class="kv"><b>0 vs 6-16</b><span>placebo (sharp-null) declarations: MSCR-CRT v2 vs the seven baselines</span></div>
+  <div class="kv"><b>R 0.10</b><span>best eligible step-2 DEV rule (90 % CI 0.02-0.19); K-L0 bar 0.35</span></div>
+</div>
+
+<h2 style="border-top:none;margin-top:28px">Plain-language summary</h2>
+<div class="plain">
+<p>Our long-term aim is a "referee" for the apps (xApps) that tune an O-RAN radio network. When energy-saving apps and
+an app that protects priority users get in each other's way, the referee should decide who wins, and it should do so
+from a learned map of cause and effect. Step 1 asks whether our method can learn that map from logs in which the
+referee's accept/reject choices were randomised. Step 2 asks whether a referee that uses the map beats simpler ones.</p>
+<p>Step 1 needed three tries. Each try had its rulebook frozen before we looked at new data, and each used brand-new
+simulated episodes. The first try (60 episodes) found only 3 of the 8 true neighbour effects and had one sign
+backwards. Four independent reviews found the main reason: far too little data, plus a real bug in how the direction
+of an effect was read. The second try fixed the bug and used 480 episodes. It missed by a hair on the single most
+important link, "a small cell going to sleep raises protected-user problems in the neighbouring cells". The third try
+changed only the amount of data (1 200 episodes). It found that link clearly, and 7 of the 8 true neighbour effects,
+with no wrong claims about neighbours. On fake data where nothing can have an effect, it claimed nothing; every
+competing method claimed between 6 and 16 effects there. Pooled over all 1 200 episodes it beats every other method,
+but on quarter-size slices it wins only one of four, and the rulebook asked for three. So the verdict is "partial".
+Because it took three tries, any write-up has to show all three.</p>
+<p>For step 2 the answer on this scenario is "probably not". The moves that help here are blunt fixed rules, mainly
+"stop the power-saving app from turning transmit power back up". They need no cause-and-effect map, and the version
+that helps most breaks a safety limit (27 % more dropped radio links). The safe versions recover about a tenth of the
+harm. We therefore did not spend the roughly 110 CPU-hours a full step-2 test would cost. The open question for the
+user is where to test the referee next.</p>
+</div>
+
+<ol class="toc">
+  <li><a href="#goal">Question and main goal</a></li>
+  <li><a href="#v1">Step 1 v1: design, criteria, result</a></li>
+  <li><a href="#diag">Diagnosis of the v1 miss (agents A-D)</a></li>
+  <li><a href="#method">MSCR-CRT v2: what changed and why</a></li>
+  <li><a href="#v2">v2 results (480 episodes)</a></li>
+  <li><a href="#v3">v3 results (1 200 episodes)</a></li>
+  <li><a href="#acct">Honest accounting</a></li>
+  <li><a href="#s2">Step 2: K-L0, debate, DEV arms</a></li>
+  <li><a href="#ops">Operational incidents</a></li>
+  <li><a href="#next">Open decisions and next steps</a></li>
+  <li><a href="#repro">Reproduction and file index</a></li>
+</ol>
+
+<!-- ============================================================ 1 -->
+<h2 id="goal">1. Question and main goal</h2>
+<p><strong>Main goal</strong> (<code>NEXT_PLAN.md</code>, agreed 2026-09-29): causal learning for O-RAN WG3 xApp
+conflict mitigation. A WG3 arbiter that acts on a discovered cause-effect map should beat QACM, PACIFISTA, xTRUCE and
+SHAP→DAG on protected-slice SLA at matched energy (retention ≥ 0.90) with every guardrail ≤ 1.10 × accept-all. The
+test world is E6-P P3 surge-L40, the one cell where the guardrail-safe oracle had a real average edge
+(R_or 1.352, NOISE STOP; previous report).</p>
+<ul>
+  <li><strong>Step 1 (discovery).</strong> From logs in which the arbiter's per-request mode (accept / half / reject)
+  is randomised by a logged policy π0, does MSCR, used as a conditional randomisation test (CRT), recover the true
+  cause → effect structure, scored against a paired-knockout ground truth (GT)? And does it beat the published and
+  standard baselines on the same data? The expected indirect chain is: pico sleep on cell c → more load on the
+  neighbours N(c) → more protected violations on N(c); and PowerES transmit power (ptx) → load on the neighbours.</li>
+  <li><strong>Step 2 (referee).</strong> If step 1 passes or is partial: build a regime / window referee that uses only
+  the discovered causes, check it on DEV, freeze a protocol and evaluate it on fresh seeds. Step 3 would then ablate
+  the map (MSCR map vs no map vs SHAP map). The overnight authorisation (user, 2026-09-29 ~23:45 NST) allowed step 2
+  to be built and evaluated without waking the user, and allowed a diagnosed, re-tested MSCR on fresh seeds if step 1
+  was KILL.</li>
+</ul>
+<figure>
+  <img src="fig1_attempts_ladder.png" alt="Step-1 attempts: edge-recovery metrics and premise-edge z for v1, v2, v3">
+  <figcaption>Fig 1. The three step-1 attempts. (a) Recovery metrics on each attempt's pooled EVAL, with the relevant
+  bar. v1 fails only on indirect recall (0.38 vs 2/3). v2 passes every P1v2 part except the premise edge. v3 passes.
+  (b) The premise edge's z: 2.67 at 480 episodes (p .007; that run's BY cut-off was p ≤ .0041), 6.11 at 1 200. The v1
+  point is a descriptive replay by diagnosis agent B, because the v1 result file keeps no per-edge z.</figcaption>
+</figure>
+
+<!-- ============================================================ 2 -->
+<h2 id="v1">2. Step 1 v1: design, criteria, result</h2>
+<h3>Design (protocol v1, frozen before any DEV / PLACEBO / EVAL / GT outcome)</h3>
+<div class="tw"><table>
+<thead><tr><th class="l">item</th><th class="l">v1 (<code>E6P_DISCOVERY_PROTOCOL.md</code>, sha256 f9d87740…, commit <code>9164518</code> 09-29 20:44 NST)</th></tr></thead>
+<tbody>
+<tr><td class="l">episodes</td><td class="l">720 s (120 s all-accept warm-up + 600 s scored); <code>UnitArbiter</code>, T = 60 s units, <code>open_rule="feasible"</code>; π0 = accept .5 / half .2 / reject .3 for ES, PowerES, SliceGuarantee (draws tag 6612)</td></tr>
+<tr><td class="l">seeds (block 180000-183999)</td><td class="l">DEV 183300-319 (20), EVAL 183320-379 (60; folds of 20), GT 183380-399 (20), PLACEBO 183400-419 (20; modes logged, accept applied = sharp null), PROF 183420-443 (24)</td></tr>
+<tr><td class="l">edge space</td><td class="l">60 hypotheses = 4 knob families {carrier, sleep, ptx, prot_min} × 3 relations {own, nbr = N(c) − c, far} × 5 KPIs {pv protected violated UE-s, v all violated UE-s, e energy J, rlf, load served UE-s}. "dir" orientation: an edge is the effect of a knob-value increase (sleep 1 = asleep); unit treatment x = level × sgn, level accept 1 / half 0.5 / reject 0</td></tr>
+<tr><td class="l">unit table</td><td class="l">one row per opened unit; y(rel, k) = KPI summed over the relation's cells over the 90 s after t0 minus the 90 s before; conditioners = obs-only context + all 15 pre-window values; GT fields never read (a test poisons them)</td></tr>
+<tr><td class="l">method</td><td class="l">MSCR-CRT v1 (<code>crt_units.py</code>): redraw one family's modes from the logged π0 tables, other families and outcomes fixed; statistic = the frozen MSCR S*; B = 9 999; BY at q .05 over the tested hypotheses; sign = within-episode slope of y on x</td></tr>
+<tr><td class="l">baselines</td><td class="l">SHAP-GBDT (Sharma 2025), |corr|, Granger F-test (+ untuned Granger-BY), two-tower GNN, PACIFISTA INT, QACM predictor, MSCR row-permutation, PACIFISTA native (xApp-level only); one τ rule for all: τ = 2nd-largest DEV far-relation score (≤ 1 DEV far declaration)</td></tr>
+<tr><td class="l">GT (<code>gt_p.py</code>)</td><td class="l">CRN paired knockout, accept vs reject, reseeds k = 1-3, H = 90 s, every other unit accepted. TRUE if the 95 % episode-cluster CI (B 4 000, tag 6617) excludes 0 and |mean| ≥ δ_k; NULL if the CI lies within ±δ_k; else INDET (excluded from scoring)</td></tr>
+</tbody></table></div>
+
+<div class="tw"><table>
+<thead><tr><th class="l">criterion</th><th class="l">rule</th><th class="l">v1 value</th><th>result</th></tr></thead>
+<tbody>
+<tr><td class="l">K0 validity</td><td class="l">P(Binom(60, .05) ≥ n_reject) ≥ .01 (INVALID at ≥ 8) and ≤ 1 BY declaration, on PLACEBO</td><td class="l">3 of 60 at p ≤ .05 (rate .050), 0 BY</td><td class="yes">PASS</td></tr>
+<tr><td class="l">K1 support</td><td class="l">≥ 60 sleep units and ≥ 15 logged rejects on EVAL</td><td class="l">228 sleep units, 62 rejects</td><td class="yes">PASS</td></tr>
+<tr><td class="l">G premise</td><td class="l">GT sleep → nbr pv TRUE(+)</td><td class="l">+15.37, 95 % CI [8.03, 23.66], 60 labels</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P1</td><td class="l">indirect recall ≥ 2/3, indirect precision ≥ .80, overall F1 ≥ .60, sign accuracy ≥ .90, ≤ 1 far declaration</td><td class="l">recall <strong>3/8 = .375</strong>; precision 1.00; F1 .60; sign .92 (11/12); far 1</td><td class="no">FAIL</td></tr>
+<tr><td class="l">P2</td><td class="l">MSCR indirect F1 ≥ best DEV-tuned baseline, pooled and ≥ 2 of 3 folds</td><td class="l">pooled .55 vs Granger .75; folds 0/3</td><td class="no">FAIL</td></tr>
+<tr><td class="l"><strong>verdict</strong></td><td class="l">INVALID &gt; NO-CHAIN &gt; UNDERPOWERED &gt; PASS / PARTIAL / KILL</td><td class="l">official run 2026-09-30 00:45 NST, local detached, 1 805 s</td><td class="no">KILL</td></tr>
+</tbody></table></div>
+<p>MSCR-CRT v1 declared 13 of 60 on pooled EVAL (folds 8 / 10 / 9): carrier → own pv (−), v (−), e (+); sleep → own e
+(−), load (−); sleep → nbr v (+, p .0015), load (+); sleep → far v (+, p .0018); ptx → own v, e, load (+); ptx → nbr
+load (−); prot_min → own pv (<strong>+</strong>). Two of the 13 disagree with the GT: prot_min → own pv is TRUE with
+sign −1 (the sign bug, §3), and sleep → own e is GT-NULL (mean −190 J, inside δ). Receiving-cell localisation was 5 of
+15 correct (0.33; the GT's own top-1 matched the candidate cell in 2 of 2). The lag-1 carry-over audit declared 0 of
+120 (17.5 % at p ≤ .05, descriptive).</p>
+
+<h3>GT table (gt-1, 20 episodes, 1 339 labels)</h3>
+<ul>
+  <li><strong>27 TRUE / 19 NULL / 14 INDET</strong> ("dir"; the "act" orientation gives 29 / 18 / 13 and is not scored).</li>
+  <li><strong>8 neighbour edges TRUE:</strong> carrier → nbr pv (+1.49, tiny); sleep → nbr pv (+15.37), v (+435.9), e
+  (+6 126 J), load (+967.1); ptx → nbr v (−26.16), e (−443.6 J), load (−235.9). Neighbour NULL: carrier → nbr v and all
+  five prot_min → nbr. INDET: carrier → nbr e / rlf / load, sleep → nbr rlf, ptx → nbr pv / rlf.</li>
+  <li><strong>sleep → far is TRUE(+) for all five KPIs.</strong> A sleeping pico pushes users two hops away, so "far" is
+  not a clean negative control, and the v1 far-based rules (≤ 1 far declaration; the baselines' far-FPR τ) assume a
+  false null.</li>
+</ul>
+
+<details><summary style="cursor:pointer;font-weight:650;margin:6px 0 10px">v1 scores, every method and fold (click)</summary>
+<div class="tw"><table>
+<thead><tr><th class="l">method</th><th class="l">split</th><th>ind P</th><th>ind R</th><th>ind F1</th><th>ov P</th><th>ov F1</th><th>sign</th><th>far decl.</th><th># decl.</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>MSCR-CRT v1</strong></td><td class="l">pooled</td><td>1.00</td><td>0.38</td><td>0.55</td><td>0.92</td><td>0.60</td><td>0.92</td><td>1</td><td>13</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>nan / 1.00 / 1.00</td><td>0.00 / 0.12 / 0.25</td><td>0.00 / 0.22 / 0.40</td><td>0.88 / 0.90 / 0.89</td><td>0.40 / 0.49 / 0.44</td><td>0.86 / 0.89 / 1.00</td><td>0 / 0 / 0</td><td>8 / 10 / 9</td></tr>
+<tr><td class="l">SHAP-GBDT</td><td class="l">pooled</td><td>1.00</td><td>0.25</td><td>0.40</td><td>0.90</td><td>0.49</td><td>1.00</td><td>0</td><td>11</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>1.00 / 1.00 / 1.00</td><td>0.38 / 0.50 / 0.50</td><td>0.55 / 0.67 / 0.67</td><td>0.92 / 0.93 / 0.93</td><td>0.60 / 0.63 / 0.63</td><td>1.00 / 1.00 / 1.00</td><td>1 / 1 / 1</td><td>14 / 15 / 15</td></tr>
+<tr><td class="l">|corr|</td><td class="l">pooled</td><td>1.00</td><td>0.50</td><td>0.67</td><td>0.88</td><td>0.65</td><td>0.93</td><td>1</td><td>17</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>1.00 / 1.00 / 1.00</td><td>0.50 / 0.50 / 0.50</td><td>0.67 / 0.67 / 0.67</td><td>0.88 / 0.89 / 0.84</td><td>0.65 / 0.74 / 0.70</td><td>1.00 / 0.94 / 0.88</td><td>1 / 4 / 5</td><td>18 / 21 / 21</td></tr>
+<tr><td class="l">Granger</td><td class="l">pooled</td><td>0.75</td><td>0.75</td><td>0.75</td><td>0.70</td><td>0.70</td><td>0.79</td><td>4</td><td>31</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>1.00 / 1.00 / 1.00</td><td>0.38 / 0.38 / 0.25</td><td>0.55 / 0.55 / 0.40</td><td>0.73 / 0.73 / 0.75</td><td>0.52 / 0.52 / 0.56</td><td>1.00 / 1.00 / 0.75</td><td>1 / 0 / 2</td><td>17 / 15 / 17</td></tr>
+<tr><td class="l">Granger-BY (not in P2)</td><td class="l">pooled</td><td>1.00</td><td>0.50</td><td>0.67</td><td>0.71</td><td>0.62</td><td>0.87</td><td>3</td><td>23</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>1.00 / 1.00 / 1.00</td><td>0.25 / 0.25 / 0.25</td><td>0.40 / 0.40 / 0.40</td><td>0.71 / 0.75 / 0.69</td><td>0.49 / 0.46 / 0.45</td><td>1.00 / 1.00 / 0.89</td><td>1 / 0 / 1</td><td>14 / 12 / 13</td></tr>
+<tr><td class="l">two-tower GNN</td><td class="l">pooled</td><td>nan</td><td>0.00</td><td>0.00</td><td>0.62</td><td>0.29</td><td>1.00</td><td>3</td><td>10</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>nan / 1.00 / nan</td><td>0.00 / 0.12 / 0.00</td><td>0.00 / 0.22 / 0.00</td><td>0.62 / 0.78 / 0.64</td><td>0.29 / 0.39 / 0.37</td><td>1.00 / 0.86 / 0.86</td><td>3 / 4 / 3</td><td>10 / 10 / 14</td></tr>
+<tr><td class="l">PACIFISTA INT</td><td class="l">pooled</td><td>1.00</td><td>0.25</td><td>0.40</td><td>0.89</td><td>0.44</td><td>1.00</td><td>0</td><td>9</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>1.00 / 1.00 / 1.00</td><td>0.12 / 0.38 / 0.38</td><td>0.22 / 0.55 / 0.55</td><td>0.90 / 0.92 / 0.92</td><td>0.49 / 0.56 / 0.56</td><td>0.89 / 1.00 / 1.00</td><td>2 / 1 / 1</td><td>11 / 14 / 14</td></tr>
+<tr><td class="l">QACM (own only)</td><td class="l">pooled</td><td>nan</td><td>0.00</td><td>0.00</td><td>0.90</td><td>0.49</td><td>1.00</td><td>0</td><td>11</td></tr>
+<tr><td class="l"></td><td class="l">fold 0 / 1 / 2</td><td>nan / nan / nan</td><td>0.00 / 0.00 / 0.00</td><td>0.00 / 0.00 / 0.00</td><td>0.92 / 0.91 / 0.91</td><td>0.60 / 0.53 / 0.53</td><td>1.00 / 1.00 / 1.00</td><td>0 / 0 / 0</td><td>14 / 13 / 12</td></tr>
+<tr><td class="l">MSCR row-perm</td><td class="l">pooled</td><td>0.57</td><td>1.00</td><td>0.73</td><td>–</td><td>0.79</td><td>0.91</td><td>0</td><td>24</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Recomputed from each method's declared list and the gt-1
+cells, and asserted equal to <code>step1_v1_full.json</code>. Row-perm is scored over its 24 mapped hypotheses only
+and is copied from <code>STEP1_V1_RESULT.md</code> (not recomputed). P2 best baseline per split: pooled Granger .75;
+fold 0 |corr| .67; folds 1, 2 SHAP-GBDT .67.</p>
+</details>
+
+<!-- ============================================================ 3 -->
+<h2 id="diag">3. Diagnosis of the v1 miss (agents A-D)</h2>
+<p>Per the overnight authorisation, a KILL triggered independent diagnosis agents. Each worked read-only on DEV,
+PLACEBO and GT (EVAL could be looked at, never tuned on). Their final messages were not saved as files; the numbers
+below are from their summaries in <code>.tmp/PLAN.md</code>. Their scripts and outputs are in
+<code>.tmp/diag/{A,B,C,D}/</code>, and where an output file exists it was checked.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">agent</th><th class="l">finding</th><th class="l">key numbers</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>C</strong> (mechanisms)</td><td class="l"><strong>Power ceiling.</strong> A noise-free (oracle) unit-level test at 60 episodes reaches z &gt; 3 on exactly three of the eight TRUE neighbour edges, the three MSCR found.</td><td class="l">oracle z at 60 eps: sleep → nbr load 10.8, ptx → nbr load 7.3, sleep → nbr v 3.8, sleep → nbr e 2.6, <strong>sleep → nbr pv 1.2</strong>, the rest &lt; 0.6 → ceiling 3/8</td></tr>
+<tr><td class="l">C</td><td class="l"><strong>Sign bug (Simpson).</strong> The v1 sign is the slope on x = level × sgn, but the request direction sgn is not randomised and predicts the KPI trend. Pooling raise and release requests reverses the sign.</td><td class="l">prot_min → own pv on EVAL (re-run for this report, <code>.tmp/diag/C/sign_check.py</code>): pooled slope <strong>+1.13</strong>; within direction: raise −10.06 (n 3 364), release +0.10 (n 1 875), i.e. dir-sign −10.06 and −0.10, both negative like the GT. DEV: +1.39 vs −9.03 / +0.18.</td></tr>
+<tr><td class="l">C</td><td class="l"><strong>Half is mis-dosed; reject is a delay; far is not null; the estimand mismatch is not the cause.</strong></td><td class="l">half applied ~90-100 % (protocol v2: 88-100 %), coded 0.5; a reject delays the change ~60 s (the xApp re-proposes); sleep → far is a real 2-hop effect; π0 accept-vs-reject contrasts on EVAL match the GT within ~1.4 SE</td></tr>
+<tr><td class="l"><strong>A</strong> (noise, design)</td><td class="l">Better designs (fixed effects, conditioning, CUPED) do not rescue 60 episodes.</td><td class="l">best design, expected z at 60 eps for sleep → nbr pv 1.67 (<code>A/design_dev_a.json</code>, fe+cond); recall ceiling ≈ 0.4; sleep → nbr pv needs ~330-650 eps; other units' modes explain ~0 of the variance</td></tr>
+<tr><td class="l"><strong>B</strong> (statistic, multiplicity)</td><td class="l">The statistic and BY explain at most one missed edge; sign bug confirmed; recommends the design-centred, residualised "adj" statistic, pre-registered in <code>B/NOTES.md</code> before any EVAL look.</td><td class="l">between-sgn contrast = 63 % of the variance of x; on v1 EVAL (descriptive, B 1 999) "adj" gives sleep → nbr pv z 2.25, p .022 (<code>B/eval_lite_B1999.json</code>)</td></tr>
+<tr><td class="l"><strong>D</strong> (SNR, baselines)</td><td class="l">Per-unit signal-to-noise is low; the <strong>baselines are not calibrated</strong>: with their DEV τ they declare many edges on the placebo, where no assignment has any effect.</td><td class="l">per-unit SNR sleep → nbr pv 0.116 (paired GT label 0.588); ~1 179 units ≈ 250 eps for z 4 (<code>D/snr.json</code>); on placebo-1 |corr| declares 18, INT 10, Granger 11 (<code>D/base_placebo.json</code>): x = level × sgn leaks the non-randomised direction; the GBDT fallback is not SHAP</td></tr>
+</tbody></table></div>
+<div class="call amb"><span class="k">Where the agents disagreed</span>
+<p>A reported that other units' randomised modes explain about none of the outcome variance; D reported that about
+two thirds of it comes from other units' decisions. The disagreement was not resolved, and it did not change the
+action: both agree that more data, not more adjustment, is what raises z at this effect size. D also proposed a
+paired-knockout (digital-twin) instrument as a fallback, which was not needed.</p></div>
+
+<!-- ============================================================ 4 -->
+<h2 id="method">4. MSCR-CRT v2: what changed and why</h2>
+<p><code>cdd_oran/decision/crt_units_v2.py</code> (version <code>mscr-crt-units-v2</code>, 12 tests, commit
+<code>3919ac6</code>). Unchanged from v1: the unit table, the 60 hypotheses, the "dir" orientation, the logged-π0
+conditional redraw of one family's modes with every other family held fixed, B = 9 999, BY at q .05, and the support
+rule (≥ 30 units, ≥ 5 accepted, ≥ 5 rejected, ≥ 3 episodes).</p>
+<div class="tw"><table>
+<thead><tr><th class="l">piece</th><th class="l">v1</th><th class="l">v2</th><th class="l">why</th></tr></thead>
+<tbody>
+<tr><td class="l">dose</td><td class="l">accept 1, half 0.5, reject 0</td><td class="l">accept = half = accept+rb = 1, reject = 0</td><td class="l">half converges to the requested value within the 60 s unit (slew / alternation rule; applied 88-100 %); the treatment is "applied vs rejected" (C)</td></tr>
+<tr><td class="l">regressor</td><td class="l">x = level × sgn</td><td class="l">v_u = sgn_u · (level(mode_u) − E_π0,u[level]), expectation over the unit's own logged π0 row</td><td class="l">design-centred: E[v_u] = 0 under π0 for every unit, so the non-randomised direction sgn and anything it correlates with cannot enter the null mean (the Simpson sign bug; B, C)</td></tr>
+<tr><td class="l">outcome</td><td class="l">y, with conditioners inside S*</td><td class="l">r = OLS residual of y(rel, k) on episode × sgn fixed effects + the same target's pre-window value</td><td class="l">removes between-episode and between-direction variance (B's "adj"); r uses outcomes and pre-assignment quantities only</td></tr>
+<tr><td class="l">statistic</td><td class="l">frozen MSCR S*</td><td class="l">S = Σ v_u r_u, T = |S|; p = (1 + #{T_b ≥ T_obs}) / (B + 1); RNG <code>[seed, 6616, 2, family, lag, split]</code></td><td class="l">linear score, cheap (480 eps pooled in 10 s); B's analysis: the statistic was not the binding constraint</td></tr>
+<tr><td class="l">effect, sign</td><td class="l">within-episode slope of y on x</td><td class="l">β = S / Σ v²; sign = sign(β); z_approx = S / sd(S under the draws) (descriptive)</td><td class="l">a sign read from the randomised contrast only</td></tr>
+<tr><td class="l">sample</td><td class="l">60 EVAL eps</td><td class="l">480 (v2), 1 200 (v3)</td><td class="l">the power ceiling (A, C, D)</td></tr>
+</tbody></table></div>
+<div class="call"><span class="k">Why the test stays exact</span>
+<p>Under family f's sharp null (f's assigned modes have no effect on the trajectory), every outcome y is fixed, and so
+are the episode, the request direction sgn and the pre-window values: they are pre-assignment. The residual r is a
+function of those only, so it is fixed too and is computed once. The only random quantity is v, and the null
+distribution of S is generated by redrawing f's modes from exactly the logged π0 tables, with the other families' modes
+held fixed as in v1. So p is a finite-sample-valid CRT p-value; the residualisation can change power but not size. The
+placebo checks agree: K0 rate .033 and .067 (2 and 4 of 60 at p ≤ .05) with 0 BY declarations on the two placebo sets.
+The small tolerance 1e-9 (1 + Σ|r|) in the comparison makes p conservative against float round-off only.</p></div>
+
+<!-- ============================================================ 5 -->
+<h2 id="v2">5. v2 results (480 fresh episodes)</h2>
+<p>Protocol v2 (<code>E6P_DISCOVERY_PROTOCOL_V2.md</code>, sha256 fea6488c…, commit <code>3919ac6</code> 00:33 NST,
+before any fresh record was opened). Fresh data: eval_v2 183460-519 + 183560-979 (480 eps, 4 folds of 120, 64 629
+units), gt_ext 183520-539 (20 eps, 1 379 labels, 75 of them sleep), placebo_ext 183540-559 (20 eps). Criterion
+P1v2 replaced P1: sleep → nbr pv declared (+), at least 3 of the 4 chain members declared with the correct sign,
+overall precision ≥ .80, sign accuracy ≥ .90. Far is reported, not a criterion. P2v2 = P2 with ≥ 3 of 4 folds.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">criterion</th><th class="l">value</th><th>result</th></tr></thead>
+<tbody>
+<tr><td class="l">K0 (placebo_ext)</td><td class="l">2 of 60 at p ≤ .05 (rate .033), 0 BY; placebo-1, descriptive: 4 (.067), 0 BY</td><td class="yes">PASS</td></tr>
+<tr><td class="l">K1</td><td class="l">1 912 sleep units, 611 rejects</td><td class="yes">PASS</td></tr>
+<tr><td class="l">G (gt_ext)</td><td class="l">sleep → nbr pv TRUE(+) <strong>+9.07</strong>, 95 % CI [3.34, 15.80]; GT 28 TRUE / 19 NULL / 13 INDET, same 8 neighbour TRUE edges and signs as gt-1</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P1v2</td><td class="l">premise edge <strong>not declared</strong> (p .007, BY cut-off p ≤ .0041 at rank 23); chain 3/4; overall precision .95 (20/21); sign .95 (19/20)</td><td class="no">FAIL</td></tr>
+<tr><td class="l">P2v2</td><td class="l">pooled .67 vs Granger .71; folds 2/4</td><td class="no">FAIL</td></tr>
+<tr><td class="l"><strong>verdict</strong></td><td class="l">pass 1 (no baselines) 29 s; pass 2 (baselines) 1 502 s; both local</td><td class="no">KILL (near miss)</td></tr>
+</tbody></table></div>
+<div class="tw"><table>
+<thead><tr><th class="l">chain member (expected sign)</th><th>GT gt_ext</th><th>declared</th><th>β</th><th>z_approx</th><th>p</th></tr></thead>
+<tbody>
+<tr><td class="l">sleep → nbr load (+)</td><td>TRUE +921.3</td><td class="yes">yes, +</td><td>+562.1</td><td>+19.81</td><td>.0001</td></tr>
+<tr><td class="l"><strong>sleep → nbr pv (+), premise</strong></td><td>TRUE +9.07</td><td class="no">no</td><td>+6.97</td><td>+2.67</td><td>.0070</td></tr>
+<tr><td class="l">sleep → nbr v (+)</td><td>TRUE +399.1</td><td class="yes">yes, +</td><td>+272.3</td><td>+9.56</td><td>.0001</td></tr>
+<tr><td class="l">ptx → nbr load (−)</td><td>TRUE −213.0</td><td class="yes">yes, −</td><td>−162.3</td><td>−11.66</td><td>.0001</td></tr>
+</tbody></table></div>
+<p>MSCR-CRT v2 declared 23 of 60 (folds 19 / 18 / 19 / 17), indirect recall 4/8 (sleep → nbr v, e, load; ptx → nbr
+load) at indirect precision 1.00, far 5. The one sign error is sleep → far v (declared −, GT +33.7). The one GT-NULL
+declaration is sleep → own e (mean −190 J, inside δ 329 J). Two declarations fall on INDET cells and are not scored
+(carrier → far pv, sleep → own v). The premise edge was declared in fold 0 alone (z 4.29; folds 1-3: 0.11, 0.90,
+0.60).</p>
+
+<div class="tw"><table>
+<thead><tr><th class="l">method (v2, pooled)</th><th>ind P</th><th>ind R</th><th>ind F1</th><th>ov P</th><th>ov F1</th><th>sign</th><th>far</th><th># decl.</th><th>placebo_ext decl.</th><th>placebo-1 decl.</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>MSCR-CRT v2</strong></td><td>1.00</td><td>0.50</td><td>0.67</td><td><strong>0.95</strong></td><td><strong>0.82</strong></td><td>0.95</td><td>5</td><td>23</td><td class="yes">0</td><td class="yes">0</td></tr>
+<tr><td class="l">Granger</td><td>0.67</td><td>0.75</td><td><strong>0.71</strong></td><td>0.64</td><td>0.69</td><td>0.71</td><td>7</td><td>36</td><td class="no">13</td><td class="no">11</td></tr>
+<tr><td class="l">Granger-BY (not in P2)</td><td>0.67</td><td>0.75</td><td>0.71</td><td>0.66</td><td>0.70</td><td>0.71</td><td>6</td><td>34</td><td class="no">9</td><td class="no">8</td></tr>
+<tr><td class="l">|corr|</td><td>1.00</td><td>0.38</td><td>0.55</td><td>0.85</td><td>0.54</td><td>1.00</td><td>0</td><td>15</td><td class="no">16</td><td class="no">18</td></tr>
+<tr><td class="l">SHAP-GBDT</td><td>1.00</td><td>0.25</td><td>0.40</td><td>0.90</td><td>0.47</td><td>1.00</td><td>0</td><td>10</td><td class="no">6</td><td class="no">6</td></tr>
+<tr><td class="l">QACM (own only)</td><td>nan</td><td>0.00</td><td>0.00</td><td>0.91</td><td>0.51</td><td>1.00</td><td>0</td><td>12</td><td class="no">11</td><td class="no">10</td></tr>
+<tr><td class="l">two-tower GNN</td><td>nan</td><td>0.00</td><td>0.00</td><td>0.62</td><td>0.28</td><td>1.00</td><td>3</td><td>9</td><td class="no">10</td><td class="no">9</td></tr>
+<tr><td class="l">PACIFISTA INT</td><td>1.00</td><td>0.25</td><td>0.40</td><td>0.86</td><td>0.34</td><td>1.00</td><td>0</td><td>7</td><td class="no">6</td><td class="no">10</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">"placebo decl." = hypotheses declared on data where the
+logged modes were never applied (sharp null), with the same DEV τ as the scores. For MSCR it is the number of BY
+declarations. Baselines keep the v1 code and DEV far-FPR τ, which the v2 protocol discloses as somewhat conservative
+for |corr|, INT and QACM because sleep → far is TRUE. P2v2 per split, MSCR vs best P2-set baseline: pooled .67 vs .71
+(Granger) ✗; fold 0 .67 vs .63 (Granger) ✓; fold 1 .55 vs .57 (Granger) ✗; fold 2 .55 vs .55 (SHAP-GBDT, tie) ✓;
+fold 3 .55 vs .77 (|corr|) ✗.</p>
+
+<!-- ============================================================ 6 -->
+<h2 id="v3">6. v3 results (1 200 fresh episodes)</h2>
+<p>Protocol v3 (<code>E6P_DISCOVERY_PROTOCOL_V3.md</code>, sha256 1107dc99…, commit <code>80ae4c3</code> 03:18 NST;
+the first eval_v3 header is 03:20 NST). It changes only the EVAL sample: eval_v3 = 182000-183199 (1 200 eps, 4 folds
+of 300, 161 951 units), fresh and not pooled with v2. GT (gt_ext), placebo (placebo_ext), DEV, the method, the analyzer
+and every criterion are those of v2. The size came from v2's observed z: n ≈ 480 × (4.1 / 2.67)² ≈ 1 130 → 1 200.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">criterion</th><th class="l">value</th><th>result</th></tr></thead>
+<tbody>
+<tr><td class="l">K0 (placebo_ext, as v2)</td><td class="l">rate .033, 0 BY</td><td class="yes">PASS</td></tr>
+<tr><td class="l">K1</td><td class="l">4 727 sleep units, 1 405 rejects</td><td class="yes">PASS</td></tr>
+<tr><td class="l">G (gt_ext, as v2)</td><td class="l">+9.07 [3.34, 15.80]</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P1v2</td><td class="l">premise declared (+); chain <strong>4/4</strong>; overall precision .92 (23/25); sign accuracy 1.00 (23/23)</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P2v2</td><td class="l">pooled .93 vs |corr| .67 ✓; folds <strong>1/4</strong> (needs 3)</td><td class="no">FAIL</td></tr>
+<tr><td class="l"><strong>verdict</strong></td><td class="l">pass 1 74 s; full run 3 424 s (baselines 3 348 s), peak RSS 2.9 GB, local</td><td class="am">PARTIAL</td></tr>
+</tbody></table></div>
+<div class="tw"><table>
+<thead><tr><th class="l">chain member</th><th>GT gt_ext</th><th>declared</th><th>β</th><th>z_approx</th><th>p</th><th class="l">declared in folds (z per fold)</th></tr></thead>
+<tbody>
+<tr><td class="l">sleep → nbr load (+)</td><td>+921.3</td><td class="yes">yes, +</td><td>+593.1</td><td>+29.53</td><td>.0001</td><td class="l">4/4 (15.4, 14.3, 14.8, 15.2)</td></tr>
+<tr><td class="l"><strong>sleep → nbr pv (+)</strong></td><td>+9.07</td><td class="yes">yes, +</td><td><strong>+10.27</strong></td><td><strong>+6.11</strong></td><td>.0001</td><td class="l">2/4 (2.12, 3.07, 2.91, 4.14)</td></tr>
+<tr><td class="l">sleep → nbr v (+)</td><td>+399.1</td><td class="yes">yes, +</td><td>+258.0</td><td>+14.80</td><td>.0001</td><td class="l">4/4</td></tr>
+<tr><td class="l">ptx → nbr load (−)</td><td>−213.0</td><td class="yes">yes, −</td><td>−182.5</td><td>−21.25</td><td>.0001</td><td class="l">4/4</td></tr>
+</tbody></table></div>
+<p>28 of 60 declared (folds 20 / 21 / 20 / 23; BY cut-off p ≤ .0050 at rank 28). The eight GT-TRUE neighbour edges:
+seven declared, all with the GT sign (carrier → nbr pv +4.12, z 5.06; sleep → nbr e +2 534 J, z 5.66; ptx → nbr v
+−30.0, z −3.50; plus the chain). The miss is ptx → nbr e (β −687 J, z −2.63, p .0093). The two GT-NULL declarations
+are sleep → own e (as in v1 and v2; GT mean −190 J, inside δ) and carrier → far v (GT +6.4, inside δ 20). GT NULL means
+"within ±δ", not "no effect", so these are small effects below the materiality margin rather than clear false
+discoveries. Three declarations fall on INDET cells (carrier → nbr v, carrier → far pv, sleep → own v). Far declared:
+6.</p>
+
+<figure>
+  <img src="fig2_nbr_edges_z.png" alt="z of the 8 GT-TRUE neighbour edges across v1, v2, v3">
+  <figcaption>Fig 2. The eight GT-TRUE neighbour edges; filled = declared. Sleep → nbr load, sleep → nbr violations and
+  ptx → nbr load are found at every size, sleep → nbr energy from 480 episodes; the premise edge, ptx → nbr violations
+  and carrier → nbr pv need 1 200; ptx → nbr energy is still missed. v1's triangles are agent B's descriptive replay on
+  v1 EVAL; their fill shows what the v1 statistic declared (so a filled triangle can sit below the threshold band).</figcaption>
+</figure>
+
+<h3>Against the baselines, and why it is PARTIAL rather than PASS</h3>
+<div class="tw"><table>
+<thead><tr><th class="l">method (v3)</th><th>pooled ind F1</th><th>fold 0</th><th>fold 1</th><th>fold 2</th><th>fold 3</th><th>pooled ov P</th><th>pooled ov F1</th><th>sign</th><th># decl.</th><th>placebo decl.</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>MSCR-CRT v2</strong></td><td class="yes">0.93</td><td>0.67</td><td>0.67</td><td>0.55</td><td class="yes">0.86</td><td>0.92</td><td><strong>0.87</strong></td><td>1.00</td><td>28</td><td class="yes">0</td></tr>
+<tr><td class="l">Granger</td><td>0.63</td><td>0.71</td><td>0.75</td><td>0.59</td><td>0.71</td><td>0.61</td><td>0.70</td><td>0.78</td><td>42</td><td class="no">13</td></tr>
+<tr><td class="l">Granger-BY (not in P2)</td><td>0.63</td><td>0.75</td><td>0.67</td><td>0.62</td><td>0.71</td><td>0.62</td><td>0.71</td><td>0.78</td><td>41</td><td class="no">9</td></tr>
+<tr><td class="l">|corr|</td><td>0.67</td><td>0.67</td><td>0.67</td><td>0.67</td><td>0.55</td><td>0.86</td><td>0.57</td><td>1.00</td><td>16</td><td class="no">16</td></tr>
+<tr><td class="l">SHAP-GBDT</td><td>0.40</td><td>0.40</td><td>0.40</td><td>0.40</td><td>0.40</td><td>0.89</td><td>0.43</td><td>1.00</td><td>9</td><td class="no">6</td></tr>
+<tr><td class="l">QACM (own only)</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.88</td><td>0.39</td><td>1.00</td><td>8</td><td class="no">11</td></tr>
+<tr><td class="l">two-tower GNN</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.22</td><td>0.00</td><td>0.57</td><td>0.23</td><td>1.00</td><td>8</td><td class="no">10</td></tr>
+<tr><td class="l">PACIFISTA INT</td><td>0.40</td><td>0.22</td><td>0.40</td><td>0.40</td><td>0.40</td><td>0.86</td><td>0.34</td><td>1.00</td><td>7</td><td class="no">6</td></tr>
+<tr><td class="l">P2v2: MSCR ≥ best P2-set baseline?</td><td class="yes">✓ (vs |corr| .67)</td><td class="no">✗ (Granger .71)</td><td class="no">✗ (Granger .75)</td><td class="no">✗ (|corr| .67)</td><td class="yes">✓ (Granger .71)</td><td colspan="5" class="l">1 of 4 folds; needs 3 → P2v2 FAIL</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Placebo declarations use placebo_ext, the same data and
+τ as in v2, so the column is identical to v2's. MSCR's indirect precision is 1.00 in every split of v2 and v3; Granger's
+v3 per-fold indirect precision is 0.67 / 0.75 / 0.56 / 0.67.</p>
+
+<figure>
+  <img src="fig3_methods_f1_placebo.png" alt="Overall F1, indirect F1 and placebo declarations per method, v2 and v3">
+  <figcaption>Fig 3. MSCR-CRT v2 has the best overall F1 in both runs and the best pooled indirect F1 in v3 (at 480
+  episodes Granger's 0.71 beat its 0.67). Panel (c) is the calibration check: on data with no effect at all, each
+  baseline, at the threshold it uses for the scores, declares 6 to 16 edges; MSCR declares none.</figcaption>
+</figure>
+<figure>
+  <img src="fig4_p2_folds.png" alt="P2v2 per split: MSCR vs best baseline, v2 and v3">
+  <figcaption>Fig 4. P2v2 split by split. At 300 episodes per fold MSCR's indirect recall drops to 3-6 of 8 while its
+  precision stays 1.00. Granger and |corr| do not control false declarations (13 and 16 on the placebo), so, on our
+  reading, their recall falls less as the sample shrinks. The rule scores F1 only, so MSCR loses three folds.</figcaption>
+</figure>
+<p>Per the protocol, a PARTIAL means step 2 may use the MSCR v2 map, and step 3 must include the SHAP-map arm.</p>
+
+<!-- ============================================================ 7 -->
+<h2 id="acct">7. Honest accounting</h2>
+<div class="tw"><table>
+<thead><tr><th class="l">attempt</th><th class="l">protocol (LF sha256) and freeze commit (NST)</th><th class="l">fresh data (first record header, NST)</th><th class="l">what changed</th><th class="l">verdict (result commit)</th></tr></thead>
+<tbody>
+<tr><td class="l">v1</td><td class="l"><code>E6P_DISCOVERY_PROTOCOL.md</code> f9d87740…, <code>9164518</code> 09-29 20:44</td><td class="l">eval-1 and gt-1 launched 20:46 from <code>9164518</code>; dev-1, placebo-1 at 19:58 from <code>3e5ce78</code> (allowed before the freeze)</td><td class="l">–</td><td class="l no">KILL (<code>3919ac6</code>)</td></tr>
+<tr><td class="l">v2</td><td class="l"><code>_V2.md</code> fea6488c…, <code>3919ac6</code> 09-30 00:33</td><td class="l">gtx-3 00:25, ev2-2 00:27, plx-c2 00:31 (launched from <code>b7d5326</code>; records downloaded but not parsed before the freeze, as the protocol allows)</td><td class="l">method (§4) and n = 480</td><td class="l no">KILL, near miss (<code>f6da578</code> 03:17; baselines <code>e1fc7e5</code> 03:52)</td></tr>
+<tr><td class="l">v3</td><td class="l"><code>_V3.md</code> 1107dc99…, <code>80ae4c3</code> 09-30 03:18</td><td class="l">ev3-1 03:20 from <code>6831be3</code> (simulated after the freeze)</td><td class="l">n = 1 200 only</td><td class="l am">PARTIAL (<code>311dd58</code> 05:00; final <code>c193996</code> 05:57)</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">sha256 over the LF-normalised file, recomputed by
+<code>make_figs.py</code> and checked against each commit. The protocol texts state freeze times of "01:25 NST" (v2) and
+"03:40 NST" (v3); the commit timestamps are 00:33 and 03:18. This report uses the commit and record-header times; the
+order (freeze before fresh data was opened or simulated) holds on those.</p>
+
+<div class="call bad"><span class="k">Forking paths: what the PARTIAL does and does not show</span>
+<ul style="margin-bottom:0">
+  <li><strong>Three attempts, two of them after seeing an outcome.</strong> The v2 method changes were chosen after the
+  v1 KILL. v3's sample size was chosen after v2's near miss. Each protocol says so in its own text, and each was frozen
+  before its fresh data were opened (v2) or simulated (v3). Fresh EVAL seeds and a fresh GT were used for v2; v3 used a
+  fresh EVAL with the v2 GT and placebo, which the method had not been tuned on.</li>
+  <li><strong>What was fixed in advance.</strong> The chain set C of P1v2 is the plan's a-priori "Expected" list
+  (written before any data), not a list chosen from v1 outcomes. The thresholds (.80, .90, 3 of 4) were set before v2
+  data. Nothing was tuned on v1 EVAL; v1 data are development data for v2 and are never scored in v2 or v3.</li>
+  <li><strong>What remains.</strong> The analyst's freedom to try again is real: a third attempt that passes is
+  weaker evidence than a first attempt that passes. The v3 pass is conditional on having stopped after v2's specific
+  failure mode (power on one edge). A reader should count the result as "passes on the third pre-registered attempt,
+  with the two failures reported", not as a confirmation. The reserved confirmation seeds were not used.</li>
+  <li><strong>Protocol record.</strong> The v3 result JSON records the v2 protocol doc and hash (fea6488c…), because
+  the v2 analyzer only knows the v2 doc. The v3 doc (1107dc99…) changes only the sample and is committed at
+  <code>80ae4c3</code>; the JSON does not record it.</li>
+</ul></div>
+
+<h3>The planning input was optimistic (winner's curse)</h3>
+<p>v2's sample size came from a DEV power analysis anchored on the gt-1 effect of the premise edge, +15.37 (95 % CI
+8.03-23.66), which projects z ≈ 1.4-1.7 per 60 episodes and z ≈ 4-4.8 at 480. The fresh GT (gt_ext) puts the same
+effect at <strong>+9.07</strong> (CI 3.34-15.80). Scaling the plan's z by 9.07 / 15.37 gives about z 2.3-2.8 at
+480 episodes, and v2 observed 2.67. v3 was sized from v2's observed z instead. Strictly, this was not a selection effect: the premise edge was
+fixed a priori, not picked because it looked large. It is ordinary sampling noise in a 20-episode GT (the two CIs
+overlap widely) that was then treated as a known effect size. Across the eight neighbour edges the GT moved both ways
+(sleep → nbr e 6 126 → 4 696; ptx → nbr e −444 → −503).</p>
+<figure>
+  <img src="fig5_winners_curse.png" alt="gt-1 vs gt_ext vs MSCR beta for the eight neighbour edges">
+  <figcaption>Fig 5. GT (gt-1, gt_ext) and MSCR β for the eight neighbour edges. For the pico-sleep edges on load,
+  violations and energy, MSCR's β is about a third to a half below the knockout GT (v3: 0.64, 0.65 and 0.54 of gt_ext);
+  for the premise edge and the PowerES edges it is close. The gap is expected, not an error: the GT continues with every other
+  unit accepted, while MSCR measures the effect under π0, with an applied-vs-rejected dose that includes ~60 s delays.
+  The protocol declares this estimand mismatch, and agent C found that π0 contrasts match the GT within ~1.4 SE on v1
+  EVAL. Signs agree for every declared edge.</figcaption>
+</figure>
+<figure>
+  <img src="fig6_sample_size_z.png" alt="Premise-edge z vs number of EVAL episodes">
+  <figcaption>Fig 6. The premise edge's z against sample size. The grey band is the v2 plan (anchored on +15.4); the
+  dashed line is the v3 plan (anchored on v2's z 2.67), which predicts z ≈ 4.2 at 1 200. The observed 6.11 is above
+  it. The fold-level points show how noisy a single 120- or 300-episode estimate is (v2 folds 4.29, 0.11, 0.90, 0.60),
+  so v2's pooled 2.67 was probably itself on the low side.</figcaption>
+</figure>
+
+<!-- ============================================================ 8 -->
+<h2 id="s2">8. Step 2: K-L0, debate, DEV arms</h2>
+<p>The step-2 plan (<code>STEP2_REFEREE_PLAN.md</code>, Plan agent, 01:10 NST, never frozen) is a regime referee: an
+honest depth-2 tree per family on context features chosen by the map, an effect table from paired knockouts plus π0
+contrasts, and a knapsack over accept / soften / defer of energy-saving requests under an energy budget β and
+guardrails. The full evaluation was costed at ~110 CPU-h (seeds 184000-185999, registered in <code>a1384a3</code>).
+Its cheapest kill test, K-L0 (dev data only), ran first.</p>
+
+<h3>K-L0: KILL at every β</h3>
+<div class="tw"><table>
+<thead><tr><th class="l">quantity</th><th class="l">value (<code>step2_kl0.json</code>)</th></tr></thead>
+<tbody>
+<tr><td class="l">energy-saving units left after the 120 s warm-up, per episode (π0 dev + eval, 80 eps)</td><td class="l">carrier-off 2.59, ptx-down 2.66, pico sleep 0.40 (vs carrier-on 21.46, ptx-up 20.74, prot_min +1 63.9 / −1 37.2, wake 3.73)</td></tr>
+<tr><td class="l">R_pred of the referee at β = .03 / .05 / .07 / .09</td><td class="l">0.033 at every β, identical to the best global envelope (margin 0): it defers only carrier-offs; with no budget and no lower-bound rule, R_pred 0.154</td></tr>
+<tr><td class="l">split-half sign agreement of the leaves</td><td class="l">pv 0.50 (4 comparisons), all KPIs 0.50 (16); trees collapsed to one leaf per family</td></tr>
+<tr><td class="l">kill conditions (R_pred &lt; .35; margin &lt; .10; agreement &lt; .9)</td><td class="l">all three true → <strong>KILL</strong></td></tr>
+<tr><td class="l">caveat noted at the time</td><td class="l">the O_tape oracle also acts only after warm-up and reached R 1.35, so the K-L0 action space (energy-saving ES / PowerES only) looked too narrow → debate</td></tr>
+</tbody></table></div>
+
+<h3>Debate: forensics (F), advocate (G), skeptic (H)</h3>
+<p>Three agents, read-only, small local simulations allowed (<code>.tmp/step2debate/{F,G,H}/</code>). Summaries from
+<code>.tmp/PLAN.md</code>. Local Windows simulations are not poolable with Kaggle records and are development evidence
+only.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">agent</th><th class="l">findings</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>F</strong> (oracle forensics; local oracle re-runs of seeds 155030 / 155033)</td><td class="l">O_tape's main lever is rejecting / locking PowerES ptx-up (power restores): ~149 / 156 per episode, non-accept in 75-83 % of region-epochs, so effectively static; plus SG damping and rollbacks. Its energy retention of 1.26 comes from the blocked restores. Ablations are strongly non-additive; seed 155030's oracle gain vanishes under any static rule and is chaos-sensitive (Linux 1 006 vs local 763). The loss Λ: 32 % arises before the surge in warm-up carrier-off macros (dwell-locked); the rest where SG is saturated. Blanket static gates on 8 local DEV seeds: ptx-up + sleep + carrier-off reject R 0.30 (CI 0.01-0.55), retention 1.37, guards pass; carrier-on and wake gates are disastrous.</td></tr>
+<tr><td class="l"><strong>G</strong> (map-referee advocate)</td><td class="l">Could not support the position. Paired effects of rejecting a request type: carrier-on +7.9 pv (21.5 per episode), wake +13.3, prot_min+ +4.6, prot_min− null, ptx-up +0.2 overall but −0.9 to −2.8 in saturated cells (7.3 per episode, saves 5.9 kJ). An ES rollback is a no-op (120 s dwell &gt; 60 s window). On 6 local DEV seeds, "reject ptx-up in saturated cells" R +0.225 [−0.27, 0.76], retention 1.20, LL guard 1.199 (fail); adding carrier-off / sleep rejects 0.228 (LL 1.14, fail). Conclusion: the only lever is a hand rule that needs no map ("PowerES must not raise ptx in saturated cells").</td></tr>
+<tr><td class="l"><strong>H</strong> (skeptic)</td><td class="l">O_tape's redrawn / true advantage ratio 0.472 implies a non-clairvoyant value of about R 0.64 (0.49-0.75) in P3/3 (0.14 in P3/1), but O_tape is a digital-twin MPC, not a referee. The hindsight static's 0.757 is mostly tape-fitted. Per-unit gating ceiling ≈ R 0.06. The only learnable per-unit signal is own protected active UEs for carrier-on (R² 0.15; <code>H/hetero.json</code> 0.151), and it never flips a decision, so a map / no-map / SHAP-map ablation would be void. Untested strong static rule: "reject ptx-up" (pv −0.2 ± 22 per unit, 4.6 kJ each).</td></tr>
+<tr><td class="l"><strong>synthesis</strong></td><td class="l">On P3 surge-L40 the winning policy is essentially a static envelope ("reject PowerES restores"). A map-driven referee is unlikely to beat it, and the map would not be the reason; the step-3 ablation would be void. The ~110 CPU-h evaluation was not launched; the cheap DEV check below was run instead.</td></tr>
+</tbody></table></div>
+
+<h3>DEV arms (40 DEV seeds 184200-184239, Kaggle, 400 jobs, 7.44 CPU-h)</h3>
+<p>Driver <code>scratchpad/e6_dev/e6p_step2_dev.py</code> (<code>a1384a3</code>, run <code>e6p-s2dev-1</code>, 5
+kernels, first header 05:10 NST). Paired by seed. R uses the Gate A v2 definition on these seeds: V_AA 157.48, V_ref
+110.43 (SliceGuarantee alone), denominator 47.05 psvr. The four rule arms read only <code>obs</code>. Not frozen; DEV
+only.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">arm</th><th>V</th><th>R [90 % CI]</th><th>R − R(B1) [90 % CI]</th><th>energy ret.</th><th>SVR ÷ AA</th><th>non-prot. eMBB</th><th>LL</th><th>RLF</th><th class="l">eligible</th><th class="l">rejects per episode</th></tr></thead>
+<tbody>
+<tr><td class="l">accept-all (AA)</td><td>157.48</td><td>0</td><td>−0.30 [−0.61, 0.02]</td><td>1.006</td><td>1</td><td>1</td><td>1</td><td>1</td><td class="l">yes</td><td class="l">–</td></tr>
+<tr><td class="l">SliceGuarantee alone (= V_ref)</td><td>110.43</td><td>1</td><td>–</td><td>−0.001</td><td>0.59</td><td>0.58</td><td>0.56</td><td>0.77</td><td class="l">no <span class="m">E</span></td><td class="l">–</td></tr>
+<tr><td class="l"><strong>B1</strong> reject every PowerES ptx-up after warm-up</td><td>143.48</td><td>0.298 [−0.016, 0.615]</td><td>0</td><td>1.441</td><td>0.99</td><td>0.99</td><td>1.05</td><td class="no">1.27</td><td class="l no">no <span class="m">G</span></td><td class="l">ptx-up 192.1</td></tr>
+<tr><td class="l"><strong>B2</strong> B1 + reject pico sleep + macro carrier-off</td><td>140.50</td><td>0.361 [0.043, 0.687]</td><td>+0.063 [0.031, 0.107]</td><td>1.402</td><td>0.97</td><td>0.97</td><td>1.03</td><td class="no">1.27</td><td class="l no">no <span class="m">G</span></td><td class="l">ptx-up 186.0, carrier-off 16.7, sleep 2.0</td></tr>
+<tr><td class="l"><strong>M1</strong> reject ptx-up only where own prb_util ≥ .999</td><td>152.86</td><td>0.098 [−0.068, 0.269]</td><td>−0.199 [−0.49, 0.09]</td><td>1.138</td><td>1.00</td><td>1.00</td><td>1.01</td><td>1.01</td><td class="l yes">yes</td><td class="l">ptx-up 59.6</td></tr>
+<tr><td class="l"><strong>M2</strong> M1 + release while region LL delay rises</td><td>152.66</td><td>0.102 [0.017, 0.188]</td><td>−0.195 [−0.51, 0.12]</td><td>1.024</td><td>1.01</td><td>1.01</td><td>1.02</td><td>1.03</td><td class="l yes">yes</td><td class="l">ptx-up 7.4 (16.6 saturated, 9.2 released)</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">Recomputed from the 400 raw job records with the
+driver's paired-seed bootstrap (10 000 resamples, <code>default_rng([6618, 40])</code>, V_ref re-minimised per
+resample) and asserted equal to <code>step2_dev_summary.json</code>. Rejects are request-level counts (a rejected
+request is re-proposed each second), not 60 s units. With the Gate A v2 denominator 45.82 (other seeds) the R values
+would be 0.306 / 0.371 / 0.101 / 0.105 (<code>STEP2_DEV_RESULT.md</code>). M1 is G's "GP" rule; M2's LL guard was
+defined by the driver's builder, because G described but never implemented one.</p>
+<figure>
+  <img src="fig7_step2_dev_arms.png" alt="Step-2 DEV arms: R with CI, guardrail ratios and retention">
+  <figcaption>Fig 7. The blanket gates reach R 0.30-0.36 but raise RLF by 27 % (90 % CI 1.12-1.40 for B1, 1.11-1.42
+  for B2), which fails the 1.10 guardrail. The map-informed saturated-cell gates stay within every guardrail and
+  recover about 0.10. The local few-seed estimates did not hold up on 40 Kaggle seeds: F's B2 rule passed the guards on
+  8 local seeds but fails RLF here, and G's M1 rule fell from R 0.225 (6 local seeds) to 0.098.</figcaption>
+</figure>
+<div class="call bad"><span class="k">Step-2 conclusion, stated narrowly</span>
+<ul style="margin-bottom:0">
+  <li>No eligible rule comes near R 0.35 on DEV. The best eligible one, M2, is 0.102 [0.017, 0.188].</li>
+  <li>Even the eligible rules are hand rules on one mediator (own PRB utilisation). The MSCR map does not select or
+  shape them in a way a map-free design would not. So on this scenario a map / no-map / SHAP-map ablation would not
+  discriminate.</li>
+  <li>This is DEV evidence on 40 seeds, not an evaluation. No referee was frozen or scored on fresh seeds. It does not
+  show that a causal referee cannot work, only that P3 surge-L40 after an all-accept warm-up offers almost no lever
+  that depends on the discovered chain (0.4 pico sleeps per episode are left to referee).</li>
+</ul></div>
+
+<!-- ============================================================ 9 -->
+<h2 id="ops">9. Operational incidents</h2>
+<p>None of them changed which records were pooled or how they were scored. Times NST (UTC + 05:45).</p>
+<ol>
+  <li><strong>Local dry run reaped (before the overnight window).</strong> The DEV + PLACEBO dry run was killed by the
+  OS for low RAM during the baselines (SHAP ~1 000 CPU-s). The user chose to run analyses on Colab; commit
+  <code>d819c5a</code> added one-shot Colab jobs with keep-alive ticks.</li>
+  <li><strong>Colab reclaimed the v1 analysis.</strong> <code>job-disc-full-1</code> launched 23:33 on a Colab TPU VM
+  (4 threads). It was alive at the 23:43 tick (RSS 536 MB, 22.9 min uptime), and the session was gone at 23:53 before
+  the exit code was pulled (<code>runs/job-disc-full-1/tick.log</code>). A second session, <code>job-disc-full-2</code>,
+  could not be created: the Colab API refused the request ("Service Unavailable" per PLAN; the launch log shows a
+  failed request). The official v1 analysis was re-run locally as a detached process (3 threads, RSS ~0.5 GB): 1 805 s, verdict 00:45. The <code>colab_run.py</code> print crash on non-cp1252 text was fixed in
+  <code>d453caf</code>.</li>
+  <li><strong>Kaggle 403 on new datasets.</strong> New bundle datasets were refused (HTTP 403) until Kaggle marked them
+  ready, about 20 minutes (brief).</li>
+  <li><strong>Repo-relative script path.</strong> <code>kaggle_run</code> / <code>colab_run</code> given a
+  repo-relative SCRIPT path built a bundle that skipped the discovery protocol files and wrote a wrong
+  <code>e6dev/</code> run path; the first launch's kernels all failed, and gtx-1 / gtx-2, ev2-1 and plx-c1
+  produced no records (plx-c1 was also auto-resumed once by the tick before being abandoned). The fix commit says
+  "all five 00:30 kernels failed on it", although the commit itself is timestamped 00:22; the clock label in the
+  message is off. Fixed in <code>cloud.py</code> (use the basename; <code>b7d5326</code> 00:22). Rule since: pass bare script names. Relaunched
+  as gtx-3, ev2-2 (Kaggle) and plx-c2 (Colab).</li>
+  <li><strong>Dirty flag.</strong> gtx-3, ev2-2 and plx-c2 headers say <code>e6_dirty = true</code>. The only cause was
+  the then-untracked <code>crt_units_v2.py</code>, which the collection code never imports (protocol v2 §3).</li>
+  <li><strong>Colab pooled with Kaggle.</strong> plx-c2 ran on Colab (Linux 6.6.122, glibc 2.39, Python 3.13.15). Its
+  startup fingerprint matches Kaggle on the RNG, scipy and trajectory layers (only the <code>log2</code> ufunc layer
+  differs), so pooling is allowed; local Windows records were never used for EVAL, GT or PLACEBO.</li>
+  <li><strong>Laptop RAM.</strong> Heavy local work (v2 / v3 baseline passes, up to 2.9 GB peak) ran as detached
+  processes; monitoring used scheduled heartbeats instead of long-lived shells.</li>
+</ol>
+<div class="tw"><table>
+<thead><tr><th class="l">run (<code>scratchpad/e6_dev/runs/</code>)</th><th class="l">what</th><th>episodes</th><th>CPU-h</th><th class="l">first header (UTC)</th><th class="l">git</th><th class="l">platform</th></tr></thead>
+<tbody>
+<tr><td class="l"><code>e6p-disc-dev-1</code></td><td class="l">DEV</td><td>20</td><td>0.43</td><td class="l">09-29 14:13:15</td><td class="l">3e5ce78</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-placebo-1</code></td><td class="l">v1 placebo</td><td>20</td><td>0.40</td><td class="l">09-29 14:13:36</td><td class="l">3e5ce78</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-eval-1</code></td><td class="l">v1 EVAL</td><td>60</td><td>1.27</td><td class="l">09-29 15:01:40</td><td class="l">9164518</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-gt-1</code></td><td class="l">gt-1 knockouts</td><td>20</td><td>19.96</td><td class="l">09-29 15:01:00</td><td class="l">9164518</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-gtx-3</code></td><td class="l">gt_ext knockouts</td><td>20</td><td>21.66</td><td class="l">09-29 18:40:19</td><td class="l">b7d5326 (dirty)</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-ev2-2</code></td><td class="l">eval_v2</td><td>480</td><td>9.83</td><td class="l">09-29 18:42:22</td><td class="l">b7d5326 (dirty)</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-disc-plx-c2</code></td><td class="l">placebo_ext</td><td>20</td><td>0.16</td><td class="l">09-29 18:46:12</td><td class="l">b7d5326 (dirty)</td><td class="l">Colab</td></tr>
+<tr><td class="l"><code>e6p-disc-ev3-1</code></td><td class="l">eval_v3</td><td>1 200</td><td>23.58</td><td class="l">09-29 21:35:24</td><td class="l">6831be3</td><td class="l">Kaggle</td></tr>
+<tr><td class="l"><code>e6p-s2dev-1</code></td><td class="l">step-2 DEV arms</td><td>400 jobs</td><td>7.44</td><td class="l">09-29 23:25:02</td><td class="l">a1384a3</td><td class="l">Kaggle</td></tr>
+</tbody></table></div>
+<p style="color:var(--soft);font-size:.85rem;margin-top:-6px">CPU-h = sum of per-episode (per-job) process CPU from the
+raw records; for the GT runs it is dominated by the knockout labels (~1 h per episode). Kaggle = Linux 6.12.90, glibc
+2.35, numpy 2.4.2. The discovery raw files are git-ignored (<code>5035df9</code>; Kaggle outputs keep a copy); the
+step-2 raw file is committed.</p>
+
+<!-- ============================================================ 10 -->
+<h2 id="next">10. Open decisions and recommended next steps</h2>
+<ol>
+  <li><strong>Push.</strong> 14 local commits on <code>feat/v2</code> since the last pushed commit <code>d819c5a</code>
+  (the brief says "about 15"). Nothing is pushed until the user says so. This report is not committed.</li>
+  <li><strong>Where the referee (steps 2-3) should live.</strong> From the skeptic agent and the DEV result:
+    <ul>
+      <li><strong>(a) A test where map quality decides the outcome.</strong> Use non-randomised, confounded logs, as in
+      real networks. The associational baselines already declare 6-16 edges on the placebo; a referee built on their map
+      should make wrong calls where MSCR's calibrated map does not. This keeps the causal claim central. Not yet
+      designed or costed.</li>
+      <li><strong>(b) A scenario where the neighbour chain is the only fix</strong>, e.g. a load dip followed by a surge,
+      so that many pico sleeps remain after warm-up (here 0.4 per episode). Needs a new screen.</li>
+      <li><strong>(c) Make discovery the contribution:</strong> which xApp decision harms which KPI, with error control,
+      validated against simulator ground truth, with the placebo calibration result. Nearly ready, with the caveats of
+      §7 (third attempt; P2v2 fold failure; Granger wins small folds).</li>
+      <li>These can be combined. (c) is the only one that needs no new compute.</li>
+    </ul></li>
+  <li><strong>Protocol hygiene for any next attempt.</strong> Replace the "far" negative control with the placebo
+  check, as v2 and v3 already do. Record the governing protocol doc and hash in the result JSON (v3's JSON records the
+  v2 doc). Any P2-type head-to-head should report a calibrated-baseline variant (e.g. τ set on the placebo) next to
+  the DEV-τ one, since F1 alone rewards uncalibrated declarations.</li>
+  <li><strong>What not to do.</strong> Do not re-test P2v2 with a fourth sample size, or step 1 would become a
+  sequential search. Do not launch the ~110 CPU-h step-2 evaluation on P3 surge-L40. Confirmation seeds
+  (150200-150399, 155200-155399) stay untouched.</li>
+</ol>
+
+<!-- ============================================================ 11 -->
+<h2 id="repro">11. Reproduction and file index</h2>
+<p><strong>Figures and every number in this report</strong> (local, about 30 s, reads result JSONs, the raw step-2
+records and, if present, the raw discovery headers):</p>
+<pre><code>.venv/Scripts/python.exe reports/2026-09-30-step1-discovery-and-step2-dev/make_figs.py</code></pre>
+<p>It asserts, for v1, v2 and v3, that its own re-implementation of the scores, P1 / P1v2, P2 / P2v2 and the BY
+cut-offs reproduces the analyzers' JSONs. It checks that the protocol hashes match, that pass-1 and full-run CRT
+outputs agree (status and p exactly; β and z to within 5e-11), and that the step-2 bootstrap reproduces
+<code>step2_dev_summary.json</code>.</p>
+<p><strong>Analyses</strong> (local; <code>R=scratchpad/e6_dev/runs</code>):</p>
+<pre><code># v1 (frozen protocol v1), official run
+python scratchpad/e6_dev/e6p_disc_analyze.py analyze --dev $R/e6p-disc-dev-1/all.jsonl --eval $R/e6p-disc-eval-1/all.jsonl \
+  --gt $R/e6p-disc-gt-1/all.jsonl --placebo $R/e6p-disc-placebo-1/all.jsonl --prof $R/e6p-disc-prof-1/all.jsonl --json OUT.json
+# v2 (protocol v2): pass 1 with --no-baselines, pass 2 without it; placebo-1 as the descriptive second placebo
+python scratchpad/e6_dev/e6p_disc_analyze_v2.py analyze --dev $R/e6p-disc-dev-1/all.jsonl --eval $R/e6p-disc-ev2-2/all.jsonl \
+  --gt $R/e6p-disc-gtx-3/all.jsonl --placebo $R/e6p-disc-plx-c2/all.jsonl --placebo-dev $R/e6p-disc-placebo-1/all.jsonl --json OUT.json
+# v3 (protocol v3): as v2 with --eval $R/e6p-disc-ev3-1/all.jsonl and no --placebo-dev
+# step-2 DEV summary
+python scratchpad/e6_dev/e6p_step2_dev.py summary --in $R/e6p-s2dev-1/all.jsonl --json OUT.json</code></pre>
+<p style="color:var(--soft);font-size:.85rem">The analysis commands were not logged verbatim. They are reconstructed
+from <code>.tmp/PLAN.md</code>, the job tick log and the episode counts recorded in each JSON (v2: placebo_dev 20; v3:
+placebo_dev 0).</p>
+
+<h3>Where the sources disagree, and what this report uses</h3>
+<ul>
+  <li><strong>Fold winners in v3.</strong> <code>STEP1_V3_RESULT.md</code> and the brief say Granger wins 3 of 4 folds
+  "at .71-.75". Granger does beat MSCR in folds 0-2, but its fold-2 F1 is 0.59 (Granger-BY 0.62), and the P2-set winner
+  in fold 2 is |corr| at 0.67. This report uses the per-split values in <code>step1_v3_full.json</code>.</li>
+  <li><strong>Clock labels.</strong> Protocol v2 says frozen "01:25 NST" and v3 "03:40 NST"; the freeze commits are
+  00:33 and 03:18. PLAN says ev3-1 launched "~03:45"; its first record header is 03:20. PLAN and the brief put the final
+  v3 verdict at 06:30; commit <code>c193996</code> is 05:57. The <code>b7d5326</code> message mentions "00:30 kernels"
+  but is timestamped 00:22. This report uses commit and record-header times.</li>
+  <li><strong>Commit count.</strong> The brief says "about 15" unpushed commits; <code>git log d819c5a..HEAD</code>
+  lists 14.</li>
+  <li><strong>Protocol recorded in the v3 JSON</strong> is the v2 doc (fea6488c…), not the v3 doc (§7).</li>
+  <li><strong>Half dosing.</strong> PLAN (agent C) says half is applied "~90-100 %"; protocol v2 says "88-100 %". Both
+  are quoted as sourced.</li>
+  <li><strong>Agents A and D</strong> disagree on how much outcome variance other units' decisions explain (§3). Not
+  resolved.</li>
+</ul>
+
+<div class="tw"><table>
+<thead><tr><th class="l">commit</th><th class="l">time (NST)</th><th class="l">what</th></tr></thead>
+<tbody>
+<tr><td class="l"><code>d819c5a</code></td><td class="l">09-29 21:50</td><td class="l">last pushed: one-shot Colab analysis jobs with keep-alive ticks</td></tr>
+<tr><td class="l"><code>5035df9</code></td><td class="l">09-29 23:33</td><td class="l">do not track large discovery raw episodes</td></tr>
+<tr><td class="l"><code>d453caf</code></td><td class="l">09-29 23:59</td><td class="l">gt_ext / placebo_ext stages (183520-559); colab_run cp1252 fix</td></tr>
+<tr><td class="l"><code>f654dac</code></td><td class="l">09-30 00:14</td><td class="l">eval_v2 stage (480 eps)</td></tr>
+<tr><td class="l"><code>b7d5326</code></td><td class="l">00:22</td><td class="l">fix: cloud bundle with a repo-relative SCRIPT path</td></tr>
+<tr><td class="l"><code>3919ac6</code></td><td class="l">00:33</td><td class="l">MSCR-CRT v2 + tests, analyzer v2, <strong>protocol v2 frozen</strong> (fea6488c); v1 result archived; step-2 plan</td></tr>
+<tr><td class="l"><code>f6da578</code></td><td class="l">03:17</td><td class="l">v2 result (KILL, near miss), pass 1</td></tr>
+<tr><td class="l"><code>80ae4c3</code></td><td class="l">03:18</td><td class="l"><strong>protocol v3 frozen</strong> (1107dc99); eval_v3 stage; registry note</td></tr>
+<tr><td class="l"><code>6831be3</code></td><td class="l">03:18</td><td class="l">step-2 K-L0 (<code>referee_p.py</code>, driver, tests, result KILL)</td></tr>
+<tr><td class="l"><code>e1fc7e5</code></td><td class="l">03:52</td><td class="l">v2 baselines (P2v2 fail; baselines uncalibrated)</td></tr>
+<tr><td class="l"><code>311dd58</code></td><td class="l">05:00</td><td class="l">v3 pass 1 (P1v2 PASS)</td></tr>
+<tr><td class="l"><code>a1384a3</code></td><td class="l">05:08</td><td class="l">step-2 DEV driver + tests; seeds 184000-185999 registered</td></tr>
+<tr><td class="l"><code>10b8fbf</code></td><td class="l">05:48</td><td class="l">step-2 DEV result + raw records</td></tr>
+<tr><td class="l"><code>2ad71b8</code></td><td class="l">05:49</td><td class="l">morning brief 3</td></tr>
+<tr><td class="l"><code>c193996</code></td><td class="l">05:57</td><td class="l">v3 final (PARTIAL)</td></tr>
+</tbody></table></div>
+
+<div class="tw"><table>
+<thead><tr><th class="l">file</th><th class="l">content</th></tr></thead>
+<tbody>
+<tr><td class="l"><code>docs/benchmark/E6P_DISCOVERY_PROTOCOL.md</code>, <code>_V2.md</code>, <code>_V3.md</code></td><td class="l">the three frozen protocols</td></tr>
+<tr><td class="l"><code>cdd_oran/decision/crt_units.py</code>, <code>crt_units_v2.py</code>, <code>gt_p.py</code>, <code>edge_score.py</code>, <code>baselines_disc.py</code>, <code>referee_p.py</code></td><td class="l">MSCR-CRT v1 / v2, knockout GT, scoring, baselines, K-L0 referee</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/e6p_discovery.py</code>, <code>e6p_disc_analyze.py</code>, <code>e6p_disc_analyze_v2.py</code>, <code>e6p_referee_kl0.py</code>, <code>e6p_step2_dev.py</code>, <code>cloud.py</code>, <code>colab_run.py</code></td><td class="l">collection, analyzers, step-2 drivers, cloud runners</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/STEP1_V{1,2,3}_RESULT.md</code> + <code>step1_v1_full.json</code>, <code>step1_v1_gt_tables.json</code>, <code>step1_v2_{pass1,full}.json</code>, <code>step1_v3_{pass1,full}.json</code></td><td class="l">step-1 results (identical to <code>.tmp/disc_*</code> outputs)</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/STEP2_REFEREE_PLAN.md</code>, <code>step2_kl0.json</code>, <code>STEP2_DEV_RESULT.md</code>, <code>step2_dev_summary.json</code>; <code>runs/e6p-s2dev-1/all.jsonl</code></td><td class="l">step-2 plan, K-L0, DEV arms (raw records committed)</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/MORNING_BRIEF_3.md</code>; <code>.tmp/PLAN.md</code></td><td class="l">plain summary; chronological log incl. agent summaries</td></tr>
+<tr><td class="l"><code>.tmp/diag/{A,B,C,D}/</code>, <code>.tmp/diag/CONTEXT.md</code>, <code>.tmp/diag/build/dry_dev_v2.*</code></td><td class="l">diagnosis agents' scripts and outputs; v2 DEV dry run</td></tr>
+<tr><td class="l"><code>.tmp/step2debate/{F,G,H}/</code>, <code>.tmp/step2debate/CONTEXT.md</code></td><td class="l">step-2 debate agents' scripts and outputs</td></tr>
+</tbody></table></div>
+
+<div class="foot">
+  Sources: <code>scratchpad/e6_dev/decision/{MORNING_BRIEF_3.md, STEP1_V1_RESULT.md, STEP1_V2_RESULT.md,
+  STEP1_V3_RESULT.md, step1_v1_full.json, step1_v1_gt_tables.json, step1_v2_pass1.json, step1_v2_full.json,
+  step1_v3_pass1.json, step1_v3_full.json, STEP2_REFEREE_PLAN.md, step2_kl0.json, STEP2_DEV_RESULT.md,
+  step2_dev_summary.json}</code> · raw <code>scratchpad/e6_dev/runs/e6p-s2dev-1/all.jsonl</code> and the headers of
+  <code>runs/e6p-disc-*/all.jsonl</code> · <code>runs/job-disc-full-{1,2}/</code> · <code>docs/benchmark/E6P_DISCOVERY_PROTOCOL{,_V2,_V3}.md</code>
+  · <code>.tmp/PLAN.md</code> (from "OVERNIGHT 2 AUTHORIZATION") · <code>.tmp/diag/</code>, <code>.tmp/step2debate/</code>
+  · <code>git log d819c5a..HEAD</code>. Figures and <code>figures_data.json</code> are regenerated live by
+  <code>make_figs.py</code>.
+</div>
+
+</div>
+</body>
+</html>

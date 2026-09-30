@@ -50,9 +50,10 @@ real result.
 - **Against the other methods: why PARTIAL, not PASS.**
   - On all 1,200 episodes pooled, MSCR beats every method on neighbour links: 0.93 vs the best, correlation, at
     0.67. Its overall score (0.87) is also the best.
-  - The rule also required winning in 3 of 4 separate quarters of 300 episodes, and MSCR won only 1. In the smaller
-    slices Granger scores higher (0.71-0.75 vs MSCR's 0.55-0.86) by claiming many more links, a third or more of
-    them wrong, and it "finds" 13 links on fake data.
+  - The rule also required winning in 3 of 4 separate quarters of 300 episodes, and MSCR won only 1. In quarters 1-3
+    another method scores higher: Granger 0.71-0.75 against MSCR 0.67 in two of them, and correlation 0.67 against
+    MSCR 0.55 in the third. MSCR wins quarter 4 (0.86). The winners get there by claiming many more links (Granger
+    28-36 per quarter, precision 0.56-0.75), and they "find" 13-16 links on fake data.
   - So MSCR needs more data to reach its full strength, but it never claims false links.
 
 **v2 comparison with the other methods** (480 episodes; v3 is above):
@@ -89,7 +90,7 @@ claiming many links (36), a lot of them false, with signs right only 71 % of the
    Nothing safe gets near the 35 % bar.
 
 ## Decisions for you
-1. **Push?** About 15 local commits since d819c5a (the last pushed commit) are waiting. Say "push" and I'll push
+1. **Push?** About 16 local commits since d819c5a (the last pushed commit) are waiting. Say "push" and I'll push
    feat/v2.
 2. **Where should the referee (step 2/3) live?** My suggestions, from the skeptic agent plus the results:
    - **(a) A test where map quality decides the outcome.** Use logs that are *not* randomised, as in real networks.

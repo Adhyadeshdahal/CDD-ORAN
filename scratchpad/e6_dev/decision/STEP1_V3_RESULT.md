@@ -57,8 +57,8 @@ timing (s): {'k0_placebo': 0.6, 'unit_tables': 17.3, 'crt_v2_pooled': 26.0, 'crt
 
 ## Pass 2 (baselines; v1 code path + DEV far-FPR tau; local): P2v2 FAIL (folds 1/4) -> FINAL VERDICT PARTIAL
 
-Pooled: MSCR v2 indirect F1 .93 vs best baseline .67 (corr). Per 300-episode fold, Granger(-BY) wins indirect F1 in
-3/4 folds (.71-.75 vs MSCR .55-.86) with overall precision .61-.71 and 9-13 placebo declarations.
+Pooled: MSCR v2 indirect F1 .93 vs best baseline .67 (corr). Per 300-episode fold, the best baseline beats MSCR in folds 0-2
+(Granger(-BY) .71-.75 vs .67 in folds 0-1; |corr| .67 vs .55 in fold 2; MSCR wins fold 3 at .86) with overall precision .61-.71 and 9-13 placebo declarations.
 
 ```
         method   split  ind P  ind R ind F1   ov P     F1   sign  far  #dec  plc
