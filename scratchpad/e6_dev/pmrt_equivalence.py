@@ -13,7 +13,8 @@ declared, sign) on the small caches placebo1 / plxc2 (split 9, the v4 placebo sp
 writes one canonical JSON (sorted keys, floats by repr = exact); the proof is byte equality of the two, plus the max
 abs difference over all numeric leaves (0 when equal).
 ``reports``: compares two v4 analysis reports (e6p_disc_analyze_v4.py analyze, frozen vs renamed code, same inputs)
-leaf by leaf, ignoring only provenance / timing fields (``VOLATILE``).
+leaf by leaf, ignoring only provenance / timing fields (``VOLATILE``); strings are compared after mapping the old
+method label to the new one (``LABELS``: a rule text such as "count for MSCR+" reads "count for PMRT").
 Exit status 0 iff equivalent.
 """
 from __future__ import annotations
@@ -35,8 +36,17 @@ PMRT_ARTIFACT = "docs/benchmark/artifacts/E6P_PMRT_V4.json"
 SMALL = (("placebo1", 9), ("plxc2", 9), ("dev1", 0))
 EXPORT = ("cdd_oran", "scratchpad/e6_dev", "docs/benchmark/artifacts")
 # report fields that legitimately differ between the two runs (provenance, file names, wall time, memory)
-VOLATILE = {"argv", "artifact", "protocol", "timing", "wall_s", "peak_rss_mb", "rss_mb", "out", "cache_dir",
+VOLATILE = {"argv", "artifact", "protocol", "timing", "timing_s", "wall_s", "peak_rss_mb", "rss_mb", "out", "cache_dir",
             "generated", "host", "elapsed_s"}
+# label-only rename: string leaves are compared after mapping the old method label to the new one (reports mode only)
+LABELS = (("MSCR+", "PMRT"),)
+
+
+def _label(x):
+    if isinstance(x, str):
+        for old, new in LABELS:
+            x = x.replace(old, new)
+    return x
 
 
 # ============================================================================================ worker (one tree)
@@ -91,8 +101,9 @@ def _default(o):
 
 
 # ============================================================================================ comparison
-def diff(x, y, path="", ignore=frozenset(), out=None):
-    """Leaf-by-leaf differences [(path, x, y)]; NaN == NaN; floats compared exactly."""
+def diff(x, y, path="", ignore=frozenset(), out=None, labels=False):
+    """Leaf-by-leaf differences [(path, x, y)]; NaN == NaN; floats compared exactly; labels: strings compared after
+    ``_label`` (old method label -> new)."""
     out = [] if out is None else out
     if isinstance(x, dict) and isinstance(y, dict):
         for k in sorted(set(x) | set(y)):
@@ -101,13 +112,15 @@ def diff(x, y, path="", ignore=frozenset(), out=None):
             if k not in x or k not in y:
                 out.append((f"{path}/{k}", x.get(k, "<missing>"), y.get(k, "<missing>")))
             else:
-                diff(x[k], y[k], f"{path}/{k}", ignore, out)
+                diff(x[k], y[k], f"{path}/{k}", ignore, out, labels)
     elif isinstance(x, list) and isinstance(y, list):
         if len(x) != len(y):
             out.append((f"{path}#len", len(x), len(y)))
         for i, (u, v) in enumerate(zip(x, y, strict=False)):
-            diff(u, v, f"{path}[{i}]", ignore, out)
+            diff(u, v, f"{path}[{i}]", ignore, out, labels)
     elif isinstance(x, float) and isinstance(y, float) and math.isnan(x) and math.isnan(y):
+        pass
+    elif labels and isinstance(x, str) and isinstance(y, str) and _label(x) == _label(y):
         pass
     elif type(x) is not type(y) or x != y:
         out.append((path, x, y))
@@ -173,9 +186,9 @@ def cmd_local(a):
 
 def cmd_reports(a):
     A, B = (json.load(open(p)) for p in (a.frozen, a.renamed))
-    d = diff(A, B, ignore=frozenset(VOLATILE))
+    d = diff(A, B, ignore=frozenset(VOLATILE), labels=True)
     return summary(d, A, B, {"mode": "reports", "frozen": a.frozen, "renamed": a.renamed,
-                             "ignored": sorted(VOLATILE)})
+                             "ignored": sorted(VOLATILE), "labels": [list(t) for t in LABELS]})
 
 
 def main(argv=None):

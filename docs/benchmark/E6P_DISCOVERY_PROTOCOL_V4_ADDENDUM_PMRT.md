@@ -56,7 +56,8 @@ Procedure (`scratchpad/e6_dev/pmrt_equivalence.py`):
    plxc2 (split 9) and dev1 (split 0). Compare the canonical JSON outputs byte for byte, then leaf by leaf.
 2. **Full v4 data** (`reports`): the v4 analysis is run once with the frozen code (the verdict run) and once with the
    renamed code + `E6P_PMRT_V4.json` on the same inputs. The two reports must agree on every leaf except provenance and
-   timing fields (`VOLATILE`: argv, artifact, protocol, timing, wall_s, memory).
+   timing fields (`VOLATILE`: argv, artifact, protocol, timing, timing_s, wall_s, memory). String leaves are compared
+   after mapping the label "MSCR+" to "PMRT" (the P2 rule text names the method).
 
 Results:
 - `pmrt_artifacts.py verify --legacy`: statistic bit-identical to the params pickle on placebo1 (2435 units), plxc2
@@ -66,6 +67,9 @@ Results:
   max abs difference 0.0 (60 hypotheses per cache; primary loadsp_c + wby1s declares 0 / 0 / 4 on placebo1 / plxc2 /
   dev1, identically in both trees).
 - `tests/test_pmrt_equivalence.py` repeats the local check at B = 199.
+- `reports` on a local end-to-end analyzer dry run (v1 DEV / placebo-1 / gt-1 records, B 199, pseudo slices 5 / 10 /
+  20, frozen main tree vs renamed tree): `analysis_v4.json` 16245 leaves and `verdict_v4.json` 209 leaves, 0
+  differences. Before the label mapping, the only differences were timing and the P2 rule text ("count for MSCR+").
 - **Full-data rerun: PENDING.** To be filled in after the frozen-code v4 verdict run: Kaggle job, report paths, and
   the `reports` result.
 
