@@ -75,7 +75,7 @@ from cdd_oran.envs.e6.env import E6Env  # noqa: E402
 PROTOCOL_DOC = "docs/benchmark/E6P_CONFOUNDED_PROTOCOL.md"
 MAPS_DOC = "docs/benchmark/artifacts/E6P_CONF_MAPS.json"
 REGISTRY_DOC = "docs/benchmark/SEED_REGISTRY.json"
-FROZEN_SHA256_CONF = None               # freeze 1: the protocol doc's LF-normalised sha256 (user, at the freeze commit)
+FROZEN_SHA256_CONF = "f719f43085cf1f95cf7c487e0e2c015e4377f9d83a9d4daa5484f42a996c7a1b"  # freeze 1 (2026-10-01): the protocol doc's LF-normalised sha256
 MAPS_SHA256 = None                      # freeze 2: the maps artifact's LF-normalised sha256 (after the disc analysis)
 SCHEMA_COLL = "e6p-disc-rec/1"
 SCHEMA_EVAL = "e6p-optaka2-rec/1"

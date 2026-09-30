@@ -1,10 +1,10 @@
 # E6-P option (a) protocol: causal maps from confounded incumbent logs, and the WG3 referee they drive
 
-FROZEN: no
+FROZEN: yes (2026-10-01, freeze 1, after the v4 verdict PARTIAL)
 
 > **Naming (2026-09-30):** the discovery method is **PMRT** (Predictable Matched-Filter Randomization Test; docs/benchmark/METHOD_NAMES.md). It is the method labelled "MSCR+" in protocol v4 and in the frozen artifact E6P_MSCRPLUS_V4_FROZEN.json; this study uses its label-only successor E6P_PMRT_V4.json (docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md).
 
-**Status: DRAFT (2026-09-30).** Written after the kill tests K-A, K-A2 and K-B (section 2) and before any seed of the
+**Status: FROZEN at freeze 1 (2026-10-01); drafted 2026-09-30.** Written after the kill tests K-A, K-A2 and K-B (section 2) and before any seed of the
 study blocks below is simulated. The file must be frozen (this line set to "FROZEN: yes", the file's LF-normalised
 sha256 recorded in the freeze commit message, in `.tmp/PLAN.md` AND in `scratchpad/e6_dev/e6p_conf.py` as
 `FROZEN_SHA256_CONF`) BEFORE any `disc`, `placebo` or `gt` episode is simulated; those stages refuse to run while
@@ -28,7 +28,7 @@ Sources: `scratchpad/e6_dev/decision/OPTION_A_PLAN.md` (plan + amendment), `.tmp
 | v2 (`..._V2.md`) | MSCR-CRT v2 | eval_v2 480 eps | KILL near miss (premise z 2.67 not declared) |
 | v3 (`..._V3.md`) | MSCR-CRT v2, n 1200 | eval_v3 1200 eps | PARTIAL (P1 pass, P2 fail); validity only approximate (agent V: sleep null-outcome rejection .143) |
 | PMRT development | 29 statistic arms (agent S), 13 declaration layers (agent M), 9 combinations (agent I) | fitted on ev2 + DEV, SELECTED on ev3 slices vs the pooled GT | `loadsp_c` + `wby1s` chosen; selection optimism about .02-.05 F1 |
-| v4 (`..._V4.md`, frozen at 4fc2cd9) | frozen PMRT artifact (sha256 `4735a85a...d14ba`) | fresh 188000-189999, pi0 .5/.5 from t = 0 | pending at the time of writing; its verdict is reported next to this study |
+| v4 (`..._V4.md`, frozen at 4fc2cd9) | frozen PMRT artifact (sha256 `4735a85a...d14ba`) | fresh 188000-189999, pi0 .5/.5 from t = 0 | PARTIAL (2026-10-01, Kaggle e6p-disc-v4an-1): K0, K0n, G, K1, P1, P3, S pass; P2 fails only vs granger_by at n 60 (2/10 wins; 4/5 at n 120), which declares 13 placebo edges vs PMRT 0; pooled indirect F1 .95, sign accuracy 1.00. Not INVALID, so this study proceeds (lead decision 6) |
 
 PMRT enters this study as the v4 frozen artifact, unchanged: nothing is re-fitted on confounded data. K-B (section 2)
 used MSCR-CRT v2, not PMRT; this study is the first time PMRT sees incumbent logs.

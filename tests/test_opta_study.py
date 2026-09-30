@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -68,7 +69,7 @@ def _root(tmp_path, frozen_line="FROZEN: no"):
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(os.path.join(ROOT, rel), dst)
     p = tmp_path / C.PROTOCOL_DOC
-    txt = p.read_text(encoding="utf-8").replace("FROZEN: no", frozen_line, 1)
+    txt = re.sub(r"^FROZEN:.*$", frozen_line, p.read_text(encoding="utf-8"), count=1, flags=re.M)
     p.write_bytes(txt.encode("utf-8"))
     return str(tmp_path)
 
@@ -76,6 +77,7 @@ def _root(tmp_path, frozen_line="FROZEN: no"):
 def test_freeze_guards_refuse_until_frozen(tmp_path, monkeypatch):
     root = _root(tmp_path)
     monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(C, "FROZEN_SHA256_CONF", None)             # independent of the real freeze state
     for st in C.FROZEN_STAGES:
         with pytest.raises(SystemExit):
             C.guard_run(st, smoke=False, root=root)                # FROZEN_SHA256_CONF is None
