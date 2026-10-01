@@ -31,3 +31,8 @@
   two-tower 8 (5 right, 22 placebo); SHAP 5 (1 right). Freeze 2 (maps artifact) committed after one disclosed
   plumbing fix (circular hash pin). **EVAL launched** (160 seeds, 3 Kaggle kernels, ~6-7 h): this is the step that
   tests whether the better map actually prevents SLA violations.
+- 13:55 **option (a) VERDICT: NOT ELIGIBLE.** The PMRT-map referee has the highest R of every arm (+0.47, 90% CI
+  [0.35, 0.59]; ground-truth map +0.24; best static never_sleep +0.22; best associational map corr +0.03; Granger,
+  granger_by, two-tower and SHAP maps -9.8 to -11.5) and lowers SLA / eMBB / LL violations, but raises radio-link
+  failures 1.31x (CI 1.10-1.56) against the 1.10 guard, so it is ineligible and D1 / D2 fail by rule. Cause: the PMRT
+  map misses the three RLF edges (sleep -> nbr / far RLF up, ptx -> nbr RLF down) that the ground-truth map has.

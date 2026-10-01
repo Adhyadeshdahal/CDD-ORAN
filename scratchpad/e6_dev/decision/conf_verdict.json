@@ -1,0 +1,178 @@
+{
+ "verdict": {
+  "verdict": "NOT ELIGIBLE",
+  "label": "NOT ELIGIBLE",
+  "complete": true,
+  "precedence": "INVALID (K0 or K0n) > NOT ELIGIBLE (E) > PASS (D1 and D2) / PARTIAL (one) / FAIL"
+ },
+ "K0": true,
+ "K0n": true,
+ "E": {
+  "pass": false,
+  "retention_ci90": [
+   1.62203425289096,
+   1.7231588738649681
+  ],
+  "guard_ratio_ci90": {
+   "svr": [
+    0.8376853369712083,
+    0.8886596950727895
+   ],
+   "nonprot_embb_viol": [
+    0.8319156611397501,
+    0.8825902458716542
+   ],
+   "ll_viol": [
+    0.8743401645462163,
+    1.0147257948165473
+   ],
+   "rlf": [
+    1.0963961133691378,
+    1.5648131344614191
+   ]
+  }
+ },
+ "D1": {
+  "pass": false,
+  "delta1": -0.03260101854949631,
+  "best_point": "MG:corr@dev",
+  "lb90": -0.0771522658368257,
+  "ci90": [
+   -0.0771522658368257,
+   -0.007838598902679867
+  ],
+  "n_nonfinite": 0,
+  "best_selected_share": {
+   "MG:corr@dev": 0.7754,
+   "MG:corr@plc": 0.0008,
+   "MG:granger@dev": 0.0,
+   "MG:granger@plc": 0.0,
+   "MG:shap_gbdt@dev": 0.0,
+   "MG:shap_gbdt@plc": 0.0,
+   "MG:int@dev": 0.0,
+   "MG:int@plc": 0.0,
+   "MG:qacm@dev": 0.2238,
+   "MG:qacm@plc": 0.0,
+   "MG:two_tower@dev": 0.0,
+   "MG:two_tower@plc": 0.0,
+   "MG:granger_by": 0.0
+  },
+  "margin": 0.1
+ },
+ "D2": {
+  "pass": false,
+  "n_hypotheses": 9,
+  "hypotheses": {
+   "MG:corr@dev": {
+    "members": [
+     "MG:corr@dev"
+    ],
+    "p": 0.884011598840116,
+    "same_signature_as_primary": false,
+    "rejected": false
+   },
+   "MG:corr@plc": {
+    "members": [
+     "MG:corr@plc",
+     "MG:granger@plc",
+     "MG:int@dev",
+     "MG:int@plc",
+     "MG:two_tower@plc"
+    ],
+    "p": 1.0,
+    "same_signature_as_primary": false,
+    "rejected": false
+   },
+   "MG:granger@dev": {
+    "members": [
+     "MG:granger@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "MG:shap_gbdt@dev": {
+    "members": [
+     "MG:shap_gbdt@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "MG:shap_gbdt@plc": {
+    "members": [
+     "MG:shap_gbdt@plc"
+    ],
+    "p": 1.0,
+    "same_signature_as_primary": false,
+    "rejected": false
+   },
+   "MG:qacm@dev": {
+    "members": [
+     "MG:qacm@dev"
+    ],
+    "p": 0.9925007499250075,
+    "same_signature_as_primary": false,
+    "rejected": false
+   },
+   "MG:qacm@plc": {
+    "members": [
+     "MG:qacm@plc"
+    ],
+    "p": 0.9925007499250075,
+    "same_signature_as_primary": false,
+    "rejected": false
+   },
+   "MG:two_tower@dev": {
+    "members": [
+     "MG:two_tower@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "MG:granger_by": {
+    "members": [
+     "MG:granger_by"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   }
+  },
+  "alpha": 0.05,
+  "procedure": "Holm over the distinct signatures of A, one-sided paired bootstrap"
+ },
+ "never_sleep": {
+  "dR": 0.2485037730939371,
+  "ci90": [
+   0.1385655236724055,
+   0.3618438134915213
+  ],
+  "noninferior_lb90_gt": -0.1,
+  "noninferior": true,
+  "statement": "pre-registered: the study does NOT expect and will NOT claim that the PMRT map beats the best static rule; reported whatever it shows"
+ },
+ "discovery_label": "DISC-PASS",
+ "maps_verify": {
+  "path": "/tmp/job_root/docs/benchmark/artifacts/E6P_CONF_MAPS.json",
+  "sha256": "6c82357b913d5ee11d501ff1209ec5e2068732e85181dcd27a5216109ff8940a",
+  "checks": {
+   "schema": true,
+   "signatures": true,
+   "alias": true,
+   "arms_complete": true,
+   "mapgate_sha": true,
+   "mapgate_consts": true,
+   "analyzer_sha": true,
+   "driver_sha": true,
+   "v4_artifact_sha": true,
+   "mode_full": true,
+   "not_invalid": true
+  },
+  "ok": true,
+  "driver_MAPS_SHA256": "6c82357b913d5ee11d501ff1209ec5e2068732e85181dcd27a5216109ff8940a",
+  "driver_matches": true
+ },
+ "n_seeds": 160
+}
