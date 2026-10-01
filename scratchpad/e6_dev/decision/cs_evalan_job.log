@@ -1,0 +1,35 @@
+[job] bundle: unzipped dataset at /kaggle/input/datasets/bishalpanta/e6p-cs-evalan-1-code -> /tmp/job_root
+[job] /kaggle/input: 66 listing lines -> job_inputs.txt
+[job] sources -> /tmp/src/<slug>: {'e6p-cs-eval-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-cs-eval-1-a', 'e6p-cs-eval-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-cs-eval-1-b', 'e6p-cs-eval-1-c': '/kaggle/input/notebooks/bishalpanta/e6p-cs-eval-1-c', 'e6p-cs-eval-1-d': '/kaggle/input/notebooks/bishalpanta/e6p-cs-eval-1-d', 'e6p-cs-eval-1-e': '/kaggle/input/notebooks/bishalpanta/e6p-cs-eval-1-e'}; missing []
+[job] git 8ef2f3c0a9d885320fa8577c16e2920a1f838da2 dirty True; pin match; kaggle had {'numpy': '2.0.2', 'scipy': '1.16.3'}; now 2.4.2 1.18.1 3.12.13; want 2.4.2/1.18.1; install [(['numpy==2.4.2', 'scipy==1.18.1'], 0)]
+[job] cpus 4; CMD: python scratchpad/e6_dev/e6p_certsafe_analyze.py eval --records $JOB_SRC/e6p-cs-eval-1-a,$JOB_SRC/e6p-cs-eval-1-b,$JOB_SRC/e6p-cs-eval-1-c,$JOB_SRC/e6p-cs-eval-1-d,$JOB_SRC/e6p-cs-eval-1-e --disc-json scratchpad/e6_dev/decision/conf_disc_conf.json --out $JOB_OUT
+[19:05:49] EVAL: 160 seeds; den 58.48
+[19:05:49]   freeze               R -5.088 [-6.088,-4.316] R* -5.088 ret 0.000 0.60 0.52 0.29 0.94 n
+[19:05:49]   sub:ES+PowerES       R -11.106 [-12.779,-9.815] R* -11.106 ret 1.000 1.03 0.89 0.51 0.99 Y
+[19:05:49]   noarb                R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   sub:ES               R -7.114 [-8.341,-6.176] R* -7.114 ret 0.492 0.75 0.65 0.34 1.02 n
+[19:05:49]   sub:PowerES          R -8.662 [-10.112,-7.522] R* -8.662 ret 0.638 0.86 0.74 0.46 0.95 n
+[19:05:49]   sub:SliceGuarantee   R +1.000 [+1.000,+1.000] R* +0.000 ret -0.002 0.60 0.59 0.54 0.95 n
+[19:05:49]   incumbent            R -0.192 [-0.319,-0.078] R* -0.192 ret 0.858 0.95 0.95 0.92 0.94 n
+[19:05:49]   never_sleep          R +0.256 [+0.169,+0.339] R* +0.256 ret 1.146 0.88 0.88 0.86 0.96 Y
+[19:05:49]   MG:PMRT              R +0.201 [+0.025,+0.363] R* +0.201 ret 1.634 0.89 0.88 0.96 1.05 Y
+[19:05:49]   CS:PMRT              R +0.256 [+0.169,+0.339] R* +0.256 ret 1.146 0.88 0.88 0.86 0.96 Y
+[19:05:49]   CS:GT                R +0.221 [+0.119,+0.319] R* +0.221 ret 1.294 0.90 0.90 0.91 0.94 Y
+[19:05:49]   CS:rand              R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:blanket2          R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:corr@dev          R +0.095 [+0.036,+0.157] R* +0.095 ret 1.029 0.97 0.97 0.97 0.97 Y
+[19:05:49]   CS:corr@plc          R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:granger@dev       R -11.057 [-12.726,-9.780] R* -11.057 ret 1.003 1.03 0.88 0.50 0.99 Y
+[19:05:49]   CS:granger@plc       R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:shap_gbdt@dev     R -10.742 [-12.407,-9.474] R* -10.742 ret 0.891 1.01 0.87 0.50 0.99 n
+[19:05:49]   CS:shap_gbdt@plc     R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:int@dev           R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:int@plc           R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:qacm@dev          R -0.010 [-0.049,+0.024] R* -0.010 ret 0.996 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:qacm@plc          R -0.010 [-0.049,+0.024] R* -0.010 ret 0.996 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:two_tower@dev     R -11.023 [-12.683,-9.745] R* -11.023 ret 1.003 1.03 0.88 0.50 0.99 Y
+[19:05:49]   CS:two_tower@plc     R +0.000 [+0.000,+0.000] R* +0.000 ret 0.995 1.00 1.00 1.00 1.00 Y
+[19:05:49]   CS:granger_by        R -10.551 [-12.176,-9.286] R* -10.551 ret 1.032 1.00 0.86 0.49 0.97 Y
+[19:05:49] E True D1 True D2 True D3 False (delta3 0.0, LB90 0.0) S1 True (RLF UB90 0.9874732361314209)
+[19:05:49] VERDICT: PARTIAL
+[job] exit code 0; wall 36.7 s

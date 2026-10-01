@@ -1,0 +1,148 @@
+{
+ "verdict": {
+  "verdict": "PARTIAL",
+  "label": "PARTIAL",
+  "complete": true,
+  "precedence": "INVALID > NOT ELIGIBLE (E) > PASS (D1, D2, D3) > PARTIAL > FAIL"
+ },
+ "K0": true,
+ "K0n": true,
+ "E": {
+  "pass": true,
+  "retention_ci90": [
+   1.1289404551588758,
+   1.1637109245511241
+  ],
+  "guard_ratio_ci90": {
+   "svr": [
+    0.8701875795424743,
+    0.899013553823898
+   ],
+   "nonprot_embb_viol": [
+    0.8687893492178516,
+    0.8974250004908482
+   ],
+   "ll_viol": [
+    0.8282349597168099,
+    0.8896706327585923
+   ],
+   "rlf": [
+    0.9307039569573332,
+    0.9874732361314209
+   ]
+  }
+ },
+ "D1": {
+  "pass": true,
+  "delta1": 0.16139673965467338,
+  "best_point": "CS:corr@dev",
+  "lb90": 0.09417392447358267,
+  "ci90": [
+   0.09417392447358267,
+   0.22874513096575783
+  ],
+  "n_nonfinite": 0,
+  "best_selected_share": {
+   "CS:corr@dev": 0.9927,
+   "CS:corr@plc": 0.0014,
+   "CS:granger@dev": 0.0,
+   "CS:granger@plc": 0.0,
+   "CS:shap_gbdt@dev": 0.0,
+   "CS:shap_gbdt@plc": 0.0,
+   "CS:int@dev": 0.0,
+   "CS:int@plc": 0.0,
+   "CS:qacm@dev": 0.0059,
+   "CS:qacm@plc": 0.0,
+   "CS:two_tower@dev": 0.0,
+   "CS:two_tower@plc": 0.0,
+   "CS:granger_by": 0.0
+  },
+  "margin": 0.1
+ },
+ "D2": {
+  "pass": true,
+  "n_hypotheses": 7,
+  "hypotheses": {
+   "CS:corr@dev": {
+    "members": [
+     "CS:corr@dev"
+    ],
+    "p": 0.00019998000199980003,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:corr@plc": {
+    "members": [
+     "CS:corr@plc",
+     "CS:granger@plc",
+     "CS:shap_gbdt@plc",
+     "CS:int@dev",
+     "CS:int@plc",
+     "CS:two_tower@plc"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:granger@dev": {
+    "members": [
+     "CS:granger@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:shap_gbdt@dev": {
+    "members": [
+     "CS:shap_gbdt@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:qacm@dev": {
+    "members": [
+     "CS:qacm@dev",
+     "CS:qacm@plc"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:two_tower@dev": {
+    "members": [
+     "CS:two_tower@dev"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   },
+   "CS:granger_by": {
+    "members": [
+     "CS:granger_by"
+    ],
+    "p": 9.999000099990002e-05,
+    "same_signature_as_primary": false,
+    "rejected": true
+   }
+  },
+  "alpha": 0.05,
+  "procedure": "Holm over the distinct signatures of A, one-sided paired bootstrap"
+ },
+ "D3": {
+  "pass": false,
+  "delta3": 0.0,
+  "lb90": 0.0,
+  "ci90": [
+   0.0,
+   0.0
+  ],
+  "ref": "never_sleep"
+ },
+ "S1": {
+  "pass": true,
+  "rlf_ratio_ub90": 0.9874732361314209,
+  "cap": 1.2
+ },
+ "n_seeds": 160
+}
