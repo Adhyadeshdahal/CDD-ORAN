@@ -25,3 +25,9 @@
   prefer, revert is one `git revert` away and changes nothing about the v4 verdict.
 - 03:11 option (a) DISC collection complete (600 episodes, both kernels clean). Waiting on GT + placebo.
 - 07:15 option (a) GT complete (40 eps). Discovery analysis running on Kaggle (e6p-conf-discan-2; a first launch, discan-1, got empty input paths from a shell-quoting slip and is void). Next: freeze 2 (maps artifact) -> EVAL (160 seeds, 3 kernels).
+- ~07:45 **option (a) discovery: DISC-PASS.** On confounded incumbent logs, PMRT's map: 22 edges, 18 true with the
+  right sign, **0 wrong-sign**, **0 edges on placebo logs**. Associational baselines: granger_by 47 edges (16 right,
+  6 wrong-sign, 29 on placebo); granger 32 (12 right, 6 wrong, 19 placebo); corr 10 (6 right, 2 wrong, 8 placebo);
+  two-tower 8 (5 right, 22 placebo); SHAP 5 (1 right). Freeze 2 (maps artifact) committed after one disclosed
+  plumbing fix (circular hash pin). **EVAL launched** (160 seeds, 3 Kaggle kernels, ~6-7 h): this is the step that
+  tests whether the better map actually prevents SLA violations.
