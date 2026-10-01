@@ -56,8 +56,10 @@ eval (section 7.2): Gate A stats (e6p_step2_dev definitions) of every arm on ONE
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import re
 import sys
 import time
 import warnings
@@ -772,6 +774,14 @@ def step1_maps(a, bl: dict, ud_disc, cache_dir: str) -> dict:
 
 
 # ============================================================================================ build / verify (freeze 2)
+def driver_sha(root: str = ROOT) -> str:
+    """LF sha256 of the driver with its ``MAPS_SHA256`` line normalised to None: the maps artifact pins the driver,
+    and the driver pins the maps artifact (freeze 2), so the pin itself must not enter the driver's hash."""
+    txt = open(os.path.join(root, DRIVER), "rb").read().decode("utf-8").replace("\r\n", "\n")
+    txt = re.sub(r"^MAPS_SHA256 = .*$", "MAPS_SHA256 = None", txt, count=1, flags=re.M)
+    return hashlib.sha256(txt.encode("utf-8")).hexdigest()
+
+
 def build_artifact(disc: dict, disc_sha: str, allow_dry: bool = False) -> dict:
     """The maps artifact (section 9 step 5) from a disc_conf.json dict. Refuses INVALID, failed record checks, a
     non-full analysis (unless ``allow_dry``) and missing arms (unless ``allow_dry``)."""
@@ -803,7 +813,7 @@ def build_artifact(disc: dict, disc_sha: str, allow_dry: bool = False) -> dict:
                         "priority": list(MG.PRIORITY_V2), "guards": list(MG.GUARDS_V2), "rels": list(MG.RELS_V2),
                         "directional": True, "sha256": A4.sha_lf(os.path.join(ROOT, MAPGATE))},
             "sha256": {"disc_conf.json": disc_sha, ANALYZER: A4.sha_lf(os.path.join(ROOT, ANALYZER)),
-                       DRIVER: A4.sha_lf(os.path.join(ROOT, DRIVER)),
+                       DRIVER: driver_sha(),
                        "v4_artifact": disc["artifact"]["sha256"], "disc_code": disc["code_sha256"]},
             "platform": disc["platform"]}
 
@@ -833,7 +843,7 @@ def verify_artifact(path: str, disc_json: str | None = None, allow_dry: bool = F
            "mapgate_sha": a["mapgate"]["sha256"] == A4.sha_lf(os.path.join(ROOT, MAPGATE)),
            "mapgate_consts": (a["mapgate"]["theta"], a["mapgate"]["k_conf"]) == (C.THETA, C.K_CONF),
            "analyzer_sha": a["sha256"][ANALYZER] == A4.sha_lf(os.path.join(ROOT, ANALYZER)),
-           "driver_sha": a["sha256"][DRIVER] == A4.sha_lf(os.path.join(ROOT, DRIVER)),
+           "driver_sha": a["sha256"][DRIVER] == driver_sha(),
            "v4_artifact_sha": a["sha256"]["v4_artifact"] == V4_ARTIFACT_SHA256,
            "mode_full": a["mode"] == "full" or allow_dry, "not_invalid": a["discovery_label"] != "INVALID"}
     if disc_json:

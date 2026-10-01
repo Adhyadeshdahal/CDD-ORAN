@@ -480,3 +480,18 @@ def test_load_eval_expands_aliases(tmp_path):
     R, _ = AN.load_eval([str(f)], {"MG:PMRT": "MG:PMRT", "MG:GT": "MG:PMRT", "blanket2": "blanket2",
                                    "MG:corr@dev": "noarb"})
     assert R[187000]["MG:GT"]["alias_of"] == "MG:PMRT" and "MG:corr@dev" not in R[187000]
+
+
+def test_driver_sha_ignores_maps_pin(tmp_path):
+    """freeze 2 is circular (the maps artifact pins the driver, the driver pins the maps artifact): the driver's hash
+    must not depend on the MAPS_SHA256 line, and must still depend on everything else."""
+    d = tmp_path / AN.DRIVER
+    d.parent.mkdir(parents=True, exist_ok=True)
+    src = open(os.path.join(ROOT, AN.DRIVER), encoding="utf-8").read()
+    d.write_text(re.sub(r"^MAPS_SHA256 = .*$", "MAPS_SHA256 = None", src, count=1, flags=re.M), encoding="utf-8")
+    h0 = AN.driver_sha(str(tmp_path))
+    d.write_text(re.sub(r"^MAPS_SHA256 = .*$", 'MAPS_SHA256 = "' + "a" * 64 + '"', src, count=1, flags=re.M),
+                 encoding="utf-8")
+    assert AN.driver_sha(str(tmp_path)) == h0
+    d.write_text(src + "\n# changed\n", encoding="utf-8")
+    assert AN.driver_sha(str(tmp_path)) != h0

@@ -1,0 +1,18 @@
+arm                  edges TRUE+ WRONG null indet | placebo-map edges
+MG:PMRT                 22    18     0    3     1 | 0
+MG:GT                   29    29     0    0     0 | -
+MG:rand                 22     4     7    9     2 | -
+blanket2                 9     4     1    1     3 | -
+MG:shap_gbdt@dev         5     1     0    1     3 | 2
+MG:shap_gbdt@plc         1     1     0    0     0 | 1
+MG:corr@dev             10     6     2    2     0 | 8
+MG:corr@plc              4     3     0    1     0 | 1
+MG:granger@dev          32    12     6   12     2 | 19
+MG:granger@plc           6     5     0    1     0 | 1
+MG:granger_by           47    16     6   19     6 | 29
+MG:two_tower@dev         8     5     0    3     0 | 22
+MG:two_tower@plc         0     0     0    0     0 | 1
+MG:int@dev               5     4     0    1     0 | 1
+MG:int@plc               7     4     1    2     0 | 1
+MG:qacm@dev              6     5     0    1     0 | 0
+MG:qacm@plc              7     6     0    1     0 | 1

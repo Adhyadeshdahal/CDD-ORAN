@@ -1,0 +1,63 @@
+[job] bundle: unzipped dataset at /kaggle/input/datasets/bishalpanta/e6p-conf-discan-2-code -> /tmp/job_root
+[job] /kaggle/input: 72 listing lines -> job_inputs.txt
+[job] sources -> /tmp/src/<slug>: {'e6p-conf-dev-2-a': '/kaggle/input/notebooks/bishalpanta/e6p-conf-dev-2-a', 'e6p-conf-disc-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-conf-disc-1-a', 'e6p-conf-disc-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-conf-disc-1-b', 'e6p-conf-placebo-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-conf-placebo-1-a', 'e6p-conf-gt-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-conf-gt-1-a', 'e6p-conf-gt-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-conf-gt-1-b'}; missing []
+[job] git 11f59553b9ae26a60f5408ae07707d1ee235d4be dirty True; pin match; kaggle had {'numpy': '2.0.2', 'scipy': '1.16.3'}; now 2.4.2 1.18.1 3.12.13; want 2.4.2/1.18.1; install [(['numpy==2.4.2', 'scipy==1.18.1'], 0)]
+[job] cpus 4; CMD: python scratchpad/e6_dev/e6p_conf_analyze.py disc --dev $JOB_SRC/e6p-conf-dev-2-a --disc $JOB_SRC/e6p-conf-disc-1-a,$JOB_SRC/e6p-conf-disc-1-b --placebo $JOB_SRC/e6p-conf-placebo-1-a --gt $JOB_SRC/e6p-conf-gt-1-a,$JOB_SRC/e6p-conf-gt-1-b --dev-step1 scratchpad/e6_dev/runs/e6p-disc-dev-1/all.jsonl --workers 4 --out $JOB_OUT
+[01:31:15] v4 artifact sha ok True, code ok True []
+[01:31:30] record checks: {'dev_conf': (20, {}, 0, True), 'disc': (600, {}, 0, True), 'placebo': (200, {}, 0, True)}
+[01:31:30] repro: {"incumbent_vs_logging": {"per_seed": {"186080": 0.0, "186081": 0.0}, "ok": true}, "allaccept_vs_noarb": {"per_seed": {"186080": 0.0, "186081": 0.0}, "ok": true}, "noarb_alias": true}
+[01:32:18] units 79499 disc / 25016 placebo / 2773 dev; p_mismatch {'disc': 0, 'placebo': 0, 'dev': 0} [37.7 s]
+[01:32:19] GT 40 eps, 2777 labels; G True; data {'dev_conf': {'ok': True, 'n': 20, 'expected': [186080, 186099], 'smoke': False}, 'disc': {'ok': True, 'n': 600, 'expected': [186100, 186699], 'smoke': False}, 'placebo': {'ok': True, 'n': 200, 'expected': [186700, 186899], 'smoke': False}, 'gt': {'ok': True, 'n': 40, 'expected': [186900, 186939]}, 'all_ok': True}
+[01:32:35] K0 True: m 60 reject 0 tail 1 declared [] [15.2 s]
+[01:33:20] PMRT DISC (600 eps): declared [['carrier|own|e', 1], ['carrier|own|load', -1], ['carrier|own|pv', -1], ['carrier|own|v', -1], ['prot_min|own|pv', -1], ['ptx|far|load', -1], ['ptx|nbr|load', -1], ['ptx|nbr|v', -1], ['ptx|own|e', 1], ['ptx|own|load', 1], ['ptx|own|pv', 1], ['ptx|own|rlf', 1], ['ptx|own|v', 1], ['sleep|nbr|e', 1], ['sleep|nbr|load', 1], ['sleep|nbr|pv', 1], ['sleep|nbr|v', 1], ['sleep|own|e', -1], ['sleep|own|load', -1], ['sleep|own|pv', -1], ['sleep|own|rlf', -1], ['sleep|own|v', -1]] [45.4 s]
+[01:33:26]   K0n g0 shift1: units 8216, primary decl 0 (6 s)
+[01:33:32]   K0n g0 shift2: units 8216, primary decl 0 (6 s)
+[01:33:38]   K0n g0 shift3: units 8216, primary decl 0 (6 s)
+[01:33:44]   K0n g0 shift4: units 8216, primary decl 0 (6 s)
+[01:33:49]   K0n g1 shift1: units 8051, primary decl 0 (6 s)
+[01:33:55]   K0n g1 shift2: units 8051, primary decl 0 (6 s)
+[01:34:01]   K0n g1 shift3: units 8051, primary decl 0 (6 s)
+[01:34:07]   K0n g1 shift4: units 8051, primary decl 0 (6 s)
+[01:34:12]   K0n g2 shift1: units 7981, primary decl 0 (6 s)
+[01:34:18]   K0n g2 shift2: units 7981, primary decl 0 (6 s)
+[01:34:24]   K0n g2 shift3: units 7981, primary decl 0 (6 s)
+[01:34:29]   K0n g2 shift4: units 7981, primary decl 0 (6 s)
+[01:34:35]   K0n g3 shift1: units 8167, primary decl 0 (6 s)
+[01:34:41]   K0n g3 shift2: units 8167, primary decl 0 (6 s)
+[01:34:47]   K0n g3 shift3: units 8167, primary decl 0 (6 s)
+[01:34:53]   K0n g3 shift4: units 8167, primary decl 0 (6 s)
+[01:34:58]   K0n g4 shift1: units 7621, primary decl 0 (6 s)
+[01:35:04]   K0n g4 shift2: units 7621, primary decl 0 (5 s)
+[01:35:09]   K0n g4 shift3: units 7621, primary decl 0 (6 s)
+[01:35:15]   K0n g4 shift4: units 7621, primary decl 0 (6 s)
+[01:35:21]   K0n g5 shift1: units 7887, primary decl 0 (6 s)
+[01:35:26]   K0n g5 shift2: units 7887, primary decl 0 (6 s)
+[01:35:32]   K0n g5 shift3: units 7887, primary decl 0 (6 s)
+[01:35:38]   K0n g5 shift4: units 7887, primary decl 0 (6 s)
+[01:35:43]   K0n g6 shift1: units 7681, primary decl 0 (6 s)
+[01:35:49]   K0n g6 shift2: units 7681, primary decl 0 (6 s)
+[01:35:55]   K0n g6 shift3: units 7681, primary decl 0 (6 s)
+[01:36:00]   K0n g6 shift4: units 7681, primary decl 0 (6 s)
+[01:36:06]   K0n g7 shift1: units 8054, primary decl 0 (6 s)
+[01:36:12]   K0n g7 shift2: units 8054, primary decl 0 (6 s)
+[01:36:18]   K0n g7 shift3: units 8054, primary decl 0 (6 s)
+[01:36:24]   K0n g7 shift4: units 8054, primary decl 0 (6 s)
+[01:36:29]   K0n g8 shift1: units 7771, primary decl 0 (6 s)
+[01:36:35]   K0n g8 shift2: units 7771, primary decl 0 (6 s)
+[01:36:40]   K0n g8 shift3: units 7771, primary decl 0 (6 s)
+[01:36:46]   K0n g8 shift4: units 7771, primary decl 0 (6 s)
+[01:36:52]   K0n g9 shift1: units 8070, primary decl 0 (6 s)
+[01:36:58]   K0n g9 shift2: units 8070, primary decl 0 (6 s)
+[01:37:04]   K0n g9 shift3: units 8070, primary decl 0 (6 s)
+[01:37:10]   K0n g9 shift4: units 8070, primary decl 0 (6 s)
+[01:37:10] K0n True: 40 variants, rate 0.05 [229.7 s]
+[01:37:10] K1 True  X1 True  X2 True (prec 0.8666666666666667, sign 1.0)  X3 True  -> discovery label DISC-PASS
+[01:39:06]    baseline shap_gbdt: tau 0.01635 (physics 0.0001451) wall 116.0 s (cpu 115.0 s)
+[01:39:06]    baseline corr: tau 0.2924 (physics 0.4035) wall 0.1 s (cpu 0.1 s)
+[01:39:06]    baseline granger: tau 7.152 (physics 2.205) wall 0.3 s (cpu 1.1 s)
+[01:46:53]    baseline two_tower: tau 0.004647 (physics 0.007705) wall 466.7 s (cpu 918.1 s)
+[01:46:53]    baseline int: tau 0.3544 (physics 0.4108) wall 0.1 s (cpu 0.1 s)
+[02:03:12]    baseline qacm: tau 0.2355 (physics 0.2284) wall 978.7 s (cpu 1955.8 s)
+[02:03:14] maps: {'MG:PMRT': 22, 'MG:GT': 29, 'MG:rand': 22, 'blanket2': 9, 'MG:shap_gbdt@dev': 5, 'MG:shap_gbdt@plc': 1, 'MG:corr@dev': 10, 'MG:corr@plc': 4, 'MG:granger@dev': 32, 'MG:granger@plc': 6, 'MG:granger_by': 47, 'MG:two_tower@dev': 8, 'MG:two_tower@plc': 0, 'MG:int@dev': 5, 'MG:int@plc': 7, 'MG:qacm@dev': 6, 'MG:qacm@plc': 7}; jobs ['MG:PMRT', 'MG:GT', 'MG:rand', 'blanket2', 'MG:corr@dev', 'MG:granger@dev', 'MG:shap_gbdt@dev', 'MG:shap_gbdt@plc', 'MG:qacm@dev', 'MG:qacm@plc', 'MG:two_tower@dev', 'MG:granger_by']; missing []
+[02:05:46] mode full; label DISC-PASS; wrote /kaggle/working/out/disc_conf.json
+[job] exit code 0; wall 2101.3 s
