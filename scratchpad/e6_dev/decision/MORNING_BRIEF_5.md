@@ -12,3 +12,13 @@
   (MG:PMRT on these seeds: R +0.201, RLF 1.05). CS:GT +0.221. Associational maps: corr@dev +0.095, qacm -0.01,
   granger / granger_by / two_tower / shap -10.5 to -11.1. STOP RULE applies: no further referee iterations.
   Files: decision/cs_verdict.json, cs_eval.json, cs_evalan_job.log.
+- ~01:20 raw EVAL records pulled locally (runs/e6p-cs-eval-1, runs/e6p-conf-eval-1). Archive report builder (subagent) started: reports/2026-10-02-v4-pmrt-confounded-certsafe/.
+- ~01:45 Archive report done: reports/2026-10-02-v4-pmrt-confounded-certsafe/ (index.html + make_figs.py; 55 assertion
+  blocks recompute everything from raw records and all pass). The independent recomputation corrected three of my claims:
+  (1) granger_by precision is .59-.75 across all 18 slices (not .59-.71); (2) the "ptx -> nbr RLF z -2.2" is the
+  plain_c arm; PMRT's primary statistic (loadsp_c) gives z -0.70, so the edge was not close to being declared;
+  (3) the ungated MG:PMRT referee was ELIGIBLE on the 160 fresh 2b seeds (R +0.201, RLF 1.05, UB 1.16): the option (a)
+  1.31x RLF failure did not reproduce. Other findings: the 2b gate does not stop the catastrophic associational
+  referees (CS:granger_by etc. eligible at R -10.6 to -11.1, harm from about 18,400 prot_min deferrals that no guard
+  measures); the reviewers suggested gating by deferring unresolved actions, while the frozen protocol does the
+  opposite; the reviewer CONTEXT file still has the old (wrong) sleep-edge RLF explanation.

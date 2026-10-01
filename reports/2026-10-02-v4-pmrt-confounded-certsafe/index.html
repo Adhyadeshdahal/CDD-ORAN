@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v4, option (a) and 2b</title>
+<style>
+  :root{--bg:#faf9f6;--card:#fff;--ink:#20242a;--soft:#5c6470;--line:#e6e3db;--good:#1f8a5b;--bad:#c0492f;
+    --acc:#2a6cc0;--amb:#a66d12;--accbg:#eaf0f8;--goodbg:#e8f5ee;--badbg:#faeae4;--ambbg:#faf1df;--mono:#f2f0ea;
+    --eq:#dbe8f8;--fig:#ffffff}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  }
+  :root[data-theme="dark"]{--bg:#17181a;--card:#1f2124;--ink:#e8e6e1;--soft:#a3a8b0;--line:#34373c;
+      --good:#5cc592;--bad:#ee7f66;--acc:#79a8e8;--amb:#e0a84a;--accbg:#1d2a3b;--goodbg:#173026;--badbg:#3a2019;
+      --ambbg:#352a15;--mono:#2a2c30;--eq:#23344c;--fig:#f4f3ef}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 16px 100px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
+  .kick{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  h1{font-size:1.85rem;line-height:1.22;margin:8px 0 6px;letter-spacing:-0.01em}
+  .meta{color:var(--soft);font-size:.9rem}
+  h2{font-size:1.28rem;margin:46px 0 12px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-0.01em}
+  h3{font-size:1.05rem;margin:26px 0 8px}
+  p{margin:0 0 14px} strong{font-weight:650}
+  a{color:var(--acc)}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.86em;
+    background:var(--mono);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+  pre{background:var(--mono);padding:12px 14px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--amb);
+    border-radius:10px;padding:18px 22px;margin:20px 0}
+  .tag{display:inline-block;background:var(--badbg);color:var(--bad);font-weight:700;font-size:.74rem;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin:0 6px 8px 0}
+  .tag.amb{background:var(--ambbg);color:var(--amb)} .tag.acc{background:var(--accbg);color:var(--acc)}
+  .tag.good{background:var(--goodbg);color:var(--good)}
+  .verdict p{margin:0 0 8px;font-size:1.0rem}
+  .plain{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:18px 0}
+  .plain p{margin:0 0 10px} .plain p:last-child{margin:0}
+  figure{margin:22px 0;padding:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--fig);padding:4px}
+  figcaption{color:var(--soft);font-size:.88rem;margin-top:8px;padding-left:2px}
+  .tw{overflow-x:auto;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:.83rem;font-variant-numeric:tabular-nums}
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:right;vertical-align:top}
+  th:first-child,td:first-child,td.l,th.l{text-align:left}
+  thead th{background:var(--mono);font-weight:650}
+  td.no{color:var(--bad);font-weight:600} td.yes{color:var(--good);font-weight:600} td.am{color:var(--amb);font-weight:600}
+  td.eq{background:var(--eq)}
+  .call{border-left:4px solid var(--acc);background:var(--accbg);padding:13px 18px;border-radius:0 8px 8px 0;margin:18px 0}
+  .call.amb{border-color:var(--amb);background:var(--ambbg)} .call.bad{border-color:var(--bad);background:var(--badbg)}
+  .call .k{font-weight:700;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--acc);
+    display:block;margin-bottom:4px} .call.amb .k{color:var(--amb)} .call.bad .k{color:var(--bad)}
+  .call p:last-child{margin-bottom:0}
+  ul,ol{margin:0 0 14px;padding-left:24px} li{margin:5px 0}
+  .foot{color:var(--soft);font-size:.84rem;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+  @media(max-width:700px){.four{grid-template-columns:1fr 1fr}}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .kv b{display:block;font-size:1.35rem;letter-spacing:-0.01em} .kv span{color:var(--soft);font-size:.82rem}
+  .toc{font-size:.9rem;columns:2;column-gap:28px;margin:10px 0 0;padding-left:20px}
+  @media(max-width:620px){.toc{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kick">CDD-ORAN · E6-P discovery v4, PMRT rename, option (a), follow-up 2b · 2026-09-30 to 2026-10-02 · archival</div>
+  <h1>PMRT finds a calibrated causal map; the referee built on it is either unsafe or no better than "never sleep"</h1>
+  <div class="meta">Report written 2026-10-02 · sequel to
+    <a href="../2026-09-30-step1-discovery-and-step2-dev/index.html"><code>2026-09-30-step1-discovery-and-step2-dev</code></a>
+    · plant E6-P P3 surge-L40 · four frozen documents: discovery protocol v4 <code>E6P_DISCOVERY_PROTOCOL_V4.md</code>
+    (LF sha256 6857466c…, commit <code>4fc2cd9</code>), option (a) <code>E6P_CONFOUNDED_PROTOCOL.md</code> (f719f430…,
+    <code>e2d2149</code>; maps artifact 6c82357b…, <code>cdeb606</code>), 2b <code>E6P_CERTSAFE_PROTOCOL.md</code>
+    (cdd2c7e6…, <code>0b70a9b</code>; artifact 303ac557…, <code>8ef2f3c</code>) · every score, criterion, arm number
+    and count below is recomputed by <code>make_figs.py</code> from the analyzers' JSONs and the raw EVAL records,
+    written to <code>figures_data.json</code>, and asserted equal to the stored values (55 assertion blocks, all pass)
+    · nothing pushed</div>
+</header>
+
+<div class="verdict">
+  <span class="tag amb">v4 discovery: PARTIAL</span><span class="tag">option (a): NOT ELIGIBLE</span><span class="tag amb">2b: PARTIAL (D3 fails)</span><span class="tag acc">stop rule reached</span>
+  <p><strong>Discovery v4: PARTIAL.</strong> The frozen PMRT (formerly "MSCR+") passes K0, K0n, G, K1, P1, P3 and S on
+  600 fresh randomised episodes: pooled indirect F1 0.95, overall precision 0.92, sign accuracy 1.00, the full chain on
+  every 120-episode slice, and 0 declarations on placebo. It fails P2 only against the untuned Granger + BY at n 60
+  (2 of 10 slice wins, 6 needed; 4 of 5 at n 120). Granger + BY declares 13 edges on placebo.</p>
+  <p><strong>Option (a): NOT ELIGIBLE.</strong> From confounded incumbent logs PMRT builds a map with 18 of 22 edges
+  true and correctly signed, no wrong-sign edge and no placebo edge. The referee using it has the highest recovery of all
+  26 arms (R +0.470, 90 % CI [0.346, 0.594]) but raises radio-link failures 1.31× against a 1.10× guard. Cause: the map
+  lacks the ptx → neighbour RLF edge, so the referee blocks 8 674 power-up units (oracle map: 2 370).</p>
+  <p style="margin:0"><strong>Follow-up 2b (certified-safe referee): PARTIAL, and final under the stop rule.</strong>
+  The gated PMRT referee is eligible and safe (R +0.256 [0.169, 0.339], RLF ratio 0.96) and beats every gated
+  associational map (D1, D2). But it is the never-sleep rule: on all 160 seeds its outcome record equals never_sleep's
+  field for field, so D3 fails with Δ 0.</p>
+</div>
+
+<div class="four">
+  <div class="kv"><b>0 vs 1-13</b><span>v4 placebo declarations: PMRT (all 9 statistic × layer combinations) vs the other methods</span></div>
+  <div class="kv"><b>0 / 0</b><span>wrong-sign / placebo edges in PMRT's option (a) map (Granger + BY: 6 / 29)</span></div>
+  <div class="kv"><b>1.31×</b><span>option (a) RLF ratio of the PMRT-map referee (guard 1.10×); 8 674 vs 2 370 ptx-up deferrals</span></div>
+  <div class="kv"><b>Δ 0</b><span>2b: CS:PMRT minus never_sleep, identical on 160 of 160 seeds</span></div>
+</div>
+
+<h2 style="border-top:none;margin-top:28px">Plain-language summary</h2>
+<div class="plain">
+<p>We want a "referee" inside the O-RAN near-real-time controller that settles fights between apps (xApps): energy
+savers that put small cells to sleep or lower transmit power, and an app that protects priority users. The idea is
+that the referee should act on a learned cause-and-effect map, and that a better map should prevent more service
+violations than maps from correlation-style methods or than fixed rules.</p>
+<p>The map-learning part works. Our method, PMRT, was tested on brand-new simulated data under a rulebook frozen in
+advance. It found the true chain of effects (a sleeping cell pushes load and violations onto its neighbours) on every
+data slice, never claimed a wrong direction, and claimed nothing on fake data where nothing can have an effect. The
+competing methods claimed between 1 and 13 effects on that fake data. One competitor (Granger with a multiple-testing
+correction) scored higher on the smallest slices, which is why the verdict is "partial" rather than "pass". Learned
+from realistic, biased logs instead of randomised ones, PMRT's map again had no wrong-direction and no fake
+effects, while the correlation-style maps had both.</p>
+<p>The referee part does not show what we hoped. Driven by PMRT's map, the referee cut priority-user violations the
+most of all 26 strategies, but it did so partly by blocking power increases, which made dropped radio links 31 % more
+common. That breaks a safety limit, so it does not count. A stricter, pre-registered version only acts where the data
+prove the action is safe. It is safe and clearly better than referees driven by correlation-style maps (several of
+those make things about ten times worse). But it ends up doing exactly one thing, "stop small cells from sleeping",
+which is a fixed rule that needs no map. By the rule we set ourselves, there are no further referee attempts.</p>
+</div>
+
+<ol class="toc" start="0">
+  <li>Plain-language summary (above)</li>
+  <li><a href="#q">Question</a></li>
+  <li><a href="#v4">Discovery v4</a></li>
+  <li><a href="#rename">PMRT rename and equivalence check</a></li>
+  <li><a href="#opta">Option (a): confounded logs → maps → referee</a></li>
+  <li><a href="#rev">Reviewer synthesis</a></li>
+  <li><a href="#cs">2b: certified-safe referee</a></li>
+  <li><a href="#acct">Honest accounting</a></li>
+  <li><a href="#ops">Operational incidents</a></li>
+  <li><a href="#open">Open decisions</a></li>
+  <li><a href="#repro">Reproduction and file index</a></li>
+</ol>
+
+<!-- ============================================================ 1 -->
+<h2 id="q">1. Question</h2>
+<p>Causal discovery for xApp conflict mitigation in the O-RAN near-RT RIC. Two questions, in order:</p>
+<ul>
+  <li><strong>Discovery.</strong> From logs of a referee that randomises (v4) or from a confounded incumbent (option
+  (a)), does PMRT recover the cause → effect structure better than associational methods: |corr|, Granger, Granger +
+  BY, SHAP-GBDT, a two-tower network, the QACM predictor and PACIFISTA INT? Scored against a paired-knockout ground
+  truth (GT) over 60 hypotheses: 4 knob families (carrier, sleep, ptx, prot_min) × 3 relations (own, nbr, far) × 5 KPIs
+  (pv protected violations, v all violations, e energy, rlf radio-link failures, load).</li>
+  <li><strong>Decision.</strong> Does a referee (MapGateV2) that acts on a better map prevent SLA violations better
+  than the same referee on associational maps, and better than static rules? Measure: recovery
+  R = (V_AA − V_arm) / (V_AA − V_ref) of protected-slice violations, where V_AA is accept-all and V_ref the best single
+  xApp. Eligibility: energy retention ≥ 0.90 and four guard ratios (all-UE SVR, non-protected eMBB, LL, RLF) ≤ 1.10 ×
+  accept-all. R* = R if eligible, else min(R, 0).</li>
+</ul>
+<p>Method name: PMRT, the Predictable Matched-Filter Randomization Test, a design-based conditional randomisation test
+with predictable outcome adjustment, a frozen matched filter (arm <code>loadsp_c</code>) and prior-weighted directional
+BY declarations (<code>wby1s</code>). Protocol v4 and its frozen artifact still call it "MSCR+"
+(<code>crt_units_plus</code>); §3 covers the rename.</p>
+
+<!-- ============================================================ 2 -->
+<h2 id="v4">2. Discovery v4 (randomised logs, fresh small slices)</h2>
+<p>Protocol v4 (frozen <code>4fc2cd9</code>, LF sha256 6857466c…) fixes PMRT and its learned artifact
+(<code>E6P_MSCRPLUS_V4_FROZEN.json</code>, sha 4735a85a…) and tests it on fresh seeds: EVAL 188100-188699 (600
+episodes, 89 067 units), placebo 188700-739 (40), DEV 188000-019 (20, baseline τ only), GT 188800-839 (40 episodes,
+3 697 labels; 29 TRUE / 21 NULL / 10 INDET, 10 GT-TRUE neighbour edges: all five sleep → nbr and all five ptx → nbr
+KPIs). Slices: pooled 600, ten of 60, five of 120, two of 300 (descriptive). Official run <code>e6p-disc-v4an-1</code>
+(Kaggle, frozen code, 3 723 s).</p>
+
+<div class="tw"><table>
+<thead><tr><th class="l">criterion</th><th class="l">rule</th><th class="l">value</th><th>result</th></tr></thead>
+<tbody>
+<tr><td class="l">K0 placebo</td><td class="l">P(Binom(m, .05) ≥ rejects) ≥ .01 and ≤ 1 declaration</td><td class="l">7 of 60 at p ≤ .05, tail .0297, 0 declared</td><td class="yes">PASS</td></tr>
+<tr><td class="l">K0n null outcomes</td><td class="l">40 shifted-outcome variants: rate ≤ .075, every family ≤ .10, ≤ 5 variants with a declaration</td><td class="l">rate .0525 (families .047-.060), 0 variants with a declaration</td><td class="yes">PASS</td></tr>
+<tr><td class="l">G premise</td><td class="l">GT sleep → nbr pv TRUE(+)</td><td class="l">+20.56, 95 % CI [14.10, 28.87]</td><td class="yes">PASS</td></tr>
+<tr><td class="l">K1 support</td><td class="l">each 120-slice ≥ 60 sleep units, ≥ 15 rejects</td><td class="l">545-655 units, 246-343 rejects</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P1</td><td class="l">≥ 3 of 5 120-slices: premise declared + and ≥ 3 chain hits</td><td class="l">5 of 5, chain 4/4 on each</td><td class="yes">PASS</td></tr>
+<tr><td class="l">P2</td><td class="l">indirect F1 ≥ baseline in ≥ 6/10 60-slices and ≥ 3/5 120-slices, for corr, granger AND granger_by</td><td class="l">corr 10/10 + 5/5; granger 10/10 + 5/5; <strong>granger_by 2/10</strong> + 4/5</td><td class="no">FAIL</td></tr>
+<tr><td class="l">P3 pooled</td><td class="l">premise +, ≥ 3 chain hits, overall precision ≥ .80, sign accuracy ≥ .90</td><td class="l">chain 4/4 (z 32.8, 8.66, 20.8, −28.0), precision .92, sign 1.00</td><td class="yes">PASS</td></tr>
+<tr><td class="l">S</td><td class="l">pooled sign accuracy and the 120-slice mean ≥ .90</td><td class="l">1.00 and 1.00</td><td class="yes">PASS</td></tr>
+<tr><td class="l"><strong>verdict</strong></td><td class="l">INVALID &gt; NO-CHAIN &gt; UNDERPOWERED &gt; PASS / PARTIAL (P3, S) / KILL</td><td class="l">P2 fails, P3 and S pass</td><td class="am">PARTIAL</td></tr>
+</tbody></table></div>
+
+<figure>
+  <img src="fig1_v4_methods.png" alt="v4 method scores, per-slice precision and placebo declarations">
+  <figcaption>Fig 1. (a) Pooled scores. PMRT: indirect F1 0.95 (recall 0.90, precision 1.00), overall precision 0.92.
+  SHAP-GBDT, QACM and two-tower: indirect F1 0. (b) Overall precision on every slice: PMRT 0.82-0.95 over all 18
+  slices, Granger + BY 0.59-0.75 (0.59-0.72 on pooled, 120 and 300). (c) Placebo declarations: PMRT 0 (as are all 9
+  statistic × layer combinations and the v3 method), Granger + BY 13, INT 6, two-tower 6, QACM 5, |corr| 3, SHAP 2,
+  Granger 1.</figcaption>
+</figure>
+
+<p><strong>Reading of P2.</strong> On the 60-episode slices PMRT's indirect F1 is 0.57-0.78 and Granger + BY's is
+0.59-0.74; at n 120 they are 0.67-0.82 and 0.63-0.76. Granger + BY reaches its F1 by declaring 28-45 edges per slice
+(PMRT 18-28), with overall precision 0.59-0.75 and 13 placebo declarations, so it is not calibrated. P2 as frozen
+compares F1 only and does not condition on calibration, so it fails; this report does not reinterpret it.</p>
+<p>Recomputation: every method's metrics on every slice (266 method × slice pairs) were recomputed from the declared
+lists and the GT cells and match <code>v4_analysis.json</code>; K0 was recomputed with an exact binomial tail from the
+placebo per-hypothesis p-values; P1, P2 (per-slice win vectors), P3, S and the verdict precedence match
+<code>v4_verdict.json</code>.</p>
+
+<!-- ============================================================ 3 -->
+<h2 id="rename">3. PMRT rename and equivalence check</h2>
+<p>On 2026-09-30 the method was renamed from "MSCR+" to PMRT (<code>docs/benchmark/METHOD_NAMES.md</code>), with code
+moves <code>crt_units_plus.py</code> → <code>pmrt.py</code>, <code>mscr_multi.py</code> → <code>fdr_layer.py</code>
+and others, and a successor artifact <code>E6P_PMRT_V4.json</code> (sha 9991c390…) carrying the same learned content
+and recording the frozen one in <code>supersedes</code>. The addendum
+(<code>E6P_DISCOVERY_PROTOCOL_V4_ADDENDUM_PMRT.md</code>) states the rule: the v4 verdict is the frozen code's; a
+renamed-code rerun is the equivalence check, and <em>"if it differs on any non-volatile leaf, the rename is
+reverted"</em>.</p>
+<p>The rerun <code>e6p-disc-v4an-pmrt-1</code> (renamed code, same inputs, different Kaggle machine) was diffed leaf by
+leaf against the official run. <code>make_figs.py</code> re-implements the diff and gets:</p>
+<ul>
+  <li><code>verdict_v4.json</code>: 269 leaves, <strong>0 differences</strong>; verdict PARTIAL in both.</li>
+  <li><code>analysis_v4.json</code>: 44 663 leaves, <strong>14 differences</strong>, all in descriptive baselines: the
+  two-tower τ (0.0058573 vs 0.0058578) and QACM's declared list on slice <code>s300_1</code> (9 vs 10 edges, with the
+  derived n_declared, precision, recall and F1). Zero differences in the 36 667 PMRT statistic × layer and criterion
+  leaves and in the 5 094 corr / granger / granger_by / v2 baseline leaves.</li>
+</ul>
+<p>These counts agree with the stored equivalence records and with the addendum (44 663 / 14 / 36 667). Both
+differing baselines fit small seeded neural networks on CPU; their code did not change in the rename, and float
+reductions in training are not bit-reproducible across machines.</p>
+<figure>
+  <img src="fig2_rename_diff.png" alt="Leaf counts and differences by category">
+  <figcaption>Fig 2. Leaves of the analysis tree by category and how many differ between frozen-code and renamed-code
+  runs. Category boundaries are this report's; the criterion count reproduces the addendum's 36 667.</figcaption>
+</figure>
+<div class="call amb"><span class="k">Open decision for the user</span>
+<p>Read literally, the addendum's rule ("any non-volatile difference → revert") <strong>fails</strong>: 14 non-volatile
+leaves differ. The rename was kept with a clarification written after seeing the result: the rule is meant to detect
+behaviour changes in code the rename touched, and the neural baselines were not touched. That clarification is
+disclosed in the addendum but it is post hoc. Reverting is one <code>git revert</code> away and changes nothing in the
+v4 verdict, which comes from the frozen code either way. The user should decide which reading stands.</p></div>
+
+<!-- ============================================================ 4 -->
+<h2 id="opta">4. Option (a): confounded incumbent logs → causal maps → MapGateV2 referee</h2>
+<p>Protocol <code>E6P_CONFOUNDED_PROTOCOL.md</code> (freeze 1 <code>e2d2149</code>, after the v4 verdict). Logs come
+from a confounded incumbent policy with logged propensities. Seeds: DISC 186100-699 (600 episodes, 79 499 units),
+placebo 186700-899 (200), GT 186900-939 (40; 29 TRUE / 24 NULL / 7 INDET), EVAL 187000-187159 (160). Each method's
+map (DEV τ "@dev" or placebo-calibrated τ "@plc") drives the same MapGateV2 referee; maps frozen in
+<code>E6P_CONF_MAPS.json</code> (freeze 2 <code>cdeb606</code>).</p>
+<h3>Discovery: DISC-PASS</h3>
+<p>K0: 0 of 60 rejects on placebo (min p .064), 0 declared. K0n: rate .05, no variant with a declaration. K1: 2 032
+sleep units, 708 rejects. X1: premise sleep → nbr pv declared (+, p .0001; GT +9.83 [6.82, 13.15]). X2: precision .87
+(13 of 15 scored edges on pv / v / rlf / e are TRUE) and sign accuracy 1.00. X3: chain 4/4.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">map</th><th>edges</th><th>GT TRUE, right sign</th><th>GT TRUE, wrong sign</th><th>GT NULL</th><th>INDET</th><th>edges on placebo logs</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>PMRT</strong></td><td>22</td><td>18</td><td class="yes">0</td><td>3</td><td>1</td><td class="yes">0</td></tr>
+<tr><td class="l">GT (oracle)</td><td>29</td><td>29</td><td>0</td><td>0</td><td>0</td><td>-</td></tr>
+<tr><td class="l">Granger + BY</td><td>47</td><td>16</td><td class="no">6</td><td>19</td><td>6</td><td class="no">29</td></tr>
+<tr><td class="l">Granger @dev</td><td>32</td><td>12</td><td class="no">6</td><td>12</td><td>2</td><td class="no">19</td></tr>
+<tr><td class="l">|corr| @dev</td><td>10</td><td>6</td><td class="no">2</td><td>2</td><td>0</td><td class="no">8</td></tr>
+<tr><td class="l">two-tower @dev</td><td>8</td><td>5</td><td>0</td><td>3</td><td>0</td><td class="no">22</td></tr>
+<tr><td class="l">SHAP-GBDT @dev</td><td>5</td><td>1</td><td>0</td><td>1</td><td>3</td><td>2</td></tr>
+<tr><td class="l">QACM @dev</td><td>6</td><td>5</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+<tr><td class="l">INT @dev</td><td>5</td><td>4</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+<tr><td class="l">random map</td><td>22</td><td>4</td><td>7</td><td>9</td><td>2</td><td>-</td></tr>
+</tbody></table></div>
+<figure>
+  <img src="fig3_conf_maps.png" alt="Option (a) map quality">
+  <figcaption>Fig 3. Map quality recomputed from the maps and the option (a) GT cells (asserted equal to
+  <code>edge_quality</code> and <code>conf_map_quality.txt</code>). The @plc variants (placebo-calibrated τ) are in
+  <code>figures_data.json</code>; most of them are small maps that alias to accept-all.</figcaption>
+</figure>
+
+<h3>EVAL: NOT ELIGIBLE</h3>
+<p>160 seeds × 26 named arms (3 360 simulated jobs, 58.7 CPU-h, 12 Kaggle shards, code <code>cdeb606</code>). V_AA
+157.67, V_ref 97.20 (SliceGuarantee alone), denominator 60.46.</p>
+<figure>
+  <img src="fig4_conf_eval.png" alt="Option (a) EVAL recovery and RLF ratio per arm">
+  <figcaption>Fig 4. Option (a) EVAL, recomputed from the 12 raw shards with the analyzer's bootstrap; every value
+  matches <code>conf_eval.json</code>.</figcaption>
+</figure>
+<div class="tw"><table>
+<thead><tr><th class="l">arm</th><th>R [90 % CI]</th><th>energy ret.</th><th>SVR</th><th>non-prot eMBB</th><th>LL</th><th>RLF [90 % CI]</th><th>eligible</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>MG:PMRT</strong></td><td>+0.470 [0.346, 0.594]</td><td>1.67</td><td>0.86</td><td>0.86</td><td>0.94</td><td class="no">1.31 [1.10, 1.56]</td><td class="no">no</td></tr>
+<tr><td class="l">MG:GT</td><td>+0.244 [0.157, 0.327]</td><td>1.32</td><td>0.88</td><td>0.88</td><td>0.88</td><td>1.01 [0.94, 1.09]</td><td class="yes">yes</td></tr>
+<tr><td class="l">never_sleep</td><td>+0.221 [0.140, 0.296]</td><td>1.18</td><td>0.87</td><td>0.87</td><td>0.85</td><td>0.99 [0.94, 1.04]</td><td class="yes">yes</td></tr>
+<tr><td class="l">blanket2</td><td>+0.227 [0.153, 0.299]</td><td>0.89</td><td>0.93</td><td>0.93</td><td>0.88</td><td>0.99</td><td class="no">no (energy)</td></tr>
+<tr><td class="l">B2</td><td>+0.161 [0.043, 0.280]</td><td>1.44</td><td>1.00</td><td>1.00</td><td>1.10</td><td>1.16</td><td class="no">no</td></tr>
+<tr><td class="l">MG:corr@dev</td><td>+0.033 [−0.011, 0.077]</td><td>1.03</td><td>0.97</td><td>0.97</td><td>0.95</td><td>1.00</td><td class="yes">yes</td></tr>
+<tr><td class="l">MG:qacm@dev (= @plc)</td><td>+0.011 [0.004, 0.020]</td><td>0.99</td><td>1.00</td><td>1.00</td><td>1.00</td><td>1.00</td><td class="yes">yes</td></tr>
+<tr><td class="l">incumbent</td><td>−0.068 [−0.160, 0.015]</td><td>0.86</td><td>0.93</td><td>0.92</td><td>0.87</td><td>0.96</td><td class="no">no (energy)</td></tr>
+<tr><td class="l">MG:rand</td><td>−0.419 [−0.565, −0.293]</td><td>1.10</td><td>1.08</td><td>1.08</td><td>1.07</td><td>0.99</td><td class="yes">yes</td></tr>
+<tr><td class="l">MG:granger_by</td><td>−9.775 [−10.960, −8.791]</td><td>1.52</td><td>1.02</td><td>0.87</td><td>0.56</td><td>1.27</td><td class="no">no</td></tr>
+<tr><td class="l">MG:shap_gbdt@dev</td><td>−9.902 [−11.070, −8.931]</td><td>0.91</td><td>1.03</td><td>0.88</td><td>0.49</td><td>1.00</td><td class="yes">yes</td></tr>
+<tr><td class="l">MG:two_tower@dev</td><td>−10.251 [−11.430, −9.250]</td><td>1.48</td><td>1.06</td><td>0.91</td><td>0.59</td><td>1.16</td><td class="no">no</td></tr>
+<tr><td class="l">MG:granger@dev</td><td>−11.479 [−12.773, −10.379]</td><td>1.44</td><td>1.16</td><td>0.99</td><td>0.65</td><td>1.19</td><td class="no">no</td></tr>
+</tbody></table></div>
+<p>Arms aliased to accept-all (R 0): MG:corr@plc, MG:granger@plc, MG:shap_gbdt@plc, MG:int@dev, MG:int@plc,
+MG:two_tower@plc. Criteria: <strong>E fails</strong> (MG:PMRT RLF 1.31 &gt; 1.10), so the verdict is NOT ELIGIBLE and,
+because R* = 0, D1 (Δ1 −0.033 vs MG:corr@dev, LB90 −0.077) and D2 (4 of 9 Holm hypotheses rejected) fail by rule.
+Pre-registered descriptive contrast: R(MG:PMRT) − R(never_sleep) = +0.249 [0.139, 0.362]; the protocol stated in
+advance that it would not claim a win over the best static rule.</p>
+
+<h3>Mechanism of the RLF failure (corrected)</h3>
+<figure>
+  <img src="fig5_ptx_deferrals.png" alt="Deferred units by family for PMRT and GT referees">
+  <figcaption>Fig 5. Units deferred per family, summed over 160 seeds. Option (a): PMRT map 8 674 ptx-up units, GT map
+  2 370; sleep 932 vs 952. Also shown: the 2b seeds (MG:PMRT 8 313; CS:PMRT 0 deferred and 2 579 withheld; CS:GT 2 301).</figcaption>
+</figure>
+<p>The guard ratios are relative to accept-all, so only deferrals can move them. PMRT's map has no ptx → nbr RLF edge.
+In the GT that edge is TRUE with mean −0.061 (95 % CI [−0.096, −0.027]): raising transmit power lowers neighbour RLF.
+The GT map declares it, so MapGateV2 applies its duty bound to ptx-up deferrals ("defer [bounded]"); the PMRT map
+does not, so the referee defers every ptx-up ("defer"): 8 674 units vs 2 370. Blocking power-ups raises neighbour RLF.
+Sleep deferrals are almost the same in both arms (932 vs 952), so the missed sleep → nbr / far RLF edges are not the
+cause. PMRT's extra R (+0.47 vs +0.24) plausibly comes from the same extra deferrals.</p>
+<p>On the PMRT side, the edge was not declared. The <code>plain_c</code> statistic arm gives z −2.21 (p .025), but the
+primary arm <code>loadsp_c</code> gives z −0.70 (p .49). The briefs' "z −2.2" is the plain_c value, not the primary
+one. The 2b design-slope bound gives β −0.082, SE 0.051 (z −1.61).</p>
+<div class="call bad"><span class="k">Correction disclosed</span>
+<p>The first explanation (commit <code>5086c1d</code> and MORNING_BRIEF_4, 13:55) was that the PMRT map missed the
+sleep → nbr / far RLF edges and therefore approved harmful sleeps. That was wrong. The 2b builder checked the deferral
+counts in <code>conf_eval.json</code> and found the ptx-up mechanism above; the correction was appended to the brief
+in <code>eedf495</code>. The reviewer CONTEXT file (§5) still lists the missed-edges explanation, so the reviewers
+worked from the earlier account. The 2b protocol (§0.3) uses the corrected one.</p></div>
+
+<!-- ============================================================ 5 -->
+<h2 id="rev">5. Reviewer synthesis after option (a)</h2>
+<p>Three independent reviewers (<code>scratchpad/e6_dev/decision/next_after_opta/</code>: A statistics, B O-RAN
+systems, C publication) chose among: report as is; 2a an RLF-specific statistic in PMRT; 2b a conservative referee that
+treats untested or under-powered guard edges as possible harm; 2c both; 2d more data. <strong>Unanimous: 2b, as one
+disclosed follow-up, then stop and write up.</strong> 2a was rejected as a forking path (filter design aimed at three
+known missed edges), 2d because n would be chosen after seeing z ≈ 1. Reviewer A noted the failure was foreseeable:
+on DEV, the GT map without its nbr / far edges (GT2_own) was already RLF-ineligible (1.26). Reviewer B added the
+upper-CI RLF check (≤ 1.20). The predicted risk was stated up front: the referee might defer so much that it only
+ties never_sleep.</p>
+<p>One point changed between the synthesis and the protocol. The synthesis wrote "UNRESOLVED edges defer the
+action", i.e. it gated accepts. The protocol (§13.1, §14.1 lead decision) gates <em>deferrals</em> instead, because
+accepts cannot move a ratio against accept-all. An uncertified class is therefore accepted.</p>
+
+<!-- ============================================================ 6 -->
+<h2 id="cs">6. Follow-up 2b: certified-safe referee</h2>
+<h3>Design (frozen before DEV and EVAL)</h3>
+<ul>
+  <li><strong>Gate</strong> (<code>cdd_oran/decision/certsafe.py</code>): for every (family f, direction d) that
+  MapGateV2(M) can defer and every guard edge (f, rel, k), rel ∈ {own, nbr, far}, k ∈ {v, rlf}: DECLARED if in the map
+  (MapGateV2 logic applies), CERTIFIED if the one-sided 90 % upper bound of the deferral's harm (h = −d) is ≤ τ(f, d, k),
+  else UNRESOLVED. A class with any unresolved edge is uncertified and <strong>never deferred</strong> (accepted). Same
+  rule for every map arm.</li>
+  <li><strong>Tolerance:</strong> τ(f, d, k) = 0.05 · G_k / (max(N(f, d), 1) · 3), with G_k the mean per-episode guard
+  total and N(f, d) the mean units per episode under accept-all on DEV seeds 191000-191039 (40 episodes; G_v 19 953.65,
+  G_rlf 35.025; noarb bit-identity on 191000-001). Example: τ(ptx, +, rlf) = 0.0364.</li>
+  <li><strong>Bounds:</strong> PMRT design slope + martingale SE (CS:PMRT), the GT 95 % CI (CS:GT), naive OLS slope + iid
+  SE (associational maps), all from the option (a) DISC data; artifact <code>E6P_CERTSAFE.json</code> (freeze 2
+  <code>8ef2f3c</code>).</li>
+  <li><strong>Criteria:</strong> E (CS:PMRT eligible), D1 and D2 as option (a) over the 13 gated associational arms,
+  new D3: R*(CS:PMRT) − R*(never_sleep) &gt; 0 with paired LB90 &gt; 0, and S1 (secondary): UB90 of the RLF ratio ≤ 1.20.
+  Verdict INVALID &gt; NOT ELIGIBLE &gt; PASS (D1, D2, D3) &gt; PARTIAL &gt; FAIL. EVAL seeds 191100-191259. Stop rule:
+  last referee study.</li>
+  <li><strong>Builder's projection</strong> (protocol §8, before freeze 1, not binding): CS:PMRT leaves ptx+, carrier−
+  and prot_min− uncertified and defers sleep only, so it should act like never_sleep and D3 is unlikely.</li>
+</ul>
+<figure>
+  <img src="fig7_certification.png" alt="Certification table per CS arm">
+  <figcaption>Fig 7. Certification per arm and class, recomputed from the frozen maps, the bound tables and τ, and
+  asserted equal to the artifact (statuses, upper bounds, uncertified lists). CS:PMRT: sleep+ certified (3 declared, 3
+  certified edges); carrier−, ptx+ and prot_min− uncertified. The deciding ptx+ edge: nbr RLF, UB90 0.148 vs τ 0.036.</figcaption>
+</figure>
+
+<h3>EVAL result: PARTIAL</h3>
+<p>160 fresh seeds, 20 shards on 5 Kaggle kernels (all 20 complete with a close record; code <code>8ef2f3c</code>,
+headers carry the frozen <code>certsafe.py</code> sha256), 2 720 simulated jobs, 58.2 CPU-h. V_AA 175.30, V_ref 116.82,
+denominator 58.48.</p>
+<figure>
+  <img src="fig6_certsafe_eval.png" alt="2b EVAL recovery and RLF ratio per arm">
+  <figcaption>Fig 6. 2b EVAL recomputed from the 20 raw shards; every value matches <code>cs_eval.json</code>.</figcaption>
+</figure>
+<div class="tw"><table>
+<thead><tr><th class="l">arm</th><th>R [90 % CI]</th><th>energy ret.</th><th>SVR</th><th>LL</th><th>RLF [90 % CI]</th><th>eligible</th></tr></thead>
+<tbody>
+<tr><td class="l"><strong>CS:PMRT</strong></td><td class="eq">+0.256 [0.169, 0.339]</td><td>1.15</td><td>0.88</td><td>0.86</td><td>0.96 [0.93, 0.99]</td><td class="yes">yes</td></tr>
+<tr><td class="l">never_sleep</td><td class="eq">+0.256 [0.169, 0.339]</td><td>1.15</td><td>0.88</td><td>0.86</td><td>0.96 [0.93, 0.99]</td><td class="yes">yes</td></tr>
+<tr><td class="l">CS:GT</td><td>+0.221 [0.119, 0.319]</td><td>1.29</td><td>0.90</td><td>0.91</td><td>0.94 [0.90, 0.97]</td><td class="yes">yes</td></tr>
+<tr><td class="l">MG:PMRT (ungated, descriptive)</td><td>+0.201 [0.025, 0.363]</td><td>1.63</td><td>0.89</td><td>0.96</td><td>1.05 [0.95, 1.16]</td><td class="yes">yes</td></tr>
+<tr><td class="l">CS:corr@dev</td><td>+0.095 [0.036, 0.157]</td><td>1.03</td><td>0.97</td><td>0.97</td><td>0.97</td><td class="yes">yes</td></tr>
+<tr><td class="l">CS:qacm@dev (= @plc)</td><td>−0.010 [−0.049, 0.024]</td><td>1.00</td><td>1.00</td><td>1.00</td><td>1.00</td><td class="yes">yes</td></tr>
+<tr><td class="l">incumbent</td><td>−0.192 [−0.319, −0.078]</td><td>0.86</td><td>0.95</td><td>0.92</td><td>0.94</td><td class="no">no (energy)</td></tr>
+<tr><td class="l">CS:granger_by</td><td>−10.551 [−12.176, −9.286]</td><td>1.03</td><td>1.00</td><td>0.49</td><td>0.97</td><td class="yes">yes</td></tr>
+<tr><td class="l">CS:shap_gbdt@dev</td><td>−10.742 [−12.407, −9.474]</td><td>0.89</td><td>1.01</td><td>0.50</td><td>0.99</td><td class="no">no (energy)</td></tr>
+<tr><td class="l">CS:two_tower@dev</td><td>−11.023 [−12.683, −9.745]</td><td>1.00</td><td>1.03</td><td>0.50</td><td>0.99</td><td class="yes">yes</td></tr>
+<tr><td class="l">CS:granger@dev</td><td>−11.057 [−12.726, −9.780]</td><td>1.00</td><td>1.03</td><td>0.50</td><td>0.99</td><td class="yes">yes</td></tr>
+</tbody></table></div>
+<p>Arms aliased to accept-all (R 0): CS:rand, CS:blanket2, CS:corr@plc, CS:granger@plc, CS:shap_gbdt@plc, CS:int@dev,
+CS:int@plc, CS:two_tower@plc.</p>
+<div class="tw"><table>
+<thead><tr><th class="l">criterion</th><th class="l">value</th><th>result</th></tr></thead>
+<tbody>
+<tr><td class="l">E (CS:PMRT eligible)</td><td class="l">retention 1.15 [1.13, 1.16]; guard ratios SVR 0.88, non-prot eMBB 0.88, LL 0.86, RLF 0.96</td><td class="yes">PASS</td></tr>
+<tr><td class="l">D1 (≥ .10 above the best gated associational map, LB90 &gt; 0)</td><td class="l">Δ1 +0.161 vs CS:corr@dev, LB90 +0.094</td><td class="yes">PASS</td></tr>
+<tr><td class="l">D2 (Holm over distinct signatures)</td><td class="l">7 hypotheses, all rejected (p .0002 for corr@dev, .0001 for the rest)</td><td class="yes">PASS</td></tr>
+<tr><td class="l">D3 (beats never_sleep, LB90 &gt; 0)</td><td class="l">Δ3 0.000, 90 % CI [0.000, 0.000]</td><td class="no">FAIL</td></tr>
+<tr><td class="l">S1 (RLF ratio UB90 ≤ 1.20, secondary)</td><td class="l">UB90 0.987</td><td class="yes">PASS</td></tr>
+<tr><td class="l"><strong>verdict</strong></td><td class="l">E holds; D1, D2 pass; D3 fails</td><td class="am">PARTIAL</td></tr>
+</tbody></table></div>
+
+<p><strong>The tie is exact.</strong> For each of the 160 seeds, the CS:PMRT record equals the never_sleep record on all
+39 outcome fields (every KPI total, energy, RLF, handovers) and on the deferred sleep requests (1 711 pre-window + 2 222
+post-window over all seeds). CS:PMRT deferred 899 units, all sleep-up (<code>dir_sleep_+1</code> = 899), and nothing
+else; it withheld 2 579 ptx-up and 67 carrier-down deferrals as uncertified. Blocking every sleep request as a unit
+gate gives the same trajectory as the static rule. This is the builder's pre-registered projection. The protocol's
+claim wording for this case is "Under the gate the PMRT referee is safe but reduces to the static never-sleep
+rule."</p>
+<p>The gate does remove the option (a) RLF failure, but the comparison needs care. On the 2b seeds the
+<em>ungated</em> MG:PMRT has RLF ratio 1.05 (UB90 1.16) and is eligible at R +0.201, so the 1.31× of option (a) did not
+reproduce at the point level on fresh seeds; it still defers 8 313 ptx-up units. CS:PMRT − MG:PMRT = +0.055 [−0.091,
++0.216]; CS:PMRT − CS:GT = +0.035 [−0.028, +0.102].</p>
+<p>The gate does not stop the catastrophic associational referees. CS:granger_by, CS:granger@dev and CS:two_tower@dev
+are eligible at R −10.6 to −11.1: their harm comes from deferring about 18 400-18 600 prot_min units (blocking the
+protection xApp), which raises protected violations without moving the four guards above 1.10.</p>
+
+<!-- ============================================================ 7 -->
+<h2 id="acct">7. Honest accounting</h2>
+<div class="tw"><table>
+<thead><tr><th class="l">claim</th><th class="l">status</th></tr></thead>
+<tbody>
+<tr><td class="l">PMRT recovers the indirect chain on fresh randomised logs, with calibrated error control</td><td class="l">Shown (v4 K0, K0n, P1, P3, S; 0 placebo declarations in all 9 combinations)</td></tr>
+<tr><td class="l">PMRT beats every baseline head to head on small samples</td><td class="l">Not shown: P2 fails against Granger + BY at n 60 (2/10). Granger + BY is uncalibrated (13 placebo declarations, precision 0.59-0.75), but the frozen P2 does not condition on that</td></tr>
+<tr><td class="l">PMRT gives a cleaner map than associational methods on confounded logs</td><td class="l">Shown descriptively (option (a) DISC-PASS; 0 wrong-sign, 0 placebo edges vs 6 / 29 for Granger + BY). Map quality was not a pre-registered head-to-head criterion</td></tr>
+<tr><td class="l">A PMRT-map referee prevents more SLA violations than associational-map referees</td><td class="l">Shown under the 2b gate (D1, D2 pass). Without the gate (option (a)) PMRT is ineligible, so D1 / D2 fail by rule</td></tr>
+<tr><td class="l">A PMRT-map referee beats the best static rule</td><td class="l">Not shown. Option (a): higher R (+0.249 vs never_sleep) but RLF guard violated. 2b: identical to never_sleep</td></tr>
+<tr><td class="l">The RLF failure came from missed sleep RLF edges</td><td class="l">Wrong, retracted (§4). It came from ptx-up deferrals</td></tr>
+</tbody></table></div>
+<p><strong>Strongest supportable claims.</strong> Discovery level: PMRT is calibrated on placebo and on confounded logs
+where associational methods are not (declarations on fake data, wrong-sign edges). Decision level: referees driven by
+PMRT's map never produce the R ≈ −10 outcomes that Granger, Granger + BY, two-tower and SHAP maps produce in both
+studies, and under a guard-certification gate PMRT beats every gated associational map; but on this scenario the
+certified-safe PMRT referee does not beat the never_sleep rule, and the ungated PMRT referee's higher R in option (a)
+came with a guard violation. Scope: one simulated cell (E6-P P3 surge-L40), one incumbent, logged propensities
+required, asymptotic validity. Every look is listed: step-2 DEV, K-A / K-A2 (DEV), option (a), 2b; 2b was designed
+after option (a) failed.</p>
+
+<!-- ============================================================ 8 -->
+<h2 id="ops">8. Operational incidents</h2>
+<ul>
+  <li><strong>Shell-quoting slip (option (a) discovery analysis).</strong> The first launch <code>e6p-conf-discan-1</code>
+  was built from a double-quoted command, so the local shell expanded <code>$JOB_SRC</code> / <code>$JOB_OUT</code> to
+  empty strings. Its recorded <code>launch.json</code> shows inputs like <code>/e6p-conf-disc-1-a</code> and an empty
+  <code>--out</code>. No data was read; the run is void. It was relaunched as <code>e6p-conf-discan-2</code> with a
+  single-quoted command verified in the kernel source. (The brief says it failed at argparse after 32 s; only the
+  launch record is available locally, so that detail is not verified here.)</li>
+  <li><strong>Circular hash pin (option (a) freeze 2).</strong> The maps artifact pinned the driver's sha256 and the
+  driver pinned the artifact's (<code>MAPS_SHA256</code>), so verify and the EVAL completeness check could not both
+  pass. Fixed before the pin by hashing the driver with that line normalised; maps content unchanged; test
+  <code>test_driver_sha_ignores_maps_pin</code> added (<code>cdeb606</code>, disclosed in the commit).</li>
+  <li><strong>Freeze-state-dependent tests.</strong> Freeze-guard tests assumed the protocols were unfrozen and broke
+  when the real freeze landed. Patched to be independent of the real freeze state: <code>tests/test_opta_study.py</code>
+  in <code>e2d2149</code>, <code>tests/test_certsafe_study.py</code> in <code>0b70a9b</code>.</li>
+  <li><strong>PMRT artifact not committed.</strong> <code>docs/benchmark/artifacts/</code> is gitignored, so
+  <code>E6P_PMRT_V4.json</code> was missing after the rename merge; added with <code>git add -f</code> in
+  <code>d1dd5a2</code>.</li>
+  <li><strong>Wrong RLF mechanism claim</strong> in the option (a) result commit and brief, corrected in
+  <code>eedf495</code> (§4).</li>
+  <li><strong>Strict rename rule failed literally</strong> (§3), handled by a post-hoc clarification that is an open
+  decision.</li>
+</ul>
+
+<!-- ============================================================ 9 -->
+<h2 id="open">9. Open decisions for the user</h2>
+<ol>
+  <li><strong>Rename rule.</strong> Keep the rename under the disclosed clarification, or revert per the addendum's
+  literal rule (one <code>git revert</code>; the v4 verdict is unchanged either way). If kept, the paper should say the
+  check failed literally on two descriptive neural baselines.</li>
+  <li><strong>Write-up.</strong> The stop rule ends the referee line. Proceed to the journal write-up with: v4 PARTIAL,
+  option (a) NOT ELIGIBLE (corrected mechanism), 2b PARTIAL (tie with never_sleep). The decision-level story is
+  negative on "map beats static rule"; positive on calibration and on not being catastrophic.</li>
+  <li><strong>The MG:PMRT replication on 2b seeds</strong> (eligible, RLF 1.05) shows the option (a) RLF failure was
+  near the guard boundary. It must not be used to re-score option (a); report it as descriptive.</li>
+  <li><strong>Guard coverage.</strong> The gated associational referees reach R ≈ −11 while eligible because no guard
+  covers protected-slice harm from deferring the protection xApp. Whether to say so in the paper as a limitation of
+  the eligibility definition (not a change to any verdict).</li>
+  <li><strong>"z −2.2" wording.</strong> Briefs and CONTEXT cite the plain_c z for ptx → nbr RLF; the primary
+  statistic's z is −0.70. Use the primary value (or both, labelled) in the paper.</li>
+</ol>
+
+<!-- ============================================================ 10 -->
+<h2 id="repro">10. Reproduction and file index</h2>
+<p><strong>Figures and every number in this report</strong> (local, about 20 s; reads the decision JSONs, the frozen
+artifacts and the raw EVAL / DEV records):</p>
+<pre><code>.venv/Scripts/python.exe reports/2026-10-02-v4-pmrt-confounded-certsafe/make_figs.py</code></pre>
+<p>It recomputes and asserts (55 blocks, all pass): v4 scores of 266 method × slice pairs, K0 (exact binomial), K1,
+P1, P2 win vectors, P3, S and the verdict; the rename diff counts per file and category against the stored
+equivalence records; option (a) X2, map quality of 17 maps, all 26 arms' V / R / R* / retention / guard ratios /
+eligibility / 90 % CIs from 12 raw shards, D1, D2, the never_sleep contrast, deferral counts and the verdict; 2b G_k
+and N(f, d) from raw DEV records, τ, the certification table of 17 arms, all 26 arms from 20 raw shards, D1, D2, D3,
+S1, the verdict, the per-seed identity of CS:PMRT and never_sleep, and the protocol / artifact sha256s.</p>
+<p><strong>Analyses</strong> (Kaggle jobs; commands from the protocols and job logs):</p>
+<pre><code># v4 (frozen code; renamed rerun e6p-disc-v4an-pmrt-1 with --artifact .../E6P_PMRT_V4.json)
+python scratchpad/e6_dev/e6p_disc_analyze_v4.py analyze --artifact docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json \
+  --eval $JOB_SRC/e6p-disc-v4ev-1-a,$JOB_SRC/e6p-disc-v4ev-1-b --placebo $JOB_SRC/e6p-disc-v4plc-1-a \
+  --gt $JOB_SRC/e6p-disc-v4gt-1-a,$JOB_SRC/e6p-disc-v4gt-1-b --dev $JOB_SRC/e6p-disc-v4dev-1-a --out $JOB_OUT --workers 4
+# option (a) EVAL analysis
+python scratchpad/e6_dev/e6p_conf_analyze.py eval --records $JOB_SRC/e6p-conf-eval-1-a,...-b,...-c \
+  --disc-json scratchpad/e6_dev/runs/e6p-conf-discan-2/out/disc_conf.json --out $JOB_OUT
+# 2b EVAL analysis
+python scratchpad/e6_dev/e6p_certsafe_analyze.py eval --records $JOB_SRC/e6p-cs-eval-1-a,...,-e \
+  --disc-json scratchpad/e6_dev/decision/conf_disc_conf.json --out $JOB_OUT</code></pre>
+
+<h3>Where the sources disagree, and what this report uses</h3>
+<ul>
+  <li><strong>Granger + BY precision range.</strong> Briefs say .59-.71. Over all 18 slices it is 0.59-0.75 (s60_6
+  0.75); over pooled, 120 and 300 slices 0.59-0.72. This report uses the recomputed values.</li>
+  <li><strong>ptx → nbr RLF z.</strong> Briefs say "z −2.2": that is the plain_c arm; the primary loadsp_c z is −0.70
+  (§4).</li>
+  <li><strong>Synthesis vs protocol on what is gated</strong> (accepts vs deferrals): the protocol's lead decision is
+  used (§5).</li>
+  <li><strong>discan-1 failure detail</strong> (argparse, 32 s) is from the brief, not verified locally (§8).</li>
+  <li>All other numbers in the briefs (v4, rename counts, map table, option (a) and 2b arm values, 8 674 / 2 370, 899
+  units) agree with the recomputation.</li>
+</ul>
+
+<div class="tw"><table>
+<thead><tr><th class="l">commit</th><th class="l">time (NST)</th><th class="l">what</th></tr></thead>
+<tbody>
+<tr><td class="l"><code>4fc2cd9</code></td><td class="l">09-30 16:26</td><td class="l"><strong>freeze: discovery protocol v4</strong> (MSCR+ on fresh small slices)</td></tr>
+<tr><td class="l"><code>34a2c15</code></td><td class="l">09-30 17:53</td><td class="l">docs: name the discovery method PMRT</td></tr>
+<tr><td class="l"><code>ec33686</code></td><td class="l">09-30 22:38</td><td class="l">refactor(pmrt): label-only rename with equivalence proof</td></tr>
+<tr><td class="l"><code>d1dd5a2</code></td><td class="l">10-01 00:20</td><td class="l">artifacts: E6P_PMRT_V4.json force-added (artifacts/ gitignored)</td></tr>
+<tr><td class="l"><code>519adf2</code></td><td class="l">10-01 01:24</td><td class="l">results: v4 verdict PARTIAL</td></tr>
+<tr><td class="l"><code>e2d2149</code></td><td class="l">10-01 01:26</td><td class="l"><strong>freeze 1: option (a) protocol</strong>; freeze-guard test made state-independent</td></tr>
+<tr><td class="l"><code>11f5955</code></td><td class="l">10-01 02:51</td><td class="l">results: PMRT rename full-data equivalence (14 diffs, descriptive NN baselines)</td></tr>
+<tr><td class="l"><code>cdeb606</code></td><td class="l">10-01 07:55</td><td class="l"><strong>freeze 2: option (a) maps artifact</strong>; DISC-PASS; circular pin fix</td></tr>
+<tr><td class="l"><code>5086c1d</code></td><td class="l">10-01 13:56</td><td class="l">results: option (a) NOT ELIGIBLE</td></tr>
+<tr><td class="l"><code>297722e</code></td><td class="l">10-01 18:57</td><td class="l">decision: reviewer synthesis (unanimous 2b)</td></tr>
+<tr><td class="l"><code>ae0f74a</code></td><td class="l">10-01 21:09</td><td class="l">build: certified-safe referee (2b) protocol draft, gate, driver, analyzer, tests</td></tr>
+<tr><td class="l"><code>eedf495</code></td><td class="l">10-01 21:10</td><td class="l">brief: correct the option (a) RLF mechanism</td></tr>
+<tr><td class="l"><code>0b70a9b</code></td><td class="l">10-01 21:15</td><td class="l"><strong>freeze 1: 2b protocol</strong>; roundtrip test made state-independent</td></tr>
+<tr><td class="l"><code>8ef2f3c</code></td><td class="l">10-01 21:29</td><td class="l"><strong>freeze 2: 2b artifact E6P_CERTSAFE.json</strong></td></tr>
+<tr><td class="l"><code>a6f0b17</code></td><td class="l">10-02 00:52</td><td class="l">result: 2b EVAL verdict PARTIAL</td></tr>
+</tbody></table></div>
+
+<div class="tw"><table>
+<thead><tr><th class="l">file</th><th class="l">content</th></tr></thead>
+<tbody>
+<tr><td class="l"><code>docs/benchmark/E6P_DISCOVERY_PROTOCOL_V4.md</code>, <code>_V4_ADDENDUM_PMRT.md</code>, <code>METHOD_NAMES.md</code></td><td class="l">v4 protocol, rename addendum, method names</td></tr>
+<tr><td class="l"><code>docs/benchmark/E6P_CONFOUNDED_PROTOCOL.md</code>, <code>E6P_CERTSAFE_PROTOCOL.md</code></td><td class="l">option (a) and 2b protocols</td></tr>
+<tr><td class="l"><code>docs/benchmark/artifacts/E6P_MSCRPLUS_V4_FROZEN.json</code>, <code>E6P_PMRT_V4.json</code>, <code>E6P_PMRT_V4_EQUIV_*.json</code>, <code>E6P_CONF_MAPS.json</code>, <code>E6P_CERTSAFE.json</code></td><td class="l">frozen artifacts and equivalence records</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/v4_{analysis,verdict}.json</code>, <code>v4_analysis_job.log</code></td><td class="l">v4 result</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/runs/e6p-disc-v4an-1/out</code>, <code>e6p-disc-v4an-pmrt-1/out</code></td><td class="l">frozen and renamed v4 runs (+ equivalence JSONs)</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/conf_disc_conf.json</code>, <code>conf_map_quality.txt</code>, <code>conf_eval.json</code>, <code>conf_verdict.json</code>, <code>conf_*_job.log</code>; raw <code>runs/e6p-conf-eval-1/{a,b,c}/res_*.jsonl</code></td><td class="l">option (a)</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/next_after_opta/</code></td><td class="l">reviewer context, A / B / C, synthesis</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/cs_{calib,bounds,eval,verdict}.json</code>, <code>cs_evalan_job.log</code>; raw <code>runs/e6p-cs-dev-1/all.jsonl</code>, <code>runs/e6p-cs-eval-1/{a..e}/res_*.jsonl</code></td><td class="l">2b</td></tr>
+<tr><td class="l"><code>cdd_oran/decision/pmrt.py</code>, <code>fdr_layer.py</code>, <code>mapgate.py</code>, <code>certsafe.py</code>; <code>scratchpad/e6_dev/e6p_disc_analyze_v4.py</code>, <code>pmrt_equivalence.py</code>, <code>e6p_conf.py</code>, <code>e6p_conf_analyze.py</code>, <code>e6p_certsafe.py</code>, <code>e6p_certsafe_analyze.py</code></td><td class="l">method, referee, drivers, analyzers</td></tr>
+<tr><td class="l"><code>scratchpad/e6_dev/decision/MORNING_BRIEF_4.md</code>, <code>MORNING_BRIEF_5.md</code>; <code>.tmp/PLAN.md</code></td><td class="l">chronological logs</td></tr>
+</tbody></table></div>
+
+<div class="foot">
+  Sources: the files above and <code>git log --oneline -40</code>. Figures and <code>figures_data.json</code> are
+  regenerated live by <code>make_figs.py</code>; the raw EVAL records are git-ignored and must be present locally.
+</div>
+
+</div>
+</body>
+</html>
