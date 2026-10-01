@@ -36,3 +36,6 @@
   granger_by, two-tower and SHAP maps -9.8 to -11.5) and lowers SLA / eMBB / LL violations, but raises radio-link
   failures 1.31x (CI 1.10-1.56) against the 1.10 guard, so it is ineligible and D1 / D2 fail by rule. Cause: the PMRT
   map misses the three RLF edges (sleep -> nbr / far RLF up, ptx -> nbr RLF down) that the ground-truth map has.
+- CORRECTION: the RLF failure comes from power-up deferrals (PMRT map 8674 vs GT map 2370 deferred units), because
+  PMRT did not declare ptx -> neighbour RLF (z -2.2). The sleep RLF edges are not the cause (both maps defer sleep
+  equally). The earlier "missed sleep RLF edges" explanation was wrong.
