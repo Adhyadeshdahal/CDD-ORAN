@@ -1,6 +1,6 @@
 # E6-P follow-up study 2b: the certified-safe referee
 
-FROZEN: no
+FROZEN: yes (2026-10-01, freeze 1)
 
 Drafted 2026-10-01, after the option (a) verdict NOT ELIGIBLE and the reviewer synthesis
 (`scratchpad/e6_dev/decision/next_after_opta/SYNTHESIS.md`, reviewers A, B, C). The file must be frozen ("FROZEN: yes",
@@ -294,7 +294,7 @@ per request). Pre-registered expectations:
 | EVAL analysis (Kaggle job) | - | < 0.2 |
 | **total** | | **about 45-75, central about 50** |
 
-Wall clock: about 4-6 h on 3 concurrent EVAL kernels (4 CPUs each), plus the queue; DEV and bounds about 30 min.
+Wall clock: about 2.5-4 h on 5 concurrent EVAL kernels (4 CPUs each), plus the queue; DEV and bounds about 30 min.
 Reduced variant (to be chosen before freeze 1): drop the descriptive references incumbent and MG:PMRT (-5.7 CPU-h).
 Reviewer C's estimate (about 20 CPU-h) assumed few gated arms; every CS:<b> arm on 160 seeds costs 2.8 CPU-h.
 
@@ -353,8 +353,8 @@ All paths repo-relative; local commands from the repo root with `PYTHONPATH=.` a
     PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_certsafe_analyze.py build --bounds scratchpad/e6_dev/runs/e6p-cs-bounds-1/out/certsafe_bounds.json --calib scratchpad/e6_dev/runs/e6p-cs-dev-1/certsafe_calib.json --disc-json scratchpad/e6_dev/decision/conf_disc_conf.json
     PYTHONPATH=. .venv/Scripts/python.exe scratchpad/e6_dev/e6p_certsafe_analyze.py verify
     # EVAL + decision analysis
-    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-cs-eval-1 e6p_certsafe_eval.py 3
-    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-cs-evalan-1 --cmd 'python scratchpad/e6_dev/e6p_certsafe_analyze.py eval --records $JOB_SRC/e6p-cs-eval-1-a,$JOB_SRC/e6p-cs-eval-1-b,$JOB_SRC/e6p-cs-eval-1-c --disc-json scratchpad/e6_dev/decision/conf_disc_conf.json --out $JOB_OUT' --paths docs/benchmark/artifacts/E6P_CONF_MAPS.json docs/benchmark/artifacts/E6P_CERTSAFE.json scratchpad/e6_dev/decision/conf_disc_conf.json --sources bishalpanta/e6p-cs-eval-1-a,bishalpanta/e6p-cs-eval-1-b,bishalpanta/e6p-cs-eval-1-c
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_run.py launch e6p-cs-eval-1 e6p_certsafe_eval.py 5
+    .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py launch e6p-cs-evalan-1 --cmd 'python scratchpad/e6_dev/e6p_certsafe_analyze.py eval --records $JOB_SRC/e6p-cs-eval-1-a,$JOB_SRC/e6p-cs-eval-1-b,$JOB_SRC/e6p-cs-eval-1-c,$JOB_SRC/e6p-cs-eval-1-d,$JOB_SRC/e6p-cs-eval-1-e --disc-json scratchpad/e6_dev/decision/conf_disc_conf.json --out $JOB_OUT' --paths docs/benchmark/artifacts/E6P_CONF_MAPS.json docs/benchmark/artifacts/E6P_CERTSAFE.json scratchpad/e6_dev/decision/conf_disc_conf.json --sources bishalpanta/e6p-cs-eval-1-a,bishalpanta/e6p-cs-eval-1-b,bishalpanta/e6p-cs-eval-1-c,bishalpanta/e6p-cs-eval-1-d,bishalpanta/e6p-cs-eval-1-e
     .venv/Scripts/python.exe scratchpad/e6_dev/kaggle_job.py pull e6p-cs-evalan-1
 
 ## 13. Open items for the lead (settle before freeze 1)
@@ -370,3 +370,12 @@ All paths repo-relative; local commands from the repo root with `PYTHONPATH=.` a
    projection then also leaves sleep+ uncertified, i.e. CS:PMRT is about accept-all).
 4. **Expected tie with never_sleep** (section 8). Is a study whose likely result is "eligible, ties never_sleep" worth
    about 50 CPU-h, or is the reduced variant preferred?
+
+## 14. Lead decisions (2026-10-01, before freeze 1; user chose the full study)
+1. Deferral direction: the gate certifies DEFERRALS; an uncertified class is accepted (item 13.1 as written).
+2. Guard KPIs: (v, rlf), as built.
+3. Budget split: per relation only (.05 per class). Worst case two certified classes use .05 each, which stays within
+   the unchanged 1.10 guard; the class-split alternative leaves nothing certifiable and would make the study moot.
+4. Full variant (all arms, about 45-75 CPU-h); EVAL split over 5 Kaggle kernels (a-e) instead of 3 (parallelism only;
+   the job list is seed-major and identical).
+5. Stop rule (section 11) confirmed: after this study, write up whatever it shows; no further referee iterations.

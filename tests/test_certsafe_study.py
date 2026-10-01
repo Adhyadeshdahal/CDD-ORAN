@@ -317,6 +317,7 @@ def test_calib_and_artifact_roundtrip(tmp_path, monkeypatch):
               "sha256": {"maps_artifact": C.maps_status()["sha256"]}, "platform": {}}
     disc = json.load(open(DISC_JSON))
     sha = {"disc_conf.json": C.sha_lf(DISC_JSON), "certsafe_bounds.json": "x", "certsafe_calib.json": "y"}
+    monkeypatch.setattr(X, "freeze_status", lambda root=None: {"frozen": False})  # independent of the real freeze
     with pytest.raises(SystemExit):                                             # protocol not frozen
         XA.build_artifact(bounds, calib, disc, os.path.join(ROOT, C.MAPS_DOC), sha)
     monkeypatch.setattr(X, "freeze_status", lambda root=None: {"frozen": True})
