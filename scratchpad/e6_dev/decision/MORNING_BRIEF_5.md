@@ -22,3 +22,4 @@
   referees (CS:granger_by etc. eligible at R -10.6 to -11.1, harm from about 18,400 prot_min deferrals that no guard
   measures); the reviewers suggested gating by deferring unresolved actions, while the frozen protocol does the
   opposite; the reviewer CONTEXT file still has the old (wrong) sleep-edge RLF explanation.
+- 2026-10-02 USER DECISION: keep PMRT rename (strict-rule reading accepted; settled).
