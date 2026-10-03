@@ -8,8 +8,8 @@ value is written here; (2) the line above becomes "FROZEN: yes (<date>)"; (3) `s
 `protocol_sha256` = the LF sha256 of this file (the campaign EVAL guard and `eval_analysis.py` check it) and its
 `pkgs_lock`; (4) the freeze note `scratchpad/xmethod/freeze/FREEZE_NOTE.md`, committed in the freeze commit (whose
 message is one subject line), records the LF sha256 of this file, `scratchpad/xmethod/eval_analysis.py`,
-`specs/eval/full.json`, `cdd_oran/xmethod/campaign.py`, `cdd_oran/xmethod/dev_power.py` and
-`results/fmax_sim/dependence.json` and the DEV inputs (contents: T7); "recorded in the freeze commit" below means
+`scratchpad/xmethod/eval_report.py`, `specs/eval/full.json`, `cdd_oran/xmethod/campaign.py`,
+`cdd_oran/xmethod/dev_power.py` and `results/fmax_sim/dependence.json` and the DEV inputs (contents: T7); "recorded in the freeze commit" below means
 in that note or a file it names; (5) the orchestrator
 registers the EVAL block 3_100_000-3_100_299 in `docs/benchmark/SEED_REGISTRY.json`. After the freeze this file is
 never edited: amendments go to `docs/xmethod/PROTOCOL_A_AMENDMENTS.md` + `specs/eval/amendments.json` (section 14).
@@ -372,7 +372,8 @@ lambda, cost vs n.
   `dev_power.py` (xm/dev-runs), every adapter of the spec (`cdd_oran/xmethod/methods/`: pmrt_core, pmrt_nl, pc,
   granger, corr, notears, shap_dag, two_tower, cdl + _cdl_model, mscr, pcorr, pcorr_hac, rcot2 and their shared
   modules), runner / api / score / covariates / worlds, the launchers (`scratchpad/e6_dev/` kaggle_job, colab_run,
-  xm_dispatch), `uv.lock`, the spec with `protocol_sha256` and `pkgs_lock`, `eval_analysis.py`, `results/fmax_sim/`,
+  xm_dispatch), `uv.lock`, the spec with `protocol_sha256` and `pkgs_lock`, `eval_analysis.py` and the report
+  generator `eval_report.py` (renders section 12 from eval_analysis' outputs; frozen with it), `results/fmax_sim/`,
   the DEV inputs of T1 / T3 / T5 (merged files or their LF sha256), the T3 calibration block (R-55: f and e by host
   type) and cost-pilot records, the R-55 per-record host logging in campaign.py, the
   estimand-check re-run, and this file FROZEN; checklist `scratchpad/xmethod/freeze/FREEZE_CHECKLIST.md`.

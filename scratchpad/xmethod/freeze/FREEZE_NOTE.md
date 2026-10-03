@@ -9,6 +9,7 @@ the orchestrator after this commit). Every sha256 below is over the file with LF
 | docs/xmethod/PROTOCOL_A.md (= spec protocol_sha256) | <sha> |
 | scratchpad/xmethod/specs/eval/full.json | <sha> |
 | scratchpad/xmethod/eval_analysis.py | <sha> |
+| scratchpad/xmethod/eval_report.py | <sha> |
 | cdd_oran/xmethod/campaign.py | <sha> |
 | cdd_oran/xmethod/dev_power.py | <sha> |
 | scratchpad/xmethod/results/fmax_sim/dependence.json (= spec fmax_dependence_sha256) | <sha> |

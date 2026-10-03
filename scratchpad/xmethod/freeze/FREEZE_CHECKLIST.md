@@ -78,6 +78,7 @@ Units and cost (DEV costs; tune = DEV tune seeds re-run, R-34; E4 R3 / R4 C3 rea
    s.7 unit counts at the chosen S, header line -> "FROZEN: yes (<date>)".
 4. Spec `protocol_sha256` = LF sha256 of that PROTOCOL_A (compute after step 3; never edit either file afterwards).
 5. Re-run at the freeze tree: `scratchpad/xmethod/estimand_check.py` (R-36), tests `test_xmethod_eval_analysis.py`,
+   `test_xmethod_eval_report.py`,
    `test_xmethod_campaign.py`, `test_xmethod_pmrt*.py`, `test_xmethod_cdl.py`, citests / classic tests; the
    campaign self-test bundle; `campaign list` on the frozen spec (validate_spec + EVAL guard pass).
 6. Write `FREEZE_NOTE.md` (template beside this file) with every LF sha256, then ONE freeze commit (subject line
@@ -85,4 +86,5 @@ Units and cost (DEV costs; tune = DEV tune seeds re-run, R-34; E4 R3 / R4 C3 rea
 7. Orchestrator registers 3_100_000-3_100_299 in `docs/benchmark/SEED_REGISTRY.json` (step 5 of the procedure).
 8. Launch section A (2): EVAL from a clean checkout of the freeze commit (records must stamp it; dirty false).
 
-Never after the freeze: edit PROTOCOL_A (amendments file only), the spec, eval_analysis.py or any adapter.
+Never after the freeze: edit PROTOCOL_A (amendments file only), the spec, eval_analysis.py, eval_report.py or any
+adapter.

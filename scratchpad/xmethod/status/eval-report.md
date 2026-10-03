@@ -43,17 +43,18 @@ Branch xm/eval-report from feat/v2 e087160; local only, not pushed. No EVAL seed
   With tests/test_xmethod_eval_analysis.py: 46 pass + 1 skip. ruff clean.
 
 ## Findings
-- F1 C3 on DEV is NOT SUPPORTED by design: 60 seeds per cell give an exactly valid arm a .26 chance to pass. The
-  same simulation sets S_E4 = 300 (T9). It is not a validity signal: pmrt_eq has 0 INVALID cells there and a pooled
-  conf_raw of .039.
+- F1 DEV C3: at 60 seeds an exactly valid arm passes with P .26 (hence S_E4 300, T9); see Morning review.
 - F2 Dataset-hash mismatch on DEV: E2 R2 n 24000, seed 3000016 differs between the full run (numpy 2.0.2, pins off)
-  and ci_c (numpy 2.4.2, locked); same Kaggle CPU model. 1 of ~16k datasets.
-  - EVAL is unaffected: everything is pinned and one platform per dataset.
+  and ci_c (numpy 2.4.2, locked); same Kaggle CPU model. 1 of ~16k datasets. EVAL is unaffected (all pinned).
   - The R-34 tune reproducibility check (`--dev-merged`) against the full DEV run may show such dataset-sha
     differences; read them as a numpy-version effect.
 - F3 DEV V11 fails as expected: unfrozen protocol, mixed commits / platforms / numpy, 17 176 dirty records (CI run
   launcher). Every record's candidate set is complete; the BY re-check agrees on 74 920 / 74 920.
 
 ## Questions
-- Q1 Should eval_report.py be frozen with eval_analysis.py (PROTOCOL_A T7 and FREEZE_NOTE sha list)? It computes
-  nothing new, but it renders the reported text. Default: yes, add it to T7 at the freeze; not edited here.
+- Q1 ANSWERED (orchestrator): eval_report.py is frozen with eval_analysis.py. Done on xm/freeze-t7: PROTOCOL_A freeze
+  step 4 + T7, FREEZE_NOTE sha table, FREEZE_CHECKLIST tests / never-edit list.
+
+## Morning review
+- DEV C3 for pmrt_eq: confirmed not a failure. 0 of 20 E4 R3 cells are INVALID; the verdict fails only leg (b),
+  because the pooled P_placebo raw rate .045 [.018, .082] is INCONCLUSIVE at DEV seed counts (upper bound > .075).
