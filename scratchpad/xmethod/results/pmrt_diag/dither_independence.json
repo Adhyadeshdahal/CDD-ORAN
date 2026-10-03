@@ -1,0 +1,23 @@
+{
+ "same_t_cross_column": {
+  "count": 2160,
+  "mean_z": -0.0097,
+  "sd_z": 0.9818,
+  "max_abs_z": 4.047,
+  "frac_abs_gt_1.96": 0.0463
+ },
+ "lag1_all_pairs": {
+  "count": 4860,
+  "mean_z": -0.0022,
+  "sd_z": 0.9918,
+  "max_abs_z": 3.564,
+  "frac_abs_gt_1.96": 0.0479
+ },
+ "null_D_vs_Y": {
+  "count": 2280,
+  "mean_z": 0.0113,
+  "sd_z": 1.0208,
+  "max_abs_z": 3.645,
+  "frac_abs_gt_1.96": 0.0557
+ }
+}

@@ -237,3 +237,10 @@ hand-back, with measured CPU-s and peak RAM per run).
   (3) R4 (no design) reported as "not applicable" for PMRT, never recall 0; like-for-like table (PMRT scored with the
   same per-edge cutoff as score-only arms, and every p arm at raw p <= .05) promoted to a headline table.
 - R-43 T1 power pairs use the primary PMRT arm (pmrt_nl_eq; winner run on DEV T1 cells). Fallback: if no R-42 candidate passes, linear pmrt_eq is primary. V0 shows all recalls with validity flags; V2/V3 gate on not-INVALID.
+- R-44 (user, 2026-10-03) compute: before every new job check Colab (CPU / GPU) first for medium jobs; Kaggle for long
+  unattended ones (cap 5); when Kaggle is full and Colab unavailable, use Lightning (up to all 3.77 credits; log
+  credits per job in the status file). Never let a job wait for a Kaggle slot if another platform is free.
+- R-45 (pmrt-diag REPORT): pmrt_core has no flaw; DEV E2 R2 excess = chance + selection (600 regen replicates
+  per cell nominal, .049-.053). Wording: PMRT is asymptotically valid (martingale CLT; its predictable adjustment
+  uses the focal action's own past dither); exact only when the adjustment is invariant to the focal dither. The
+  optional exact `inv` variant is NOT added (applies to memoryless E2 only; costs 1-2.5 pts recall).

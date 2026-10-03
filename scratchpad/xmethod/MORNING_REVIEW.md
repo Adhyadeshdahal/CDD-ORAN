@@ -42,3 +42,4 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   theory and disclosed in PROTOCOL_A s.0. Freeze waits for this.
 - CMI-kNN GPU cost: ~40 min per dataset at n 4000, ~5 h at n 8000 (over budget). Full grid at n 4000 may need far
   more GPU-hours than Kaggle's ~30/week: decision pending the pilot projection.
+- R-44 Lightning up to 3.77 credits; Colab-first retry policy (user).

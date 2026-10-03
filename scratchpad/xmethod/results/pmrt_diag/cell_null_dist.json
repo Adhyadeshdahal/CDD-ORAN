@@ -1,0 +1,30 @@
+{
+ "prod|3000100-3000119": {
+  "dev_rate": 0.0844,
+  "sim_mean": 0.0554,
+  "sim_sd": 0.0088,
+  "P_sim_ge_dev": 0.0005,
+  "P_INVALID": 0.069
+ },
+ "prod|3000100-3000159": {
+  "dev_rate": 0.0635,
+  "sim_mean": 0.0501,
+  "sim_sd": 0.0049,
+  "P_sim_ge_dev": 0.0043,
+  "P_INVALID": 0.0168
+ },
+ "inv|3000100-3000119": {
+  "dev_rate": 0.0703,
+  "sim_mean": 0.0504,
+  "sim_sd": 0.0092,
+  "P_sim_ge_dev": 0.0225,
+  "P_INVALID": 0.022
+ },
+ "inv|3000100-3000159": {
+  "dev_rate": 0.0646,
+  "sim_mean": 0.0488,
+  "sim_sd": 0.005,
+  "P_sim_ge_dev": 0.0008,
+  "P_INVALID": 0.0075
+ }
+}
