@@ -65,3 +65,7 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   GT as stored: TRUE 29 / NULL 21 / INDET 10; ~71 core-h, cdl ~55). Answered defaults: LOSO conformal tau, full
   context in eq + native, mscr n <= 1000, granger kept (labelled). GO for the pilot only, lowest priority (launch when
   < 4 of my Kaggle sessions run); P1 waits (EVAL first). Copied campaign.py / dev_power.py into its worktree.
+- 02:20 Merged into feat/v2: e087160 freeze package (protocol v5, T-register filled except T1 S; final EVAL spec;
+  launch plan S 40 ~1 240 CPU-h ~56 h wall on 4 Kaggle + 3 Colab; checklist), aa6d02e EVAL report generator (DEV
+  rehearsal: C1 SUPPORTED 5/6 (4/5 without mscr), C2a SUPPORTED, C2b SUPPORTED, C3 NOT SUPPORTED = INCONCLUSIVE cells
+  at DEV seed counts, 0 INVALID for pmrt; EVAL uses 300 E4 seeds). eval_report.py frozen with eval_analysis (T7).
