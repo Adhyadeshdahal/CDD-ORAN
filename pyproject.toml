@@ -13,6 +13,7 @@ dependencies = [
     "matplotlib>=3.9",
     "tensorboard>=2.18",
     "pyyaml>=6.0.3",
+    "causal-learn>=0.1.4.8",
 ]
 
 [tool.uv]
@@ -34,6 +35,12 @@ baselines = [
     "scikit-learn>=1.9.1",
     "scipy==1.18.1",  # exact: the E6 sim uses scipy (gaussian_filter, norm.cdf)
     "shap>=0.52.0",
+    "xgboost>=3.4.1",
+]
+citests = [
+    "dcor>=0.7",
+    "momentchi2==0.1.8",
+    "tigramite>=5.2.10.1",
 ]
 dev = [
     "pytest>=9.1.1",

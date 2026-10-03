@@ -159,10 +159,14 @@ def remote(name, code, timeout=600, tag=None):
 
 def new_session(name, tries=3):
     """`colab new -s NAME --tpu v5e1` with retries; after a failed attempt, refuse to continue if the server holds an
-    assignment the CLI does not know (orphan: stop it by hand)."""
+    assignment the CLI does not know (orphan: stop it by hand). Env COLAB_ACCEL picks the runtime (2026-10-02,
+    xm-citests): "tpu:v5e1" (default, unchanged), "gpu:T4" (GPU ports), "cpu" (plain CPU runtime)."""
+    accel = os.environ.get("COLAB_ACCEL", "tpu:v5e1")
+    kind, _, variant = accel.partition(":")
+    flags = {"tpu": ["--tpu", variant], "gpu": ["--gpu", variant], "cpu": []}[kind]
     for k in range(tries):
         try:
-            out = colab("new", "-s", name, "--tpu", "v5e1", timeout=HTTP_TIMEOUT + 300)
+            out = colab("new", "-s", name, *flags, timeout=HTTP_TIMEOUT + 300)
             print(out[-300:].encode("ascii", "replace").decode(), flush=True)
             if "READY" in out:
                 return
@@ -173,9 +177,12 @@ def new_session(name, tries=3):
             ses = colab("sessions", timeout=120, check=False)
             if f"[{name}]" in ses:
                 return
-            raise SystemExit(f"{n} active assignment(s) not known as session {name!r}: {ses}")
+            known = sum(1 for ln in ses.splitlines() if ln.lstrip().startswith("["))
+            if n > known:      # an assignment no CLI session accounts for: orphan, stop it by hand
+                raise SystemExit(f"{n} active assignment(s), only {known} known sessions (not {name!r}): {ses}")
+            # every assignment is another known session (concurrent jobs): just retry
         time.sleep(60)
-    raise SystemExit(f"could not create a TPU v5e-1 runtime after {tries} attempts")
+    raise SystemExit(f"could not create a {accel} runtime after {tries} attempts")
 
 
 def run_dir(name):
