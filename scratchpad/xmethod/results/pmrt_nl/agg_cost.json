@@ -1,0 +1,405 @@
+{
+ "errors": [],
+ "n_records": 6,
+ "validity": {
+  "gbm|dev|E2|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.0625,
+    0.0625,
+    0.0625
+   ],
+   "null_class": "INVALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E5|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|dev|E2|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|dev|E5|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.2,
+    0.2,
+    0.2
+   ],
+   "null_class": "INVALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff|dev|E2|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.125,
+    0.125,
+    0.125
+   ],
+   "null_class": "INVALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff|dev|E5|R1|n4000": {
+   "seeds": 1,
+   "null": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "null_class": "INVALID",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  }
+ },
+ "recall_edges": {
+  "gbm|dev|E2|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K5": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K0": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K3": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K4": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P2->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P3->K2": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P4->K3": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P4->K4": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P5->K3": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P5->K4": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P6->K5": [
+   0.0,
+   1
+  ],
+  "gbm|dev|E2|R1|n4000|P7->K5": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P1->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P2->K1": [
+   1.0,
+   1
+  ],
+  "gbm|dev|E5|R1|n4000|P3->K3": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P0->K1": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P0->K5": [
+   0.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P1->K0": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P1->K1": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P1->K3": [
+   0.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P1->K4": [
+   0.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P2->K1": [
+   0.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P3->K2": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P4->K3": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P4->K4": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P5->K3": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P5->K4": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P6->K5": [
+   1.0,
+   1
+  ],
+  "poly|dev|E2|R1|n4000|P7->K5": [
+   1.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P0->K1": [
+   0.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P1->K1": [
+   0.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P2->K1": [
+   1.0,
+   1
+  ],
+  "poly|dev|E5|R1|n4000|P3->K3": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P0->K1": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P0->K5": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P1->K0": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P1->K1": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P1->K3": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P1->K4": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P2->K1": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P3->K2": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P4->K3": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P4->K4": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P5->K3": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P5->K4": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P6->K5": [
+   1.0,
+   1
+  ],
+  "rff|dev|E2|R1|n4000|P7->K5": [
+   1.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P0->K0": [
+   1.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P0->K1": [
+   0.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P0->K2": [
+   1.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P1->K1": [
+   1.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P2->K1": [
+   1.0,
+   1
+  ],
+  "rff|dev|E5|R1|n4000|P3->K3": [
+   1.0,
+   1
+  ]
+ },
+ "recall": {
+  "gbm": {
+   "mean_per_edge": 0.9545,
+   "n_edges": 22,
+   "cells": {
+    "dev|E2|R1|n4000": 0.9375,
+    "dev|E5|R1|n4000": 1.0
+   }
+  },
+  "poly": {
+   "mean_per_edge": 0.7273,
+   "n_edges": 22,
+   "cells": {
+    "dev|E2|R1|n4000": 0.75,
+    "dev|E5|R1|n4000": 0.6667
+   }
+  },
+  "rff": {
+   "mean_per_edge": 0.9545,
+   "n_edges": 22,
+   "cells": {
+    "dev|E2|R1|n4000": 1.0,
+    "dev|E5|R1|n4000": 0.8333
+   }
+  }
+ },
+ "cost": {
+  "gbm|n4000": {
+   "mean": 42.8,
+   "max": 56.5,
+   "units": 2
+  },
+  "poly|n4000": {
+   "mean": 18.7,
+   "max": 26.0,
+   "units": 2
+  },
+  "rff|n4000": {
+   "mean": 61.0,
+   "max": 87.0,
+   "units": 2
+  }
+ }
+}

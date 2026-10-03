@@ -1,0 +1,1677 @@
+{
+ "errors": [],
+ "n_records": 2160,
+ "validity": {
+  "gbm|dev|E1|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0375,
+    0.0167,
+    0.0625
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.0,
+    0.125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E1|R1|n4000": {
+   "seeds": 20,
+   "null": [
+    0.0292,
+    0.0125,
+    0.0542
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.0,
+    0.1125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E1|R1|n500": {
+   "seeds": 20,
+   "null": [
+    0.0292,
+    0.0083,
+    0.0542
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.0125,
+    0.1
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E1|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0528,
+    0.0375,
+    0.0694
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0667,
+    0.0333,
+    0.1042
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E1|R2|n4000": {
+   "seeds": 60,
+   "null": [
+    0.0514,
+    0.0361,
+    0.0681
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0125,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E1|R2|n500": {
+   "seeds": 60,
+   "null": [
+    0.0417,
+    0.0278,
+    0.0556
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0333,
+    0.0875
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.025,
+    0.0141,
+    0.0375
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0667,
+    0.025,
+    0.1083
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R1|n4000": {
+   "seeds": 20,
+   "null": [
+    0.0344,
+    0.0219,
+    0.0469
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.075,
+    0.025,
+    0.125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R1|n500": {
+   "seeds": 20,
+   "null": [
+    0.0297,
+    0.0187,
+    0.0422
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0667,
+    0.025,
+    0.1167
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0458,
+    0.0359,
+    0.0563
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.025,
+    0.0806
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R2|n4000": {
+   "seeds": 60,
+   "null": [
+    0.0411,
+    0.0323,
+    0.05
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0528,
+    0.0333,
+    0.075
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E2|R2|n500": {
+   "seeds": 60,
+   "null": [
+    0.051,
+    0.0443,
+    0.0578
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0472,
+    0.0278,
+    0.0694
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E3|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.05,
+    0.0312,
+    0.075
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.02,
+    0.0,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E3|R1|n4000": {
+   "seeds": 20,
+   "null": [
+    0.05,
+    0.0281,
+    0.075
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.04,
+    0.01,
+    0.08
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E3|R1|n500": {
+   "seeds": 20,
+   "null": [
+    0.0656,
+    0.0437,
+    0.0906
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.03,
+    0.0,
+    0.06
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E3|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0354,
+    0.024,
+    0.0479
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0333,
+    0.0167,
+    0.0533
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E3|R2|n4000": {
+   "seeds": 60,
+   "null": [
+    0.0427,
+    0.0312,
+    0.0552
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0433,
+    0.0233,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E3|R2|n500": {
+   "seeds": 60,
+   "null": [
+    0.0469,
+    0.0344,
+    0.0594
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0433,
+    0.02,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R1|lam1.0|n1000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.15,
+    0.0,
+    0.35
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R1|lam1.0|n4000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R1|lam1.0|n500": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.1,
+    0.0,
+    0.25
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R2|lam1.0|n1000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.1167
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R2|lam1.0|n4000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0167,
+    0.0,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R2|lam1.0|n500": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.1167
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam0.0|n1000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0167,
+    0.0,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R3|lam0.0|n4000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0667,
+    0.0167,
+    0.1333
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam0.0|n500": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0333,
+    0.0,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam0.5|n1000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0333,
+    0.0,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam0.5|n4000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0333,
+    0.0,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam0.5|n500": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0333,
+    0.0,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam1.0|n1000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0167,
+    0.0,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R3|lam1.0|n4000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0333,
+    0.0,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam1.0|n500": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R3|lam1.5|n1000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R3|lam1.5|n4000": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.1167
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R3|lam1.5|n500": {
+   "seeds": 60,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0167,
+    0.0,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R4|lam0.0|n1000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam0.0|n4000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.1,
+    0.0,
+    0.25
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam0.0|n500": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam0.5|n1000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam0.5|n4000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam0.5|n500": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.1,
+    0.0,
+    0.25
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam1.0|n1000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam1.0|n4000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.1,
+    0.0,
+    0.25
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam1.0|n500": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam1.5|n1000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E4|R4|lam1.5|n4000": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E4|R4|lam1.5|n500": {
+   "seeds": 20,
+   "null": [
+    NaN,
+    NaN,
+    NaN
+   ],
+   "null_class": "NO_READ",
+   "placebo": [
+    0.05,
+    0.0,
+    0.15
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.04,
+    0.02,
+    0.06
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.025,
+    0.0,
+    0.0625
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E5|R1|n4000": {
+   "seeds": 20,
+   "null": [
+    0.03,
+    0.005,
+    0.06
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0625,
+    0.025,
+    0.1125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E5|R1|n500": {
+   "seeds": 20,
+   "null": [
+    0.045,
+    0.015,
+    0.075
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0625,
+    0.025,
+    0.1125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.04,
+    0.0233,
+    0.0583
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0125,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E5|R2|n4000": {
+   "seeds": 60,
+   "null": [
+    0.045,
+    0.03,
+    0.06
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0167,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E5|R2|n500": {
+   "seeds": 60,
+   "null": [
+    0.0533,
+    0.0367,
+    0.0717
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0125,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  }
+ },
+ "recall_edges": {
+  "gbm|dev|E1|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n1000|P2->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n4000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n4000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n4000|P2->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n4000|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n500|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n500|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n500|P2->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R1|n500|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E1|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n1000|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n1000|P2->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n4000|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n4000|P2->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n4000|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n500|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n500|P2->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E1|R2|n500|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K5": [
+   0.45,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P6->K5": [
+   0.15,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P7->K5": [
+   0.8,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P0->K5": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P1->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P3->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P4->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P4->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P5->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P5->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P6->K5": [
+   0.4,
+   20
+  ],
+  "gbm|dev|E2|R1|n4000|P7->K5": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P0->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P0->K5": [
+   0.15,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P1->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P1->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P1->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P3->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P4->K3": [
+   0.95,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P4->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P5->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P5->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P6->K5": [
+   0.1,
+   20
+  ],
+  "gbm|dev|E2|R1|n500|P7->K5": [
+   0.15,
+   20
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K5": [
+   0.3,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K3": [
+   0.617,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K4": [
+   0.567,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P2->K1": [
+   0.733,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P4->K3": [
+   0.8,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P4->K4": [
+   0.933,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P5->K3": [
+   0.95,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P5->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P6->K5": [
+   0.083,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P7->K5": [
+   0.467,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P0->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P0->K5": [
+   0.917,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P1->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P1->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P1->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P2->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P4->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P4->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P5->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P5->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P6->K5": [
+   0.017,
+   60
+  ],
+  "gbm|dev|E2|R2|n4000|P7->K5": [
+   0.983,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P0->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P0->K2": [
+   0.983,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P0->K5": [
+   0.133,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P1->K0": [
+   0.983,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P1->K1": [
+   0.95,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P1->K3": [
+   0.267,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P1->K4": [
+   0.267,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P2->K1": [
+   0.283,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P4->K3": [
+   0.467,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P4->K4": [
+   0.617,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P5->K3": [
+   0.833,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P5->K4": [
+   0.95,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P6->K5": [
+   0.033,
+   60
+  ],
+  "gbm|dev|E2|R2|n500|P7->K5": [
+   0.133,
+   60
+  ],
+  "gbm|dev|E3|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n1000|P1->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n1000|P2->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n1000|P3->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n4000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n4000|P1->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n4000|P2->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n4000|P3->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n500|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n500|P1->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n500|P2->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R1|n500|P3->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E3|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n1000|P1->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n1000|P2->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n1000|P3->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n4000|P1->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n4000|P2->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n4000|P3->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n500|P1->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n500|P2->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E3|R2|n500|P3->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R1|lam1.0|n1000|P0->K0": [
+   0.35,
+   20
+  ],
+  "gbm|dev|E4|R1|lam1.0|n4000|P0->K0": [
+   0.9,
+   20
+  ],
+  "gbm|dev|E4|R1|lam1.0|n500|P0->K0": [
+   0.2,
+   20
+  ],
+  "gbm|dev|E4|R2|lam1.0|n1000|P0->K0": [
+   0.017,
+   60
+  ],
+  "gbm|dev|E4|R2|lam1.0|n4000|P0->K0": [
+   0.0,
+   60
+  ],
+  "gbm|dev|E4|R2|lam1.0|n500|P0->K0": [
+   0.017,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.0|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.0|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.0|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.5|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.5|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam0.5|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.0|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.0|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.0|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.5|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.5|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E4|R3|lam1.5|n500|P0->K0": [
+   0.983,
+   60
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K1": [
+   0.5,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P1->K1": [
+   0.9,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n4000|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P0->K1": [
+   0.25,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P1->K1": [
+   0.4,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n500|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K1": [
+   0.15,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P1->K1": [
+   0.183,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P2->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P0->K1": [
+   0.333,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P1->K1": [
+   0.517,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P2->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n4000|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P0->K1": [
+   0.183,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P1->K1": [
+   0.05,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P2->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n500|P3->K3": [
+   1.0,
+   60
+  ]
+ },
+ "recall": {
+  "gbm": {
+   "mean_per_edge": 0.8654,
+   "n_edges": 198,
+   "cells": {
+    "dev|E1|R1|n1000": 1.0,
+    "dev|E1|R1|n4000": 1.0,
+    "dev|E1|R1|n500": 1.0,
+    "dev|E1|R2|n1000": 1.0,
+    "dev|E1|R2|n4000": 1.0,
+    "dev|E1|R2|n500": 1.0,
+    "dev|E2|R1|n1000": 0.9,
+    "dev|E2|R1|n4000": 0.9625,
+    "dev|E2|R1|n500": 0.8344,
+    "dev|E2|R2|n1000": 0.7781,
+    "dev|E2|R2|n4000": 0.9323,
+    "dev|E2|R2|n500": 0.6188,
+    "dev|E3|R1|n1000": 1.0,
+    "dev|E3|R1|n4000": 1.0,
+    "dev|E3|R1|n500": 1.0,
+    "dev|E3|R2|n1000": 1.0,
+    "dev|E3|R2|n4000": 1.0,
+    "dev|E3|R2|n500": 1.0,
+    "dev|E4|R1|lam1.0|n1000": 0.35,
+    "dev|E4|R1|lam1.0|n4000": 0.9,
+    "dev|E4|R1|lam1.0|n500": 0.2,
+    "dev|E4|R2|lam1.0|n1000": 0.0167,
+    "dev|E4|R2|lam1.0|n4000": 0.0,
+    "dev|E4|R2|lam1.0|n500": 0.0167,
+    "dev|E4|R3|lam0.0|n1000": 1.0,
+    "dev|E4|R3|lam0.0|n4000": 1.0,
+    "dev|E4|R3|lam0.0|n500": 1.0,
+    "dev|E4|R3|lam0.5|n1000": 1.0,
+    "dev|E4|R3|lam0.5|n4000": 1.0,
+    "dev|E4|R3|lam0.5|n500": 1.0,
+    "dev|E4|R3|lam1.0|n1000": 1.0,
+    "dev|E4|R3|lam1.0|n4000": 1.0,
+    "dev|E4|R3|lam1.0|n500": 1.0,
+    "dev|E4|R3|lam1.5|n1000": 1.0,
+    "dev|E4|R3|lam1.5|n4000": 1.0,
+    "dev|E4|R3|lam1.5|n500": 0.9833,
+    "dev|E5|R1|n1000": 0.9,
+    "dev|E5|R1|n4000": 1.0,
+    "dev|E5|R1|n500": 0.775,
+    "dev|E5|R2|n1000": 0.7222,
+    "dev|E5|R2|n4000": 0.8083,
+    "dev|E5|R2|n500": 0.7056
+   }
+  }
+ },
+ "cost": {
+  "gbm|n500": {
+   "mean": 15.0,
+   "max": 54.4,
+   "units": 720
+  },
+  "gbm|n1000": {
+   "mean": 25.1,
+   "max": 93.0,
+   "units": 720
+  },
+  "gbm|n4000": {
+   "mean": 69.1,
+   "max": 272.1,
+   "units": 720
+  }
+ }
+}

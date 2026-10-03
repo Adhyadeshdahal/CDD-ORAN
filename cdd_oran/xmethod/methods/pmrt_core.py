@@ -34,6 +34,11 @@ Statistic, per action a (all targets on ONE set of B draws, as pmrt.family_tests
               pmrt's fixed-B p (used only for the equivalence gate). RNG
               ``default_rng([data.seed, 7801, action_index, split])`` (CONTRACT section 6), chunked, chunk-invariant.
   sign        sign(S) (the plain-kernel sign rule of pmrt).
+  statistic   option (ruling R-42). "linear" (default; the secondary arm, version pmrt-core-v1, unchanged) is S above.
+              "gbm" / "rff" / "poly" run the same redraw with a nonlinear statistic from
+              ``cdd_oran.xmethod.methods.pmrt_nl`` (version pmrt-core-v2; option ``adjust`` = "ridge" | "gbm", None = the
+              statistic's default). R-42 selection (2026-10-03, docs/xmethod/PMRT_CORE.md): "gbm" (the learned
+              predictable matched filter, past-only gbm adjustment) is the primary PMRT arm pmrt_nl_eq.
   declare     fdr_layer.declare(..., "by") at q = .05 over every action -> KPI candidate incl. P_placebo (ruling
               R-6; a not-applicable one counts in m and is never declared; plain BY: the E-series has no
               independent prior data, so no weights and no one-sided directions). Secondary (CONTRACT section 5): tau on
@@ -78,7 +83,9 @@ from cdd_oran.decision import fdr_layer as FL
 from cdd_oran.xmethod import api
 from cdd_oran.xmethod.covariates import concurrent_indices, design_covariates, info_order
 
-PMRT_CORE_VERSION = "pmrt-core-v1"
+PMRT_CORE_VERSION = "pmrt-core-v1"                # statistic "linear" (default)
+PMRT_CORE_V2_VERSION = "pmrt-core-v2"             # a nonlinear statistic (R-42, pmrt_nl)
+STATISTICS = ("linear", "gbm", "rff", "poly")
 RNG_TAG = 7801                                  # CONTRACT section 6 (pmrt_core stream)
 NOT_APPLICABLE = "not_applicable"
 
@@ -101,6 +108,8 @@ class PmrtCoreConfig:
     max_chunk_bytes: int = 64_000_000
     split: int = 0
     tau: float | None = None                    # secondary score threshold (placebo rule, from tune)
+    statistic: str = "linear"                   # R-42: "linear" (S = sum v w) | "gbm" | "rff" | "poly" (pmrt_nl)
+    adjust: str | None = None                   # nonlinear statistics only: "ridge" | "gbm" | None (their default)
 
 
 # ============================================================================================ assignment (design)
@@ -399,6 +408,12 @@ class PmrtCore:
         order) exist only for the equivalence check against pmrt.py (scratchpad/xmethod/pmrt_equiv.py)."""
         t_cpu = time.process_time()
         cfg = config_from_dict(config) if config is not None else self.cfg
+        if cfg.statistic not in STATISTICS:
+            raise ValueError(f"statistic must be one of {STATISTICS}, got {cfg.statistic!r}")
+        if cfg.statistic != "linear":
+            return self._run_nonlinear(data, cfg, t_cpu, rngs, W_override)
+        if cfg.adjust is not None:
+            raise ValueError("adjust applies to the nonlinear statistics only (linear uses the ridge residual)")
         order = info_order(data)
         kpis = list(data.kpi_names)
         Y = np.asarray(data.Y, float)[order]
@@ -498,11 +513,23 @@ class PmrtCore:
         return api.Result(method=self.name, version=self.version, edges=tuple(edges),
                           cpu_s=time.process_time() - t_cpu, config=dataclasses.asdict(cfg), notes=notes)
 
+    def _run_nonlinear(self, data, cfg, t_cpu, rngs, W_override) -> api.Result:
+        """statistic != "linear": the pmrt_nl statistic on the same redraw machinery and settings (B, Besag-Clifford,
+        BY family, covariates, burn, refit blocks, RNG stream, tau); the Result is reported as pmrt_core v2."""
+        from cdd_oran.xmethod.methods import pmrt_nl as NL
+        if cfg.huber_c is not None or rngs is not None or W_override is not None:
+            raise ValueError("huber_c / rngs / W_override apply to the linear statistic only")
+        shared = {f.name for f in dataclasses.fields(NL.PmrtNlConfig)} & {f.name for f in dataclasses.fields(cfg)}
+        res = NL.PmrtNl(NL.PmrtNlConfig(**{k: getattr(cfg, k) for k in shared})).run(data)
+        notes = dict(res.notes, statistic_module=f"{NL.__name__} {NL.PMRT_NL_VERSION}")
+        return api.Result(method=self.name, version=PMRT_CORE_V2_VERSION, edges=res.edges,
+                          cpu_s=time.process_time() - t_cpu, config=dataclasses.asdict(cfg), notes=notes)
+
 
 def make() -> PmrtCore:
     return PmrtCore()
 
 
-__all__ = ["COVARIATE_SETS", "NOT_APPLICABLE", "PMRT_CORE_VERSION", "RNG_TAG", "Assignment", "PmrtCore", "PmrtCoreConfig",
-           "assignment", "concurrent_columns", "config_from_dict", "covariates", "crt", "info_order", "make",
-           "predictable_weights"]
+__all__ = ["COVARIATE_SETS", "NOT_APPLICABLE", "PMRT_CORE_V2_VERSION", "PMRT_CORE_VERSION", "RNG_TAG", "STATISTICS",
+           "Assignment", "PmrtCore", "PmrtCoreConfig", "assignment", "concurrent_columns", "config_from_dict",
+           "covariates", "crt", "info_order", "make", "predictable_weights"]

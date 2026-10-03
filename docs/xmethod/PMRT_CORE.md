@@ -1,6 +1,7 @@
 # PMRT core (cross-method study, E1-E5)
 
-Code: `cdd_oran/xmethod/methods/pmrt_core.py` (adapter `pmrt_core`, version `pmrt-core-v1`). Full PMRT on E6-P:
+Code: `cdd_oran/xmethod/methods/pmrt_core.py` (adapter `pmrt_core`, version `pmrt-core-v1`; option
+`statistic="gbm"`: `pmrt-core-v2`, section "Nonlinear statistic"). Full PMRT on E6-P:
 `cdd_oran/decision/pmrt.py` + `fdr_layer.py` (`docs/benchmark/METHOD_NAMES.md`).
 
 ## What it tests
@@ -53,6 +54,58 @@ asymptotically valid (martingale central limit theorem), but not exact.
 | Receiver table rho, unit support rule | **Dropped** (E6 unit-table specific). A constant or non-finite target, or zero design variance, is "undetermined" | - |
 | CRT redraw from the known design, B = 9999, asymptotic validity | **Kept** | - |
 | Weighted BY, one-sided where the prior \|z\| >= 3 (`wby1s`) | **Reduced** to plain BY | no independent prior data |
+
+## Nonlinear statistic (ruling R-42)
+
+**Why.** On DEV, the linear S = sum_t v_t w_t found E2 / E5 edges at raw p <= .05 in .38-.54 of cases (n 1000), against
+.67-.97 for SHAP-DAG. Three causes, from `scratchpad/xmethod/results/pmrt_nl/DIAG.md`:
+- **Centred bumps.** A bump centred in the design range has Cov(v, Y) = 0. Under setpoint + dither, the local slopes
+  cancel across setpoints.
+- **Pure interactions.** Some effects exist only together with a concurrent action or a gate.
+- **Leftover nuisance.** The linear ridge leaves the other actions' nonlinear effects in w.
+
+**Option.** `PmrtCoreConfig(statistic="gbm")` (default `"linear"`). It runs the statistic from
+`cdd_oran/xmethod/methods/pmrt_nl.py` (`pmrt-nl-v1`) on the same redraw, B = 9999 with Besag-Clifford h = 20, BY
+family, covariates, refit blocks and RNG stream. The result is reported as `pmrt_core` version `pmrt-core-v2`. The
+study's primary PMRT arm is `pmrt_nl_eq` = `{"covariates": "eq", "statistic": "gbm"}`. The linear statistic stays
+the default and is the secondary arm `pmrt_eq`, unchanged and bit-identical. `"rff"` and `"poly"` are also accepted
+(R-42 candidates N2 and N1).
+
+**How gbm works.**
+1. **Model.** Per target k, fit a gradient-boosted model g_k(A_t, x_t). A_t is every designed action at t; x_t is
+   Z_eq (lagged KPIs, context, setpoints, lagged actions). Settings: XGBoost, 200 trees, depth 4, eta .1, one thread,
+   seed 0. The fit uses PAST rows only and is refitted at pmrt_core's geometric block boundaries.
+2. **Adjustment.** For the focal action a, m_t = E_design[g_k(A_t with a's random part redrawn, x_t)] and
+   w_t = y_t - m_t. The first burn rows get weight 0.
+3. **Profile.** The learned matched filter is h_t(v) = g_k(A_t with a's random part = v, x_t) - m_t. It is linearly
+   interpolated on 25 grid points over the design support, and is exact on a categorical support.
+4. **Statistic.** T = sum_t h_t(v_t) w_t / sqrt(sum_t Var_design(h_t) w_t^2). It is one-sided: large T is evidence.
+   The declared sign is sign(sum_t v_t w_t).
+
+**Validity.** It rests on the same argument as the linear statistic. Proof in `pmrt_nl.py` and
+`results/pmrt_nl/CANDIDATES.md`.
+- **Why the martingale argument holds.** h_t and w_t are predictable: they use rows < t and x_t only. h_t(v_t) has
+  design mean 0 given the past. So sum h_t(v_t) w_t is a martingale whose predictable variance equals the redraw
+  variance.
+- **Asymptotic, exact only in a special case.** The CRT p-value is asymptotically valid (martingale CLT). It is exact
+  only when g, h and w do not depend on the focal action's own past draws.
+- **Why fit on the past only.** A cross-fitted model would use future rows, whose KPIs can depend on v_t. That breaks
+  the argument (orchestrator ruling, Q1).
+
+**Selection (applied mechanically).** Details in `results/pmrt_nl/SELECTION.md`. Seeds were DEV 3_000_100-159 only.
+- **Validity.** None of gbm, rff or poly has an INVALID cell in the synthetic F4 null level (n 500 / 1000 / 4000;
+  i.i.d., R2-like and nonlinear nulls) or in the DEV truth-null and placebo rates (E1-E5 x R1-R4, n 500 / 1000 / 4000).
+- **Cost.** All three fit the budget: at n 4000 the maximum is 26-87 CPU-s against 7200.
+- **Recall.** Mean per-edge recall at raw p <= .05 over DEV E2 / E5 R1 / R2 n 1000 plus SYN-NL R1 / R2 (58 edges):
+
+| candidate | recall |
+|---|---|
+| gbm | .749 |
+| rff | .666 |
+| poly | .638 |
+| linear (reference) | .420 |
+
+gbm wins. Its DEV truth-null rate is .025-.066 (mean .042).
 
 ## Why no clip (ruling R-14)
 

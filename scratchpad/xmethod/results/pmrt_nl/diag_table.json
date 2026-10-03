@@ -1,0 +1,2994 @@
+{
+ "E2|R1|P0->K0": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.0,
+   20
+  ],
+  "corr:tau": [
+   0.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.28,
+   0.61,
+   0.65
+  ]
+ },
+ "E2|R1|P0->K1": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.0,
+   20
+  ],
+  "corr:tau": [
+   0.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.05,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.42,
+   0.8,
+   0.55
+  ]
+ },
+ "E2|R1|P0->K2": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -17.33,
+   17.33,
+   0.0
+  ]
+ },
+ "E2|R1|P0->K5": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.0,
+   20
+  ],
+  "corr:tau": [
+   0.05,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.1,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.65,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.09,
+   0.76,
+   0.5
+  ]
+ },
+ "E2|R1|P1->K0": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   15.54,
+   15.54,
+   1.0
+  ]
+ },
+ "E2|R1|P1->K1": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   15.72,
+   15.72,
+   1.0
+  ]
+ },
+ "E2|R1|P1->K3": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.15,
+   20
+  ],
+  "corr:tau": [
+   0.25,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.15,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.3,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.2,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.3,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.95,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.53,
+   0.97,
+   0.35
+  ]
+ },
+ "E2|R1|P1->K4": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.05,
+   20
+  ],
+  "corr:tau": [
+   0.1,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.1,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.46,
+   0.81,
+   0.4
+  ]
+ },
+ "E2|R1|P2->K1": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.05,
+   20
+  ],
+  "corr:tau": [
+   0.05,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.05,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   0.9,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.13,
+   0.62,
+   0.55
+  ]
+ },
+ "E2|R1|P3->K2": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.05,
+   20
+  ],
+  "corr:tau": [
+   0.1,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.55,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.13,
+   0.51,
+   0.45
+  ]
+ },
+ "E2|R1|P4->K3": {
+  "corr:decl": [
+   0.05,
+   20
+  ],
+  "corr:raw05": [
+   0.25,
+   20
+  ],
+  "corr:tau": [
+   0.3,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.3,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.3,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.4,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.3,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.35,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.16,
+   1.05,
+   0.55
+  ]
+ },
+ "E2|R1|P4->K4": {
+  "corr:decl": [
+   0.05,
+   20
+  ],
+  "corr:raw05": [
+   0.1,
+   20
+  ],
+  "corr:tau": [
+   0.25,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.2,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.15,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.2,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.25,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.26,
+   0.9,
+   0.55
+  ]
+ },
+ "E2|R1|P5->K3": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -9.52,
+   9.52,
+   0.0
+  ]
+ },
+ "E2|R1|P5->K4": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.35,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -4.74,
+   4.74,
+   0.0
+  ]
+ },
+ "E2|R1|P6->K5": {
+  "corr:decl": [
+   0.1,
+   20
+  ],
+  "corr:raw05": [
+   0.45,
+   20
+  ],
+  "corr:tau": [
+   0.5,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.45,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.1,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.35,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.45,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.35,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.5,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   0.6,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.15,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -1.48,
+   1.58,
+   0.1
+  ]
+ },
+ "E2|R1|P7->K5": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.0,
+   20
+  ],
+  "corr:tau": [
+   0.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.05,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   0.75,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.6,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.21,
+   0.6,
+   0.6
+  ]
+ },
+ "E2|R2|P0->K0": {
+  "corr:decl": [
+   0.65,
+   60
+  ],
+  "corr:raw05": [
+   0.733,
+   60
+  ],
+  "corr:tau": [
+   0.1,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.083,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.3,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.517,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.533,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.4,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.617,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.633,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.767,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.1,
+   2.2,
+   0.48
+  ]
+ },
+ "E2|R2|P0->K1": {
+  "corr:decl": [
+   0.65,
+   60
+  ],
+  "corr:raw05": [
+   0.817,
+   60
+  ],
+  "corr:tau": [
+   0.1,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.1,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.25,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.517,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.5,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.383,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.567,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.617,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.7,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.67,
+   2.06,
+   0.45
+  ]
+ },
+ "E2|R2|P0->K2": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   1.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.95,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.967,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.783,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -7.36,
+   7.36,
+   0.0
+  ]
+ },
+ "E2|R2|P0->K5": {
+  "corr:decl": [
+   0.183,
+   60
+  ],
+  "corr:raw05": [
+   0.4,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.083,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.033,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.167,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.133,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.033,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.133,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.15,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.983,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.583,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.03,
+   0.94,
+   0.5
+  ]
+ },
+ "E2|R2|P1->K0": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   0.9,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.683,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.85,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.967,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.967,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.983,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.317,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   5.04,
+   5.04,
+   1.0
+  ]
+ },
+ "E2|R2|P1->K1": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   0.883,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.417,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.733,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.967,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.967,
+   60
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.267,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   4.8,
+   4.8,
+   1.0
+  ]
+ },
+ "E2|R2|P1->K3": {
+  "corr:decl": [
+   0.717,
+   60
+  ],
+  "corr:raw05": [
+   0.767,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.217,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.05,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.2,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.15,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.05,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.233,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.317,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.85,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.083,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -1.26,
+   1.27,
+   0.18
+  ]
+ },
+ "E2|R2|P1->K4": {
+  "corr:decl": [
+   0.55,
+   60
+  ],
+  "corr:raw05": [
+   0.617,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.133,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.1,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.1,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.1,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.133,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.933,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.067,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.45,
+   1.07,
+   0.37
+  ]
+ },
+ "E2|R2|P2->K1": {
+  "corr:decl": [
+   0.633,
+   60
+  ],
+  "corr:raw05": [
+   0.75,
+   60
+  ],
+  "corr:tau": [
+   0.05,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.083,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.017,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.083,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.017,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.083,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.45,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.01,
+   1.18,
+   0.5
+  ]
+ },
+ "E2|R2|P3->K2": {
+  "corr:decl": [
+   0.767,
+   60
+  ],
+  "corr:raw05": [
+   0.867,
+   60
+  ],
+  "corr:tau": [
+   0.117,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.267,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.267,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.5,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.5,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.383,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.55,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.567,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.65,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.29,
+   2.06,
+   0.53
+  ]
+ },
+ "E2|R2|P4->K3": {
+  "corr:decl": [
+   0.667,
+   60
+  ],
+  "corr:raw05": [
+   0.767,
+   60
+  ],
+  "corr:tau": [
+   0.05,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.15,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.017,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.2,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.2,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.033,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.233,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.3,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.933,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.1,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.11,
+   1.13,
+   0.57
+  ]
+ },
+ "E2|R2|P4->K4": {
+  "corr:decl": [
+   0.533,
+   60
+  ],
+  "corr:raw05": [
+   0.617,
+   60
+  ],
+  "corr:tau": [
+   0.017,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.2,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.067,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.267,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.267,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.15,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.25,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.317,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.983,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.183,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.16,
+   1.22,
+   0.55
+  ]
+ },
+ "E2|R2|P5->K3": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   0.9,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.767,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.583,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.733,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.717,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.583,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.717,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.75,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.95,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -3.98,
+   4.02,
+   0.15
+  ]
+ },
+ "E2|R2|P5->K4": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   0.3,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.333,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.283,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.517,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.5,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.25,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.517,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.55,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.717,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.24,
+   2.07,
+   0.47
+  ]
+ },
+ "E2|R2|P6->K5": {
+  "corr:decl": [
+   0.333,
+   60
+  ],
+  "corr:raw05": [
+   0.467,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.117,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.1,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.083,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.1,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.333,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.033,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.29,
+   0.81,
+   0.4
+  ]
+ },
+ "E2|R2|P7->K5": {
+  "corr:decl": [
+   0.183,
+   60
+  ],
+  "corr:raw05": [
+   0.383,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.117,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.067,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.267,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.233,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.083,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.233,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.267,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.517,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.28,
+   1.34,
+   0.52
+  ]
+ },
+ "E5|R1|P0->K0": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   27.82,
+   27.82,
+   1.0
+  ]
+ },
+ "E5|R1|P0->K1": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.15,
+   20
+  ],
+  "corr:tau": [
+   0.1,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.15,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.05,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.05,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   0.8,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.35,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.87,
+   0.87,
+   0.9
+  ]
+ },
+ "E5|R1|P0->K2": {
+  "corr:decl": [
+   1.0,
+   20
+  ],
+  "corr:raw05": [
+   1.0,
+   20
+  ],
+  "corr:tau": [
+   1.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   30.01,
+   30.01,
+   1.0
+  ]
+ },
+ "E5|R1|P1->K1": {
+  "corr:decl": [
+   0.25,
+   20
+  ],
+  "corr:raw05": [
+   0.6,
+   20
+  ],
+  "corr:tau": [
+   0.55,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.55,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.2,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.55,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.4,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.2,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.55,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.4,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   0.15,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   1.99,
+   1.99,
+   1.0
+  ]
+ },
+ "E5|R1|P2->K1": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.0,
+   20
+  ],
+  "corr:tau": [
+   0.0,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.0,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.71,
+   0.79,
+   0.8
+  ]
+ },
+ "E5|R1|P3->K3": {
+  "corr:decl": [
+   0.0,
+   20
+  ],
+  "corr:raw05": [
+   0.1,
+   20
+  ],
+  "corr:tau": [
+   0.1,
+   20
+  ],
+  "pc_eq:decl": [
+   0.0,
+   20
+  ],
+  "pc_eq:tau": [
+   0.1,
+   20
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_eq:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_eq:tau": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   20
+  ],
+  "pmrt_r3:raw05": [
+   0.1,
+   20
+  ],
+  "pmrt_r3:tau": [
+   0.05,
+   20
+  ],
+  "shap_dag:decl": [
+   0.0,
+   20
+  ],
+  "shap_dag:tau": [
+   1.0,
+   20
+  ],
+  "two_tower:decl": [
+   0.0,
+   20
+  ],
+  "two_tower:tau": [
+   1.0,
+   20
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.17,
+   0.73,
+   0.4
+  ]
+ },
+ "E5|R2|P0->K0": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   1.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.983,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   12.55,
+   12.55,
+   1.0
+  ]
+ },
+ "E5|R2|P0->K1": {
+  "corr:decl": [
+   0.567,
+   60
+  ],
+  "corr:raw05": [
+   0.65,
+   60
+  ],
+  "corr:tau": [
+   0.017,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.017,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.067,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.083,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.033,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.017,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.217,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.55,
+   0.83,
+   0.68
+  ]
+ },
+ "E5|R2|P0->K2": {
+  "corr:decl": [
+   1.0,
+   60
+  ],
+  "corr:raw05": [
+   1.0,
+   60
+  ],
+  "corr:tau": [
+   1.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.967,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:decl": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   1.0,
+   60
+  ],
+  "pmrt_r3:tau": [
+   1.0,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   16.01,
+   16.01,
+   1.0
+  ]
+ },
+ "E5|R2|P1->K1": {
+  "corr:decl": [
+   0.7,
+   60
+  ],
+  "corr:raw05": [
+   0.783,
+   60
+  ],
+  "corr:tau": [
+   0.0,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.033,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.017,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.067,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.0,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.067,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.017,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   0.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   0.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.06,
+   0.63,
+   0.55
+  ]
+ },
+ "E5|R2|P2->K1": {
+  "corr:decl": [
+   0.717,
+   60
+  ],
+  "corr:raw05": [
+   0.833,
+   60
+  ],
+  "corr:tau": [
+   0.117,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.467,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.45,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.6,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.567,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.517,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.7,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.633,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   0.13,
+   2.5,
+   0.52
+  ]
+ },
+ "E5|R2|P3->K3": {
+  "corr:decl": [
+   0.75,
+   60
+  ],
+  "corr:raw05": [
+   0.883,
+   60
+  ],
+  "corr:tau": [
+   0.05,
+   60
+  ],
+  "pc_eq:decl": [
+   0.0,
+   60
+  ],
+  "pc_eq:tau": [
+   0.5,
+   60
+  ],
+  "pmrt_eq:decl": [
+   0.367,
+   60
+  ],
+  "pmrt_eq:raw05": [
+   0.517,
+   60
+  ],
+  "pmrt_eq:tau": [
+   0.483,
+   60
+  ],
+  "pmrt_r3:decl": [
+   0.5,
+   60
+  ],
+  "pmrt_r3:raw05": [
+   0.65,
+   60
+  ],
+  "pmrt_r3:tau": [
+   0.583,
+   60
+  ],
+  "shap_dag:decl": [
+   0.0,
+   60
+  ],
+  "shap_dag:tau": [
+   1.0,
+   60
+  ],
+  "two_tower:decl": [
+   0.0,
+   60
+  ],
+  "two_tower:tau": [
+   1.0,
+   60
+  ],
+  "pmrt_eq:z_med_absmed_signfrac+": [
+   -0.17,
+   2.02,
+   0.47
+  ]
+ },
+ "_null_raw05_pmrt_eq": {
+  "E2|R1": [
+   0.055,
+   760
+  ],
+  "E2|R2": [
+   0.058,
+   2280
+  ],
+  "E5|R1": [
+   0.036,
+   280
+  ],
+  "E5|R2": [
+   0.051,
+   840
+  ]
+ },
+ "_tau": {
+  "corr|E2|R1": 0.05436310134724562,
+  "corr|E2|R2": 0.32263272749219124,
+  "corr|E5|R1": 0.06783476326378339,
+  "corr|E5|R2": 0.4398136188880668,
+  "pc_eq|E2|R1": 1.1240893494277409,
+  "pc_eq|E2|R2": 1.0643254934515207,
+  "pc_eq|E5|R1": 1.4386137608454181,
+  "pc_eq|E5|R2": 1.1224445167125845,
+  "pmrt_eq|E2|R1": 1.6763113859741485,
+  "pmrt_eq|E2|R2": 2.057760419105558,
+  "pmrt_eq|E5|R1": 2.27028917710466,
+  "pmrt_eq|E5|R2": 2.0713560016279695,
+  "pmrt_r3|E2|R1": 1.5478018939417322,
+  "pmrt_r3|E2|R2": 1.825838799452473,
+  "pmrt_r3|E5|R1": 2.3706112827357932,
+  "pmrt_r3|E5|R2": 2.2782147306504634,
+  "shap_dag|E2|R1": 0.08049961896040726,
+  "shap_dag|E2|R2": 0.08903786827830382,
+  "shap_dag|E5|R1": 0.04945446981517542,
+  "shap_dag|E5|R2": 0.0911674212469816,
+  "two_tower|E2|R1": 0.1365778858789418,
+  "two_tower|E2|R2": 0.27615144620470494,
+  "two_tower|E5|R1": 0.029622412368954514,
+  "two_tower|E5|R2": 0.06952792222636801
+ }
+}

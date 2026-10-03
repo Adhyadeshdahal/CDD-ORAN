@@ -1,0 +1,2046 @@
+{
+ "errors": [],
+ "n_records": 1680,
+ "validity": {
+  "gbm|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.025,
+    0.0141,
+    0.0375
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0667,
+    0.025,
+    0.1083
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0458,
+    0.0359,
+    0.0563
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.025,
+    0.0806
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.04,
+    0.02,
+    0.06
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.025,
+    0.0,
+    0.0625
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.04,
+    0.0233,
+    0.0583
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0125,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "gbm|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0462,
+    0.0333,
+    0.0603
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0292,
+    0.0875
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "gbm|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0359,
+    0.0244,
+    0.0487
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0417,
+    0.0208,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "linear|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0563,
+    0.0344,
+    0.0797
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.05,
+    0.0167,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "linear|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0615,
+    0.0495,
+    0.074
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0417,
+    0.0222,
+    0.0639
+   ],
+   "placebo_class": "VALID"
+  },
+  "linear|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.05,
+    0.02,
+    0.085
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "placebo_class": "VALID"
+  },
+  "linear|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0567,
+    0.04,
+    0.075
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0167,
+    0.0625
+   ],
+   "placebo_class": "VALID"
+  },
+  "linear|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0462,
+    0.0321,
+    0.0603
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0292,
+    0.0917
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "linear|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0538,
+    0.0385,
+    0.0705
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0125,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0437,
+    0.0312,
+    0.0563
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0333,
+    0.0083,
+    0.0667
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0552,
+    0.0422,
+    0.0688
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0389,
+    0.0194,
+    0.0611
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.07,
+    0.04,
+    0.1
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.0875,
+    0.0375,
+    0.1375
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "poly|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.045,
+    0.03,
+    0.0617
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0083,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0462,
+    0.0333,
+    0.059
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0125,
+    0.0625
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0474,
+    0.0321,
+    0.0628
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0333,
+    0.0875
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "poly_g|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0406,
+    0.0281,
+    0.0547
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0417,
+    0.0165,
+    0.075
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly_g|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.051,
+    0.0422,
+    0.0599
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.05,
+    0.0278,
+    0.075
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly_g|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.04,
+    0.015,
+    0.065
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0625,
+    0.0125,
+    0.125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "poly_g|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.05,
+    0.035,
+    0.065
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0208,
+    0.0042,
+    0.0417
+   ],
+   "placebo_class": "VALID"
+  },
+  "poly_g|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0487,
+    0.0321,
+    0.0654
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0292,
+    0.0958
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "poly_g|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0436,
+    0.0295,
+    0.0577
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0833,
+    0.0499,
+    0.125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0578,
+    0.0375,
+    0.0844
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.05,
+    0.0167,
+    0.0833
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0615,
+    0.05,
+    0.0734
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0472,
+    0.0278,
+    0.0694
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.055,
+    0.025,
+    0.09
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.05,
+    0.0125,
+    0.1
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.055,
+    0.0367,
+    0.075
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0083,
+    0.0542
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0513,
+    0.0359,
+    0.0679
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0208,
+    0.0042,
+    0.0376
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0628,
+    0.0474,
+    0.0795
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.0833,
+    0.05,
+    0.1208
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff_g|dev|E2|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.0359,
+    0.025,
+    0.0484
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0333,
+    0.0083,
+    0.0583
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff_g|dev|E2|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.051,
+    0.0411,
+    0.0615
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0583,
+    0.0333,
+    0.0861
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff_g|dev|E5|R1|n1000": {
+   "seeds": 20,
+   "null": [
+    0.06,
+    0.02,
+    0.1101
+   ],
+   "null_class": "INCONCLUSIVE",
+   "placebo": [
+    0.0625,
+    0.0247,
+    0.1125
+   ],
+   "placebo_class": "INCONCLUSIVE"
+  },
+  "rff_g|dev|E5|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.055,
+    0.04,
+    0.0733
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0375,
+    0.0167,
+    0.0625
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff_g|syn|nl|R1|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0474,
+    0.0321,
+    0.0628
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0292,
+    0.0083,
+    0.05
+   ],
+   "placebo_class": "VALID"
+  },
+  "rff_g|syn|nl|R2|n1000": {
+   "seeds": 60,
+   "null": [
+    0.0513,
+    0.0359,
+    0.0692
+   ],
+   "null_class": "VALID",
+   "placebo": [
+    0.0917,
+    0.0542,
+    0.1333
+   ],
+   "placebo_class": "INVALID"
+  }
+ },
+ "recall_edges": {
+  "gbm|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P0->K5": [
+   0.45,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P1->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P6->K5": [
+   0.15,
+   20
+  ],
+  "gbm|dev|E2|R1|n1000|P7->K5": [
+   0.8,
+   20
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P0->K5": [
+   0.3,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K3": [
+   0.617,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P1->K4": [
+   0.567,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P2->K1": [
+   0.733,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P4->K3": [
+   0.8,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P4->K4": [
+   0.933,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P5->K3": [
+   0.95,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P5->K4": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P6->K5": [
+   0.083,
+   60
+  ],
+  "gbm|dev|E2|R2|n1000|P7->K5": [
+   0.467,
+   60
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K1": [
+   0.5,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P1->K1": [
+   0.9,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K1": [
+   0.15,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P1->K1": [
+   0.183,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P2->K1": [
+   1.0,
+   60
+  ],
+  "gbm|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P0->K0": [
+   0.967,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P1->K0": [
+   0.783,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P2->K1": [
+   0.183,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P2->K2": [
+   1.0,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P3->K1": [
+   0.117,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|syn|nl|R1|n1000|P4->K0": [
+   0.467,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P0->K0": [
+   0.5,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P1->K0": [
+   0.033,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P2->K1": [
+   0.183,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P2->K2": [
+   0.1,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P3->K1": [
+   0.25,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "gbm|syn|nl|R2|n1000|P4->K0": [
+   0.3,
+   60
+  ],
+  "linear|dev|E2|R1|n1000|P0->K0": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P0->K1": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P0->K5": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P1->K3": [
+   0.1,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P1->K4": [
+   0.1,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P2->K1": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P3->K2": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P4->K3": [
+   0.3,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P4->K4": [
+   0.15,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P6->K5": [
+   0.35,
+   20
+  ],
+  "linear|dev|E2|R1|n1000|P7->K5": [
+   0.0,
+   20
+  ],
+  "linear|dev|E2|R2|n1000|P0->K0": [
+   0.517,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P0->K1": [
+   0.517,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P0->K5": [
+   0.167,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P1->K0": [
+   0.967,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P1->K1": [
+   0.967,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P1->K3": [
+   0.2,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P1->K4": [
+   0.1,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P2->K1": [
+   0.083,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P3->K2": [
+   0.5,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P4->K3": [
+   0.2,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P4->K4": [
+   0.267,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P5->K3": [
+   0.733,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P5->K4": [
+   0.517,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P6->K5": [
+   0.1,
+   60
+  ],
+  "linear|dev|E2|R2|n1000|P7->K5": [
+   0.267,
+   60
+  ],
+  "linear|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "linear|dev|E5|R1|n1000|P0->K1": [
+   0.15,
+   20
+  ],
+  "linear|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "linear|dev|E5|R1|n1000|P1->K1": [
+   0.55,
+   20
+  ],
+  "linear|dev|E5|R1|n1000|P2->K1": [
+   0.0,
+   20
+  ],
+  "linear|dev|E5|R1|n1000|P3->K3": [
+   0.1,
+   20
+  ],
+  "linear|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "linear|dev|E5|R2|n1000|P0->K1": [
+   0.067,
+   60
+  ],
+  "linear|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "linear|dev|E5|R2|n1000|P1->K1": [
+   0.067,
+   60
+  ],
+  "linear|dev|E5|R2|n1000|P2->K1": [
+   0.6,
+   60
+  ],
+  "linear|dev|E5|R2|n1000|P3->K3": [
+   0.517,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P0->K0": [
+   0.083,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P1->K0": [
+   0.95,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P2->K1": [
+   0.033,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P2->K2": [
+   1.0,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P3->K1": [
+   0.05,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "linear|syn|nl|R1|n1000|P4->K0": [
+   0.033,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P0->K0": [
+   0.333,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P1->K0": [
+   0.033,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P2->K1": [
+   0.067,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P2->K2": [
+   0.233,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P3->K1": [
+   0.167,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P3->K2": [
+   0.917,
+   60
+  ],
+  "linear|syn|nl|R2|n1000|P4->K0": [
+   0.317,
+   60
+  ],
+  "poly|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P0->K5": [
+   0.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P1->K3": [
+   0.05,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P1->K4": [
+   0.05,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P2->K1": [
+   0.05,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P6->K5": [
+   0.35,
+   20
+  ],
+  "poly|dev|E2|R1|n1000|P7->K5": [
+   0.55,
+   20
+  ],
+  "poly|dev|E2|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P0->K1": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P0->K5": [
+   0.383,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P1->K0": [
+   0.933,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P1->K1": [
+   0.917,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P1->K3": [
+   0.15,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P1->K4": [
+   0.15,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P2->K1": [
+   0.083,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P4->K3": [
+   0.783,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P4->K4": [
+   0.883,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P5->K3": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P5->K4": [
+   1.0,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P6->K5": [
+   0.067,
+   60
+  ],
+  "poly|dev|E2|R2|n1000|P7->K5": [
+   0.6,
+   60
+  ],
+  "poly|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "poly|dev|E5|R1|n1000|P0->K1": [
+   0.05,
+   20
+  ],
+  "poly|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "poly|dev|E5|R1|n1000|P1->K1": [
+   0.35,
+   20
+  ],
+  "poly|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "poly|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "poly|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly|dev|E5|R2|n1000|P0->K1": [
+   0.05,
+   60
+  ],
+  "poly|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "poly|dev|E5|R2|n1000|P1->K1": [
+   0.067,
+   60
+  ],
+  "poly|dev|E5|R2|n1000|P2->K1": [
+   1.0,
+   60
+  ],
+  "poly|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P1->K0": [
+   0.883,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P2->K1": [
+   0.05,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P2->K2": [
+   0.967,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P3->K1": [
+   0.033,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly|syn|nl|R1|n1000|P4->K0": [
+   0.017,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P0->K0": [
+   0.5,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P1->K0": [
+   0.033,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P2->K1": [
+   0.217,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P2->K2": [
+   0.167,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P3->K1": [
+   0.3,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly|syn|nl|R2|n1000|P4->K0": [
+   0.317,
+   60
+  ],
+  "poly_g|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P0->K5": [
+   0.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P1->K3": [
+   0.1,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P1->K4": [
+   0.05,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P2->K1": [
+   0.15,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P6->K5": [
+   0.2,
+   20
+  ],
+  "poly_g|dev|E2|R1|n1000|P7->K5": [
+   0.45,
+   20
+  ],
+  "poly_g|dev|E2|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P0->K1": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P0->K5": [
+   0.2,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P1->K0": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P1->K1": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P1->K3": [
+   0.25,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P1->K4": [
+   0.167,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P2->K1": [
+   0.167,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P4->K3": [
+   0.9,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P4->K4": [
+   0.883,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P5->K3": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P5->K4": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P6->K5": [
+   0.033,
+   60
+  ],
+  "poly_g|dev|E2|R2|n1000|P7->K5": [
+   0.333,
+   60
+  ],
+  "poly_g|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E5|R1|n1000|P0->K1": [
+   0.4,
+   20
+  ],
+  "poly_g|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E5|R1|n1000|P1->K1": [
+   0.95,
+   20
+  ],
+  "poly_g|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "poly_g|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E5|R2|n1000|P0->K1": [
+   0.133,
+   60
+  ],
+  "poly_g|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E5|R2|n1000|P1->K1": [
+   0.117,
+   60
+  ],
+  "poly_g|dev|E5|R2|n1000|P2->K1": [
+   1.0,
+   60
+  ],
+  "poly_g|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P1->K0": [
+   0.767,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P2->K1": [
+   0.067,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P2->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P3->K1": [
+   0.033,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|syn|nl|R1|n1000|P4->K0": [
+   0.033,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P0->K0": [
+   0.5,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P1->K0": [
+   0.05,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P2->K1": [
+   0.167,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P2->K2": [
+   0.183,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P3->K1": [
+   0.283,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "poly_g|syn|nl|R2|n1000|P4->K0": [
+   0.317,
+   60
+  ],
+  "rff|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P0->K5": [
+   0.35,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P1->K3": [
+   0.25,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P1->K4": [
+   0.2,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P2->K1": [
+   0.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P6->K5": [
+   0.3,
+   20
+  ],
+  "rff|dev|E2|R1|n1000|P7->K5": [
+   0.75,
+   20
+  ],
+  "rff|dev|E2|R2|n1000|P0->K0": [
+   0.983,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P0->K1": [
+   0.95,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P0->K5": [
+   0.233,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P1->K0": [
+   0.933,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P1->K1": [
+   0.967,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P1->K3": [
+   0.217,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P1->K4": [
+   0.2,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P2->K1": [
+   0.1,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P4->K3": [
+   0.667,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P4->K4": [
+   0.667,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P5->K3": [
+   1.0,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P5->K4": [
+   0.983,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P6->K5": [
+   0.083,
+   60
+  ],
+  "rff|dev|E2|R2|n1000|P7->K5": [
+   0.683,
+   60
+  ],
+  "rff|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "rff|dev|E5|R1|n1000|P0->K1": [
+   0.05,
+   20
+  ],
+  "rff|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "rff|dev|E5|R1|n1000|P1->K1": [
+   0.4,
+   20
+  ],
+  "rff|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "rff|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "rff|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "rff|dev|E5|R2|n1000|P0->K1": [
+   0.033,
+   60
+  ],
+  "rff|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "rff|dev|E5|R2|n1000|P1->K1": [
+   0.067,
+   60
+  ],
+  "rff|dev|E5|R2|n1000|P2->K1": [
+   0.983,
+   60
+  ],
+  "rff|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P0->K0": [
+   0.983,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P1->K0": [
+   0.967,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P2->K1": [
+   0.133,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P2->K2": [
+   0.967,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P3->K1": [
+   0.283,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "rff|syn|nl|R1|n1000|P4->K0": [
+   0.233,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P0->K0": [
+   0.7,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P1->K0": [
+   0.067,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P2->K1": [
+   0.233,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P2->K2": [
+   0.267,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P3->K1": [
+   0.25,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "rff|syn|nl|R2|n1000|P4->K0": [
+   0.467,
+   60
+  ],
+  "rff_g|dev|E2|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P0->K1": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P0->K5": [
+   0.35,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P1->K0": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P1->K3": [
+   0.25,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P1->K4": [
+   0.2,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P2->K1": [
+   0.5,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P3->K2": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P4->K3": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P4->K4": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P5->K3": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P5->K4": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P6->K5": [
+   0.2,
+   20
+  ],
+  "rff_g|dev|E2|R1|n1000|P7->K5": [
+   0.5,
+   20
+  ],
+  "rff_g|dev|E2|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P0->K1": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P0->K5": [
+   0.117,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P1->K0": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P1->K1": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P1->K3": [
+   0.317,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P1->K4": [
+   0.2,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P2->K1": [
+   0.3,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P4->K3": [
+   0.733,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P4->K4": [
+   0.733,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P5->K3": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P5->K4": [
+   0.983,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P6->K5": [
+   0.133,
+   60
+  ],
+  "rff_g|dev|E2|R2|n1000|P7->K5": [
+   0.5,
+   60
+  ],
+  "rff_g|dev|E5|R1|n1000|P0->K0": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E5|R1|n1000|P0->K1": [
+   0.65,
+   20
+  ],
+  "rff_g|dev|E5|R1|n1000|P0->K2": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E5|R1|n1000|P1->K1": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E5|R1|n1000|P2->K1": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E5|R1|n1000|P3->K3": [
+   1.0,
+   20
+  ],
+  "rff_g|dev|E5|R2|n1000|P0->K0": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E5|R2|n1000|P0->K1": [
+   0.167,
+   60
+  ],
+  "rff_g|dev|E5|R2|n1000|P0->K2": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E5|R2|n1000|P1->K1": [
+   0.2,
+   60
+  ],
+  "rff_g|dev|E5|R2|n1000|P2->K1": [
+   1.0,
+   60
+  ],
+  "rff_g|dev|E5|R2|n1000|P3->K3": [
+   1.0,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P0->K0": [
+   0.917,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P1->K0": [
+   0.967,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P2->K1": [
+   0.15,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P2->K2": [
+   1.0,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P3->K1": [
+   0.25,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P3->K2": [
+   1.0,
+   60
+  ],
+  "rff_g|syn|nl|R1|n1000|P4->K0": [
+   0.317,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P0->K0": [
+   0.7,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P1->K0": [
+   0.05,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P2->K1": [
+   0.167,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P2->K2": [
+   0.15,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P3->K1": [
+   0.267,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P3->K2": [
+   0.983,
+   60
+  ],
+  "rff_g|syn|nl|R2|n1000|P4->K0": [
+   0.35,
+   60
+  ]
+ },
+ "recall": {
+  "gbm": {
+   "mean_per_edge": 0.7494,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.9,
+    "dev|E2|R2|n1000": 0.7781,
+    "dev|E5|R1|n1000": 0.9,
+    "dev|E5|R2|n1000": 0.7222,
+    "syn|nl|R1|n1000": 0.6452,
+    "syn|nl|R2|n1000": 0.3381
+   }
+  },
+  "linear": {
+   "mean_per_edge": 0.4201,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.375,
+    "dev|E2|R2|n1000": 0.4438,
+    "dev|E5|R1|n1000": 0.4667,
+    "dev|E5|R2|n1000": 0.5417,
+    "syn|nl|R1|n1000": 0.45,
+    "syn|nl|R2|n1000": 0.2952
+   }
+  },
+  "poly": {
+   "mean_per_edge": 0.6379,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.6906,
+    "dev|E2|R2|n1000": 0.6844,
+    "dev|E5|R1|n1000": 0.7333,
+    "dev|E5|R2|n1000": 0.6861,
+    "syn|nl|R1|n1000": 0.5643,
+    "syn|nl|R2|n1000": 0.3619
+   }
+  },
+  "poly_g": {
+   "mean_per_edge": 0.6532,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.6844,
+    "dev|E2|R2|n1000": 0.6833,
+    "dev|E5|R1|n1000": 0.8917,
+    "dev|E5|R2|n1000": 0.7083,
+    "syn|nl|R1|n1000": 0.5571,
+    "syn|nl|R2|n1000": 0.3571
+   }
+  },
+  "rff": {
+   "mean_per_edge": 0.6655,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.7406,
+    "dev|E2|R2|n1000": 0.6667,
+    "dev|E5|R1|n1000": 0.7417,
+    "dev|E5|R2|n1000": 0.6806,
+    "syn|nl|R1|n1000": 0.6524,
+    "syn|nl|R2|n1000": 0.4262
+   }
+  },
+  "rff_g": {
+   "mean_per_edge": 0.6948,
+   "n_edges": 58,
+   "cells": {
+    "dev|E2|R1|n1000": 0.75,
+    "dev|E2|R2|n1000": 0.6885,
+    "dev|E5|R1|n1000": 0.9417,
+    "dev|E5|R2|n1000": 0.7278,
+    "syn|nl|R1|n1000": 0.6571,
+    "syn|nl|R2|n1000": 0.381
+   }
+  }
+ },
+ "cost": {
+  "gbm|n1000": {
+   "mean": 45.9,
+   "max": 89.6,
+   "units": 280
+  },
+  "linear|n1000": {
+   "mean": 0.8,
+   "max": 2.0,
+   "units": 280
+  },
+  "poly|n1000": {
+   "mean": 6.5,
+   "max": 12.3,
+   "units": 280
+  },
+  "poly_g|n1000": {
+   "mean": 41.5,
+   "max": 83.7,
+   "units": 280
+  },
+  "rff|n1000": {
+   "mean": 29.0,
+   "max": 63.2,
+   "units": 280
+  },
+  "rff_g|n1000": {
+   "mean": 64.7,
+   "max": 121.6,
+   "units": 280
+  }
+ }
+}
