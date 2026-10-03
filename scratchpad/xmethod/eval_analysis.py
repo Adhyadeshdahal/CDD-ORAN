@@ -75,8 +75,8 @@ LIKE_RAW_KEYS = ("null_decl", "plac_decl", "conf_decl")  # validity of the V0 ra
 COUNTED = ("ok", "under_seeded")      # cell statuses that enter verdicts and tables
 P_KEYS = ("null_raw", "plac_raw")     # C1 / C2 legs (BY declarations imply raw p <= .05, so raw is the binding leg)
 C3_P_KEYS = ("plac_raw", "conf_raw")  # E4 has no real-action null candidate
-C3_TAU_KEYS = ("conf_decl",)
-EQ_TAU_KEYS = ("null_decl",)          # tau eq arms in R1 / R2 (unfiltered eq table, R-56): truth-null declarations          # P_placebo is the tuning column of tau arms; the confounded placebo is not
+C3_TAU_KEYS = ("conf_decl",)          # P_placebo is the tuning column of tau arms; the confounded placebo is not
+EQ_TAU_KEYS = ("null_decl",)          # tau eq arms in R1 / R2 (unfiltered eq table, R-56): truth-null declarations
 
 
 # ================================================================================================ input
@@ -1249,6 +1249,15 @@ def analyse(records: list[dict], spec: dict, freeze_commit: str | None = None, *
             dev_records: list[dict] | None = None) -> dict:
     use, screened = screen(records, spec)
     cells, rows = build_cells(use, spec)
+    v11 = integrity(use, screened, spec, freeze_commit, spec_sha=spec_sha, protocol=protocol, amendments=amendments,
+                    dep=dep, dev_records=dev_records)
+    return assemble(cells, rows, use, spec, dep, v11)
+
+
+def assemble(cells: dict, rows: dict, records: list[dict], spec: dict, dep: dict | None, v11: dict) -> dict:
+    """Every table (V0-V10) from the cells / rows of ``build_cells`` and the screened ``records`` (V10 reads only
+    their status / cost fields), with the given V11. ``analyse`` = screen + build_cells + integrity + this; the
+    report generator (eval_report.py) builds cells arm by arm and calls this once."""
     focal = focal_arm(spec)
     prim = {k: e for k, e in cells.items() if e["kappa"] == PRIMARY_KAPPA}
     v1 = [_cell_row(k, e) for k, e in sorted(prim.items())]
@@ -1290,9 +1299,8 @@ def analyse(records: list[dict], spec: dict, freeze_commit: str | None = None, *
             "V0_like_for_like": like_for_like(prim, focal), "V1_validity": v1, "V2_recall": v2,
             "V3_paired": paired_diffs(prim, focal=focal), "V3_paired_valid_only": paired_diffs(prim, "VALID", focal),
             "V4_verdicts": verdicts(cells, rows, spec, dep), "V5_information_R2": v5, "V6_E4": v6,
-            "V7_not_testable": v7, "V8_secondary": v8, "V9_kappa_sweep": v9, "V10_cost": cost_table(use, cells, spec),
-            "V11_integrity": integrity(use, screened, spec, freeze_commit, spec_sha=spec_sha, protocol=protocol,
-                                       amendments=amendments, dep=dep, dev_records=dev_records),
+            "V7_not_testable": v7, "V8_secondary": v8, "V9_kappa_sweep": v9,
+            "V10_cost": cost_table(records, cells, spec), "V11_integrity": v11,
             "secondary_tau_of_p_arms": {k: e["secondary_tau"]["validity"] for k, e in sorted(prim.items())
                                         if e.get("secondary_tau")}}
 
