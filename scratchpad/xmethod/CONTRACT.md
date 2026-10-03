@@ -263,3 +263,6 @@ hand-back, with measured CPU-s and peak RAM per run).
   cdd_oran/models/cdl.py + configs/env_*_cdl.yaml + tests/golden/Environment*_CDL.json. Score-only method: primary
   declaration = conformal placebo tau (R-29) like other score-only arms; the conference's fixed threshold reported
   as secondary. Native arm only (no conditioning interface), R-37 applies.
+- R-51 cdl gets the full DEV grid run by dev-runs before the freeze (T1 / T4 (iii) apply, no waiver). T3 host: DEV
+  costs from any platform are accepted, converted to the Kaggle reference by a measured speed factor (same
+  calibration units run on both hosts, factor recorded).

@@ -415,7 +415,7 @@ def test_set_d_flag_excludes_the_unchosen_hac_variant():
 
 
 def test_arm_out_of_d_is_descriptive_and_drops_its_eq_partner_from_c2b():
-    spec = copy.deepcopy(SPEC)                         # Q11 / R-40: pdcor_native-like arm, set_D false
+    spec = copy.deepcopy(SPEC)                         # Q11 / R-40: a native arm with set_D false
     spec["arms"]["ci_native"]["set_D"] = False
     out = run(synth_records(spec), spec)
     v = out["V4_verdicts"]
@@ -460,12 +460,59 @@ def test_eval_spec_r40():
     assert [a for a, d in arms.items() if d.get("c2b", True) is not True] == ["mscr_eq"]
     assert arms["mscr_eq"]["label"].startswith("single-conditioner max statistic")
     assert arms["mscr_eq_min"]["label"] == arms["mscr_eq"]["label"]                      # Q11
-    assert arms["pdcor_native"]["set_D"] is False                                         # Q11: out of D
     assert sorted(a for a, d in arms.items() if E.arm_kind(d) == "native" and d["declare"] == "by"
-                  and d.get("set_D", True) is True) == ["cmi_knn_native", "corr", "granger_native", "mscr_native",
-                                                        "pcorr_hac_fb", "pcorr_native", "rcot2_native"]
-    assert {a for a in arms if "dependence test" in arms[a].get("label", "")} == {"pdcor_eq", "pdcor_native",
-                                                                                   "pdcor_eq_min"}
+                  and d.get("set_D", True) is True) == ["corr", "granger_native", "mscr_native", "pcorr_hac_fb",
+                                                        "pcorr_native", "rcot2_native"]
+    assert [a for a, d in arms.items() if d.get("set_D", True) is not True] == ["pcorr_hac"]  # T8; pdcor gone (R-48)
+
+
+def test_eval_spec_and_protocol_drop_pdcor_cmi_knn_r48_r49():
+    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    assert len(spec["arms"]) == 25
+    for gone in ("pdcor", "cmi_knn"):                                                    # R-48, R-49 revised
+        assert not [a for a, d in spec["arms"].items() if gone in a or gone in d["ref"]]
+        assert not [a for b in spec["blocks"] if isinstance(b.get("arms"), list) for a in b["arms"] if gone in a]
+        assert gone not in spec["tbd"]["citests_arms"] and spec["tbd"][gone].startswith("dropped from Study A")
+    assert not [a for a, d in spec["arms"].items() if "dependence test" in d.get("label", "")]
+    assert not [a for a, d in spec["arms"].items() if d.get("budget_wall_s")]           # no GPU arm planned
+    assert spec["tbd"]["large_n_citests"].startswith("OPEN (R-47")                     # T11
+    with open(os.path.join(ROOT, "docs", "xmethod", "PROTOCOL_A.md"), encoding="utf-8") as fh:
+        prot = fh.read()
+    assert "| pdcor (" not in prot and "| cmi_knn (" not in prot                         # methods table
+    assert prot.count("considered and excluded") == 2
+    assert "- T11 " in prot and "OPEN" in prot.split("- T11 ")[1].split("\n## ")[0]
+
+
+def test_eval_spec_cdl_placeholder_r50():
+    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    d = spec["arms"]["cdl"]
+    assert d["ref"] == "cdd_oran.xmethod.methods.cdl:TBD-R-50" and d["config"] == {"arm": "native"}
+    assert d["declare"] == "tau" and d["analysis"] == "primary" and d["fixed_threshold"] == 0.16
+    assert E.arm_kind(d) == "native" and E.analysis_block("cdl", spec) == "primary"
+    assert [a for a, x in spec["arms"].items() if "fixed_threshold" in x] == ["cdl"]
+    e4 = [b for b in spec["blocks"] if isinstance(b.get("arms"), list) and "two_tower" in b["arms"]]
+    assert len(e4) == 1 and "cdl" in e4[0]["arms"]                                         # E4 R3 / R4 natives
+    assert spec["tbd"]["cdl"].startswith("placeholder arm (R-50)")
+
+
+def test_fixed_threshold_secondary_scoring_r50():
+    res = api.Result("m", "v", tuple(api.EdgeResult(PLACEBO, f"K{i}", sc, None, 0, False)
+                                     for i, sc in enumerate([0.16, 0.159, math.nan, 0.5])), 0.0, {})
+    assert [e.declared for e in E.fixed_declare(res, 0.16).edges] == [True, False, False, True]   # CMI >= .16
+    spec = copy.deepcopy(SPEC)
+    spec["arms"]["pc_native"]["fixed_threshold"] = 0.995       # synthetic score = 1 - p: true edges only
+    out = run(synth_records(spec), spec)
+    v0 = out["V0_like_for_like"]
+    assert {r["rule"] for r in v0 if r["arm"] == "pc_native"} == {"tau", "fixed"}
+    assert {r["rule"] for r in v0 if r["arm"] == "pc_eq"} == {"tau"}
+    fx = [r for r in v0 if r["arm"] == "pc_native" and r["rule"] == "fixed" and r["world"] == "E1"]
+    assert fx and all(not r["placebo_is_tuning_column"] for r in fx)
+    assert all(r["recall"]["mean"] == 1.0 and r["null"]["rate"] == 0.0 and r["placebo"]["rate"] == 0.0 for r in fx)
+    assert all(r["state"] in ("VALID", "INCONCLUSIVE") for r in fx)                       # untuned: never INVALID here
+    md = E.markdown(out)
+    assert "| pc_native | fixed |" in md and "fixed threshold, fixed)" in md
 
 
 def test_gpu_arm_cost_is_wall_seconds_r41():
@@ -496,17 +543,6 @@ def test_gpu_arm_cost_is_wall_seconds_r41():
     assert all(r["budget"] == "cpu_s" for r in cost if r["arm"] == "corr")
     md = E.markdown(out)
     assert "(cost 9000 GPU wall-s)" in md and "## V10 cost (GPU arms (R-41)" in md
-
-
-def test_eval_spec_cmi_knn_torch_r41():
-    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
-        arms = json.load(fh)["arms"]
-    cmi = {a: d for a, d in arms.items() if "cmi_knn" in d["ref"]}
-    assert sorted(cmi) == ["cmi_knn_eq", "cmi_knn_eq_min", "cmi_knn_native"]
-    for d in cmi.values():
-        assert d["config"]["backend"] == "torch" and d["budget_wall_s"] == 7200 and d["budget_cpu_s"] is None
-    assert [a for a, d in arms.items() if d.get("budget_wall_s")] == list(cmi)   # the only GPU arms
-    assert all(E.cost_field(d) == "wall_s" for d in cmi.values())
 
 
 def test_dataset_hash_equal_across_arms_and_shards_r41a():

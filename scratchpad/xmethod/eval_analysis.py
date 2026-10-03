@@ -49,7 +49,7 @@ from cdd_oran.xmethod.score import (  # noqa: E402
 )
 from cdd_oran.xmethod.worlds import REGIMES_OF, truth_for  # noqa: E402
 
-ANALYSIS_VERSION = "xm-eval-analysis/3"
+ANALYSIS_VERSION = "xm-eval-analysis/4"
 ALPHA = 0.05
 VALID_UB = 0.075             # Bradley's liberal band 1.5 alpha (R-30)
 Q_BY = 0.05
@@ -522,6 +522,17 @@ def raw_declare(result: api.Result) -> api.Result:
                       config={**result.config, "declare": "raw_p"}, notes=result.notes)
 
 
+def fixed_declare(result: api.Result, threshold: float) -> api.Result:
+    """Copy of ``result`` with ``declared = score >= threshold`` per edge: a score-only arm's own fixed threshold
+    (spec ``fixed_threshold``; cdl: the conference's CMI >= .16, ``CDL.get_binary_graph``, R-50), not tuned; an
+    edge without a finite score is not declared. Secondary scoring (V0 rule 'fixed')."""
+    edges = tuple(api.EdgeResult(e.source, e.target, e.score, e.p, e.sign,
+                                 e.score is not None and math.isfinite(e.score) and float(e.score) >= threshold)
+                  for e in result.edges)
+    return api.Result(method=result.method, version=result.version, edges=edges, cpu_s=result.cpu_s,
+                      config={**result.config, "declare": "fixed", "fixed_threshold": threshold}, notes=result.notes)
+
+
 def seed_row(r: dict, decl: api.Result, truth: api.Truth) -> dict:
     """Validity / power numbers of one measurement record under declaration ``decl`` (PROTOCOL_A section 8)."""
     sc = score(decl, truth)
@@ -673,12 +684,15 @@ def build_cells(records: list[dict], spec: dict) -> tuple[dict, dict]:
         mode = d["declare"]
         truth = truths.setdefault((u["world"], u["regime"]), truth_for(u["world"], u["regime"]))
         tau = conformal_tau([to_result(r) for r in g["tune"]]) if g["tune"] else None
-        rows, rows_tau, rows_raw = [], [], []
+        rows, rows_tau, rows_raw, rows_fixed = [], [], [], []
+        thr = d.get("fixed_threshold")
         for r in g["measure"]:
             res = to_result(r)
             if mode == "by":
                 rows.append(seed_row(r, res, truth))
                 rows_raw.append(seed_row(r, raw_declare(res), truth))
+            if thr is not None:
+                rows_fixed.append(seed_row(r, fixed_declare(res, float(thr)), truth))
             if tau is not None:
                 rows_tau.append(seed_row(r, apply_threshold(res, tau), truth))
         planned = (plan.get(ck) or {}).get("planned_seeds")
@@ -713,6 +727,8 @@ def build_cells(records: list[dict], spec: dict) -> tuple[dict, dict]:
             e["secondary_tau"] = summarise(rows_tau, False, power_na=na)
         if rows_raw:
             e["like_raw"] = summarise(rows_raw, False, vkeys=LIKE_RAW_KEYS, power_na=na)
+        if rows_fixed:                         # untuned: all three declaration rates enter its validity (R-50)
+            e["like_fixed"] = summarise(rows_fixed, False, vkeys=LIKE_RAW_KEYS, power_na=na)
         cells[ck] = e
         rows_out[ck] = prim
     return cells, rows_out
@@ -837,8 +853,8 @@ def verdicts(cells: dict, rows: dict, spec: dict, dep) -> dict:
     arms = spec["arms"]
     focal = focal_arm(spec)
     # C1: D = design-blind p arms (native, declare by; the R-38 pcorr_hac variant), fixed by the frozen spec; an
-    # arm with "set_D" other than true (the HAC variant not chosen under T8, or still undecided; pdcor_native, a
-    # dependence test, R-40) is not in D: same legs reported descriptively, no effect
+    # arm with "set_D" other than true (the HAC variant not chosen under T8, or still undecided) is not in D: same
+    # legs reported descriptively, no effect (pdcor, the former such arm, is dropped from Study A, R-48)
     blind = sorted(a for a, d in arms.items() if arm_kind(d) == "native" and d["declare"] == "by")
     D = [a for a in blind if arms[a].get("set_D", True) is True]
     c1_arms = {a: c1_arm(cells, rows, a, dep) for a in D}
@@ -968,15 +984,16 @@ def paired_diffs(cells: dict, gate: str = "not_invalid", focal: str = FOCAL) -> 
 def like_for_like(cells: dict, focal: str = FOCAL) -> list[dict]:
     """V0, the headline like-for-like table (R-42): every arm per cell under a common scoring, side by side.
     p arms twice: raw p <= .05 per edge (no multiplicity; rule 'raw_p') and the conformal placebo tau of the
-    score-only arms (R-29; rule 'tau'); tau (score-only) arms with their tau. Per row: mean per-seed recall (NA where
+    score-only arms (R-29; rule 'tau'); tau (score-only) arms with their tau, and an arm with a spec
+    ``fixed_threshold`` (cdl, R-50) also at that fixed threshold (rule 'fixed', secondary, untuned). Per row: mean per-seed recall (NA where
     the arm's power is not applicable: PMRT in R4), truth-null and placebo declaration rates (not-applicable
     candidates count as not declared, section 8) with CI and three-way validity. The placebo is the tuning column
-    of a tau scoring (reported, not in its validity: truth-null and confounded placebo); the raw_p validity uses
-    all three. Recall is shown for every counted cell next to its rates (descriptive; V2 / V3 keep the R-39 gate)."""
+    of a tau scoring (reported, not in its validity: truth-null and confounded placebo); the raw_p and fixed
+    validity use all three. Recall is shown for every counted cell next to its rates (descriptive; V2 / V3 keep the R-39 gate)."""
     out = []
     for k, e in sorted(cells.items()):
         rules = ([("raw_p", e.get("like_raw")), ("tau", e.get("secondary_tau"))] if e["declare"] == "by"
-                 else [("tau", e.get("primary"))])
+                 else [("tau", e.get("primary"))] + ([("fixed", e.get("like_fixed"))] if "like_fixed" in e else []))
         for rule, s in rules:
             ok = e["status"] in COUNTED and bool(s) and s["validity"] != "few_seeds"
             state = e["status"] if e["status"] not in COUNTED else "untuned" if not s else s["validity"]
@@ -1045,7 +1062,7 @@ def integrity(records: list[dict], screened: dict, spec: dict, freeze_commit: st
         t = truths.setdefault((u["world"], u["regime"]), truth_for(u["world"], u["regime"]))
         if {(e["source"], e["target"]) for e in r.get("edges", [])} != set(t.edges) | set(t.null_edges):
             incomplete.append(r["key"])
-    # R-41a: a dataset's arms may run in separate shards (cmi_knn GPU shard), so every arm of a dataset must carry
+    # R-41a: a dataset's arms may run in separate shards (a GPU shard), so every arm of a dataset must carry
     # the same dataset_sha256 (runner.run_one: generate.dataset_hash). An ok record without it fails the check;
     # a not-ok record is compared when stamped (a unit not run has no dataset) and counted when not.
     ds: dict[tuple, set] = defaultdict(set)
@@ -1260,7 +1277,7 @@ def _md_like(rows: list[dict], arms: list[str]) -> list[str]:
         return f"{rec} / {rt(r['null'])} / {rt(r['placebo'])}"
     L = ["## V0 like-for-like (headline, R-42): recall / truth-null rate / placebo rate per cell", "",
          "Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal placebo tau (tau), next to the "
-         "score-only arms (tau). Rates are declaration rates; * INVALID, ~ INCONCLUSIVE; a tau row's placebo is "
+         "score-only arms (tau; cdl also at the conference's fixed threshold, fixed). Rates are declaration rates; * INVALID, ~ INCONCLUSIVE; a tau row's placebo is "
          "its tuning column (reported, not in its validity). NA = not applicable (PMRT in R4: no known design, "
          "never recall 0); inv INVALID, inf infeasible (EVAL or T3), mis missing, unt untuned, few < 10 seeds."]
     ns = sorted({r["n"] for r in rows})
@@ -1270,7 +1287,7 @@ def _md_like(rows: list[dict], arms: list[str]) -> list[str]:
         L += ["", f"### {w}", "", "| arm | rule | " + " | ".join(f"n {n}" for n in ns) + " |",
               "|---|---|" + "---|" * len(ns)]
         for a in arms:
-            for rule in ("raw_p", "tau"):
+            for rule in ("raw_p", "tau", "fixed"):
                 if not any((w, a, rule, n) in idx for n in ns):
                     continue
                 L.append(f"| {a} | {rule} | " + " | ".join(txt(idx.get((w, a, rule, n))) for n in ns) + " |")
