@@ -49,7 +49,7 @@ from cdd_oran.xmethod.score import (  # noqa: E402
 )
 from cdd_oran.xmethod.worlds import REGIMES_OF, truth_for  # noqa: E402
 
-ANALYSIS_VERSION = "xm-eval-analysis/4"
+ANALYSIS_VERSION = "xm-eval-analysis/5"
 ALPHA = 0.05
 VALID_UB = 0.075             # Bradley's liberal band 1.5 alpha (R-30)
 Q_BY = 0.05
@@ -75,7 +75,8 @@ LIKE_RAW_KEYS = ("null_decl", "plac_decl", "conf_decl")  # validity of the V0 ra
 COUNTED = ("ok", "under_seeded")      # cell statuses that enter verdicts and tables
 P_KEYS = ("null_raw", "plac_raw")     # C1 / C2 legs (BY declarations imply raw p <= .05, so raw is the binding leg)
 C3_P_KEYS = ("plac_raw", "conf_raw")  # E4 has no real-action null candidate
-C3_TAU_KEYS = ("conf_decl",)          # P_placebo is the tuning column of tau arms; the confounded placebo is not
+C3_TAU_KEYS = ("conf_decl",)
+EQ_TAU_KEYS = ("null_decl",)          # tau eq arms in R1 / R2 (unfiltered eq table, R-56): truth-null declarations          # P_placebo is the tuning column of tau arms; the confounded placebo is not
 
 
 # ================================================================================================ input
@@ -823,6 +824,7 @@ def c1_arm(cells: dict, rows: dict, arm: str, dep) -> dict:
     n2 = sum(cell_class(cells[k], P_KEYS) == "INVALID" for k in u2)
     n1 = sum(cell_class(cells[k], P_KEYS) == "INVALID" for k in u1)
     pooled2 = {rk: _pooled([x for k in u2 for x in rows[k]], rk) for rk in P_KEYS}
+    pooled1 = {rk: _pooled([x for k in u1 for x in rows[k]], rk) for rk in P_KEYS}
     pooled_inv = any((p or {}).get("validity") == "INVALID" for p in pooled2.values())
     fm1 = _fmax(cells, u1, P_KEYS, dep)
     complete = len(u2) == len(p2) and len(u1) == len(p1) and not any(
@@ -838,7 +840,8 @@ def c1_arm(cells: dict, rows: dict, arm: str, dep) -> dict:
         v = "NOT A FAILURE"
     return {"verdict": v, "complete": complete, "assessable": assessable, "r2_invalid": n2, "r2_planned": len(p2),
             "r2_counted": len(u2), "r1_invalid": n1, "r1_planned": len(p1), "r1_counted": len(u1),
-            "r1_f_max": fm1["f_max"], "pooled_r2": pooled2, "pooled_r2_invalid": pooled_inv}
+            "r1_f_max": fm1["f_max"], "pooled_r2": pooled2, "pooled_r1": pooled1, "pooled_r2_invalid": pooled_inv,
+            "r2_legs": bool(assessable and 2 * n2 >= len(p2) and pooled_inv)}         # legs (i) + (ii) alone
 
 
 def _majority(passes: list[bool], complete: bool, n_min: int = 1) -> str:
@@ -864,6 +867,14 @@ def verdicts(cells: dict, rows: dict, spec: dict, dep) -> dict:
           "n_failures": sum(c1_arms[a]["verdict"] == "FAILURE" for a in counted),
           "verdict": _majority([c1_arms[a]["verdict"] == "FAILURE" for a in counted],
                                all(v["complete"] for v in c1_arms.values()), n_min=3)}
+    # R-56: C1 also without the arms flagged "c1_sensitivity_drop" (mscr_native, R-54): sensitivity line, no effect
+    drop = [a for a in D if arms[a].get("c1_sensitivity_drop")]
+    if drop:
+        keep = [a for a in counted if a not in drop]
+        c1["sensitivity_without"] = {
+            "dropped": drop, "D_counted": keep, "n_failures": sum(c1_arms[a]["verdict"] == "FAILURE" for a in keep),
+            "verdict": _majority([c1_arms[a]["verdict"] == "FAILURE" for a in keep],
+                                 all(c1_arms[a]["complete"] for a in D if a not in drop), n_min=3)}
     hac = [a for a in D if "hac" in a]
     hac_ok = [a for a in hac if c1_arms[a]["verdict"] == "NOT A FAILURE"]
     c1["wording"] = ("design-blind tests are invalid on the R2 (setpoint + dither) design tested" if not hac_ok else
@@ -888,6 +899,51 @@ def verdicts(cells: dict, rows: dict, spec: dict, dep) -> dict:
     c2b = {"arms": c2b_arms, "excluded": c2b_excluded,
            "verdict": _majority([v["verdict"] in ("SUPPORTED", "PARTIAL") for v in ev.values()],
                                 len(ev) == len(c2b_arms) and all(v["verdict"] != "PARTIAL" for v in ev.values()))}
+    # R-56: C2b also with the eq arms whose native partner fails C1's R2 legs but is INVALID IN R1 (sensitivity)
+    r1fail = {}
+    for a in sorted(arms):
+        if arm_kind(arms[a]) != "eq" or arms[a]["declare"] != "by" or arms[a].get("c2b", True) is not True:
+            continue
+        p = native_partner(a, spec)
+        pv = c1_arms.get(p) or c1["descriptive"].get(p)
+        if a not in c2b_arms and pv and pv["verdict"] == "INVALID IN R1" and pv["r2_legs"]:
+            r1fail[a] = {"native": p, **r1r2(a)}
+    both = {**c2b_arms, **r1fail}
+    ev2 = {a: v for a, v in both.items() if v["verdict"] != "NOT EVALUABLE"}
+    c2b["with_r1_failing_partners"] = {
+        "added": sorted(r1fail), "arms": r1fail,
+        "verdict": _majority([v["verdict"] in ("SUPPORTED", "PARTIAL") for v in ev2.values()],
+                             len(ev2) == len(both) and all(v["verdict"] != "PARTIAL" for v in ev2.values()))}
+    # R-56: unfiltered verdict of EVERY eq arm (same rule on R1 + R2; tau arms on their truth-null declarations)
+    eq_table = {}
+    for a in sorted(arms):
+        if arm_kind(arms[a]) != "eq":
+            continue
+        p = native_partner(a, spec)
+        pv = c1_arms.get(p) or c1["descriptive"].get(p)
+        keys = P_KEYS if arms[a]["declare"] == "by" else EQ_TAU_KEYS
+        x = validity_component(cells, rows, _set_of(cells, a, lambda e: e["regime"] in ("R1", "R2")), keys, dep)
+        member = ("member" if a in c2b_arms else "excluded (R-40)" if a in c2b_excluded else
+                  f"not a member (declare {arms[a]['declare']})" if arms[a]["declare"] != "by" else
+                  f"not a member (native {p}: {pv['verdict'] if pv else 'not assessed'})")
+        own = c1_arm(cells, rows, a, dep) if arms[a]["declare"] == "by" else None
+        eq_table[a] = {"native": p, "native_c1": pv["verdict"] if pv else None, "membership": member,
+                       "label": arm_label(a, spec), "verdict": x["verdict"], "n_cells": x["n_cells"],
+                       "n_invalid": x["n_invalid"], "f_max": x["f_max"], "pooled": x["pooled"],
+                       "r2_invalid": own["r2_invalid"] if own else None, "r2_planned": own["r2_planned"] if own else None,
+                       "pooled_r1": own["pooled_r1"] if own else None, "pooled_r2": own["pooled_r2"] if own else None}
+    # R-56: eq arms INVALID in R2 whose native partner is INVALID IN R1 are NAMED in the C2 text (pre-registered
+    # sentence); not C2b members, so they never change its verdict
+    named = []
+    for a, x in eq_table.items():
+        own = c1_arm(cells, rows, a, dep) if arms[a]["declare"] == "by" else None
+        if (own and own["r2_legs"] and x["native_c1"] == "INVALID IN R1" and x["membership"] != "member"
+                and x["membership"] != "excluded (R-40)"):
+            named.append({"arm": a, "native": x["native"], "sentence": (
+                f"{a} is INVALID in R2 (pooled truth-null raw rate {_rate_txt(own['pooled_r2'].get('null_raw'))}) "
+                f"as already in R1 ({_rate_txt(own['pooled_r1'].get('null_raw'))}): the test is miscalibrated "
+                f"without the design (its native partner {x['native']} is INVALID IN R1), so it is outside C2b's "
+                f"membership rule, and adding design covariates does not make it valid")})
     restored = sorted(a for a, v in ev.items() if v["verdict"] in ("SUPPORTED", "PARTIAL"))
     if c2a["verdict"] in ("SUPPORTED", "PARTIAL") and c2b["verdict"] == "SUPPORTED":
         c2_wording = "using the design restores validity (design-based inference and design-covariate adjustment)"
@@ -896,6 +952,9 @@ def verdicts(cells: dict, rows: dict, spec: dict, dep) -> dict:
                       + (f" (it does for {', '.join(restored)})" if restored else ""))
     else:
         c2_wording = "not supported: the design-based test is not shown valid in R1 / R2"
+    if named:
+        c2_wording += ("; " + ", ".join(x["arm"] for x in named) + " INVALID in R2 as already in R1 (not restored "
+                       "by design covariates)")
 
     # C3: the primary PMRT arm in E4 R3; reported for every eq arm (no claim effect)
     def c3_for(a: str) -> dict:
@@ -914,12 +973,18 @@ def verdicts(cells: dict, rows: dict, spec: dict, dep) -> dict:
                 for a in sorted(arms) if arm_kind(arms[a]) == "pmrt" and a != focal}
     comps = {"C1": c1["verdict"], "C2a": c2a["verdict"], "C2b": c2b["verdict"], "C3": c3["verdict"]}
     claim = "SUPPORTED" if all(v == "SUPPORTED" for v in comps.values()) else "NOT SUPPORTED"
-    return {"focal": focal, "C1": c1, "C2a": c2a, "C2b": c2b, "C2_wording": c2_wording, "C3": c3,
+    return {"focal": focal, "C1": c1, "C2a": c2a, "C2b": c2b, "C2_wording": c2_wording, "C2_named": named,
+            "eq_arms_table": eq_table, "C3": c3,
             "C3_eq_arms": c3_eq, "pmrt_secondary": pmrt_sec, "components": comps, "claim": claim,
             "arm_labels": {a: arm_label(a, spec) for a in sorted(arms) if arm_label(a, spec)}}
 
 
 # ================================================================================================ tables
+def _rate_txt(x: dict | None) -> str:
+    return "n/a" if not x or x.get("rate") is None else (f"{x['rate']:.3f} [{x['ci'][0]:.3f}, {x['ci'][1]:.3f}]"
+                                                        if x.get("ci") else f"{x['rate']:.3f}")
+
+
 def _brief(x: dict | None) -> dict | None:
     return None if not x else {"rate": x["rate"], "ci": x["ci"], "n": x["n"], "validity": x["validity"]}
 
@@ -1308,6 +1373,10 @@ def markdown(out: dict) -> str:
           f"- C1: **{c1['verdict']}** ({c1['n_failures']} / {len(c1['D_counted'])} counted arms of D are "
           f"design-blind failures; |D| = {len(c1['D'])}). Wording: {c1['wording']}."]
     lab = v4.get("arm_labels", {})
+    if c1.get("sensitivity_without"):
+        sw = c1["sensitivity_without"]
+        L.append(f"- C1 sensitivity without {', '.join(sw['dropped'])} (R-56, no effect): **{sw['verdict']}** "
+                 f"({sw['n_failures']} / {len(sw['D_counted'])} counted arms fail)")
     L += [f"- Arm labels (R-40; every table): {a}: {x}" for a, x in lab.items()]
 
     def tag(a: str) -> str:
@@ -1331,7 +1400,24 @@ def markdown(out: dict) -> str:
         comp(f"{a}{tag(a)} (native {x['native']})", x, "  ")
     for a, x in v4["C2b"].get("excluded", {}).items():
         comp(f"{a} EXCLUDED from C2b (R-40) [{x['label']}], same rule reported (no effect)", x, "  ")
+    w2 = v4["C2b"].get("with_r1_failing_partners")
+    if w2:
+        L.append(f"- C2b with the R1-failing partners (R-56, sensitivity, no effect): **{w2['verdict']}** (added: "
+                 f"{', '.join(w2['added']) or 'none'})")
     L.append(f"- C2 wording: {v4['C2_wording']}.")
+    for x in v4.get("C2_named", []):
+        L.append(f"  - {x['sentence']}.")
+    if v4.get("eq_arms_table"):
+        L += ["", "Every eq arm, same rule on R1 + R2, unfiltered (R-56):", "",
+              "| eq arm | C2b membership | native C1 | verdict | INVALID / cells (F_max) | R2 INVALID / planned | "
+              "pooled R1 truth-null | pooled R2 truth-null |", "|---|---|---|---|---|---|---|---|"]
+        for a, x in v4["eq_arms_table"].items():
+            r2 = "-" if x["r2_invalid"] is None else f"{x['r2_invalid']}/{x['r2_planned']}"
+            r1t = _rate_txt((x["pooled_r1"] or {}).get("null_raw")) if x["pooled_r1"] else "-"
+            r2t = _rate_txt((x["pooled_r2"] or {}).get("null_raw")) if x["pooled_r2"] else "-"
+            L.append(f"| {a}{tag(a)} | {x['membership']} | {x['native_c1'] or '-'} | {x['verdict']} | "
+                     f"{x['n_invalid']}/{x['n_cells']} ({x['f_max']}) | {r2} | {r1t} | {r2t} |")
+        L.append("")
     comp(f"C3 {focal} valid in E4 R3", v4["C3"])
     if v4["C3"].get("wording"):
         L.append(f"  - wording: {v4['C3']['wording']}.")
@@ -1471,14 +1557,24 @@ def markdown(out: dict) -> str:
 
 
 # ================================================================================================ T1 (freeze)
-S_FLOOR, S_CAP, T1_NS = 40, 100, (500, 1000, 4000)
+S_FLOOR, S_CAP, T1_NS = 40, 60, (500, 1000, 4000)       # T6 cap 60 = stated compute ceiling (R-56)
+
+
+def achieved_power(sd_d: float, s: int, delta: float = 0.15, alpha: float = 0.05) -> float:
+    """Power of the two-sided paired t-test with s seeds for a mean gap ``delta`` (noncentral t)."""
+    if not np.isfinite(sd_d) or sd_d <= 0:
+        return 1.0
+    df, nc = s - 1, delta * math.sqrt(s) / sd_d
+    tc = stats.t.ppf(1 - alpha / 2, df)
+    return float(stats.nct.sf(tc, df, nc) + stats.nct.cdf(-tc, df, nc))
 
 
 def t1_seed_count(records: list[dict], spec: dict, s_cap: int = S_CAP, focal: str | None = None) -> dict:
     """PROTOCOL_A T1 on the DEV merged records, with this module's own definitions: per kappa .25 cell at n in
     T1_NS (E4 excluded: one true edge), every V3 pair (pmrt_eq vs a primary-block arm, same declaration rule,
     neither arm INVALID on DEV) gives paired_seeds(sd_d; delta .15, alpha .05, power .8); S_power = the max;
-    S = min(s_cap, max(40, S_power rounded up to a multiple of 10)). Also the minimum detectable gap at S.
+    S = min(s_cap, max(40, S_power rounded up to a multiple of 10)), cap 60 (R-56). Also the minimum detectable gap
+    and the achieved power (gap .15) at S per pair: reported when the cap binds (R-56).
     ``focal``: the PMRT arm of the pairs (default ``focal_arm(spec)``)."""
     focal = focal or focal_arm(spec)
     use, _ = screen(records, spec)
@@ -1504,10 +1600,12 @@ def t1_seed_count(records: list[dict], spec: dict, s_cap: int = S_CAP, focal: st
     s = S_FLOOR if s_power is None else min(s_cap, max(S_FLOOR, 10 * math.ceil(s_power / 10)))
     for p in pairs:
         p["mdg_at_S"] = min_detectable_gap(p["sd_d"], s) if p["sd_d"] > 0 else 0.0
+        p["power_at_S"] = achieved_power(p["sd_d"], s)
     worst = sorted(pairs, key=lambda p: (-p["seeds_needed"], p["cell"], p["arm"]))[:15]
     return {"S": s, "focal": focal, "S_power": s_power, "cap": s_cap, "cap_binds": bool(s_power is not None and s_power > s_cap),
             "n_pairs": len(pairs), "largest": worst,
-            "max_mdg_at_S": max((p["mdg_at_S"] for p in pairs), default=None)}
+            "max_mdg_at_S": max((p["mdg_at_S"] for p in pairs), default=None),
+            "min_power_at_S": min((p["power_at_S"] for p in pairs), default=None)}
 
 
 # ================================================================================================ main

@@ -1,12 +1,16 @@
 # Study A protocol: design-based vs design-blind edge tests on E1-E5 (EVAL pre-registration)
 
-FROZEN: no (DRAFT v4, worker `protocol`, 2026-10-03; branch xm/protocol8, feat/v2 95663ec; rulings R-1..R-51)
+FROZEN: no (DRAFT v5 = freeze candidate, worker `protocol`, 2026-10-04; branch xm/freeze-prep, feat/v2 5a811de;
+rulings R-1..R-56)
 
 Freeze procedure. Before any EVAL unit is generated: (1) every T-item of section 13 is filled by its rule and the
 value is written here; (2) the line above becomes "FROZEN: yes (<date>)"; (3) `specs/eval/full.json` gets
 `protocol_sha256` = the LF sha256 of this file (the campaign EVAL guard and `eval_analysis.py` check it) and its
-`pkgs_lock`; (4) the freeze commit message records the LF sha256 of this file, `scratchpad/xmethod/eval_analysis.py`,
-`specs/eval/full.json`, `cdd_oran/xmethod/campaign.py` and `results/fmax_sim/dependence.json`; (5) the orchestrator
+`pkgs_lock`; (4) the freeze note `scratchpad/xmethod/freeze/FREEZE_NOTE.md`, committed in the freeze commit (whose
+message is one subject line), records the LF sha256 of this file, `scratchpad/xmethod/eval_analysis.py`,
+`specs/eval/full.json`, `cdd_oran/xmethod/campaign.py`, `cdd_oran/xmethod/dev_power.py` and
+`results/fmax_sim/dependence.json` and the DEV inputs (contents: T7); "recorded in the freeze commit" below means
+in that note or a file it names; (5) the orchestrator
 registers the EVAL block 3_100_000-3_100_299 in `docs/benchmark/SEED_REGISTRY.json`. After the freeze this file is
 never edited: amendments go to `docs/xmethod/PROTOCOL_A_AMENDMENTS.md` + `specs/eval/amendments.json` (section 14).
 Sources: CONTRACT.md, PROTOCOL_NOTES.md, PMRT_CORE.md, FIDELITY_CLASSIC / CITESTS, xm/dev-runs, reviews A-C.
@@ -39,7 +43,19 @@ the score-only arms) promoted to a headline; after the CI-test audit and the DEV
 CI DEV plan C (R-47: full DEV grid for pcorr and rcot2, mscr at n <= 1000 only, cost probes only for pdcor and
 cmi_knn; the full grid was ~5900 core-h + 372-1482 GPU-h), pdcor dropped (R-48) and cmi_knn dropped (R-49 revised,
 cost; section 4), and the authors' conference method CDL added as a
-score-only arm (R-50). Estimand check: PASS, 18 cells.
+score-only arm (R-50); after the CI DEV run (plan C, `results/dev/ci_c`) and the R-42 selection (R-51..R-54):
+mscr INVALID in every R2 cell in all three arms (truth-null raw .93-1.00), so mscr is kept as a reported-INVALID arm
+at n 500 / 1000 only (R-54, T11); pcorr, pcorr_hac and pcorr_hac_fb native INVALID in R2 (truth-null raw .21-.46 at
+n 1000) with their eq / eq_min arms at .04-.06; rcot2 INVALID in most R2 cells in every arm (rcot2_eq truth-null
+.067-.104 at n 1000; 20 of 25 R2 cells) and in 7 of 25 R1 cells (eq and native; its authors' null is liberal, F4),
+so the C1 / C2b directions of these arms were known (section 10); the R-42 winner gbm (R-52: F4 0 / 24 and DEV 0 /
+108 INVALID cells, recall .749 vs linear .420); cdl's fidelity, cost and 12-cell integration run (R-53); the DEV
+runs of cdl on the full grid (R-51) and of pmrt_nl_eq on the T1 cells (R-43), the T1 input; the DEV cost tables and
+the EVAL projection (`scratchpad/xmethod/freeze/`); R-55 (timing: T3 speed factors from a calibration block keyed
+by platform + CPU model, 1 process per vCPU in EVAL, the paper's runtime table from a dedicated timing run), set
+after the DEV costs were seen (they came from oversubscribed sessions); R-56 (after the freeze-prep DEV preview of
+the C1 / C2b legs: C2b membership rule kept, rcot2_eq named, an unfiltered eq-arm table, C2b with / without the
+R1-failing partners, C1 with / without mscr, S cap 60). Estimand check: PASS, 18 cells.
 
 ## 1. Question and claim
 
@@ -87,8 +103,8 @@ measurement noise); sweep {.125, .5} in R2 at n 1000; kappa 0 is a DEV sanity ch
 
 | adapter (version) | family | authors' null / native rule | arms | fidelity (F1-F7) |
 |---|---|---|---|---|
-| pmrt_core (`pmrt-core-v1`: linear statistic; the T10 statistic's version string) | proposed, design-based CRT | redraw of the known random part, B <= 9999 Besag-Clifford, no clip; any statistic (R-42) | nl_eq (primary: statistic by T10), eq (linear, secondary), r3 | engine bit-exact vs E6 pmrt `plain`; F4 null .043-.058 (linear); nonlinear: F4 under T10 |
-| mscr (`xm-mscr-v2-bc`) | CI test; eq arm: single-conditioner max statistic, cannot condition on the joint design set (R-40) | stratified random-partition bank, B 9999 BC | eq (not in C2b), eq_min, native | F3 exact on stored E2 |
+| pmrt_core (`pmrt-core-v1`: linear statistic; `pmrt-core-v2`: statistic gbm, module `pmrt-nl-v1`, T10) | proposed, design-based CRT | redraw of the known random part, B <= 9999 Besag-Clifford, no clip; any statistic (R-42) | nl_eq (primary: statistic gbm, T10), eq (linear, secondary), r3 | engine bit-exact vs E6 pmrt `plain`; F4 null .043-.058 (linear); gbm: F4 truth-null .026-.047, 0 / 24 INVALID, DEV 0 / 108 INVALID (R-52) |
+| mscr (`xm-mscr-v2-bc`) | CI test; single-conditioner max statistic, the eq arm cannot condition on the joint design set (R-40); reported-INVALID arm, EVAL n 500 / 1000 only (R-54) | stratified random-partition bank, B 9999 BC | eq (not in C2b), eq_min, native | F3 exact on stored E2; F4 null .054 / .049 (n 500 / 1000) |
 | pcorr (`xm-pcorr-v1`) | CI test | partial-correlation t-test, df n-2-\|Z\| | eq, eq_min, native | F2 / F4 PASS |
 | pcorr_hac (`PcorrHac` 1.0, R-32) | design-blind, serial-dependence robust | OLS t, Newey-West HAC SE, Andrews AR(1) bandwidth, time order, t(n-k) | native, eq_min | F2 == statsmodels; F4 iid .049-.054, AR(1) .8: .104 / .084 / .060 (n 500 / 1000 / 4000) |
 | pcorr_hac_fb (`inference: fixed_b`, 1.1, R-38) | as pcorr_hac; set-D member (T8) | same statistic and bandwidth, Kiefer-Vogelsang (2005) Bartlett fixed-b p | native, eq_min | F3 vs KV Table I PASS; F4 iid .047-.053, AR(1) .8: .091 / .080 / .056 |
@@ -97,7 +113,7 @@ measurement noise); sweep {.125, .5} in R2 at n 1000; kappa 0 is a DEV sanity ch
 | notears (xunzheng/notears@4a9ab19) | classic discovery | w_threshold .3 | native only | F3 19/20; included, disclosed |
 | shap_dag (XGBoost 3.4.1 + shap) | O-RAN (Sharma et al.) | "most influential" | native only | PASS-WITH-NOTES |
 | two_tower (E2 port, row-share score) | ADAPTATION inspired by arXiv:2601.13213 | relative gate .10 | native only | not the published supervised model |
-| cdl (port of the authors' NaNA 2026 conference method, refactor/codebase `cdd_oran/models/cdl.py`; version TBD, R-50) | the authors' conference method: Causal Dynamics Learning (Wang et al. 2022), masked neural predictor, per-edge CMI from likelihood ratios, EMA | conference fixed threshold CMI >= .16 (secondary, V0); primary: conformal tau | native only | TBD (worker cdl: F1 / F3 vs the conference golden runs, F4) |
+| cdl (port of the authors' NaNA 2026 conference method, refactor/codebase@65b56f3 `cdd_oran/models/cdl.py`; version "... port, offline 130-epoch rule (cap 16k steps)", R-50, R-53) | the authors' conference method: Causal Dynamics Learning (Wang et al. 2022), masked neural predictor, per-edge CMI from likelihood ratios, EMA; CPU, training steps min(16000, ceil(130 n / 128)) | conference fixed threshold CMI >= .16 (secondary, V0); primary: conformal tau | native only | F2 bitwise port PASS; F3 Env II 16 / 16 PASS, Env I 4 of 5 seeds (paper's seed 9 / 10, CPU vs the paper's CUDA); F4 primary family VALID, power 1.00; KPI -> KPI family not calibrated by the action placebo, no claim (R-53, FIDELITY_CDL.md) |
 | corr (scipy pearsonr) | simple | Pearson t-test | native only | PASS |
 | granger (own OLS F == statsmodels) | simple, E3 only | F-test, one lag | eq (VARX), native | PASS-WITH-NOTES |
 
@@ -144,23 +160,26 @@ under T4. Conditioning-set sizes |Z| for focal P0 (native / eq_min / eq): R1 E1 
 - Measurement seeds from the EVAL block: S seeds 3_100_000.. (T1) for every cell, except that the C3 readers
   (pmrt_nl_eq, pmrt_eq, pmrt_r3, every eq arm; R-39) use S_E4 = 300 seeds (T9) in E4 R3 / R4; sweep cells the first
   ceil(S/2). Tune seeds = DEV tune seeds 3_000_000-019 re-run at the freeze commit (R-34; sha and declarations vs DEV
-  reported, V11). `specs/eval/full.json`: 25 arms; S 40: 207 560 units / 16 200 datasets (46 480 tune); S 100:
-  323 180 / 19 500. The EVAL n grid of the mscr arms at large n is open (T11).
+  reported, V11). `specs/eval/full.json`: 25 arms; the mscr arms at n 500 / 1000 only (R-54, T11); S 40: 191 600
+  units / 16 200 datasets (43 240 tune); S 100: 298 940 / 19 500 (projection:
+  `scratchpad/xmethod/freeze/eval_projection.json`).
 - Budget (R-13, R-35): 7200 CPU-s per (method, dataset) decides feasibility (T3, Kaggle reference host). In EVAL
   RLIMIT_CPU = 14 400 (2x safety cap): a unit over it is recorded infeasible with its CPU-s, never re-run, and its
   cell is infeasible; an OOM kill is an error (re-run). RNG tags 7800 data, 7801 pmrt, 7802 citests, 7803 classic.
 - GPU budget (R-41, the R-13 analogue): an arm run on a GPU backend (spec `budget_wall_s`; none since cmi_knn was
-  dropped; cdl's device is fixed from its cost, spec `tbd.cdl`) has a budget of 2 h wall (7200 s) per (method,
-  dataset) on a Kaggle T4 (`budget_cpu_s` none); over it = "infeasible at this n (measured cost X)", X in GPU wall-s
-  (T3). In EVAL the same 2x safety cap applies (14 400 wall-s), same rule as the CPU cap. GPU wall time is reported
-  apart from CPU-s (V10, Experiment C), never summed with it. Arms on CPU backends report any `gpu_s` (V10), not
-  budgeted.
+  dropped; cdl runs on CPU, R-53: its GPU run neither reproduces the CPU run nor is faster) has a budget of 2 h wall
+  (7200 s) per (method, dataset) on a Kaggle T4 (`budget_cpu_s` none); over it = "infeasible at this n (measured cost
+  X)", X in GPU wall-s (T3). In EVAL the same 2x safety cap applies (14 400 wall-s), same rule as the CPU cap. GPU
+  wall time is reported apart from CPU-s (V10, Experiment C), never summed with it. Arms on CPU backends report any
+  `gpu_s` (V10), not budgeted.
 - Platforms (R-26, R-35, R-41a, R-46): packages pinned to uv.lock everywhere (`pkgs_lock`); shards split across
-  Kaggle, Lightning and Colab in parallel (R-46); a dataset's arms on one platform, in one shard, except that GPU
-  arms may run in a separate GPU shard on the same platform (R-41a). Every record stamps the dataset hash (`dataset_sha256`, sha256 over every array and name of the generated
-  dataset), and all arms of a dataset must carry the same hash (eval_analysis V11: a mismatch, or an ok record without
-  a hash, makes the run PROVISIONAL; a unit not run has no dataset and is only counted). EVAL shards in their own
-  directory (tune keys equal DEV keys).
+  Kaggle, Lightning and Colab in parallel (R-46); a dataset's arms on one platform, in one shard, except that GPU arms
+  may run in a separate GPU shard on the same platform (R-41a). EVAL sessions run 1 process per vCPU, never
+  oversubscribed (R-55; Kaggle 4, Colab 2), and every record logs its host type = platform + CPU model
+  (/proc/cpuinfo), the load average and the number of concurrent processes. Every record stamps the dataset hash
+  (`dataset_sha256`, sha256 over every array and name of the generated dataset), and all arms of a dataset must carry
+  the same hash (eval_analysis V11: a mismatch, or an ok record without a hash, makes the run PROVISIONAL; a unit not
+  run has no dataset and is only counted). EVAL shards in their own directory (tune keys equal DEV keys).
 
 ## 8. Metrics (per (arm, cell) on measurement seeds; cell = (world, regime, lambda, kappa, n))
 
@@ -176,6 +195,11 @@ under T4. Conditioning-set sizes |Z| for focal P0 (native / eq_min / eq): R1 E1 
 - Power (R-39: cells not INVALID; VALID-only is the sensitivity read, since at S 40 an exactly nominal cell is VALID
   w.p. only .25-.45): recall per seed (mean, sd), FDP (mean = FDR, CI), pooled sign accuracy. Also counted: not
   testable / not applicable; cost (CPU-s; wall-s for the GPU arms, R-41; peak RSS, GPU-s, infeasible and error units).
+- Runtime (Experiment C, R-55): the paper's runtime table comes from a dedicated uncontended timing run on Kaggle (1
+  process per vCPU, a few datasets per (method, n), CPU-s and peak RSS), not from the campaign. Its rows pool tune
+  and measure seeds, kappas and lambdas and report median, mean, min and max, with the tune / measure flag kept and
+  a per (world, regime) breakdown in the json. The campaign CPU-s (V10) are supplementary, reported with their load
+  mix (host types, load average, concurrent processes).
 - PMRT in R4 (R-42): the real actions have design kind `none`, so a PMRT arm tests no true edge there. Its power
   (recall, sign) is "not applicable" (NA), never recall 0, and is left out of every recall table, mean and paired
   difference (V0, V2, V3, V6). Its placebo rates are still read (P_placebo has an i.i.d. design in R4).
@@ -220,8 +244,10 @@ are Monte Carlo steps of an integer quantile (P(#INVALID <= F_max) >= .95 holds 
 
 - C1 (design-blind tests invalid on R2). D = the native p arms of the frozen spec with `set_D: true`: corr,
   granger_native, the HAC variant chosen under T8 and the native CI tests admitted by T4 (a dependence test that is
-  not CI would make C1 a strawman; R-40, Q11). The HAC variant not chosen gets the same legs reported
-  descriptively, no effect. Arm a is a FAILURE iff (i) INVALID in >= half of its planned R2 cells
+  not CI would make C1 a strawman; R-40, Q11). mscr_native is in D over its own cells (n 500 / 1000; R-54), its
+  label printed with its verdict, the FAILURE definition unchanged; C1 is also reported without it (spec
+  `c1_sensitivity_drop`; R-56), a sensitivity line with no effect. The HAC variant not chosen gets the same legs
+  reported descriptively, no effect. Arm a is a FAILURE iff (i) INVALID in >= half of its planned R2 cells
   (a cell not counted is not INVALID), (ii) its pooled R2 truth-null or placebo raw rate is INVALID and (iii) #INVALID
   R1 cells <= F_max(R1 set); if (iii) fails, "INVALID IN R1" (invalid regardless of the design, e.g. a liberal
   authors' null; not a failure); else NOT A FAILURE. C1 needs >= 3 assessable arms (>= 90 % of R1 and R2 cells
@@ -237,7 +263,17 @@ are Monte Carlo steps of an integer quantile (P(#INVALID <= F_max) >= .95 holds 
   design-covariate adjustment)"; C2a SUPPORTED, C2b not -> "design-based inference restores validity; adding design
   covariates does not suffice" (+ the arms for which it does). R-40: mscr_eq (spec `c2b: false`) is not equal
   information, so it is excluded; its same-rule R1 + R2 result is reported, no effect, labelled "single-conditioner
-  max statistic; cannot condition on the joint design set" (also on mscr_eq_min).
+  max statistic; cannot condition on the joint design set" (also on mscr_eq_min). R-56 (membership rule kept):
+  (1) an eq p arm outside C2b whose native partner is INVALID IN R1 while meeting C1 legs (i) and (ii), and which
+  itself meets legs (i) and (ii), is NAMED in the C2 text (wording suffix "<arm> INVALID in R2 as already in R1 (not
+  restored by design covariates)") with this pre-registered sentence: "<arm> is INVALID in R2 (pooled truth-null raw
+  rate r2 [CI]) as already in R1 (r1 [CI]): the test is miscalibrated without the design (its native partner <arm>
+  is INVALID IN R1), so it is outside C2b's membership rule, and adding design covariates does not make it valid".
+  DEV (section 0) expects rcot2_eq here (R2 truth-null .067-.104 at n 1000; rcot2_native INVALID in 7 of 25 R1
+  cells, F_max 2: RCoT2 is miscalibrated already in R1). (2) V4 prints an unfiltered table of EVERY eq arm: C2b
+  membership, its native partner's C1 verdict, the same-rule R1 + R2 verdict (tau arms on truth-null declarations),
+  R2 INVALID cells, pooled R1 and R2 truth-null rates. (3) C2b is also reported with the eq arms whose native partner
+  is INVALID IN R1 but meets legs (i) and (ii) added to its members (sensitivity, no effect).
 - C3 (valid under the logged confounded policy). The PMRT arm over E4 R3 (4 lambda x 5 n, S_E4 300): (a) #INVALID
   <= F_max on P_placebo and P_placebo_conf raw; (b) both pooled raw rates VALID. Reported with the same rule for every
   eq arm (tau arms: P_placebo_conf declarations), no claim effect; if any also passes, the wording adds "so do
@@ -265,45 +301,81 @@ are Monte Carlo steps of an integer quantile (P(#INVALID <= F_max) >= .95 holds 
 
 ## 12. Outputs (`eval_tables.json` + `EVAL_TABLES.md`)
 
-V0 like-for-like headline, printed first (R-42; section 9); V1 validity per (arm, cell) with status; V2 recall / FDP
-/ sign (not INVALID; NA = not applicable); V3 same-rule differences; V4 verdicts, F_max, wording (+ the other PMRT
-arms, no effect); V5 information levels; V6 E4; V7 not testable; V8 KPI -> KPI; V9 kappa sweep; V10 cost (GPU arms in
-wall-s, a separate table; R-41); V11 integrity. Figures (not drawn): validity map, recall vs n, information levels,
-E4 by lambda, cost vs n.
+V0 like-for-like headline, printed first (R-42; section 9); V1 validity per (arm, cell) with status; V2 recall / FDP /
+sign (not INVALID; NA = not applicable); V3 same-rule differences; V4 verdicts, F_max, wording (+ the other PMRT arms,
+the R-56 eq-arm table, named arms and sensitivity lines; no effect); V5 information levels; V6 E4; V7 not testable; V8
+KPI -> KPI; V9 kappa sweep; V10 campaign cost (supplementary to the timing-run table, R-55; GPU arms in wall-s, a
+separate table; R-41); V11 integrity. Figures (not drawn): validity map, recall vs n, information levels, E4 by
+lambda, cost vs n.
 
 ## 13. Register of values fixed at the freeze (rules fixed now)
 
-- T1 seed count S: `eval_analysis.py t1 --spec <DEV specs> --merged <files> --cap <T6>` on the full DEV runs
-  (dev-runs `results/dev/full/merged.jsonl.gz` + the citests DEV merged file; paths and LF sha256 in the freeze
-  commit). Kappa .25 cells at n in {500, 1000, 4000}, E4 excluded (one true edge); every pair PMRT arm vs a
-  primary-block arm under the same declaration rule, neither INVALID on DEV, gives the paired-t seed count for a
-  recall gap .15 (alpha .05, power .8); S = min(cap, max(40, max count rounded up to a multiple of 10)); minimum
-  detectable gap at S per pair reported; the max over noisy DEV sd's biases S upward (disclosed). The PMRT arm of the
-  pairs is the primary one (`t1 --focal pmrt_nl_eq`): dev-runs runs the T10 winner on the T1 cells (DEV measure
-  seeds) and that DEV run is in the T1 input; under the T10 fallback, pmrt_eq. CI DEV plan C (R-47): mscr's DEV run
-  covers n <= 1000 only, so its pairs use n 500 / 1000. cdl (R-51): dev-runs runs it on the full DEV grid before the
-  freeze, and that run is in the T1 input (T4 (iii) applies, no waiver). VALUE: TBD.
-- T2 tau: from the EVAL tune records (section 6); not a DEV quantity.
-- T3 infeasible (arm, n): max over worlds, regimes, lambdas of DEV `cpu_s` per unit, in Kaggle reference seconds,
-  > 7200 makes n and every larger n infeasible (spec `max_n`, `t3_cost_cpu_s`). DEV costs from any platform count
-  (R-51): a unit run on another host type (Lightning, Colab) is converted as cost x f, f the measured speed factor of
-  that (arm, host type) = sum of Kaggle cost / sum of host cost over the same calibration units run on both hosts
-  (DEV seeds 3_000_000-002 in the arm's 3 costliest (world, regime) at its largest measured n). The units, both
-  costs and f are recorded in the freeze commit. Without a DEV cost at that n: a cost pilot on those calibration
-  units, on Kaggle or on another host with its f; its max decides. Pilot: none infeasible (max 144 s). GPU arms
-  (R-41): the same rule on DEV wall-s per unit (child wall clock when isolated), referenced to a Kaggle T4 > 7200
-  (spec `t3_cost_wall_s`), f measured against a Kaggle T4. VALUE: TBD.
+- T1 seed count S: `eval_analysis.py t1 --spec <DEV specs> --merged <files> --cap <T6>` on the full DEV runs (dev-runs
+  `results/dev/full/merged.jsonl.gz` + the citests DEV merged file; paths and LF sha256 in the freeze commit). Kappa
+  .25 cells at n in {500, 1000, 4000}, E4 excluded (one true edge); every pair PMRT arm vs a primary-block arm under
+  the same declaration rule, neither INVALID on DEV, gives the paired-t seed count for a recall gap .15 (alpha .05,
+  power .8); S = min(cap, max(40, max count rounded up to a multiple of 10)), cap 60 (T6), i.e. S = clip(S_power, 40,
+  60) from DEV data only, frozen (R-56); minimum detectable gap and achieved power (gap .15) at S per pair reported,
+  and if S_power > 60 the study runs at 60 and reports the achieved power; the max over noisy DEV sd's biases S upward
+  (disclosed). The PMRT arm of the pairs is the primary one (`t1 --focal pmrt_nl_eq`): dev-runs runs the T10 winner on
+  the T1 cells (DEV measure seeds) and that DEV run is in the T1 input; under the T10 fallback, pmrt_eq. CI DEV plan C
+  (R-47): mscr's DEV run covers n <= 1000 only, so its pairs use n 500 / 1000. cdl (R-51): dev-runs runs it on the
+  full DEV grid before the freeze, and that run is in the T1 input (T4 (iii) applies, no waiver). Interim (focal
+  pmrt_eq, 10 arms + 13 CI arms, 108 pairs; results/dev/ci_c/t1.json): S_power 14, S 40, minimum detectable gap .082.
+  VALUE: TBD (aud1's power calculation on the T1 input with the pmrt_nl_eq and cdl DEV runs, results/dev/).
+- T2 tau: from the EVAL tune records (section 6); not a DEV quantity. VALUE: computed in EVAL (no freeze value).
+- T3 infeasible (arm, n): max over worlds, regimes, lambdas of DEV `cpu_s` per unit, in Kaggle reference seconds, >
+  7200 makes n and every larger n infeasible (spec `max_n`, `t3_cost_cpu_s`). DEV costs from any platform count
+  (R-51): a unit run on another host type is converted as cost x f. Host type = platform + CPU model (R-55; logged per
+  record). f = sum of Kaggle CPU-s / sum of host CPU-s over a trimmed paired calibration block (R-55): 6 anchor arms
+  spanning cheap / medium / expensive (pcorr_eq, rcot2_eq, shap_dag, pmrt_nl_eq, cdl, mscr_eq_min; mscr at n 500 /
+  1000 only), each at n 500 / 1000 / 4000, E2 R2 kappa .25, DEV seeds 3_000_000-002 (the 3 repeats), built and run by
+  xm-citests (`scratchpad/xmethod/exp_c_timing.py calib`, read by `exp_c_runtime.py calib`) as its own job under 1
+  process per vCPU on Kaggle (the reference) and on each Colab CPU model, before EVAL where slots allow (the full
+  201-unit plan only with spare capacity). Its error e = max over anchors of |f_anchor / f - 1|. A DEV cost from an
+  uncalibrated host type makes the T3 read provisional; an arm whose converted max is within e of 7200 (max x f x (1 +
+  e) > 7200) counts as over budget. The block, both costs, f and e are recorded in the freeze commit. Without a DEV
+  cost at that n: a cost pilot (DEV seeds 3_000_000-002 in the arm's 3 costliest (world, regime) at that n), on Kaggle
+  or on a calibrated host with its f; its max decides. Pilot: none infeasible (max 144 s). GPU arms (R-41): the same
+  rule on DEV wall-s per unit (child wall clock when isolated), referenced to a Kaggle T4 > 7200 (spec
+  `t3_cost_wall_s`), f measured against a Kaggle T4. No GPU arm is planned (R-49 revised, R-53). VALUE: no (arm, n)
+  infeasible, no spec `max_n`. Max DEV CPU-s per unit before f (`eval_projection.json` `t3_max_cpu_s_by_arm_n`):
+  mscr_eq_min 719 (n 1000; mscr not run above, R-54), mscr_eq 192, cdl 365 at n 4000 (DEV run so far; n 8000 / 24000
+  from its full DEV run), pmrt_nl_eq 272 at n 4000 (R-42 runs; n 8000 / 24000 by the cost pilot), two_tower 156,
+  shap_dag 148, pc_eq 80, pmrt_eq 63, pmrt_r3 60, every other arm <= 28 (n 24000). The 10 classic / PMRT arms ran on
+  Kaggle only (f = 1); the largest non-Kaggle cost (719) is over budget only if f (1 + e) > 10; f and e by host type
+  are recorded in the freeze commit (T7).
 - T4 admitted CI-test arms, HAC arms and cdl: iff (i) the F1-F6 line in `status/xm-citests.md` (HAC: `status/hac.md`;
   cdl: its fidelity line in `status/cdl.md`, R-50) and
   (ii) the verdict in `status/audit-citests.md` are PASS or PASS-WITH-NOTES (audit table: OK, or a doc / protocol FIX
   whose fix is merged; mscr's M1 protocol fix is R-40, so mscr, a faithful port, stays admissible; Q11), and (iii) its
   DEV run is in the T1 input. rcot2's liberal authors' null is a disclosed note, not a failure. Others removed, with
-  reason. VALUE: TBD.
+  reason. VALUE: admitted: pcorr (eq, eq_min, native; F2 / F4 PASS, audit OK), pcorr_hac and pcorr_hac_fb (+ eq_min;
+  F2 / F3 PASS, `status/hac.md`, `hac2.md`), rcot2 (eq, eq_min, native; F2 / F3 PASS, F4 liberal authors' null
+  disclosed, audit OK), mscr (eq, eq_min, native; F3 / F4 PASS, audit M1 fixed by R-40; a reported-INVALID arm at n
+  500 / 1000, R-54), cdl (F2 PASS, F3 PARTIAL at the paper's seed, F4 primary family VALID; R-53); (iii): the CI arms'
+  DEV run is plan C (`results/dev/ci_c`, 58 480 / 58 480 ok); cdl's full DEV run must be in the T1 input before the
+  freeze (running). Removed: pdcor (R-48), cmi_knn (R-49 revised).
 - T5 DEV validity (R-21): computed by `eval_analysis.py` on the DEV records, reported in the freeze commit; not used.
+  VALUE: `results/dev/full/REPORT.md` (10 arms, 824 cells: VALID 268, INVALID 249, INCONCLUSIVE 247, NO_READ 60),
+  `results/dev/ci_c/REPORT.md` (13 CI arms, 1138 cells: VALID 122, INVALID 444, INCONCLUSIVE 572), and the cdl and
+  pmrt_nl_eq DEV reports (at the freeze); paths and LF sha256 in the freeze commit.
 - T6 S cap: 100, unless `campaign project` at S 100 with the DEV costs (incl. citests) exceeds the compute the user
-  states at the freeze; then the largest multiple of 10 that fits, not below 40 (R-34). VALUE: TBD.
+  states at the freeze; then the largest multiple of 10 that fits, not below 40 (R-34). Projection
+  (`eval_projection.json`, DEV costs, Kaggle 4 sessions + Colab 3 CPU jobs at 1 process per vCPU, no Lightning):
+  S 40 = 191 600 units, ~1 240 CPU-h, ~56 h wall; S 50 = 209 490, ~1 380 CPU-h, ~63 h; S 60 = 227 380, ~1 520
+  CPU-h, ~69 h (S 100 would be 298 940, ~2 070 CPU-h, ~94 h); cdl ~46 % and pmrt_nl_eq ~34 % at S 40. The stated
+  compute ceiling (R-56: free tiers; S 100 risks incomplete cells) fits S 60. VALUE: 60, so S = clip(S_power, 40,
+  60) (T1).
 - T7 freeze-commit contents: campaign EVAL mode (audited), all adapter branches, `uv.lock`, filled `pkgs_lock`, this
-  file FROZEN, the estimand-check re-run. VALUE: TBD.
+  file FROZEN, the estimand-check re-run. VALUE: one commit on feat/v2 containing `cdd_oran/xmethod/campaign.py` and
+  `dev_power.py` (xm/dev-runs), every adapter of the spec (`cdd_oran/xmethod/methods/`: pmrt_core, pmrt_nl, pc,
+  granger, corr, notears, shap_dag, two_tower, cdl + _cdl_model, mscr, pcorr, pcorr_hac, rcot2 and their shared
+  modules), runner / api / score / covariates / worlds, the launchers (`scratchpad/e6_dev/` kaggle_job, colab_run,
+  xm_dispatch), `uv.lock`, the spec with `protocol_sha256` and `pkgs_lock`, `eval_analysis.py`, `results/fmax_sim/`,
+  the DEV inputs of T1 / T3 / T5 (merged files or their LF sha256), the T3 calibration block (R-55: f and e by host
+  type) and cost-pilot records, the R-55 per-record host logging in campaign.py, the
+  estimand-check re-run, and this file FROZEN; checklist `scratchpad/xmethod/freeze/FREEZE_CHECKLIST.md`.
 - T8 set-D HAC variant (R-38): pcorr_hac vs pcorr_hac_fb on synthetic F4 only (AR(1) rho .5 / .8 and iid, n 500 /
   1000 / 4000): the smaller max |rate - .05| gets `set_D: true`, the other false (secondary). VALUE: pcorr_hac_fb
   (fixed-b .0405 vs t .0535; calib F4, xm/hac2 `results/pcorr_hac_f4b.json`); pcorr_hac (t) secondary.
@@ -316,13 +388,17 @@ E4 by lambda, cost vs n.
   R-13 budget at n 4000, pick the highest mean per-edge recall at raw p <= .05 over DEV E2 / E5 R1 / R2 n 1000 + the
   synthetic nonlinear scenarios; ties -> the cheaper. DEV seeds 3_000_100-159 only (3_000_160-189 reserved). Worker
   pmrt-nl applies it (status `pmrt-nl.md`). The winner's option and version string go into pmrt_nl_eq's spec config
-  (placeholder `statistic: TBD-R-42`). The linear pmrt_eq stays as the secondary arm. Fallback: if no candidate
+  (filled below). The linear pmrt_eq stays as the secondary arm. Fallback: if no candidate
   passes the gates, pmrt_nl_eq is removed from the spec and the linear pmrt_eq is the primary PMRT arm (spec
-  `focal: pmrt_eq`, analysis primary, its R-42 label dropped) in every rule above that names the PMRT arm. VALUE: TBD.
-- T11 EVAL grid of the mscr arms at large n (R-47): OPEN. Under CI DEV plan C mscr has DEV records at n <= 1000
-  only, and the EVAL grid at larger n is decided with the user at the freeze (the R-47 question also named pdcor and
-  cmi_knn, both dropped since: R-48, R-49 revised). Until then the spec keeps the full n grid (spec
-  `tbd.large_n_citests`); T3 still decides feasibility for any n kept. Rule: TBD with the user. VALUE: TBD.
+  `focal: pmrt_eq`, analysis primary, its R-42 label dropped) in every rule above that names the PMRT arm. VALUE: gbm
+  (R-52; `results/pmrt_nl/SELECTION.md`): spec config `{"covariates": "eq", "statistic": "gbm"}`, version
+  `pmrt-core-v2` (module `pmrt-nl-v1`); all three candidates passed, gbm recall .749 (rff .666, poly .638); no
+  fallback.
+- T11 EVAL grid of the mscr arms at large n (R-47): decided by the user (R-54). Under CI DEV plan C mscr has DEV
+  records at n <= 1000 only (the R-47 question also named pdcor and cmi_knn, both dropped since: R-48, R-49
+  revised). VALUE: the mscr arms (eq, native, eq_min) run at n 500 / 1000 only, in every block (tune, measure, E4
+  R3 / R4, kappa sweep); n >= 4000 is outside their grid ("not in the grid, R-54"), not a T3 infeasibility; mscr is
+  a reported-INVALID arm, never in C2b (spec `tbd.mscr`).
 
 ## 14. Deviations
 

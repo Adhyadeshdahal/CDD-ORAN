@@ -438,6 +438,48 @@ def test_tau_pos_inf_declares_nothing():
     assert row["null_decl"]["rate"] == 0.0 and row["plac_decl"]["rate"] == 0.0
 
 
+def test_r56_eq_table_c2b_sensitivity_and_named_arm():
+    spec = copy.deepcopy(SPEC)
+    spec["arms"]["ci_native"]["c1_sensitivity_drop"] = True
+    lib = LIBERAL | {("ci_native", "R1"), ("ci_eq", "R1"), ("ci_eq", "R2")}   # rcot2-like: liberal already in R1
+    recs = [_record(u["arm"], u["world"], u["regime"], u["lam"], u["n"], u["seed"], u["role"],
+                    (u["arm"], u["regime"]) in lib) for u in E.expected_units(spec).values()]
+    v = run(recs, spec)["V4_verdicts"]
+    assert v["C1"]["arms"]["ci_native"]["verdict"] == "INVALID IN R1" and v["C1"]["arms"]["ci_native"]["r2_legs"]
+    assert v["C2b"]["arms"] == {} and v["C2b"]["verdict"] == "NOT EVALUABLE"            # membership rule kept
+    w = v["C2b"]["with_r1_failing_partners"]
+    assert w["added"] == ["ci_eq"] and w["verdict"] == "NOT SUPPORTED"                  # sensitivity, no effect
+    t = v["eq_arms_table"]
+    assert set(t) == {"ci_eq", "pc_eq"} and t["pc_eq"]["membership"] == "not a member (declare tau)"
+    assert t["ci_eq"]["membership"] == "not a member (native ci_native: INVALID IN R1)"
+    assert t["ci_eq"]["verdict"] == "NOT SUPPORTED" and t["ci_eq"]["r2_invalid"] == t["ci_eq"]["r2_planned"]
+    assert [x["arm"] for x in v["C2_named"]] == ["ci_eq"]
+    assert "ci_eq INVALID in R2 as already in R1" in v["C2_wording"]
+    assert "miscalibrated without the design" in v["C2_named"][0]["sentence"]
+    sw = v["C1"]["sensitivity_without"]
+    assert sw["dropped"] == ["ci_native"] and sw["D_counted"] == ["corr", "pcorr_hac"]
+    assert sw["verdict"] == "NOT EVALUABLE"                                               # < 3 arms left
+    md = E.markdown(run(recs, spec))
+    assert "C1 sensitivity without ci_native (R-56" in md and "C2b with the R1-failing partners (R-56" in md
+    assert "| ci_eq | not a member (native ci_native: INVALID IN R1) |" in md and "unfiltered (R-56)" in md
+
+
+def test_r56_default_study_eq_table_and_no_sensitivity(synth):
+    v = synth[1]["V4_verdicts"]
+    assert "sensitivity_without" not in v["C1"] and v["C2_named"] == []
+    assert v["eq_arms_table"]["ci_eq"]["membership"] == "member"
+    assert v["C2b"]["with_r1_failing_partners"]["added"] == []
+    assert v["C2b"]["with_r1_failing_partners"]["verdict"] == v["C2b"]["verdict"]
+
+
+def test_t6_cap_60_and_achieved_power_r56():
+    assert E.S_CAP == 60 and E.S_FLOOR == 40
+    for sd in (0.1, 0.18, 0.3):
+        s = E.paired_seeds(sd)
+        assert E.achieved_power(sd, s) >= 0.8 > E.achieved_power(sd, max(3, s - 3))
+    assert E.achieved_power(0.18, 60) > 0.99 and E.achieved_power(0.0, 40) == 1.0
+
+
 def test_c2b_exclusion_and_labels_r40():
     spec = copy.deepcopy(SPEC)
     lab = "single-conditioner max statistic; cannot condition on the joint design set"
@@ -476,25 +518,28 @@ def test_eval_spec_and_protocol_drop_pdcor_cmi_knn_r48_r49():
         assert gone not in spec["tbd"]["citests_arms"] and spec["tbd"][gone].startswith("dropped from Study A")
     assert not [a for a, d in spec["arms"].items() if "dependence test" in d.get("label", "")]
     assert not [a for a, d in spec["arms"].items() if d.get("budget_wall_s")]           # no GPU arm planned
-    assert spec["tbd"]["large_n_citests"].startswith("OPEN (R-47")                     # T11
+    assert spec["tbd"]["mscr"].startswith("SETTLED (R-54") and "large_n_citests" not in spec["tbd"]   # T11
     with open(os.path.join(ROOT, "docs", "xmethod", "PROTOCOL_A.md"), encoding="utf-8") as fh:
         prot = fh.read()
     assert "| pdcor (" not in prot and "| cmi_knn (" not in prot                         # methods table
     assert prot.count("considered and excluded") == 2
-    assert "- T11 " in prot and "OPEN" in prot.split("- T11 ")[1].split("\n## ")[0]
+    assert "- T11 " in prot and "VALUE: the mscr arms" in prot.split("- T11 ")[1].split("\n## ")[0]
 
 
-def test_eval_spec_cdl_placeholder_r50():
+def test_eval_spec_cdl_r50_r53():
     with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
         spec = json.load(fh)
     d = spec["arms"]["cdl"]
-    assert d["ref"] == "cdd_oran.xmethod.methods.cdl:TBD-R-50" and d["config"] == {"arm": "native"}
+    assert d["ref"] == "cdd_oran.xmethod.methods.cdl:CDLMethod" and d["config"] == {"arm": "native"}
+    with open(os.path.join(ROOT, "cdd_oran", "xmethod", "methods", "cdl.py"), encoding="utf-8") as fh:
+        assert "\nclass CDLMethod(" in fh.read()                                          # without importing torch
+    assert not d.get("budget_wall_s")                                                      # CPU arm (R-53)
     assert d["declare"] == "tau" and d["analysis"] == "primary" and d["fixed_threshold"] == 0.16
     assert E.arm_kind(d) == "native" and E.analysis_block("cdl", spec) == "primary"
     assert [a for a, x in spec["arms"].items() if "fixed_threshold" in x] == ["cdl"]
-    e4 = [b for b in spec["blocks"] if isinstance(b.get("arms"), list) and "two_tower" in b["arms"]]
+    e4 = [b for b in spec["blocks"] if b["regimes"] == ["R3", "R4"] and "two_tower" in b["arms"]]
     assert len(e4) == 1 and "cdl" in e4[0]["arms"]                                         # E4 R3 / R4 natives
-    assert spec["tbd"]["cdl"].startswith("placeholder arm (R-50)")
+    assert spec["tbd"]["cdl"].startswith("filled (R-53)")
 
 
 def test_fixed_threshold_secondary_scoring_r50():
@@ -689,14 +734,60 @@ def test_eval_spec_pmrt_nl_placeholder_r42():
     assert spec["focal"] == "pmrt_nl_eq" and E.focal_arm(spec) == "pmrt_nl_eq"
     nl = arms["pmrt_nl_eq"]
     assert E.arm_kind(nl) == "pmrt" and nl["declare"] == "by" and E.analysis_block("pmrt_nl_eq", spec) == "primary"
-    assert nl["config"] == {"covariates": "eq", "statistic": "TBD-R-42"} and "pmrt_nl_eq" in spec["tbd"]
+    assert nl["config"] == {"covariates": "eq", "statistic": "gbm"} and spec["tbd"]["pmrt_nl_eq"].startswith("filled")
+    from cdd_oran.xmethod.methods import pmrt_core  # T10 = gbm (R-52)
+    assert "gbm" in pmrt_core.STATISTICS and pmrt_core.PMRT_CORE_V2_VERSION == "pmrt-core-v2"
     assert E.analysis_block("pmrt_eq", spec) == "secondary" and "secondary PMRT arm" in arms["pmrt_eq"]["label"]
-    e4 = [b for b in spec["blocks"] if b["seeds"] == "TBD_E4"]
-    assert len(e4) == 1 and {"pmrt_nl_eq", "pmrt_eq", "pmrt_r3"} <= set(e4[0]["arms"])    # C3 readers (R-39)
+    e4 = [b for b in spec["blocks"] if b["seeds"] == [3_100_000, 3_100_299]]           # S_E4 300 (T9)
+    readers = {a for b in e4 for a in b["arms"]}
+    assert readers == {a for a, d in arms.items() if E.arm_kind(d) in ("pmrt", "eq")}     # C3 readers (R-39)
+    assert all(b["regimes"] == ["R3", "R4"] and b["worlds"] == ["E4"] for b in e4)
     assert sorted(a for a, d in arms.items() if E.arm_kind(d) == "pmrt") == ["pmrt_eq", "pmrt_nl_eq", "pmrt_r3"]
     assert all(E.power_not_applicable(arms[a], "R4") and not E.power_not_applicable(arms[a], "R3")
                for a in ("pmrt_eq", "pmrt_nl_eq", "pmrt_r3"))
     assert not E.power_not_applicable(arms["pcorr_eq"], "R4")
+
+
+def test_eval_spec_mscr_n1000_r54_and_unit_counts():
+    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    mscr = {a for a, d in spec["arms"].items() if "mscr" in d["ref"]}
+    assert mscr == {"mscr_eq", "mscr_native", "mscr_eq_min"}
+    assert all(b["ns"] == [1000] for b in spec["blocks"] if b.get("arms", "all") == "all")   # kappa sweep only
+    for b in spec["blocks"]:
+        names = set(spec["arms"]) if b.get("arms", "all") == "all" else set(b["arms"])
+        if names & mscr:
+            assert set(b["ns"]) <= {500, 1000}, b                                       # R-54: n <= 1000 only
+    assert not [a for a, d in spec["arms"].items() if "max_n" in d]                     # T3: nothing infeasible
+    assert all("R-54" in spec["arms"][a]["label"] for a in mscr)
+    assert [a for a, d in spec["arms"].items() if d.get("c1_sensitivity_drop")] == ["mscr_native"]   # R-56
+
+    def filled(S):
+        x = copy.deepcopy(spec)
+        for b in x["blocks"]:
+            if b["seeds"] == "TBD":
+                b["seeds"] = [3_100_000, 3_100_000 + S - 1]
+            elif b["seeds"] == "TBD_HALF":
+                b["seeds"] = [3_100_000, 3_100_000 + math.ceil(S / 2) - 1]
+        return x
+    for S, units, tune, ds in ((40, 191_600, 43_240, 16_200), (100, 298_940, 43_240, 19_500)):   # PROTOCOL_A s.7
+        u = E.planned_units(filled(S))
+        assert len(u) == units and sum(x["role"] == "tune" for x in u.values()) == tune
+        assert len({(x["world"], x["regime"], x["lam"], x["n"], x["kappa"], x["seed"]) for x in u.values()}) == ds
+        assert max(x["n"] for x in u.values() if x["arm"] in mscr) == 1000
+        assert not any(x["t3"] for x in u.values())
+
+
+def test_protocol_t_register_only_t1_open():
+    with open(os.path.join(ROOT, "docs", "xmethod", "PROTOCOL_A.md"), encoding="utf-8") as fh:
+        prot = fh.read()
+    reg = prot.split("## 13. ")[1].split("\n## ")[0]
+    items = {t.split(" ", 1)[0]: t for t in reg.split("\n- ")[1:]}
+    assert sorted(items, key=lambda t: int(t[1:])) == [f"T{i}" for i in range(1, 12)]
+    assert [t for t, x in items.items() if "VALUE: TBD" in x] == ["T1"]                 # seed count: aud1 (T1)
+    assert all("VALUE:" in x for x in items.values())
+    assert "VALUE: gbm" in items["T10"] and "VALUE: 300" in items["T9"] and "VALUE: 60," in items["T6"]
+    assert "FROZEN: no" in prot.splitlines()[2]                                          # frozen only at the freeze
 
 
 def test_r4_real_actions_have_no_design():
