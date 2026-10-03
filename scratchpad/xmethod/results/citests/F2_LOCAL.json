@@ -1,0 +1,63 @@
+{
+ "dcor": "0.7",
+ "numpy": "2.4.2",
+ "pdcor_stat": {
+  "cases": 60,
+  "max_abs_diff": 2.8449465006019636e-16,
+  "tol": 1e-09,
+  "pass": true
+ },
+ "pdcor_p": {
+  "null_lin": {
+   "reps": 200,
+   "rej_ours": [
+    0.82,
+    0.7609,
+    0.8671
+   ],
+   "rej_dcor": [
+    0.815,
+    0.7554,
+    0.8627
+   ],
+   "spearman_p": 0.9441352011015377,
+   "pass": true
+  },
+  "null_nonlin": {
+   "reps": 200,
+   "rej_ours": [
+    0.775,
+    0.7123,
+    0.8274
+   ],
+   "rej_dcor": [
+    0.765,
+    0.7016,
+    0.8184
+   ],
+   "spearman_p": 0.9377574497725312,
+   "pass": true
+  },
+  "alt": {
+   "reps": 200,
+   "rej_ours": [
+    1.0,
+    0.9812,
+    1.0
+   ],
+   "rej_dcor": [
+    1.0,
+    0.9812,
+    1.0
+   ],
+   "spearman_p": 0.5237067275147611,
+   "pass": true
+  }
+ },
+ "pcorr_vs_ols": {
+  "tests": 720,
+  "max_rel_diff": 1.1700500965277435e-13,
+  "tol": 1e-08,
+  "pass": true
+ }
+}

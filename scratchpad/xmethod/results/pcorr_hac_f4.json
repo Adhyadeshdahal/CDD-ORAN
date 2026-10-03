@@ -1,0 +1,689 @@
+{
+ "reps": 2000,
+ "rows": [
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.049,
+   "ci_0.05": [
+    0.0404,
+    0.0594
+   ],
+   "rej_0.01": 0.0095,
+   "ci_0.01": [
+    0.0061,
+    0.0148
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0455,
+   "ci_0.05": [
+    0.0372,
+    0.0555
+   ],
+   "rej_0.01": 0.008,
+   "ci_0.01": [
+    0.0049,
+    0.013
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.056,
+   "ci_0.05": [
+    0.0467,
+    0.067
+   ],
+   "rej_0.01": 0.014,
+   "ci_0.01": [
+    0.0097,
+    0.0202
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0565,
+   "ci_0.05": [
+    0.0472,
+    0.0675
+   ],
+   "rej_0.01": 0.014,
+   "ci_0.01": [
+    0.0097,
+    0.0202
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0535,
+   "ci_0.05": [
+    0.0445,
+    0.0642
+   ],
+   "rej_0.01": 0.013,
+   "ci_0.01": [
+    0.0089,
+    0.019
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0515,
+   "ci_0.05": [
+    0.0426,
+    0.0621
+   ],
+   "rej_0.01": 0.014,
+   "ci_0.01": [
+    0.0097,
+    0.0202
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.054,
+   "ci_0.05": [
+    0.0449,
+    0.0648
+   ],
+   "rej_0.01": 0.0105,
+   "ci_0.01": [
+    0.0069,
+    0.016
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0535,
+   "ci_0.05": [
+    0.0445,
+    0.0642
+   ],
+   "rej_0.01": 0.01,
+   "ci_0.01": [
+    0.0065,
+    0.0154
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.051,
+   "ci_0.05": [
+    0.0422,
+    0.0615
+   ],
+   "rej_0.01": 0.017,
+   "ci_0.01": [
+    0.0122,
+    0.0237
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.055,
+   "ci_0.05": [
+    0.0458,
+    0.0659
+   ],
+   "rej_0.01": 0.0155,
+   "ci_0.01": [
+    0.0109,
+    0.0219
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0615,
+   "ci_0.05": [
+    0.0518,
+    0.0729
+   ],
+   "rej_0.01": 0.007,
+   "ci_0.01": [
+    0.0042,
+    0.0117
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "iid",
+   "rho": 0.0,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.059,
+   "ci_0.05": [
+    0.0495,
+    0.0702
+   ],
+   "rej_0.01": 0.007,
+   "ci_0.01": [
+    0.0042,
+    0.0117
+   ],
+   "maxlags_median_X": 1.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.07,
+   "ci_0.05": [
+    0.0596,
+    0.082
+   ],
+   "rej_0.01": 0.0115,
+   "ci_0.01": [
+    0.0077,
+    0.0172
+   ],
+   "maxlags_median_X": 5.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.1305,
+   "ci_0.05": [
+    0.1164,
+    0.146
+   ],
+   "rej_0.01": 0.0435,
+   "ci_0.01": [
+    0.0354,
+    0.0533
+   ],
+   "maxlags_median_X": 5.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.051,
+   "ci_0.05": [
+    0.0422,
+    0.0615
+   ],
+   "rej_0.01": 0.0125,
+   "ci_0.01": [
+    0.0085,
+    0.0184
+   ],
+   "maxlags_median_X": 5.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0505,
+   "ci_0.05": [
+    0.0417,
+    0.061
+   ],
+   "rej_0.01": 0.011,
+   "ci_0.01": [
+    0.0073,
+    0.0166
+   ],
+   "maxlags_median_X": 5.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0615,
+   "ci_0.05": [
+    0.0518,
+    0.0729
+   ],
+   "rej_0.01": 0.0155,
+   "ci_0.01": [
+    0.0109,
+    0.0219
+   ],
+   "maxlags_median_X": 7.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.1235,
+   "ci_0.05": [
+    0.1098,
+    0.1386
+   ],
+   "rej_0.01": 0.041,
+   "ci_0.01": [
+    0.0332,
+    0.0506
+   ],
+   "maxlags_median_X": 7.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0475,
+   "ci_0.05": [
+    0.039,
+    0.0577
+   ],
+   "rej_0.01": 0.0095,
+   "ci_0.01": [
+    0.0061,
+    0.0148
+   ],
+   "maxlags_median_X": 7.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0465,
+   "ci_0.05": [
+    0.0381,
+    0.0566
+   ],
+   "rej_0.01": 0.0095,
+   "ci_0.01": [
+    0.0061,
+    0.0148
+   ],
+   "maxlags_median_X": 7.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0545,
+   "ci_0.05": [
+    0.0454,
+    0.0653
+   ],
+   "rej_0.01": 0.016,
+   "ci_0.01": [
+    0.0114,
+    0.0225
+   ],
+   "maxlags_median_X": 11.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.121,
+   "ci_0.05": [
+    0.1074,
+    0.136
+   ],
+   "rej_0.01": 0.044,
+   "ci_0.01": [
+    0.0359,
+    0.0539
+   ],
+   "maxlags_median_X": 11.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.046,
+   "ci_0.05": [
+    0.0377,
+    0.0561
+   ],
+   "rej_0.01": 0.008,
+   "ci_0.01": [
+    0.0049,
+    0.013
+   ],
+   "maxlags_median_X": 11.0
+  },
+  {
+   "scenario": "ar1_.5",
+   "rho": 0.5,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.043,
+   "ci_0.05": [
+    0.035,
+    0.0528
+   ],
+   "rej_0.01": 0.0075,
+   "ci_0.01": [
+    0.0046,
+    0.0123
+   ],
+   "maxlags_median_X": 11.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.1035,
+   "ci_0.05": [
+    0.0909,
+    0.1176
+   ],
+   "rej_0.01": 0.034,
+   "ci_0.01": [
+    0.0269,
+    0.0429
+   ],
+   "maxlags_median_X": 14.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 500,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.358,
+   "ci_0.05": [
+    0.3373,
+    0.3793
+   ],
+   "rej_0.01": 0.236,
+   "ci_0.01": [
+    0.2179,
+    0.2551
+   ],
+   "maxlags_median_X": 14.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0565,
+   "ci_0.05": [
+    0.0472,
+    0.0675
+   ],
+   "rej_0.01": 0.009,
+   "ci_0.01": [
+    0.0057,
+    0.0142
+   ],
+   "maxlags_median_X": 14.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 500,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0525,
+   "ci_0.05": [
+    0.0436,
+    0.0632
+   ],
+   "rej_0.01": 0.0095,
+   "ci_0.01": [
+    0.0061,
+    0.0148
+   ],
+   "maxlags_median_X": 14.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.084,
+   "ci_0.05": [
+    0.0726,
+    0.097
+   ],
+   "rej_0.01": 0.0275,
+   "ci_0.01": [
+    0.0212,
+    0.0356
+   ],
+   "maxlags_median_X": 18.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 1000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.3445,
+   "ci_0.05": [
+    0.324,
+    0.3656
+   ],
+   "rej_0.01": 0.224,
+   "ci_0.01": [
+    0.2063,
+    0.2428
+   ],
+   "maxlags_median_X": 18.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0605,
+   "ci_0.05": [
+    0.0509,
+    0.0718
+   ],
+   "rej_0.01": 0.0155,
+   "ci_0.01": [
+    0.0109,
+    0.0219
+   ],
+   "maxlags_median_X": 18.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 1000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0585,
+   "ci_0.05": [
+    0.049,
+    0.0697
+   ],
+   "rej_0.01": 0.0135,
+   "ci_0.01": [
+    0.0093,
+    0.0196
+   ],
+   "maxlags_median_X": 18.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.0595,
+   "ci_0.05": [
+    0.05,
+    0.0707
+   ],
+   "rej_0.01": 0.0115,
+   "ci_0.01": [
+    0.0077,
+    0.0172
+   ],
+   "maxlags_median_X": 30.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 4000,
+   "source": "X",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.3475,
+   "ci_0.05": [
+    0.3269,
+    0.3686
+   ],
+   "rej_0.01": 0.222,
+   "ci_0.01": [
+    0.2043,
+    0.2407
+   ],
+   "maxlags_median_X": 30.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_hac",
+   "reps": 2000,
+   "rej_0.05": 0.056,
+   "ci_0.05": [
+    0.0467,
+    0.067
+   ],
+   "rej_0.01": 0.0135,
+   "ci_0.01": [
+    0.0093,
+    0.0196
+   ],
+   "maxlags_median_X": 30.0
+  },
+  {
+   "scenario": "ar1_.8",
+   "rho": 0.8,
+   "n": 4000,
+   "source": "P_placebo",
+   "test": "pcorr_plain",
+   "reps": 2000,
+   "rej_0.05": 0.0535,
+   "ci_0.05": [
+    0.0445,
+    0.0642
+   ],
+   "rej_0.01": 0.0145,
+   "ci_0.01": [
+    0.0101,
+    0.0207
+   ],
+   "maxlags_median_X": 30.0
+  }
+ ]
+}

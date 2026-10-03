@@ -1,0 +1,498 @@
+{
+ "pcorr|null|500": {
+  "reps": 200,
+  "cpu_s_mean": 0.003203125,
+  "primary": {
+   "null_tests": 4000,
+   "rej_rate_raw05": [
+    0.0522,
+    0.0458,
+    0.0596
+   ],
+   "cluster_boot95": [
+    0.0457,
+    0.059
+   ],
+   "null_declared_total": 3,
+   "mean_fdp": 0.015
+  },
+  "kpi_kpi": {
+   "null_tests": 2400,
+   "rej_rate_raw05": [
+    0.0413,
+    0.034,
+    0.05
+   ],
+   "cluster_boot95": [
+    0.0337,
+    0.0492
+   ],
+   "null_declared_total": 8,
+   "mean_fdp": 0.008
+  },
+  "recall": {
+   "K0->K0": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K1->K1": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K2->K2": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 0
+ },
+ "pcorr|null|1000": {
+  "reps": 200,
+  "cpu_s_mean": 0.012890625,
+  "primary": {
+   "null_tests": 4000,
+   "rej_rate_raw05": [
+    0.0485,
+    0.0423,
+    0.0556
+   ],
+   "cluster_boot95": [
+    0.0422,
+    0.055
+   ],
+   "null_declared_total": 2,
+   "mean_fdp": 0.01
+  },
+  "kpi_kpi": {
+   "null_tests": 2400,
+   "rej_rate_raw05": [
+    0.0446,
+    0.037,
+    0.0536
+   ],
+   "cluster_boot95": [
+    0.0362,
+    0.0533
+   ],
+   "null_declared_total": 13,
+   "mean_fdp": 0.013
+  },
+  "recall": {
+   "K0->K0": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K1->K1": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K2->K2": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 0
+ },
+ "pcorr|planted|500": {
+  "reps": 200,
+  "cpu_s_mean": 0.009453125,
+  "primary": {
+   "null_tests": 3200,
+   "rej_rate_raw05": [
+    0.0522,
+    0.045,
+    0.0604
+   ],
+   "cluster_boot95": [
+    0.0444,
+    0.06
+   ],
+   "null_declared_total": 4,
+   "mean_fdp": 0.005
+  },
+  "kpi_kpi": {
+   "null_tests": 3000,
+   "rej_rate_raw05": [
+    0.047,
+    0.04,
+    0.0552
+   ],
+   "cluster_boot95": [
+    0.0397,
+    0.055
+   ],
+   "null_declared_total": 5,
+   "mean_fdp": 0.0125
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "P1->K1": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "P2->K2": {
+    "declared": 86,
+    "of": 200,
+    "sign_correct": 86,
+    "sign_n": 86
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 200,
+    "sign_correct": 0,
+    "sign_n": 0
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 0
+ },
+ "pcorr|planted|1000": {
+  "reps": 200,
+  "cpu_s_mean": 0.013203125,
+  "primary": {
+   "null_tests": 3200,
+   "rej_rate_raw05": [
+    0.0484,
+    0.0415,
+    0.0564
+   ],
+   "cluster_boot95": [
+    0.0406,
+    0.0559
+   ],
+   "null_declared_total": 11,
+   "mean_fdp": 0.0138
+  },
+  "kpi_kpi": {
+   "null_tests": 3000,
+   "rej_rate_raw05": [
+    0.0547,
+    0.0471,
+    0.0634
+   ],
+   "cluster_boot95": [
+    0.0463,
+    0.0633
+   ],
+   "null_declared_total": 2,
+   "mean_fdp": 0.005
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "P1->K1": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "P2->K2": {
+    "declared": 177,
+    "of": 200,
+    "sign_correct": 177,
+    "sign_n": 177
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 200,
+    "sign_correct": 0,
+    "sign_n": 0
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 3
+ },
+ "rcot2|null|500": {
+  "reps": 200,
+  "cpu_s_mean": 0.92265625,
+  "primary": {
+   "null_tests": 4000,
+   "rej_rate_raw05": [
+    0.0843,
+    0.076,
+    0.0933
+   ],
+   "cluster_boot95": [
+    0.0755,
+    0.0935
+   ],
+   "null_declared_total": 10,
+   "mean_fdp": 0.05
+  },
+  "kpi_kpi": {
+   "null_tests": 2400,
+   "rej_rate_raw05": [
+    0.0942,
+    0.0831,
+    0.1065
+   ],
+   "cluster_boot95": [
+    0.0821,
+    0.1071
+   ],
+   "null_declared_total": 28,
+   "mean_fdp": 0.028
+  },
+  "recall": {
+   "K0->K0": {
+    "declared": 197,
+    "of": 200,
+    "sign_correct": 197,
+    "sign_n": 197
+   },
+   "K1->K1": {
+    "declared": 197,
+    "of": 200,
+    "sign_correct": 197,
+    "sign_n": 197
+   },
+   "K2->K2": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K3->K3": {
+    "declared": 199,
+    "of": 200,
+    "sign_correct": 199,
+    "sign_n": 199
+   }
+  },
+  "placebo_declared": 2
+ },
+ "rcot2|null|1000": {
+  "reps": 200,
+  "cpu_s_mean": 1.154296875,
+  "primary": {
+   "null_tests": 4000,
+   "rej_rate_raw05": [
+    0.0653,
+    0.058,
+    0.0733
+   ],
+   "cluster_boot95": [
+    0.058,
+    0.073
+   ],
+   "null_declared_total": 3,
+   "mean_fdp": 0.015
+  },
+  "kpi_kpi": {
+   "null_tests": 2400,
+   "rej_rate_raw05": [
+    0.065,
+    0.0558,
+    0.0756
+   ],
+   "cluster_boot95": [
+    0.055,
+    0.0746
+   ],
+   "null_declared_total": 12,
+   "mean_fdp": 0.012
+  },
+  "recall": {
+   "K0->K0": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K1->K1": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K2->K2": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 0
+ },
+ "rcot2|planted|500": {
+  "reps": 200,
+  "cpu_s_mean": 0.895859375,
+  "primary": {
+   "null_tests": 3200,
+   "rej_rate_raw05": [
+    0.0928,
+    0.0832,
+    0.1034
+   ],
+   "cluster_boot95": [
+    0.0834,
+    0.1031
+   ],
+   "null_declared_total": 21,
+   "mean_fdp": 0.0327
+  },
+  "kpi_kpi": {
+   "null_tests": 3000,
+   "rej_rate_raw05": [
+    0.0967,
+    0.0866,
+    0.1078
+   ],
+   "cluster_boot95": [
+    0.087,
+    0.1067
+   ],
+   "null_declared_total": 21,
+   "mean_fdp": 0.0508
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 177,
+    "of": 200,
+    "sign_correct": 177,
+    "sign_n": 177
+   },
+   "P1->K1": {
+    "declared": 169,
+    "of": 200,
+    "sign_correct": 169,
+    "sign_n": 169
+   },
+   "P2->K2": {
+    "declared": 33,
+    "of": 200,
+    "sign_correct": 33,
+    "sign_n": 33
+   },
+   "P3->K2": {
+    "declared": 4,
+    "of": 200,
+    "sign_correct": 4,
+    "sign_n": 4
+   },
+   "K3->K3": {
+    "declared": 195,
+    "of": 200,
+    "sign_correct": 195,
+    "sign_n": 195
+   }
+  },
+  "placebo_declared": 5
+ },
+ "rcot2|planted|1000": {
+  "reps": 200,
+  "cpu_s_mean": 1.14171875,
+  "primary": {
+   "null_tests": 3200,
+   "rej_rate_raw05": [
+    0.0578,
+    0.0502,
+    0.0664
+   ],
+   "cluster_boot95": [
+    0.0497,
+    0.0663
+   ],
+   "null_declared_total": 10,
+   "mean_fdp": 0.0154
+  },
+  "kpi_kpi": {
+   "null_tests": 3000,
+   "rej_rate_raw05": [
+    0.0667,
+    0.0583,
+    0.0762
+   ],
+   "cluster_boot95": [
+    0.058,
+    0.076
+   ],
+   "null_declared_total": 8,
+   "mean_fdp": 0.0183
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 191,
+    "of": 200,
+    "sign_correct": 191,
+    "sign_n": 191
+   },
+   "P1->K1": {
+    "declared": 194,
+    "of": 200,
+    "sign_correct": 194,
+    "sign_n": 194
+   },
+   "P2->K2": {
+    "declared": 92,
+    "of": 200,
+    "sign_correct": 92,
+    "sign_n": 92
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 200,
+    "sign_correct": 0,
+    "sign_n": 0
+   },
+   "K3->K3": {
+    "declared": 200,
+    "of": 200,
+    "sign_correct": 200,
+    "sign_n": 200
+   }
+  },
+  "placebo_declared": 2
+ }
+}

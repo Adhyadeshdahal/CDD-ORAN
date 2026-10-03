@@ -1,0 +1,25 @@
+{
+ "name": "xmk-kappa-1",
+ "cmd": "pip install -q scikit-learn==1.9.1 && python -c \"import sklearn,numpy;print(\\\"sklearn\\\",sklearn.__version__,\\\"numpy\\\",numpy.__version__)\" && python scratchpad/xmethod/kappa_calib.py build --src $JOB_SRC/e6p-disc-v4dev-1-a --out $JOB_OUT/cache/dev_v4_design.npz && OMP_NUM_THREADS=1 python scratchpad/xmethod/kappa_calib.py fit --data $JOB_OUT/cache/dev_v4_design.npz --out $JOB_OUT --B 200 --workers 4",
+ "rc": 0,
+ "wall_s": 394.9,
+ "pin": "match",
+ "have": {
+  "numpy": "2.0.2",
+  "scipy": "1.16.3"
+ },
+ "versions_now": "2.4.2 1.18.1 3.12.13",
+ "install": [
+  {
+   "pkgs": [
+    "numpy==2.4.2",
+    "scipy==1.18.1"
+   ],
+   "rc": 0,
+   "tail": "following dependency conflicts.\nbigframes 2.39.0 requires google-cloud-bigquery-storage<3.0.0,>=2.30.0, which is not installed.\nydata-profiling 4.18.4 requires numpy<2.4,>=1.22, but you have numpy 2.4.2 which is incompatible.\nydata-profiling 4.18.4 requires scipy<1.17,>=1.8, but you have scipy 1.18.1 which is incompatible.\ngoogle-colab 1.0.0 requires jupyter-server==2.14.0, but you have jupyter-server 2.12.5 which is incompatible.\ngoogle-colab 1.0.0 requires pandas==2.2.2, but you have pandas 2.3.3 which is incompatible.\ndopamine-rl 4.1.2 requires gym<=0.25.2, but you have gym 0.26.2 which is incompatible.\nmoviepy 1.0.3 requires decorator<5.0,>=4.0.2, but you have decorator 5.3.1 which is incompatible.\nnumba 0.60.0 requires numpy<2.1,>=1.22, but you have numpy 2.4.2 which is incompatible.\n"
+  }
+ ],
+ "git_head": "1191678a01e501131302a0bab454b0bab93c47ad",
+ "dirty": false,
+ "cpus": 4
+}

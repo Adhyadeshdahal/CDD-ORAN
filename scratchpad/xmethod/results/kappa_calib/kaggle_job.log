@@ -1,0 +1,39 @@
+[job] bundle: unzipped dataset at /kaggle/input/datasets/bishalpanta/xmk-kappa-1-code -> /tmp/job_root
+[job] /kaggle/input: 37 listing lines -> job_inputs.txt
+[job] sources -> /tmp/src/<slug>: {'e6p-disc-v4dev-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4dev-1-a'}; missing []
+[job] git 1191678a01e501131302a0bab454b0bab93c47ad dirty False; pin match; kaggle had {'numpy': '2.0.2', 'scipy': '1.16.3'}; now 2.4.2 1.18.1 3.12.13; want 2.4.2/1.18.1; install [(['numpy==2.4.2', 'scipy==1.18.1'], 0)]
+[job] cpus 4; CMD: pip install -q scikit-learn==1.9.1 && python -c "import sklearn,numpy;print(\"sklearn\",sklearn.__version__,\"numpy\",numpy.__version__)" && python scratchpad/xmethod/kappa_calib.py build --src $JOB_SRC/e6p-disc-v4dev-1-a --out $JOB_OUT/cache/dev_v4_design.npz && OMP_NUM_THREADS=1 python scratchpad/xmethod/kappa_calib.py fit --data $JOB_OUT/cache/dev_v4_design.npz --out $JOB_OUT --B 200 --workers 4
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.2/9.2 MB 89.3 MB/s eta 0:00:00
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sklearn-compat 0.1.5 requires scikit-learn<1.9,>=1.2, but you have scikit-learn 1.9.1 which is incompatible.
+sklearn 1.9.1 numpy 2.4.2
+[17:11:39] seed 188000: rows 1440
+[17:11:39] seed 188004: rows 1440
+[17:11:39] seed 188008: rows 1440
+[17:11:39] seed 188012: rows 1440
+[17:11:39] seed 188016: rows 1440
+[17:11:39] seed 188001: rows 1440
+[17:11:39] seed 188005: rows 1440
+[17:11:39] seed 188009: rows 1440
+[17:11:39] seed 188013: rows 1440
+[17:11:39] seed 188017: rows 1440
+[17:11:39] seed 188002: rows 1440
+[17:11:39] seed 188006: rows 1440
+[17:11:39] seed 188010: rows 1440
+[17:11:39] seed 188014: rows 1440
+[17:11:39] seed 188018: rows 1440
+[17:11:39] seed 188003: rows 1440
+[17:11:39] seed 188007: rows 1440
+[17:11:39] seed 188011: rows 1440
+[17:11:39] seed 188015: rows 1440
+[17:11:39] seed 188019: rows 1440
+[17:11:40] wrote /kaggle/working/out/cache/dev_v4_design.npz: X (28800, 113), y (28800, 5), episodes 20, data sha256 a3925aa351a80bf9569e70ab32d73379c8bc48f72a64987ef4de047899232ba3
+[17:11:48] base: kappa {"pv": 0.636, "v": 0.254, "e": 0.125, "rlf": Infinity, "load": 0.154} median 0.254 (6.8s)
+[17:11:56] lead: kappa {"pv": 0.635, "v": 0.253, "e": 0.119, "rlf": Infinity, "load": 0.151} median 0.253 (7.6s)
+[17:12:03] nbr: kappa {"pv": 0.646, "v": 0.254, "e": 0.125, "rlf": Infinity, "load": 0.153} median 0.254 (7.6s)
+[17:12:10] time: kappa {"pv": 0.644, "v": 0.257, "e": 0.125, "rlf": Infinity, "load": 0.154} median 0.257 (6.7s)
+[17:12:18] all: kappa {"pv": 0.646, "v": 0.255, "e": 0.119, "rlf": Infinity, "load": 0.152} median 0.255 (8.6s)
+/usr/local/lib/python3.12/dist-packages/numpy/lib/_function_base_impl.py:4596: RuntimeWarning: invalid value encountered in scalar subtract
+  diff_b_a = b - a
+[17:17:43] done in 361.9 s -> /kaggle/working/out
+[job] exit code 0; wall 394.9 s

@@ -1,0 +1,121 @@
+{
+ "n": 1000,
+ "seeds": [
+  3000000,
+  3000009
+ ],
+ "cells": {
+  "E1|R1": {
+   "n_null_p": 160,
+   "rate05": 0.04375,
+   "rate01": 0.0125,
+   "placebo_rate05": 0.05,
+   "null_declared": 1,
+   "wall_s": 36.8
+  },
+  "E1|R2": {
+   "n_null_p": 160,
+   "rate05": 0.0875,
+   "rate01": 0.01875,
+   "placebo_rate05": 0.025,
+   "null_declared": 1,
+   "wall_s": 36.6
+  },
+  "E2|R1": {
+   "n_null_p": 380,
+   "rate05": 0.05526315789473684,
+   "rate01": 0.007894736842105263,
+   "placebo_rate05": 0.03333333333333333,
+   "null_declared": 1,
+   "wall_s": 43.6
+  },
+  "E2|R2": {
+   "n_null_p": 380,
+   "rate05": 0.08947368421052632,
+   "rate01": 0.034210526315789476,
+   "placebo_rate05": 0.06666666666666667,
+   "null_declared": 1,
+   "wall_s": 58.0
+  },
+  "E3|R1": {
+   "n_null_p": 210,
+   "rate05": 0.04285714285714286,
+   "rate01": 0.004761904761904762,
+   "placebo_rate05": 0.02,
+   "null_declared": 0,
+   "wall_s": 35.2
+  },
+  "E3|R2": {
+   "n_null_p": 210,
+   "rate05": 0.03333333333333333,
+   "rate01": 0.0,
+   "placebo_rate05": 0.02,
+   "null_declared": 0,
+   "wall_s": 36.5
+  },
+  "E5|R1": {
+   "n_null_p": 140,
+   "rate05": 0.05,
+   "rate01": 0.0,
+   "placebo_rate05": 0.05,
+   "null_declared": 0,
+   "wall_s": 24.3
+  },
+  "E5|R2": {
+   "n_null_p": 140,
+   "rate05": 0.04285714285714286,
+   "rate01": 0.014285714285714285,
+   "placebo_rate05": 0.0,
+   "null_declared": 1,
+   "wall_s": 21.6
+  },
+  "E4|R1|lam1.0": {
+   "n_null_p": 10,
+   "rate05": 0.0,
+   "rate01": 0.0,
+   "placebo_rate05": 0.0,
+   "null_declared": 0,
+   "wall_s": 34.7
+  },
+  "E4|R2|lam1.0": {
+   "n_null_p": 10,
+   "rate05": 0.0,
+   "rate01": 0.0,
+   "placebo_rate05": 0.0,
+   "null_declared": 0,
+   "wall_s": 9.1
+  },
+  "E4|R3|lam1.0": {
+   "n_null_p": 10,
+   "rate05": 0.2,
+   "rate01": 0.0,
+   "placebo_rate05": 0.2,
+   "null_declared": 2,
+   "wall_s": 62.3
+  },
+  "E4|R3|lam1.5": {
+   "n_null_p": 10,
+   "rate05": 0.1,
+   "rate01": 0.0,
+   "placebo_rate05": 0.1,
+   "null_declared": 0,
+   "wall_s": 44.7
+  },
+  "E4|R4|lam1.0": {
+   "n_null_p": 10,
+   "rate05": 0.0,
+   "rate01": 0.0,
+   "placebo_rate05": 0.0,
+   "null_declared": 0,
+   "wall_s": 7.8
+  },
+  "E4|R4|lam1.5": {
+   "n_null_p": 10,
+   "rate05": 0.0,
+   "rate01": 0.0,
+   "placebo_rate05": 0.0,
+   "null_declared": 0,
+   "wall_s": 6.3
+  }
+ }
+}

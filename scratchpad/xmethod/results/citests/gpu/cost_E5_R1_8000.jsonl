@@ -1,0 +1,1 @@
+{"world": "E5", "regime": "R1", "n": 8000, "kappa": 0.25, "arm": "eq", "e": 0, "candidate": ["P0", "K0"], "true": true, "dim_z": 18, "wall_s": 2398.6826889514923, "draws": 8792, "p": 0.0001, "stat": 0.027621640165513384, "capped": true, "prep_s": 0.38086843490600586, "n_candidates": 36, "device": "cuda", "gpu": "Tesla T4", "cache_hits": 8791, "cache_misses": 2}

@@ -1,0 +1,177 @@
+{
+ "mode": "null",
+ "args": {
+  "mode": "null",
+  "reps": 200,
+  "B": 999,
+  "native": true,
+  "n": "500,1000,4000",
+  "regimes": "R1,R2,R1t",
+  "beta": 0.2,
+  "betas": "0.05,0.1,0.2",
+  "native_n": [
+   4000
+  ],
+  "out": "/kaggle/working/out/null_native999.json",
+  "null": null,
+  "power": null,
+  "scale": null
+ },
+ "version": "pmrt-core-v1",
+ "cpu_s_total": 588.541559011,
+ "cells": {
+  "R1|500": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.055,
+   "ci05": [
+    0.04714898629016191,
+    0.06407042068347027
+   ],
+   "rate01": 0.008214285714285714,
+   "rate10": 0.09321428571428571,
+   "mean_p": 0.507545,
+   "placebo_rate05": 0.05875,
+   "by_null_declarations": 7,
+   "by_any_null_declared_frac": 0.03,
+   "beta_true_edges": 0.2,
+   "wall_s": 50.7
+  },
+  "R1|1000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.047142857142857146,
+   "ci05": [
+    0.039893679118979244,
+    0.05563297260057583
+   ],
+   "rate01": 0.007857142857142858,
+   "rate10": 0.1025,
+   "mean_p": 0.49776964285714287,
+   "placebo_rate05": 0.05125,
+   "by_null_declarations": 4,
+   "by_any_null_declared_frac": 0.02,
+   "beta_true_edges": 0.2,
+   "wall_s": 75.0
+  },
+  "R1|4000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.055,
+   "ci05": [
+    0.04714898629016191,
+    0.06407042068347027
+   ],
+   "rate01": 0.011785714285714287,
+   "rate10": 0.10857142857142857,
+   "mean_p": 0.49543178571428564,
+   "placebo_rate05": 0.05875,
+   "by_null_declarations": 9,
+   "by_any_null_declared_frac": 0.045,
+   "beta_true_edges": 0.2,
+   "wall_s": 238.3
+  },
+  "R2|500": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.05178571428571429,
+   "ci05": [
+    0.04417452859876832,
+    0.06062511486183232
+   ],
+   "rate01": 0.0075,
+   "rate10": 0.10607142857142857,
+   "mean_p": 0.49170035714285715,
+   "placebo_rate05": 0.0525,
+   "by_null_declarations": 0,
+   "by_any_null_declared_frac": 0.0,
+   "beta_true_edges": 0.2,
+   "wall_s": 47.1
+  },
+  "R2|1000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.056428571428571425,
+   "ci05": [
+    0.04847357467881038,
+    0.06559906052283582
+   ],
+   "rate01": 0.010357142857142856,
+   "rate10": 0.10107142857142858,
+   "mean_p": 0.5055925,
+   "placebo_rate05": 0.05125,
+   "by_null_declarations": 2,
+   "by_any_null_declared_frac": 0.01,
+   "beta_true_edges": 0.2,
+   "wall_s": 76.0
+  },
+  "R2|4000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.05142857142857143,
+   "ci05": [
+    0.04384455701423396,
+    0.06024177938936317
+   ],
+   "rate01": 0.009642857142857142,
+   "rate10": 0.10642857142857143,
+   "mean_p": 0.5000807142857143,
+   "placebo_rate05": 0.05,
+   "by_null_declarations": 4,
+   "by_any_null_declared_frac": 0.02,
+   "beta_true_edges": 0.2,
+   "wall_s": 222.8
+  },
+  "R1t|500": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.04357142857142857,
+   "ci05": [
+    0.03661470375106692,
+    0.051778877398453084
+   ],
+   "rate01": 0.008571428571428572,
+   "rate10": 0.09428571428571429,
+   "mean_p": 0.5083335714285715,
+   "placebo_rate05": 0.04,
+   "by_null_declarations": 2,
+   "by_any_null_declared_frac": 0.01,
+   "beta_true_edges": 0.2,
+   "wall_s": 36.0
+  },
+  "R1t|1000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.046785714285714285,
+   "ci05": [
+    0.03956520686940314,
+    0.05524813779314841
+   ],
+   "rate01": 0.007857142857142858,
+   "rate10": 0.09821428571428571,
+   "mean_p": 0.5057042857142857,
+   "placebo_rate05": 0.045,
+   "by_null_declarations": 5,
+   "by_any_null_declared_frac": 0.025,
+   "beta_true_edges": 0.2,
+   "wall_s": 58.6
+  },
+  "R1t|4000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.055,
+   "ci05": [
+    0.04714898629016191,
+    0.06407042068347027
+   ],
+   "rate01": 0.009642857142857142,
+   "rate10": 0.10178571428571428,
+   "mean_p": 0.4995267857142857,
+   "placebo_rate05": 0.05875,
+   "by_null_declarations": 5,
+   "by_any_null_declared_frac": 0.025,
+   "beta_true_edges": 0.2,
+   "wall_s": 157.1
+  }
+ }
+}

@@ -1,0 +1,10 @@
+E4R1 3000000 cmi_knn eq 41s
+E4R1 3000000 cmi_knn native 1s
+E4R1 3000001 cmi_knn eq 13s
+E4R1 3000001 cmi_knn native 45s
+E4R1 3000002 cmi_knn eq 19s
+E4R1 3000002 cmi_knn native 5s
+E4R1 3000003 cmi_knn eq 1s
+E4R1 3000003 cmi_knn native 1s
+E4R1 3000004 cmi_knn eq 1s
+E4R1 3000004 cmi_knn native 0s

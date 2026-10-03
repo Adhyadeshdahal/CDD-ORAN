@@ -1,0 +1,2 @@
+{'tune_cfg_arm': 'eq', 'tau_from_tune': 0.5664083296210762, 'tau_native_runs': 0.7895222240800396}
+no way to pass an arm: ClassicBase.tune() got an unexpected keyword argument 'config'

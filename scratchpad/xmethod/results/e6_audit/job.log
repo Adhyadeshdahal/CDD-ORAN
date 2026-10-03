@@ -1,0 +1,34 @@
+[job] bundle: unzipped dataset at /kaggle/input/datasets/bishalpanta/xm-pmrt-e6audit-1-code -> /tmp/job_root
+[job] /kaggle/input: 97 listing lines -> job_inputs.txt
+[job] sources -> /tmp/src/<slug>: {'e6p-disc-v4ev-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4ev-1-a', 'e6p-disc-v4ev-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4ev-1-b', 'e6p-disc-v4plc-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4plc-1-a', 'e6p-disc-v4gt-1-a': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4gt-1-a', 'e6p-disc-v4gt-1-b': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4gt-1-b', 'e6p-disc-v4an-pmrt-1': '/kaggle/input/notebooks/bishalpanta/e6p-disc-v4an-pmrt-1'}; missing []
+[job] git b2694f1f4976a2e18431c762b3c0d2650c254025 dirty False; pin match; kaggle had {'numpy': '2.0.2', 'scipy': '1.16.3'}; now 2.4.2 1.18.1 3.12.13; want 2.4.2/1.18.1; install [(['numpy==2.4.2', 'scipy==1.18.1'], 0)]
+[job] cpus 4; CMD: python scratchpad/xmethod/e6_audit.py --eval $JOB_SRC/e6p-disc-v4ev-1-a,$JOB_SRC/e6p-disc-v4ev-1-b --placebo $JOB_SRC/e6p-disc-v4plc-1-a --gt $JOB_SRC/e6p-disc-v4gt-1-a,$JOB_SRC/e6p-disc-v4gt-1-b --ref-analysis $JOB_SRC/e6p-disc-v4an-pmrt-1/out/analysis_v4.json --out $JOB_OUT --B 9999 --workers 4; rm -rf $JOB_OUT/cache
+[09:08:08] GT counts {'TRUE': 29, 'NULL': 21, 'INDET': 10} (v4: TRUE 29, NULL 21, INDET 10); eval eps 600, placebo eps 40
+[09:08:15] placebo: 5104 units, 7 s
+[09:08:19] s60_0: 8780 units, 11 s
+[09:08:20] s60_1: 8600 units, 12 s
+[09:08:27] s60_2: 9058 units, 12 s
+[09:08:31] s60_3: 8982 units, 12 s
+[09:08:31] s60_4: 9020 units, 12 s
+[09:08:38] s60_5: 8969 units, 11 s
+[09:08:42] s60_6: 8826 units, 11 s
+[09:08:43] s60_7: 8871 units, 12 s
+[09:08:50] s60_8: 9093 units, 12 s
+[09:08:53] s60_9: 8868 units, 12 s
+[09:09:06] s120_0: 17380 units, 23 s
+[09:09:12] s120_1: 18040 units, 22 s
+[09:09:14] s120_2: 17989 units, 21 s
+[09:09:24] s120_3: 17697 units, 18 s
+[09:09:27] s120_4: 17961 units, 15 s
+[09:09:41] pooled: 89067 units, 93 s
+[09:09:41] reproduction of the stored loadsp_c p-values: 1020 hyp, 0 mismatches
+[09:09:42]      60 loadsp_c  p2: .05 0.152 (32/210) CI [0.10952380952380952, 0.19523809523809524] | .01 0.100 (21/210) CI [0.08095238095238096, 0.11904761904761904]
+[09:09:42]      60 loadsp    p2: .05 0.157 (33/210) CI [0.11904761904761904, 0.2] | .01 0.095 (20/210) CI [0.0761904761904762, 0.11428571428571428]
+[09:09:42]     120 loadsp_c  p2: .05 0.152 (16/105) CI [0.12380952380952381, 0.18095238095238095] | .01 0.086 (9/105) CI [0.06666666666666667, 0.09523809523809523]
+[09:09:42]     120 loadsp    p2: .05 0.143 (15/105) CI [0.11428571428571428, 0.17142857142857143] | .01 0.086 (9/105) CI [0.06666666666666667, 0.09523809523809523]
+[09:09:42]  pooled loadsp_c  p2: .05 0.095 (2/21) CI None | .01 0.095 (2/21) CI None
+[09:09:42]  pooled loadsp    p2: .05 0.143 (3/21) CI None | .01 0.095 (2/21) CI None
+[09:09:42] placebo loadsp_c  p2: .05 0.100 (6/60) CI None | .01 0.033 (2/60) CI None
+[09:09:42] placebo loadsp    p2: .05 0.067 (4/60) CI None | .01 0.000 (0/60) CI None
+[09:09:42] done [133.7 s]
+[job] exit code 0; wall 159.4 s

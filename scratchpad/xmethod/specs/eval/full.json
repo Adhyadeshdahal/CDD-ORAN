@@ -1,0 +1,486 @@
+{
+ "name": "eval_full",
+ "status": "DRAFT: not runnable until the freeze (docs/xmethod/PROTOCOL_A.md sections 11, 13)",
+ "protocol": "docs/xmethod/PROTOCOL_A.md",
+ "protocol_sha256": "TBD-at-freeze",
+ "fmax_dependence_sha256": "402802b15c797f38cf1813aec1b4a912ffdbc3dba2ba3bfe94f1ee7a50d4f73e",
+ "pkgs_lock": "TBD-at-freeze",
+ "focal": "pmrt_nl_eq",
+ "budget_cpu_s": 7200,
+ "safety_cap_cpu_s": 14400,
+ "tbd": {
+  "seeds": "measure blocks: 'TBD' -> [3100000, 3100000 + S - 1] (S by PROTOCOL_A T1); 'TBD_HALF' -> [3100000, 3100000 + ceil(S/2) - 1]; 'TBD_E4' -> [3100000, 3100000 + S_E4 - 1] for the C3 readers (pmrt_nl_eq, pmrt_eq, pmrt_r3, eq arms; R-39), S_E4 by PROTOCOL_A T9",
+  "protocol_sha256": "LF sha256 of the frozen docs/xmethod/PROTOCOL_A.md (campaign EVAL guard and eval_analysis check it)",
+  "pkgs_lock": "dict package -> version from uv.lock for every package campaign.PKGS stamps (R-35); FINAL needs every record's pkgs equal to it",
+  "citests_arms": "mscr/pcorr/pdcor/rcot2/cmi_knn arms stay only if admitted under PROTOCOL_A T4; their eq_min arms need adapter support for config arm 'eq_min' (R-33; citests adapters accept eq / native today)",
+  "pcorr_hac": "T8 filled (R-38, calib F4 on synthetic data, xm/hac2 results/pcorr_hac_f4b.json): set-D member = pcorr_hac_fb (inference fixed_b, max |rate - .05| .0405 vs .0535 for t); pcorr_hac (inference t) secondary",
+  "max_n": "an arm infeasible at n under PROTOCOL_A T3 gets 'max_n' and 't3_cost_cpu_s' {n: DEV cost}; eval_analysis shows those cells as infeasible_t3",
+  "driver": "campaign EVAL mode (xm/dev-runs, R-35): guard on protocol_sha256 + 'FROZEN: yes', records stamp run_mode.protocol_sha256 and run_mode.spec_sha256",
+  "pmrt_nl_eq": "placeholder arm (R-42): config 'statistic' (key and value as implemented in pmrt_core by worker pmrt-nl, new version string) is filled at the freeze by PROTOCOL_A T10 (statistic chosen by the R-42 rule); 'focal' names the primary PMRT arm (C2a, C3, V3, T1); the linear pmrt_eq is secondary; fallback (Q15): if no R-42 candidate passes the gates, pmrt_nl_eq is removed and pmrt_eq becomes focal / primary (label dropped)"
+ },
+ "arms": {
+  "pmrt_nl_eq": {
+   "ref": "cdd_oran.xmethod.methods.pmrt_core:PmrtCore",
+   "config": {
+    "covariates": "eq",
+    "statistic": "TBD-R-42"
+   },
+   "declare": "by",
+   "analysis": "primary"
+  },
+  "pmrt_eq": {
+   "ref": "cdd_oran.xmethod.methods.pmrt_core:PmrtCore",
+   "config": {
+    "covariates": "eq"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "label": "linear statistic (pmrt-core-v1); secondary PMRT arm (R-42)"
+  },
+  "pmrt_r3": {
+   "ref": "cdd_oran.xmethod.methods.pmrt_core:PmrtCore",
+   "config": {
+    "covariates": "r3"
+   },
+   "declare": "by",
+   "analysis": "secondary"
+  },
+  "pc_eq": {
+   "ref": "cdd_oran.xmethod.methods.pc:PC",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "tau",
+   "analysis": "primary",
+   "native_partner": "pc_native"
+  },
+  "pc_native": {
+   "ref": "cdd_oran.xmethod.methods.pc:PC",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "tau",
+   "analysis": "secondary"
+  },
+  "granger_eq": {
+   "ref": "cdd_oran.xmethod.methods.granger:Granger",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "by",
+   "worlds": [
+    "E3"
+   ],
+   "analysis": "primary",
+   "native_partner": "granger_native"
+  },
+  "granger_native": {
+   "ref": "cdd_oran.xmethod.methods.granger:Granger",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "worlds": [
+    "E3"
+   ],
+   "analysis": "secondary"
+  },
+  "corr": {
+   "ref": "cdd_oran.xmethod.methods.corr:Corr",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "primary"
+  },
+  "notears": {
+   "ref": "cdd_oran.xmethod.methods.notears:Notears",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "tau",
+   "analysis": "primary"
+  },
+  "shap_dag": {
+   "ref": "cdd_oran.xmethod.methods.shap_dag:ShapDag",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "tau",
+   "analysis": "primary"
+  },
+  "two_tower": {
+   "ref": "cdd_oran.xmethod.methods.two_tower:TwoTowerM",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "tau",
+   "analysis": "primary"
+  },
+  "mscr_eq": {
+   "ref": "cdd_oran.xmethod.methods.mscr:MSCRMethod",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "by",
+   "analysis": "primary",
+   "native_partner": "mscr_native",
+   "c2b": false,
+   "label": "single-conditioner max statistic; cannot condition on the joint design set"
+  },
+  "mscr_native": {
+   "ref": "cdd_oran.xmethod.methods.mscr:MSCRMethod",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "secondary"
+  },
+  "pcorr_eq": {
+   "ref": "cdd_oran.xmethod.methods.pcorr:PCorrMethod",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "by",
+   "analysis": "primary",
+   "native_partner": "pcorr_native"
+  },
+  "pcorr_native": {
+   "ref": "cdd_oran.xmethod.methods.pcorr:PCorrMethod",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "secondary"
+  },
+  "pcorr_hac": {
+   "ref": "cdd_oran.xmethod.methods.pcorr_hac:PcorrHac",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "set_D": false
+  },
+  "pcorr_hac_fb": {
+   "ref": "cdd_oran.xmethod.methods.pcorr_hac:PcorrHac",
+   "config": {
+    "arm": "native",
+    "inference": "fixed_b"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "set_D": true
+  },
+  "pdcor_eq": {
+   "ref": "cdd_oran.xmethod.methods.pdcor:PDCorMethod",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "by",
+   "analysis": "primary",
+   "native_partner": "pdcor_native",
+   "label": "dependence test (pdCor = 0 is not conditional independence); not a CI test"
+  },
+  "pdcor_native": {
+   "ref": "cdd_oran.xmethod.methods.pdcor:PDCorMethod",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "label": "dependence test (pdCor = 0 is not conditional independence); not a CI test",
+   "set_D": false
+  },
+  "rcot2_eq": {
+   "ref": "cdd_oran.xmethod.methods.rcot2:RCoT2Method",
+   "config": {
+    "arm": "eq"
+   },
+   "declare": "by",
+   "analysis": "primary",
+   "native_partner": "rcot2_native"
+  },
+  "rcot2_native": {
+   "ref": "cdd_oran.xmethod.methods.rcot2:RCoT2Method",
+   "config": {
+    "arm": "native"
+   },
+   "declare": "by",
+   "analysis": "secondary"
+  },
+  "cmi_knn_eq": {
+   "ref": "cdd_oran.xmethod.methods.cmi_knn:CMIKnnMethod",
+   "config": {
+    "arm": "eq",
+    "backend": "torch"
+   },
+   "declare": "by",
+   "analysis": "primary",
+   "native_partner": "cmi_knn_native",
+   "budget_cpu_s": null,
+   "budget_wall_s": 7200,
+   "device": "gpu"
+  },
+  "cmi_knn_native": {
+   "ref": "cdd_oran.xmethod.methods.cmi_knn:CMIKnnMethod",
+   "config": {
+    "arm": "native",
+    "backend": "torch"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "budget_cpu_s": null,
+   "budget_wall_s": 7200,
+   "device": "gpu"
+  },
+  "mscr_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.mscr:MSCRMethod",
+   "config": {
+    "arm": "eq_min"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "mscr_native",
+   "label": "single-conditioner max statistic; cannot condition on the joint design set"
+  },
+  "pcorr_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.pcorr:PCorrMethod",
+   "config": {
+    "arm": "eq_min"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "pcorr_native"
+  },
+  "pdcor_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.pdcor:PDCorMethod",
+   "config": {
+    "arm": "eq_min"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "pdcor_native",
+   "label": "dependence test (pdCor = 0 is not conditional independence); not a CI test"
+  },
+  "rcot2_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.rcot2:RCoT2Method",
+   "config": {
+    "arm": "eq_min"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "rcot2_native"
+  },
+  "cmi_knn_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.cmi_knn:CMIKnnMethod",
+   "config": {
+    "arm": "eq_min",
+    "backend": "torch"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "cmi_knn_native",
+   "budget_cpu_s": null,
+   "budget_wall_s": 7200,
+   "device": "gpu"
+  },
+  "pcorr_hac_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.pcorr_hac:PcorrHac",
+   "config": {
+    "arm": "eq_min"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "pcorr_hac"
+  },
+  "pcorr_hac_fb_eq_min": {
+   "ref": "cdd_oran.xmethod.methods.pcorr_hac:PcorrHac",
+   "config": {
+    "arm": "eq_min",
+    "inference": "fixed_b"
+   },
+   "declare": "by",
+   "analysis": "secondary",
+   "native_partner": "pcorr_hac_fb"
+  }
+ },
+ "blocks": [
+  {
+   "role": "tune",
+   "worlds": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5"
+   ],
+   "regimes": [
+    "R1",
+    "R2",
+    "R3",
+    "R4"
+   ],
+   "ns": [
+    500,
+    1000,
+    4000,
+    8000,
+    24000
+   ],
+   "kappas": [
+    0.25
+   ],
+   "seeds": [
+    3000000,
+    3000019
+   ]
+  },
+  {
+   "role": "tune",
+   "worlds": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5"
+   ],
+   "regimes": [
+    "R2"
+   ],
+   "ns": [
+    1000
+   ],
+   "kappas": [
+    0.125,
+    0.5
+   ],
+   "seeds": [
+    3000000,
+    3000019
+   ]
+  },
+  {
+   "role": "measure",
+   "worlds": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5"
+   ],
+   "regimes": [
+    "R1",
+    "R2"
+   ],
+   "ns": [
+    500,
+    1000,
+    4000,
+    8000,
+    24000
+   ],
+   "kappas": [
+    0.25
+   ],
+   "seeds": "TBD"
+  },
+  {
+   "role": "measure",
+   "worlds": [
+    "E4"
+   ],
+   "regimes": [
+    "R3",
+    "R4"
+   ],
+   "ns": [
+    500,
+    1000,
+    4000,
+    8000,
+    24000
+   ],
+   "kappas": [
+    0.25
+   ],
+   "seeds": "TBD_E4",
+   "arms": [
+    "pmrt_nl_eq",
+    "pmrt_eq",
+    "pmrt_r3",
+    "pc_eq",
+    "granger_eq",
+    "mscr_eq",
+    "pcorr_eq",
+    "pdcor_eq",
+    "rcot2_eq",
+    "cmi_knn_eq"
+   ]
+  },
+  {
+   "role": "measure",
+   "worlds": [
+    "E4"
+   ],
+   "regimes": [
+    "R3",
+    "R4"
+   ],
+   "ns": [
+    500,
+    1000,
+    4000,
+    8000,
+    24000
+   ],
+   "kappas": [
+    0.25
+   ],
+   "seeds": "TBD",
+   "arms": [
+    "pc_native",
+    "granger_native",
+    "corr",
+    "notears",
+    "shap_dag",
+    "two_tower",
+    "mscr_native",
+    "pcorr_native",
+    "pcorr_hac",
+    "pcorr_hac_fb",
+    "pdcor_native",
+    "rcot2_native",
+    "cmi_knn_native",
+    "mscr_eq_min",
+    "pcorr_eq_min",
+    "pdcor_eq_min",
+    "rcot2_eq_min",
+    "cmi_knn_eq_min",
+    "pcorr_hac_eq_min",
+    "pcorr_hac_fb_eq_min"
+   ]
+  },
+  {
+   "role": "measure",
+   "worlds": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5"
+   ],
+   "regimes": [
+    "R2"
+   ],
+   "ns": [
+    1000
+   ],
+   "kappas": [
+    0.125,
+    0.5
+   ],
+   "seeds": "TBD_HALF"
+  }
+ ]
+}

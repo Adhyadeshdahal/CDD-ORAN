@@ -1,0 +1,17 @@
+{"cell": "E1 R1 lam1.0", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 14, "n_decl": 4, "cpu_s": 4.2}
+{"cell": "E1 R1 lam1.0", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 20, "n_decl": 4, "cpu_s": 4.8}
+{"cell": "E2 R2 lam1.0", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 33, "n_decl": 0, "cpu_s": 4.0}
+{"cell": "E2 R2 lam1.0", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 41, "n_decl": 6, "cpu_s": 10.8}
+{"cell": "E3 R2 lam1.0", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 20, "n_decl": 4, "cpu_s": 5.3}
+{"cell": "E3 R2 lam1.0", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 27, "n_decl": 4, "cpu_s": 5.7}
+{"cell": "E4 R1 lam1.5", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 5, "n_decl": 1, "cpu_s": 2.0}
+{"cell": "E4 R1 lam1.5", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 8, "n_decl": 1, "cpu_s": 2.0}
+{"cell": "E4 R2 lam1.5", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 7, "n_decl": 0, "cpu_s": 0.3}
+{"cell": "E4 R2 lam1.5", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 10, "n_decl": 0, "cpu_s": 0.4}
+{"cell": "E4 R3 lam1.5", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 8, "n_decl": 1, "cpu_s": 5.0}
+{"cell": "E4 R3 lam1.5", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 11, "n_decl": 1, "cpu_s": 5.1}
+{"cell": "E4 R4 lam1.5", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 7, "n_decl": 0, "cpu_s": 0.3}
+{"cell": "E4 R4 lam1.5", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 10, "n_decl": 0, "cpu_s": 0.3}
+{"cell": "E5 R2 lam1.0", "perturbed": false, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 19, "n_decl": 2, "cpu_s": 1.9}
+{"cell": "E5 R2 lam1.0", "perturbed": true, "edges_identical": true, "notes_identical": true, "X_identical": true, "d": 25, "n_decl": 2, "cpu_s": 2.0}
+ALL IDENTICAL: True

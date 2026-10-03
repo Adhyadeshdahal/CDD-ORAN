@@ -1,0 +1,10 @@
+{"method": "shap_dag", "config": {}, "rep": 0, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7833, "cpu_s": 9.4}
+{"method": "shap_dag", "config": {}, "rep": 1, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.8045, "cpu_s": 8.9}
+{"method": "shap_dag", "config": {}, "rep": 2, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7802, "cpu_s": 9.1}
+{"method": "shap_dag", "config": {}, "rep": 3, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.8223, "cpu_s": 8.9}
+{"method": "shap_dag", "config": {}, "rep": 4, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7997, "cpu_s": 8.8}
+{"method": "shap_dag", "config": {}, "rep": 5, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.8156, "cpu_s": 9.1}
+{"method": "shap_dag", "config": {}, "rep": 6, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7658, "cpu_s": 9.0}
+{"method": "shap_dag", "config": {}, "rep": 7, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.8184, "cpu_s": 9.0}
+{"method": "shap_dag", "config": {}, "rep": 8, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7824, "cpu_s": 8.9}
+{"method": "shap_dag", "config": {}, "rep": 9, "has_P0_K5": true, "n_param_edges": 16, "P0_K5_ratio": 0.7782, "cpu_s": 8.9}

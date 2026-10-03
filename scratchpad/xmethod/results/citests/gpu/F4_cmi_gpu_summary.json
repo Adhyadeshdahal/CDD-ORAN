@@ -1,0 +1,132 @@
+{
+ "cmi_knn|null|500": {
+  "reps": 100,
+  "cpu_s_mean": 9.510572128760005,
+  "primary": {
+   "null_tests": 2000,
+   "rej_rate_raw05": [
+    0.044,
+    0.0359,
+    0.0539
+   ],
+   "cluster_boot95": [
+    0.034,
+    0.0545
+   ],
+   "null_declared_total": 1,
+   "mean_fdp": 0.01
+  },
+  "recall": {},
+  "placebo_declared": 0
+ },
+ "cmi_knn|null|1000": {
+  "reps": 60,
+  "cpu_s_mean": 15.689483068949999,
+  "primary": {
+   "null_tests": 1200,
+   "rej_rate_raw05": [
+    0.0408,
+    0.031,
+    0.0536
+   ],
+   "cluster_boot95": [
+    0.03,
+    0.0525
+   ],
+   "null_declared_total": 1,
+   "mean_fdp": 0.0167
+  },
+  "recall": {},
+  "placebo_declared": 0
+ },
+ "cmi_knn|planted|500": {
+  "reps": 20,
+  "cpu_s_mean": 84.82179038814999,
+  "primary": {
+   "null_tests": 320,
+   "rej_rate_raw05": [
+    0.0563,
+    0.0359,
+    0.0872
+   ],
+   "cluster_boot95": [
+    0.0219,
+    0.1031
+   ],
+   "null_declared_total": 0,
+   "mean_fdp": 0.0
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 19,
+    "of": 20,
+    "sign_correct": 19,
+    "sign_n": 19
+   },
+   "P1->K1": {
+    "declared": 20,
+    "of": 20,
+    "sign_correct": 20,
+    "sign_n": 20
+   },
+   "P2->K2": {
+    "declared": 2,
+    "of": 20,
+    "sign_correct": 2,
+    "sign_n": 2
+   },
+   "P3->K2": {
+    "declared": 1,
+    "of": 20,
+    "sign_correct": 0,
+    "sign_n": 1
+   }
+  },
+  "placebo_declared": 0
+ },
+ "cmi_knn|planted|1000": {
+  "reps": 8,
+  "cpu_s_mean": 168.574779833375,
+  "primary": {
+   "null_tests": 128,
+   "rej_rate_raw05": [
+    0.0234,
+    0.008,
+    0.0666
+   ],
+   "cluster_boot95": [
+    0.0,
+    0.0703
+   ],
+   "null_declared_total": 0,
+   "mean_fdp": 0.0
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 8,
+    "of": 8,
+    "sign_correct": 8,
+    "sign_n": 8
+   },
+   "P1->K1": {
+    "declared": 8,
+    "of": 8,
+    "sign_correct": 8,
+    "sign_n": 8
+   },
+   "P2->K2": {
+    "declared": 3,
+    "of": 8,
+    "sign_correct": 3,
+    "sign_n": 3
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 8,
+    "sign_correct": 0,
+    "sign_n": 0
+   }
+  },
+  "placebo_declared": 0
+ }
+}

@@ -1,0 +1,8 @@
+{"cell": "E1R1", "seed": 3000000, "arm": "eq", "null_raw": "1/12", "placebo_raw": "0/4", "placebo_p": [0.5714, 0.7692, 0.4651, 0.3333]}
+{"cell": "E1R1", "seed": 3000000, "arm": "native", "null_raw": "1/12", "placebo_raw": "0/4", "placebo_p": [0.1695, 0.6667, 0.2174, 0.8696]}
+{"cell": "E1R1", "seed": 3000001, "arm": "eq", "null_raw": "0/12", "placebo_raw": "0/4", "placebo_p": [0.6897, 0.9091, 0.8333, 0.2381]}
+{"cell": "E1R1", "seed": 3000001, "arm": "native", "null_raw": "0/12", "placebo_raw": "0/4", "placebo_p": [0.4255, 1.0, 0.5405, 0.3636]}
+{"cell": "E2R1", "seed": 3000000, "arm": "eq", "null_raw": "1/32", "placebo_raw": "0/6", "placebo_p": [0.5405, 0.5714, 0.25, 0.8333, 0.0769, 0.4444]}
+{"cell": "E2R1", "seed": 3000000, "arm": "native", "null_raw": "2/32", "placebo_raw": "0/6", "placebo_p": [0.3922, 0.9524, 0.4444, 0.339, 0.0535, 0.2128]}
+{"cell": "E2R1", "seed": 3000001, "arm": "eq", "null_raw": "0/32", "placebo_raw": "0/6", "placebo_p": [0.3571, 0.3846, 0.8333, 1.0, 1.0, 0.6452]}
+{"cell": "E2R1", "seed": 3000001, "arm": "native", "null_raw": "0/32", "placebo_raw": "0/6", "placebo_p": [0.177, 0.2439, 0.9524, 0.9524, 0.8333, 0.2564]}

@@ -1,0 +1,15 @@
+/usr/local/bin/uv
+Using Python 3.12.13 environment at: /usr
+Resolved 4 packages in 867ms
+Downloading nvidia-nccl-cu13 (291.0MiB)
+Downloading xgboost (54.9MiB)
+ Downloaded xgboost
+ Downloaded nvidia-nccl-cu13
+Prepared 2 packages in 12.04s
+Uninstalled 1 package in 8ms
+Installed 2 packages in 17ms
+ + nvidia-nccl-cu13==2.32.3
+ - xgboost==3.2.0
+ + xgboost==3.4.1
+2.0.2 1.16.3 1.6.1 0.51.0 2.10.0+cpu 3.4.1
+4

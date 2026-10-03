@@ -1,0 +1,262 @@
+{
+ "mscr|null|500": {
+  "reps": 100,
+  "cpu_s_mean": 12.48158336488,
+  "primary": {
+   "null_tests": 2000,
+   "rej_rate_raw05": [
+    0.0535,
+    0.0445,
+    0.0642
+   ],
+   "cluster_boot95": [
+    0.0435,
+    0.064
+   ],
+   "null_declared_total": 1,
+   "mean_fdp": 0.01
+  },
+  "recall": {},
+  "placebo_declared": 0
+ },
+ "mscr|null|1000": {
+  "reps": 100,
+  "cpu_s_mean": 32.118085009750004,
+  "primary": {
+   "null_tests": 2000,
+   "rej_rate_raw05": [
+    0.0485,
+    0.0399,
+    0.0588
+   ],
+   "cluster_boot95": [
+    0.04,
+    0.058
+   ],
+   "null_declared_total": 2,
+   "mean_fdp": 0.02
+  },
+  "recall": {},
+  "placebo_declared": 0
+ },
+ "mscr|planted|500": {
+  "reps": 100,
+  "cpu_s_mean": 14.784645354939999,
+  "primary": {
+   "null_tests": 1600,
+   "rej_rate_raw05": [
+    0.0481,
+    0.0387,
+    0.0597
+   ],
+   "cluster_boot95": [
+    0.0381,
+    0.0587
+   ],
+   "null_declared_total": 0,
+   "mean_fdp": 0.0
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 96,
+    "of": 100,
+    "sign_correct": 96,
+    "sign_n": 96
+   },
+   "P1->K1": {
+    "declared": 91,
+    "of": 100,
+    "sign_correct": 91,
+    "sign_n": 91
+   },
+   "P2->K2": {
+    "declared": 21,
+    "of": 100,
+    "sign_correct": 21,
+    "sign_n": 21
+   },
+   "P3->K2": {
+    "declared": 9,
+    "of": 100,
+    "sign_correct": 6,
+    "sign_n": 9
+   }
+  },
+  "placebo_declared": 0
+ },
+ "mscr|planted|1000": {
+  "reps": 100,
+  "cpu_s_mean": 32.06415495956,
+  "primary": {
+   "null_tests": 1600,
+   "rej_rate_raw05": [
+    0.0475,
+    0.0381,
+    0.0591
+   ],
+   "cluster_boot95": [
+    0.0381,
+    0.0575
+   ],
+   "null_declared_total": 7,
+   "mean_fdp": 0.0168
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 100,
+    "of": 100,
+    "sign_correct": 100,
+    "sign_n": 100
+   },
+   "P1->K1": {
+    "declared": 100,
+    "of": 100,
+    "sign_correct": 100,
+    "sign_n": 100
+   },
+   "P2->K2": {
+    "declared": 74,
+    "of": 100,
+    "sign_correct": 74,
+    "sign_n": 74
+   },
+   "P3->K2": {
+    "declared": 43,
+    "of": 100,
+    "sign_correct": 25,
+    "sign_n": 43
+   }
+  },
+  "placebo_declared": 3
+ },
+ "pdcor|null|500": {
+  "reps": 100,
+  "cpu_s_mean": 11.644866479869997,
+  "primary": {
+   "null_tests": 2000,
+   "rej_rate_raw05": [
+    0.048,
+    0.0395,
+    0.0583
+   ],
+   "cluster_boot95": [
+    0.0395,
+    0.057
+   ],
+   "null_declared_total": 1,
+   "mean_fdp": 0.01
+  },
+  "recall": {},
+  "placebo_declared": 1
+ },
+ "pdcor|null|1000": {
+  "reps": 100,
+  "cpu_s_mean": 41.33613723704,
+  "primary": {
+   "null_tests": 2000,
+   "rej_rate_raw05": [
+    0.048,
+    0.0395,
+    0.0583
+   ],
+   "cluster_boot95": [
+    0.039,
+    0.0575
+   ],
+   "null_declared_total": 0,
+   "mean_fdp": 0.0
+  },
+  "recall": {},
+  "placebo_declared": 0
+ },
+ "pdcor|planted|500": {
+  "reps": 100,
+  "cpu_s_mean": 107.38446980030001,
+  "primary": {
+   "null_tests": 1600,
+   "rej_rate_raw05": [
+    0.06,
+    0.0494,
+    0.0727
+   ],
+   "cluster_boot95": [
+    0.05,
+    0.0706
+   ],
+   "null_declared_total": 5,
+   "mean_fdp": 0.0142
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 100,
+    "of": 100,
+    "sign_correct": 100,
+    "sign_n": 100
+   },
+   "P1->K1": {
+    "declared": 100,
+    "of": 100,
+    "sign_correct": 100,
+    "sign_n": 100
+   },
+   "P2->K2": {
+    "declared": 45,
+    "of": 100,
+    "sign_correct": 45,
+    "sign_n": 45
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 100,
+    "sign_correct": 0,
+    "sign_n": 0
+   }
+  },
+  "placebo_declared": 1
+ },
+ "pdcor|planted|1000": {
+  "reps": 50,
+  "cpu_s_mean": 482.22204682048005,
+  "primary": {
+   "null_tests": 800,
+   "rej_rate_raw05": [
+    0.06,
+    0.0456,
+    0.0787
+   ],
+   "cluster_boot95": [
+    0.0425,
+    0.0788
+   ],
+   "null_declared_total": 1,
+   "mean_fdp": 0.005
+  },
+  "recall": {
+   "P0->K0": {
+    "declared": 50,
+    "of": 50,
+    "sign_correct": 50,
+    "sign_n": 50
+   },
+   "P1->K1": {
+    "declared": 50,
+    "of": 50,
+    "sign_correct": 50,
+    "sign_n": 50
+   },
+   "P2->K2": {
+    "declared": 41,
+    "of": 50,
+    "sign_correct": 41,
+    "sign_n": 41
+   },
+   "P3->K2": {
+    "declared": 0,
+    "of": 50,
+    "sign_correct": 0,
+    "sign_n": 0
+   }
+  },
+  "placebo_declared": 0
+ }
+}

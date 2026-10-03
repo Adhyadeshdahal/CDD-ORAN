@@ -1,0 +1,8 @@
+{
+ "n_compared": 84,
+ "max_rel_stat_diff": 3.356075561489749e-15,
+ "max_abs_p_diff": 0.0,
+ "mask_mismatches": 0,
+ "pass": true,
+ "cpu_s": 2012.9010908839998
+}

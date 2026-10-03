@@ -1,0 +1,44 @@
+seed 3000000 done
+seed 3000001 done
+seed 3000002 done
+seed 3000003 done
+seed 3000004 done
+seed 3000005 done
+seed 3000006 done
+seed 3000007 done
+seed 3000008 done
+seed 3000009 done
+seed 3000010 done
+seed 3000011 done
+seed 3000012 done
+seed 3000013 done
+seed 3000014 done
+seed 3000015 done
+seed 3000016 done
+seed 3000017 done
+seed 3000018 done
+seed 3000019 done
+seed 3000020 done
+seed 3000021 done
+seed 3000022 done
+seed 3000023 done
+seed 3000024 done
+seed 3000025 done
+seed 3000026 done
+seed 3000027 done
+seed 3000028 done
+seed 3000029 done
+seed 3000030 done
+seed 3000031 done
+seed 3000032 done
+seed 3000033 done
+seed 3000034 done
+seed 3000035 done
+seed 3000036 done
+seed 3000037 done
+seed 3000038 done
+seed 3000039 done
+real default {"n_p": 40, "rate05": 0.05, "ci05_cluster": [0.0, 0.125], "rate01": 0.0, "ci01_cluster": [0.0, 0.0], "mean_p": 0.456325}
+real no_huber {"n_p": 40, "rate05": 0.05, "ci05_cluster": [0.0, 0.125], "rate01": 0.0, "ci01_cluster": [0.0, 0.0], "mean_p": 0.438375}
+swap default {"n_p": 80, "rate05": 0.0375, "ci05_cluster": [0.0, 0.0875], "rate01": 0.0, "ci01_cluster": [0.0, 0.0], "mean_p": 0.563725}
+swap no_huber {"n_p": 80, "rate05": 0.0625, "ci05_cluster": [0.0125, 0.1128124999999983], "rate01": 0.0125, "ci01_cluster": [0.0, 0.0375], "mean_p": 0.55755}

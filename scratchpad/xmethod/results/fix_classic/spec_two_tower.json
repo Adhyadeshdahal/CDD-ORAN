@@ -1,0 +1,152 @@
+{
+ "methods": [
+  "cdd_oran.xmethod.methods.two_tower:TwoTowerM"
+ ],
+ "worlds": [
+  "E1",
+  "E2",
+  "E3",
+  "E4",
+  "E5"
+ ],
+ "regimes": [
+  "R1",
+  "R2",
+  "R3",
+  "R4"
+ ],
+ "ns": [
+  1000
+ ],
+ "seeds": [
+  3000000
+ ],
+ "lams": [
+  1.5
+ ],
+ "configs": {
+  "cdd_oran.xmethod.methods.two_tower:TwoTowerM": {
+   "default": {},
+   "E1|R1|n1000": {
+    "tau": 0.03793550144499435,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 12,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E1|R2|n1000": {
+    "tau": 0.0274430969452819,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 12,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E2|R1|n1000": {
+    "tau": 0.09368316439780305,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 18,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E2|R2|n1000": {
+    "tau": 0.20975958727660857,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 18,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E3|R1|n1000": {
+    "tau": 0.17517079621017914,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 15,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E3|R2|n1000": {
+    "tau": 0.07852007186338755,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 15,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E4|R1|lam1.5|n1000": {
+    "tau": 0.17500572554517413,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 3,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E4|R2|lam1.5|n1000": {
+    "tau": 0.3537978410215312,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 3,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E4|R3|lam1.5|n1000": {
+    "tau": 0.0012851546742742046,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 3,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E4|R4|lam1.5|n1000": {
+    "tau": 0.0010141222332347747,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 3,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E5|R1|n1000": {
+    "tau": 0.02477697746238758,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 12,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E5|R2|n1000": {
+    "tau": 0.06731674080198935,
+    "tau_rule": "placebo_2nd_largest",
+    "n_placebo_scores": 12,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   }
+  }
+ }
+}

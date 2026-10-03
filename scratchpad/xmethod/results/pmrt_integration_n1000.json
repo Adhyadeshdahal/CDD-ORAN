@@ -1,0 +1,505 @@
+{
+ "n": 1000,
+ "seed": 3000000,
+ "version": "pmrt-core-v1",
+ "cells": {
+  "E1|R1": {
+   "n_declared": 4,
+   "tp": 4,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 4,
+   "n_true": 4,
+   "n_null": 12,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 36,
+   "n_primary": 20,
+   "primary_tested": 20,
+   "not_applicable": 16,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P1->K1",
+    "P2->K2",
+    "P3->K3"
+   ],
+   "cpu_s": 0.58,
+   "wall_s": 0.59,
+   "z_true": {
+    "P0->K0": 31.65,
+    "P1->K1": 30.68,
+    "P2->K2": 29.32,
+    "P3->K3": 30.18
+   }
+  },
+  "E1|R2": {
+   "n_declared": 4,
+   "tp": 4,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 4,
+   "n_true": 4,
+   "n_null": 12,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 36,
+   "n_primary": 20,
+   "primary_tested": 20,
+   "not_applicable": 16,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P1->K1",
+    "P2->K2",
+    "P3->K3"
+   ],
+   "cpu_s": 0.58,
+   "wall_s": 0.53,
+   "z_true": {
+    "P0->K0": 15.19,
+    "P1->K1": 15.13,
+    "P2->K2": 11.09,
+    "P3->K3": 20.0
+   }
+  },
+  "E2|R1": {
+   "n_declared": 5,
+   "tp": 5,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 0.3125,
+   "f1": 0.47619047619047616,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": NaN,
+   "sign_n": 0,
+   "n_true": 16,
+   "n_null": 32,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 90,
+   "n_primary": 54,
+   "primary_tested": 54,
+   "not_applicable": 36,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K2",
+    "P1->K0",
+    "P1->K1",
+    "P5->K3",
+    "P5->K4"
+   ],
+   "cpu_s": 0.66,
+   "wall_s": 0.69,
+   "z_true": {
+    "P0->K0": -0.77,
+    "P0->K1": -0.97,
+    "P0->K2": -18.33,
+    "P0->K5": -0.72,
+    "P1->K0": 15.73,
+    "P1->K1": 15.52,
+    "P1->K3": -1.28,
+    "P1->K4": -0.45,
+    "P2->K1": 0.78,
+    "P3->K2": -0.27,
+    "P4->K3": -2.87,
+    "P4->K4": -1.23,
+    "P5->K3": -8.2,
+    "P5->K4": -4.63,
+    "P6->K5": -2.47,
+    "P7->K5": 0.88
+   }
+  },
+  "E2|R2": {
+   "n_declared": 0,
+   "tp": 0,
+   "fp": 0,
+   "precision": NaN,
+   "recall": 0.0,
+   "f1": NaN,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": NaN,
+   "sign_n": 0,
+   "n_true": 16,
+   "n_null": 32,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 90,
+   "n_primary": 54,
+   "primary_tested": 54,
+   "not_applicable": 36,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [],
+   "cpu_s": 1.69,
+   "wall_s": 1.57,
+   "z_true": {
+    "P0->K0": 0.24,
+    "P0->K1": 0.24,
+    "P0->K2": -0.54,
+    "P0->K5": -0.25,
+    "P1->K0": -0.96,
+    "P1->K1": -0.96,
+    "P1->K3": 1.84,
+    "P1->K4": -1.84,
+    "P2->K1": -0.53,
+    "P3->K2": 0.48,
+    "P4->K3": 0.85,
+    "P4->K4": -0.84,
+    "P5->K3": 1.53,
+    "P5->K4": -1.53,
+    "P6->K5": -1.29,
+    "P7->K5": -0.45
+   }
+  },
+  "E3|R1": {
+   "n_declared": 4,
+   "tp": 4,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 4,
+   "n_true": 4,
+   "n_null": 16,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 50,
+   "n_primary": 25,
+   "primary_tested": 25,
+   "not_applicable": 25,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P1->K2",
+    "P2->K3",
+    "P3->K4"
+   ],
+   "cpu_s": 1.98,
+   "wall_s": 1.88,
+   "z_true": {
+    "P0->K0": 31.14,
+    "P1->K2": 31.0,
+    "P2->K3": 30.58,
+    "P3->K4": 30.58
+   }
+  },
+  "E3|R2": {
+   "n_declared": 4,
+   "tp": 4,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 4,
+   "n_true": 4,
+   "n_null": 16,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 50,
+   "n_primary": 25,
+   "primary_tested": 25,
+   "not_applicable": 25,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P1->K2",
+    "P2->K3",
+    "P3->K4"
+   ],
+   "cpu_s": 2.19,
+   "wall_s": 1.89,
+   "z_true": {
+    "P0->K0": 17.21,
+    "P1->K2": 9.45,
+    "P2->K3": 27.58,
+    "P3->K4": 25.35
+   }
+  },
+  "E5|R1": {
+   "n_declared": 2,
+   "tp": 2,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 0.3333333333333333,
+   "f1": 0.5,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 1,
+   "n_true": 6,
+   "n_null": 10,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 36,
+   "n_primary": 20,
+   "primary_tested": 20,
+   "not_applicable": 16,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P0->K2"
+   ],
+   "cpu_s": 0.75,
+   "wall_s": 0.97,
+   "z_true": {
+    "P0->K0": 27.73,
+    "P0->K1": 1.65,
+    "P0->K2": 29.89,
+    "P1->K1": 1.5,
+    "P2->K1": 0.6,
+    "P3->K3": -0.17
+   }
+  },
+  "E5|R2": {
+   "n_declared": 2,
+   "tp": 2,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 0.3333333333333333,
+   "f1": 0.5,
+   "fdp": 0.0,
+   "null_fpr": 0.0,
+   "sign_acc": 1.0,
+   "sign_n": 1,
+   "n_true": 6,
+   "n_null": 10,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 36,
+   "n_primary": 20,
+   "primary_tested": 20,
+   "not_applicable": 16,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0",
+    "P0->K2"
+   ],
+   "cpu_s": 0.7,
+   "wall_s": 0.97,
+   "z_true": {
+    "P0->K0": 14.42,
+    "P0->K1": -2.18,
+    "P0->K2": 15.34,
+    "P1->K1": 0.22,
+    "P2->K1": -1.99,
+    "P3->K3": 1.66
+   }
+  },
+  "E4|R1|lam1.0": {
+   "n_declared": 1,
+   "tp": 1,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": 1.0,
+   "sign_n": 1,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 3,
+   "n_primary": 2,
+   "primary_tested": 2,
+   "not_applicable": 1,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0"
+   ],
+   "cpu_s": 0.78,
+   "wall_s": 0.98,
+   "z_true": {
+    "P0->K0": -2.46
+   }
+  },
+  "E4|R2|lam1.0": {
+   "n_declared": 0,
+   "tp": 0,
+   "fp": 0,
+   "precision": NaN,
+   "recall": 0.0,
+   "f1": NaN,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": NaN,
+   "sign_n": 0,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 3,
+   "n_primary": 2,
+   "primary_tested": 2,
+   "not_applicable": 1,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [],
+   "cpu_s": 0.12,
+   "wall_s": 0.31,
+   "z_true": {
+    "P0->K0": -1.28
+   }
+  },
+  "E4|R3|lam1.0": {
+   "n_declared": 1,
+   "tp": 1,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": 1.0,
+   "sign_n": 1,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 4,
+   "n_primary": 2,
+   "primary_tested": 2,
+   "not_applicable": 1,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0"
+   ],
+   "cpu_s": 2.3,
+   "wall_s": 2.92,
+   "z_true": {
+    "P0->K0": -22.29
+   }
+  },
+  "E4|R3|lam1.5": {
+   "n_declared": 1,
+   "tp": 1,
+   "fp": 0,
+   "precision": 1.0,
+   "recall": 1.0,
+   "f1": 1.0,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": 1.0,
+   "sign_n": 1,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 4,
+   "n_primary": 2,
+   "primary_tested": 2,
+   "not_applicable": 1,
+   "na_reasons": [
+    "source is not an action with a known design"
+   ],
+   "declared": [
+    "P0->K0"
+   ],
+   "cpu_s": 2.25,
+   "wall_s": 3.05,
+   "z_true": {
+    "P0->K0": -18.0
+   }
+  },
+  "E4|R4|lam1.0": {
+   "n_declared": 0,
+   "tp": 0,
+   "fp": 0,
+   "precision": NaN,
+   "recall": 0.0,
+   "f1": NaN,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": NaN,
+   "sign_n": 0,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 4,
+   "n_primary": 2,
+   "primary_tested": 1,
+   "not_applicable": 3,
+   "na_reasons": [
+    "no known design (kind 'none')",
+    "source is not an action with a known design"
+   ],
+   "declared": [],
+   "cpu_s": 0.17,
+   "wall_s": 0.48,
+   "z_true": {
+    "P0->K0": NaN
+   }
+  },
+  "E4|R4|lam1.5": {
+   "n_declared": 0,
+   "tp": 0,
+   "fp": 0,
+   "precision": NaN,
+   "recall": 0.0,
+   "f1": NaN,
+   "fdp": 0.0,
+   "null_fpr": NaN,
+   "sign_acc": NaN,
+   "sign_n": 0,
+   "n_true": 1,
+   "n_null": 0,
+   "placebo_declared": 0,
+   "placebo_conf_declared": 0,
+   "n_candidates": 4,
+   "n_primary": 2,
+   "primary_tested": 1,
+   "not_applicable": 3,
+   "na_reasons": [
+    "no known design (kind 'none')",
+    "source is not an action with a known design"
+   ],
+   "declared": [],
+   "cpu_s": 0.14,
+   "wall_s": 0.55,
+   "z_true": {
+    "P0->K0": NaN
+   }
+  }
+ }
+}

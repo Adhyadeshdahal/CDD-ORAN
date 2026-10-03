@@ -1,0 +1,542 @@
+{
+ "cond_set": {
+  "E2R2": {
+   "mismatches": 0,
+   "eq_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "lag_kpi:K4",
+    "lag_kpi:K5",
+    "sp:P0",
+    "sp:P1",
+    "sp:P2",
+    "sp:P3",
+    "sp:P4",
+    "sp:P5",
+    "sp:P6",
+    "sp:P7",
+    "sp:P_placebo",
+    "P0@t-1",
+    "P1@t-1",
+    "P2@t-1",
+    "P3@t-1",
+    "P4@t-1",
+    "P5@t-1",
+    "P6@t-1",
+    "P7@t-1",
+    "P_placebo@t-1",
+    "P0@t-2",
+    "P1@t-2",
+    "P2@t-2",
+    "P3@t-2",
+    "P4@t-2",
+    "P5@t-2",
+    "P6@t-2",
+    "P7@t-2",
+    "P_placebo@t-2",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P4",
+    "concurrent:P5",
+    "concurrent:P6",
+    "concurrent:P7",
+    "concurrent:P_placebo"
+   ],
+   "native_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "lag_kpi:K4",
+    "lag_kpi:K5",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P4",
+    "concurrent:P5",
+    "concurrent:P6",
+    "concurrent:P7",
+    "concurrent:P_placebo"
+   ],
+   "eq_lagK0_has_own": false,
+   "eq_lagK0_tail": [
+    "concurrent:P0",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P4",
+    "concurrent:P5",
+    "concurrent:P6",
+    "concurrent:P7",
+    "concurrent:P_placebo"
+   ]
+  },
+  "E3R2": {
+   "mismatches": 0,
+   "eq_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "lag_kpi:K4",
+    "sp:P0",
+    "sp:P1",
+    "sp:P2",
+    "sp:P3",
+    "sp:P_placebo",
+    "P0@t-1",
+    "P1@t-1",
+    "P2@t-1",
+    "P3@t-1",
+    "P_placebo@t-1",
+    "P0@t-2",
+    "P1@t-2",
+    "P2@t-2",
+    "P3@t-2",
+    "P_placebo@t-2",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ],
+   "native_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "lag_kpi:K4",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ],
+   "eq_lagK0_has_own": false,
+   "eq_lagK0_tail": [
+    "concurrent:P0",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ]
+  },
+  "E4R3": {
+   "mismatches": 0,
+   "eq_P0": [
+    "lag_kpi:K0",
+    "ctx:Z",
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2",
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ],
+   "native_P0": [
+    "lag_kpi:K0",
+    "ctx:Z",
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ],
+   "eq_lagK0_has_own": false,
+   "eq_lagK0_tail": [
+    "concurrent:P0",
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ]
+  },
+  "E4R4": {
+   "mismatches": 0,
+   "eq_P0": [
+    "lag_kpi:K0",
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2"
+   ],
+   "native_P0": [
+    "lag_kpi:K0",
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ],
+   "eq_lagK0_has_own": false,
+   "eq_lagK0_tail": [
+    "concurrent:P0",
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ]
+  },
+  "E1R1": {
+   "mismatches": 0,
+   "eq_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "P0@t-1",
+    "P1@t-1",
+    "P2@t-1",
+    "P3@t-1",
+    "P_placebo@t-1",
+    "P0@t-2",
+    "P1@t-2",
+    "P2@t-2",
+    "P3@t-2",
+    "P_placebo@t-2",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ],
+   "native_P0": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ],
+   "eq_lagK0_has_own": false,
+   "eq_lagK0_tail": [
+    "concurrent:P0",
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P_placebo"
+   ]
+  }
+ },
+ "granger_eq_vs_statsmodels": {
+  "E3R2": {
+   "n_tested": 50,
+   "max_rel_p_diff_vs_statsmodels": 2.8853203555871986e-12,
+   "sign_mismatch": 0,
+   "BY_decl_mismatch": "0",
+   "n_not_testable_eq": 0,
+   "n_rows_used": 998
+  },
+  "E2R2": {
+   "n_tested": 90,
+   "max_rel_p_diff_vs_statsmodels": 1.6462039904683437e-11,
+   "sign_mismatch": 0,
+   "BY_decl_mismatch": "0",
+   "n_not_testable_eq": 0,
+   "n_rows_used": 998
+  },
+  "E1R2": {
+   "n_tested": 36,
+   "max_rel_p_diff_vs_statsmodels": 1.0696932743428688e-10,
+   "sign_mismatch": 0,
+   "BY_decl_mismatch": "0",
+   "n_not_testable_eq": 0,
+   "n_rows_used": 998
+  }
+ },
+ "pc_eq": {
+  "E2R2": {
+   "eq_X_nodes": [
+    "sp:P0",
+    "sp:P1",
+    "sp:P2",
+    "sp:P3",
+    "sp:P4",
+    "sp:P5",
+    "sp:P6",
+    "sp:P7",
+    "sp:P_placebo",
+    "P0@t-1",
+    "P1@t-1",
+    "P2@t-1",
+    "P3@t-1",
+    "P4@t-1",
+    "P5@t-1",
+    "P6@t-1",
+    "P7@t-1",
+    "P_placebo@t-1",
+    "P0@t-2",
+    "P1@t-2",
+    "P2@t-2",
+    "P3@t-2",
+    "P4@t-2",
+    "P5@t-2",
+    "P6@t-2",
+    "P7@t-2",
+    "P_placebo@t-2"
+   ],
+   "eq_dropped": [],
+   "n_rows_used": 998,
+   "n_vars": 48,
+   "base_helper_names": [
+    "lag_kpi:K0",
+    "lag_kpi:K1",
+    "lag_kpi:K2",
+    "lag_kpi:K3",
+    "lag_kpi:K4",
+    "lag_kpi:K5",
+    "sp:P0",
+    "sp:P1",
+    "sp:P2",
+    "sp:P3",
+    "sp:P4",
+    "sp:P5",
+    "sp:P6",
+    "sp:P7",
+    "sp:P_placebo",
+    "P0@t-1",
+    "P1@t-1",
+    "P2@t-1",
+    "P3@t-1",
+    "P4@t-1",
+    "P5@t-1",
+    "P6@t-1",
+    "P7@t-1",
+    "P_placebo@t-1",
+    "P0@t-2",
+    "P1@t-2",
+    "P2@t-2",
+    "P3@t-2",
+    "P4@t-2",
+    "P5@t-2",
+    "P6@t-2",
+    "P7@t-2",
+    "P_placebo@t-2"
+   ],
+   "designs": [
+    "dither",
+    "dither",
+    "dither",
+    "dither",
+    "dither",
+    "dither",
+    "dither",
+    "dither",
+    "dither"
+   ],
+   "Zeq_P0_concurrent": [
+    "concurrent:P1",
+    "concurrent:P2",
+    "concurrent:P3",
+    "concurrent:P4",
+    "concurrent:P5",
+    "concurrent:P6",
+    "concurrent:P7",
+    "concurrent:P_placebo"
+   ],
+   "pinv_rate": 0.0
+  },
+  "E4R3": {
+   "eq_X_nodes": [
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2"
+   ],
+   "eq_dropped": [],
+   "n_rows_used": 998,
+   "n_vars": 12,
+   "base_helper_names": [
+    "lag_kpi:K0",
+    "ctx:Z",
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2"
+   ],
+   "designs": [
+    "logged",
+    "iid",
+    "logged"
+   ],
+   "Zeq_P0_concurrent": [
+    "concurrent:P_placebo",
+    "concurrent:P_placebo_conf"
+   ],
+   "pinv_rate": 0.0
+  },
+  "E4R4": {
+   "eq_X_nodes": [
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2"
+   ],
+   "eq_dropped": [],
+   "n_rows_used": 998,
+   "n_vars": 11,
+   "base_helper_names": [
+    "lag_kpi:K0",
+    "P0@t-1",
+    "P_placebo@t-1",
+    "P_placebo_conf@t-1",
+    "P0@t-2",
+    "P_placebo@t-2",
+    "P_placebo_conf@t-2"
+   ],
+   "designs": [
+    "none",
+    "iid",
+    "none"
+   ],
+   "Zeq_P0_concurrent": [],
+   "pinv_rate": 0.0
+  }
+ },
+ "signs": {
+  "E2R2:pc:eq": {
+   "n": 90,
+   "sign_mismatch": 0,
+   "arm_used": "eq"
+  },
+  "E2R2:pc:native": {
+   "n": 90,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E2R2:shap_dag:native": {
+   "n": 54,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E2R2:two_tower:native": {
+   "n": 54,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E1R2:pc:eq": {
+   "n": 36,
+   "sign_mismatch": 0,
+   "arm_used": "eq"
+  },
+  "E1R2:pc:native": {
+   "n": 36,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E1R2:shap_dag:native": {
+   "n": 20,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E4R3:pc:eq": {
+   "n": 4,
+   "sign_mismatch": 0,
+   "arm_used": "eq"
+  },
+  "E4R3:pc:native": {
+   "n": 4,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  },
+  "E4R3:shap_dag:native": {
+   "n": 3,
+   "sign_mismatch": 0,
+   "arm_used": "native"
+  }
+ },
+ "two_tower": {
+  "max_abs_share_err": 6.09920820515697e-08,
+  "label": "adaptation (self-supervised E2 port), not the published supervised model",
+  "arm": "native",
+  "arm_note": "no conditioning interface",
+  "row_sums_of_scores": {
+   "K0": 1.0000000797514559,
+   "K1": 0.9999999686849429,
+   "K2": 0.999999983131255,
+   "K3": 0.9999999437691812,
+   "K4": 1.000000041902749,
+   "K5": 0.9999999123372132
+  }
+ },
+ "shap_dag": {
+  "booster_params": {
+   "objective": "reg:squarederror",
+   "max_depth": null,
+   "learning_rate": null,
+   "tree_method": null,
+   "base_score": null
+  },
+  "n_estimators": null,
+  "num_boosted_rounds": 100,
+  "shap_additivity_max_err": 2.288818359375e-05,
+  "pred_scale": 5.891480922698975,
+  "adapter_vs_direct_K5_maxdiff": 0.0,
+  "regressor": "xgboost",
+  "packages": {
+   "shap": "0.52.0",
+   "sklearn": "1.9.1",
+   "xgboost": "3.4.1"
+  }
+ },
+ "meta_independence": {
+  "pc": {
+   "identical_without_meta_extras": true,
+   "meta_keys_dropped": [
+    "block",
+    "dither",
+    "env_seed",
+    "episode",
+    "generator",
+    "obs_noise",
+    "placebo",
+    "placebo_conf",
+    "warmup"
+   ]
+  },
+  "granger": {
+   "identical_without_meta_extras": true,
+   "meta_keys_dropped": [
+    "block",
+    "dither",
+    "env_seed",
+    "episode",
+    "generator",
+    "obs_noise",
+    "placebo",
+    "placebo_conf",
+    "warmup"
+   ]
+  },
+  "shap_dag": {
+   "identical_without_meta_extras": true,
+   "meta_keys_dropped": [
+    "block",
+    "dither",
+    "env_seed",
+    "episode",
+    "generator",
+    "obs_noise",
+    "placebo",
+    "placebo_conf",
+    "warmup"
+   ]
+  },
+  "two_tower": {
+   "identical_without_meta_extras": true,
+   "meta_keys_dropped": [
+    "block",
+    "dither",
+    "env_seed",
+    "episode",
+    "generator",
+    "obs_noise",
+    "placebo",
+    "placebo_conf",
+    "warmup"
+   ]
+  }
+ }
+}

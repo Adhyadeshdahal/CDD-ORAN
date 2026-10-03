@@ -1,0 +1,75 @@
+{
+ "mode": "null",
+ "args": {
+  "mode": "null",
+  "reps": 200,
+  "B": 9999,
+  "native": false,
+  "n": "500,1000,4000",
+  "regimes": "R1",
+  "beta": 0.2,
+  "betas": "0.05,0.1,0.2",
+  "native_n": [
+   4000
+  ],
+  "out": "/kaggle/working/out/null_R1.json",
+  "null": null,
+  "power": null,
+  "scale": null
+ },
+ "version": "pmrt-core-v1",
+ "cpu_s_total": 702.8307953880001,
+ "cells": {
+  "R1|500": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.055357142857142855,
+   "ci05": [
+    0.04747998754652856,
+    0.06445272648410712
+   ],
+   "rate01": 0.007142857142857143,
+   "rate10": 0.09821428571428571,
+   "mean_p": 0.5165477553517428,
+   "placebo_rate05": 0.0575,
+   "by_null_declarations": 10,
+   "by_any_null_declared_frac": 0.045,
+   "beta_true_edges": 0.2,
+   "wall_s": 153.9
+  },
+  "R1|1000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.04535714285714286,
+   "ci05": [
+    0.038252571353278,
+    0.053707545081259536
+   ],
+   "rate01": 0.008214285714285714,
+   "rate10": 0.10142857142857142,
+   "mean_p": 0.5042618495797854,
+   "placebo_rate05": 0.0525,
+   "by_null_declarations": 8,
+   "by_any_null_declared_frac": 0.035,
+   "beta_true_edges": 0.2,
+   "wall_s": 219.2
+  },
+  "R1|4000": {
+   "reps": 200,
+   "n_null_p": 2800,
+   "rate05": 0.055714285714285716,
+   "ci05": [
+    0.04781108661334037,
+    0.06483493447429883
+   ],
+   "rate01": 0.011428571428571429,
+   "rate10": 0.10571428571428572,
+   "mean_p": 0.5027438883446829,
+   "placebo_rate05": 0.055,
+   "by_null_declarations": 11,
+   "by_any_null_declared_frac": 0.055,
+   "beta_true_edges": 0.2,
+   "wall_s": 587.6
+  }
+ }
+}

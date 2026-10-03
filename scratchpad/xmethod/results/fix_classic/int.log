@@ -1,0 +1,28 @@
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E1|R1|n1000|s3000000 cpu 1.10s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E1|R2|n1000|s3000000 cpu 0.83s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E2|R1|n1000|s3000000 cpu 2.62s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E2|R2|n1000|s3000000 cpu 2.35s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E3|R1|n1000|s3000000 cpu 1.32s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E3|R2|n1000|s3000000 cpu 1.16s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E4|R1|lam1.5|n1000|s3000000 cpu 0.31s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E4|R2|lam1.5|n1000|s3000000 cpu 0.28s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E4|R3|lam1.5|n1000|s3000000 cpu 0.25s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E4|R4|lam1.5|n1000|s3000000 cpu 0.24s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E5|R1|n1000|s3000000 cpu 1.52s ok
+[xm] cdd_oran.xmethod.methods.shap_dag:ShapDag|E5|R2|n1000|s3000000 cpu 1.29s ok
+[xm] part 0/1: 12 jobs run
+{"method": "shap_dag", "tune_cpu_s": 43.5, "spec": "/kaggle/working/out/int/spec_shap_dag.json", "results": "/kaggle/working/out/int/res_shap_dag.jsonl"}
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E1|R1|n1000|s3000000 cpu 3.05s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E1|R2|n1000|s3000000 cpu 2.37s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E2|R1|n1000|s3000000 cpu 3.22s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E2|R2|n1000|s3000000 cpu 3.44s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E3|R1|n1000|s3000000 cpu 2.38s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E3|R2|n1000|s3000000 cpu 2.43s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E4|R1|lam1.5|n1000|s3000000 cpu 0.91s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E4|R2|lam1.5|n1000|s3000000 cpu 0.90s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E4|R3|lam1.5|n1000|s3000000 cpu 1.00s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E4|R4|lam1.5|n1000|s3000000 cpu 1.01s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E5|R1|n1000|s3000000 cpu 2.12s ok
+[xm] cdd_oran.xmethod.methods.two_tower:TwoTowerM|E5|R2|n1000|s3000000 cpu 2.13s ok
+[xm] part 0/1: 12 jobs run
+{"method": "two_tower", "tune_cpu_s": 72.0, "spec": "/kaggle/working/out/int/spec_two_tower.json", "results": "/kaggle/working/out/int/res_two_tower.jsonl"}
