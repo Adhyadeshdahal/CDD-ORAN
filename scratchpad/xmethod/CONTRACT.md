@@ -77,7 +77,8 @@ A gate that fails is reported, not worked around.
 ## 6. Seeds (DEV block for this study; registered by the orchestrator)
 
 DEV: 3_000_000 - 3_000_199 for every world (corpus seeds); method RNG streams tag 7801 (pmrt_core), 7802 (citests),
-7803 (classic). EVAL block 3_100_000+ is RESERVED: do not use.
+7803 (classic), 7804 (cdl, R-50: torch seed = default_rng([7804, dataset seed, fit index])). EVAL block 3_100_000+
+is RESERVED: do not use.
 
 ## 7. Sample sizes
 
@@ -266,3 +267,9 @@ hand-back, with measured CPU-s and peak RAM per run).
 - R-51 cdl gets the full DEV grid run by dev-runs before the freeze (T1 / T4 (iii) apply, no waiver). T3 host: DEV
   costs from any platform are accepted, converted to the Kaggle reference by a measured speed factor (same
   calibration units run on both hosts, factor recorded).
+- R-52 R-42 selection applied: winner gbm (pmrt_core statistic="gbm", pmrt-core-v2; arm pmrt_nl_eq): F4 0/24 and
+  DEV 0/108 INVALID cells, recall .749 (rff .666, poly .638, linear .420), cost n 4000 <= 57 CPU-s. Linear stays
+  secondary (pmrt_eq). Merged 5e8b4f9.
+- R-53 cdl merged: F2 bitwise port, F3 Env II PASS / Env I 4 of 5 seeds (miss at the paper's seed: weak edge, CPU vs
+  paper's CUDA), F4 primary family VALID, power 1.00; cost n 24000 514 CPU-s (all n feasible). Its KPI->KPI family
+  is "not calibrated by the action placebo" (no claim). Epoch budget ~130 epochs, cap 16k steps.

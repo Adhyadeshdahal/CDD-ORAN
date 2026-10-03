@@ -1,0 +1,49 @@
+{
+ "methods": [
+  "cdd_oran.xmethod.methods.cdl:CDLMethod"
+ ],
+ "worlds": [
+  "E3"
+ ],
+ "regimes": [
+  "R1",
+  "R2"
+ ],
+ "ns": [
+  1000
+ ],
+ "seeds": [
+  3000000
+ ],
+ "lams": [
+  1.5
+ ],
+ "kappas": [
+  0.25
+ ],
+ "configs": {
+  "cdd_oran.xmethod.methods.cdl:CDLMethod": {
+   "default": {},
+   "E3|R1|k0.25|n1000": {
+    "tau": 0.002417971147224307,
+    "tau_rule": "placebo_conformal_0.05",
+    "n_placebo_scores": 15,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   },
+   "E3|R2|k0.25|n1000": {
+    "tau": 0.0019809461664408445,
+    "tau_rule": "placebo_conformal_0.05",
+    "n_placebo_scores": 15,
+    "dev_seeds": [
+     3000001,
+     3000002,
+     3000003
+    ]
+   }
+  }
+ }
+}

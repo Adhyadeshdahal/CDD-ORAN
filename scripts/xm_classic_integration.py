@@ -25,12 +25,14 @@ from cdd_oran.xmethod.runner import cell_key  # noqa: E402
 from cdd_oran.xmethod.worlds import REGIMES_OF, generate_dataset  # noqa: E402
 
 CLASSES = {"pc": "pc:PC", "notears": "notears:Notears", "shap_dag": "shap_dag:ShapDag",
-           "two_tower": "two_tower:TwoTowerM", "corr": "corr:Corr", "granger": "granger:Granger"}
+           "two_tower": "two_tower:TwoTowerM", "corr": "corr:Corr", "granger": "granger:Granger", "cdl": "cdl:CDLMethod"}
 LAM = 1.5
 
 
-def cells(method: str):
+def cells(method: str, worlds=None):
     for w, regs in REGIMES_OF.items():
+        if worlds and w not in worlds:
+            continue
         if method == "granger" and w != "E3":
             continue
         for r in regs:
@@ -46,6 +48,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--kappa", type=float, required=True,
                     help="R-24 observation noise for every world (the runner requires it; 0 = noiseless)")
+    ap.add_argument("--worlds", default="", help="comma list of worlds to run (default: all; shards a job)")
     ap.add_argument("--arm", choices=("eq", "native"), default=None,
                     help="R-17 / R-18 arm for tune and run (default: the method's default arm)")
     a = ap.parse_args(argv)
@@ -58,7 +61,7 @@ def main(argv=None) -> int:
         meth = METHODS[m]()
         arm = {} if a.arm is None else {"arm": a.arm}
         configs: dict = {"default": dict(arm)}
-        cl = list(cells(m))
+        cl = list(cells(m, set(filter(None, a.worlds.split(",")))))
         for w, r, lam in cl:
             if meth.uses_p:
                 continue

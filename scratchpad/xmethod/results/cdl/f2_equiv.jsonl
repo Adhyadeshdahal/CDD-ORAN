@@ -1,0 +1,2 @@
+{"mode": "equiv", "env": "env_i_cdl.yaml", "total_steps": 1500, "init_steps": 500, "cmi_max_abs_diff": 0.0, "weights_max_abs_diff": 0.0, "bitwise_equal": true, "cmi_nonzero": true, "cpu_s": [283.75, 291.390625]}
+{"mode": "equiv", "env": "env_ii_cdl.yaml", "total_steps": 1500, "init_steps": 500, "cmi_max_abs_diff": 0.0, "weights_max_abs_diff": 0.0, "bitwise_equal": true, "cmi_nonzero": true, "cpu_s": [436.0625, 413.453125]}

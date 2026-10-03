@@ -1,0 +1,1 @@
+{"mode": "golden", "result": {"EnvironmentI": {"original": {"max_abs_diff": 1.199999999368373e-07, "pass": true}, "port": {"max_abs_diff": 1.199999999368373e-07, "pass": true}}, "EnvironmentII": {"original": {"max_abs_diff": 1.199999999368373e-07, "pass": true}, "port": {"max_abs_diff": 1.199999999368373e-07, "pass": true}}}}

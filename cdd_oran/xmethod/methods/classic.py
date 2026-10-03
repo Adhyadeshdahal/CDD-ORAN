@@ -10,7 +10,7 @@ from collections.abc import Iterator, Mapping
 
 _PATHS = {"pc": ("pc", "PC"), "notears": ("notears", "Notears"), "shap_dag": ("shap_dag", "ShapDag"),
           "two_tower": ("two_tower", "TwoTowerM"), "corr": ("corr", "Corr"), "granger": ("granger", "Granger"),
-          "pcorr_hac": ("pcorr_hac", "PcorrHac")}
+          "pcorr_hac": ("pcorr_hac", "PcorrHac"), "cdl": ("cdl", "CDLMethod")}
 
 
 class _Lazy(Mapping):
