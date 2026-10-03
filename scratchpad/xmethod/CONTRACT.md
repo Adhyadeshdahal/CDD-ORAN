@@ -273,3 +273,6 @@ hand-back, with measured CPU-s and peak RAM per run).
 - R-53 cdl merged: F2 bitwise port, F3 Env II PASS / Env I 4 of 5 seeds (miss at the paper's seed: weak edge, CPU vs
   paper's CUDA), F4 primary family VALID, power 1.00; cost n 24000 514 CPU-s (all n feasible). Its KPI->KPI family
   is "not calibrated by the action placebo" (no claim). Epoch budget ~130 epochs, cap 16k steps.
+- R-54 mscr (user, 2026-10-03, CI DEV Q11): kept in Study A as a reported-INVALID arm. All mscr arms (eq too) reject
+  truth-null edges in R2 at .93-1.00 (single conditioner, cannot condition on the joint design set; cf. R-40). EVAL
+  runs mscr at n <= 1000 only (settles the large-n grid question); its verdicts feed C1 framing, never C2b.

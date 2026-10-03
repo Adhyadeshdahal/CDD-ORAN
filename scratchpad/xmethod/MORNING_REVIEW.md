@@ -43,3 +43,12 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
 - CMI-kNN GPU cost: ~40 min per dataset at n 4000, ~5 h at n 8000 (over budget). Full grid at n 4000 may need far
   more GPU-hours than Kaggle's ~30/week: decision pending the pilot projection.
 - R-44 Lightning up to 3.77 credits; Colab-first retry policy (user).
+
+## Night 2026-10-03 -> 04 (user asleep; user approved: freeze + EVAL launch tonight if green; cloud only, no laptop shards, no Lightning)
+- Evening: CI DEV run done (58 480 / 58 480 ok; results/dev/ci_c/REPORT.md in wt xm-pmrt). R-54 (user): mscr kept as
+  reported-INVALID arm, EVAL n <= 1000. rcot2_eq INVALID in most R2 cells (.067-.104) -> C2b fallback wording (R-31).
+- Running: cdl DEV (dispatcher, Kaggle + Colab), pmrt_nl_eq T1 DEV (Kaggle xm-dev-pmrtnl-k1).
+- Workers tonight: aud1 = finish cdl + pmrt_nl DEV, power calc; xm-harness = freeze package (T-register, EVAL spec,
+  launch plan, checklist) on xm/freeze-prep; cdl = Experiment B plan/driver on xm/exp-b (no launch until slots free);
+  xm-citests = Experiment C runtime-table script on xm/exp-c.
+- Decisions overnight are logged below with the subagent panel's votes.
