@@ -256,3 +256,10 @@ hand-back, with measured CPU-s and peak RAM per run).
 - R-49 (user) CMI-kNN exact speed-up: reuse the conditioning-set neighbourhoods across local shuffles + batched GPU
   shuffles; same statistic and null as tigramite CMIknn (shuffle test); must reproduce the current backend exactly
   (or a stated float tolerance with identical decisions) before use. No approximate kNN.
+- R-49 REVISED (user): CMI-kNN (tigramite CMIknn) is DROPPED from Study A, like pdCor (cost; RCoT and pcorr remain
+  as CI tests). No cmi-fast worker.
+- R-50 (user, 2026-10-03) ADD CDL (the authors' NaNA 2026 conference method: Wang et al. 2022 Causal Dynamics
+  Learning, masked neural predictor, CMI from likelihood ratios, EMA, threshold). Source: branch refactor/codebase
+  cdd_oran/models/cdl.py + configs/env_*_cdl.yaml + tests/golden/Environment*_CDL.json. Score-only method: primary
+  declaration = conformal placebo tau (R-29) like other score-only arms; the conference's fixed threshold reported
+  as secondary. Native arm only (no conditioning interface), R-37 applies.
