@@ -1,6 +1,6 @@
 # Study A protocol: design-based vs design-blind edge tests on E1-E5 (EVAL pre-registration)
 
-FROZEN: no (DRAFT v4, worker `protocol`, 2026-10-03; branch xm/protocol7, feat/v2 8e4cb85; rulings R-1..R-50)
+FROZEN: no (DRAFT v4, worker `protocol`, 2026-10-03; branch xm/protocol8, feat/v2 95663ec; rulings R-1..R-51)
 
 Freeze procedure. Before any EVAL unit is generated: (1) every T-item of section 13 is filled by its rule and the
 value is written here; (2) the line above becomes "FROZEN: yes (<date>)"; (3) `specs/eval/full.json` gets
@@ -281,13 +281,18 @@ E4 by lambda, cost vs n.
   detectable gap at S per pair reported; the max over noisy DEV sd's biases S upward (disclosed). The PMRT arm of the
   pairs is the primary one (`t1 --focal pmrt_nl_eq`): dev-runs runs the T10 winner on the T1 cells (DEV measure
   seeds) and that DEV run is in the T1 input; under the T10 fallback, pmrt_eq. CI DEV plan C (R-47): mscr's DEV run
-  covers n <= 1000 only, so its pairs use n 500 / 1000. VALUE: TBD.
+  covers n <= 1000 only, so its pairs use n 500 / 1000. cdl (R-51): dev-runs runs it on the full DEV grid before the
+  freeze, and that run is in the T1 input (T4 (iii) applies, no waiver). VALUE: TBD.
 - T2 tau: from the EVAL tune records (section 6); not a DEV quantity.
-- T3 infeasible (arm, n): max over worlds, regimes, lambdas of DEV `cpu_s` per unit on host.platform kaggle > 7200
-  makes n and every larger n infeasible (spec `max_n`, `t3_cost_cpu_s`). Without a Kaggle DEV cost at that n: a cost
-  pilot on Kaggle, DEV seeds 3_000_000-002, in the 3 (world, regime) costliest at the arm's largest measured n; its
-  max decides. Pilot: none infeasible (max 144 s). GPU arms (R-41): the same rule on DEV wall-s per unit (child wall
-  clock when isolated) on a Kaggle T4 > 7200 (spec `t3_cost_wall_s`), cost pilot on a Kaggle T4. VALUE: TBD.
+- T3 infeasible (arm, n): max over worlds, regimes, lambdas of DEV `cpu_s` per unit, in Kaggle reference seconds,
+  > 7200 makes n and every larger n infeasible (spec `max_n`, `t3_cost_cpu_s`). DEV costs from any platform count
+  (R-51): a unit run on another host type (Lightning, Colab) is converted as cost x f, f the measured speed factor of
+  that (arm, host type) = sum of Kaggle cost / sum of host cost over the same calibration units run on both hosts
+  (DEV seeds 3_000_000-002 in the arm's 3 costliest (world, regime) at its largest measured n). The units, both
+  costs and f are recorded in the freeze commit. Without a DEV cost at that n: a cost pilot on those calibration
+  units, on Kaggle or on another host with its f; its max decides. Pilot: none infeasible (max 144 s). GPU arms
+  (R-41): the same rule on DEV wall-s per unit (child wall clock when isolated), referenced to a Kaggle T4 > 7200
+  (spec `t3_cost_wall_s`), f measured against a Kaggle T4. VALUE: TBD.
 - T4 admitted CI-test arms, HAC arms and cdl: iff (i) the F1-F6 line in `status/xm-citests.md` (HAC: `status/hac.md`;
   cdl: its fidelity line in `status/cdl.md`, R-50) and
   (ii) the verdict in `status/audit-citests.md` are PASS or PASS-WITH-NOTES (audit table: OK, or a doc / protocol FIX
