@@ -276,3 +276,19 @@ hand-back, with measured CPU-s and peak RAM per run).
 - R-54 mscr (user, 2026-10-03, CI DEV Q11): kept in Study A as a reported-INVALID arm. All mscr arms (eq too) reject
   truth-null edges in R2 at .93-1.00 (single conditioner, cannot condition on the joint design set; cf. R-40). EVAL
   runs mscr at n <= 1000 only (settles the large-n grid question); its verdicts feed C1 framing, never C2b.
+- R-55 Exp C / T3 timing (overnight panel 3/3 unanimous, 2026-10-04): (1) T3 speed factors from a TRIMMED paired
+  calibration block (5-6 anchor arms spanning cheap/medium/expensive, n 500/1000/4000, 3 repeats), run as its own job
+  under 1 process per vCPU (cgroup quota, never oversubscribed) on Kaggle (reference) and Colab, before EVAL where
+  slots allow; full 201-unit plan only if spare capacity. Uncalibrated host -> results provisional; a method within
+  the factor's error of 7200 CPU-s counts as over budget. (2) Host type = platform + CPU model (/proc/cpuinfo logged
+  per record). (3) Paper runtime table = dedicated uncontended timing run on Kaggle (1 proc/vCPU, few datasets per
+  method x n, peak RSS); campaign CPU-s only supplementary with load mix disclosed. (4) Rows pool tune+measure seeds,
+  kappas, lambdas; report median, mean, min, max; tune/measure flag kept; per world/regime breakdown in json.
+  EVAL sessions run 1 process per vCPU and log CPU model, loadavg, concurrent processes per unit.
+- R-56 freeze-prep Q1-Q3 (overnight panel of 3, 2026-10-04): Q1 (3/3) keep the C2b membership rule; the C2 text and
+  main table NAME rcot2_eq as an eq arm INVALID in R2 (with its R1 vs R2 rates; cause: RCoT2 miscalibrated already in
+  R1); pre-registered unfiltered table of every eq arm's verdict; C2b also reported with / without the R1-failing
+  partners. Q2 (2/3) mscr_native stays in set D (R-54); C1 reported with and without mscr (sensitivity line); the
+  C1-FAILURE definition (INVALID in R2, not in R1) applies to it unchanged. Q3 (2/3) T6 cap lowered to 60 as a stated
+  compute ceiling (free tiers; S 100 ~94 h wall risks incomplete cells): S = clip(S_power, 40, 60), S_power from DEV
+  data only, frozen; if S_power > 60 the study runs at 60 and reports achieved power.

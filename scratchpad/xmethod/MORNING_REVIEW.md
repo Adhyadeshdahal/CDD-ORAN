@@ -52,3 +52,16 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   launch plan, checklist) on xm/freeze-prep; cdl = Experiment B plan/driver on xm/exp-b (no launch until slots free);
   xm-citests = Experiment C runtime-table script on xm/exp-c.
 - Decisions overnight are logged below with the subagent panel's votes.
+- 00:20 R-55 (Exp C / T3 timing; xm-citests Q1-Q4): panel of 3 subagents (generalist, skeptical referee, pragmatist)
+  unanimous: trimmed paired calibration under controlled load before EVAL; host = platform + CPU model; paper runtime
+  table from a dedicated uncontended Kaggle timing run (campaign CPU-s supplementary); pool rows, median/mean/min/max.
+  Also: EVAL runs 1 process per vCPU (ci_c ran ~3.5x oversubscribed) and logs CPU model / load per unit.
+- 00:45 R-56 (xm-harness freeze-prep Q1-Q3; panel: methodologist, skeptical referee, pragmatist):
+  Q1 3/3 keep C2b rule + name rcot2_eq as failing eq arm + unfiltered eq-arm table. Q2 2/3 (referee dissent: set_D
+  false, "padding") keep mscr_native in set D + C1 sensitivity with/without mscr. Q3 2/3 (methodologist dissent: keep
+  100, cap unlikely to bind) T6 cap 60, S = clip(S_power, 40, 60). REVIEW: Q2 and Q3 were split votes.
+  Also answered Q4 myself: calibration anchors at n 500/1000/4000, 3 repeats.
+- 01:10 Exp B (cdl worker, xm/exp-b): plan + code ready (19 arms on frozen v4 E6 episodes, read from Kaggle outputs;
+  GT as stored: TRUE 29 / NULL 21 / INDET 10; ~71 core-h, cdl ~55). Answered defaults: LOSO conformal tau, full
+  context in eq + native, mscr n <= 1000, granger kept (labelled). GO for the pilot only, lowest priority (launch when
+  < 4 of my Kaggle sessions run); P1 waits (EVAL first). Copied campaign.py / dev_power.py into its worktree.
