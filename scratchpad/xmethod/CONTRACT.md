@@ -244,3 +244,15 @@ hand-back, with measured CPU-s and peak RAM per run).
   per cell nominal, .049-.053). Wording: PMRT is asymptotically valid (martingale CLT; its predictable adjustment
   uses the focal action's own past dither); exact only when the adjustment is invariant to the focal dither. The
   optional exact `inv` variant is NOT added (applies to memoryless E2 only; costs 1-2.5 pts recall).
+- R-46 (user, 2026-10-03) supersedes the reserve framing of R-26/R-44: Kaggle (5), Lightning (several CPU/GPU
+  studios; measured ~0.06 credits/h per CPU studio, 5-8x faster than the laptop) and Colab are ALL primary. Every
+  shard plan splits across them in parallel from the start. Credits logged per job; ask the orchestrator before
+  cumulative Lightning use passes 3 credits. Stop studios when idle.
+- R-47 (user, 2026-10-03) CI DEV plan C: full DEV grid for pcorr (7 arms) + rcot2 (3); mscr (3) at n <= 1000;
+  pdcor and cmi_knn get T3 cost probes only (no DEV validity / power). Full grid was ~5900 core-h + 372-1482 GPU-h.
+  OPEN for the freeze: the EVAL grid for pdcor / cmi_knn / mscr at large n (decide with the user).
+- R-48 (user, 2026-10-03) pdCor DROPPED from Study A (all arms): not a valid CI test under conditioning (audit:
+  E2 R2 eq null .22, P_placebo_conf 5/5), O(n^2) cost, no role in any verdict. Paper: one "considered, excluded" line.
+- R-49 (user) CMI-kNN exact speed-up: reuse the conditioning-set neighbourhoods across local shuffles + batched GPU
+  shuffles; same statistic and null as tigramite CMIknn (shuffle test); must reproduce the current backend exactly
+  (or a stated float tolerance with identical decisions) before use. No approximate kNN.
