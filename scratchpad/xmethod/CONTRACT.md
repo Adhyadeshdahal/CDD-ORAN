@@ -292,3 +292,17 @@ hand-back, with measured CPU-s and peak RAM per run).
   C1-FAILURE definition (INVALID in R2, not in R1) applies to it unchanged. Q3 (2/3) T6 cap lowered to 60 as a stated
   compute ceiling (free tiers; S 100 ~94 h wall risks incomplete cells): S = clip(S_power, 40, 60), S_power from DEV
   data only, frozen; if S_power > 60 the study runs at 60 and reports achieved power.
+- R-57 EVAL interpreter pinned to exactly Python 3.12.14 on every platform (Kaggle, Colab, Lightning, VPS): uv's
+  "3.12" now resolves to 3.12.15. campaign.py EVAL_PYTHON = "3.12.14"; pin_check fails a session on any other patch.
+  (User: VPS upgraded to match.)
+- R-58 EVAL scope trim (user GO 2026-10-04 after a 4-reviewer scope panel: claims auditor, skeptical referee,
+  compute economist, paper editor). Pre-registered grid choices (spec max_n / blocks + s.7 text; report says
+  "not in grid", never missing / PARTIAL):
+  (1) cdl: R1/R2 only, n <= 4000 (training cost; feeds no claim); not in E4 R3/R4, not in the kappa sweep.
+  (2) pmrt_nl_eq: R1/R2 at all five n (C2a keeps its 50 cells and F_max).
+  (3) E4 R3: C3 readers at S_E4 300. Fallback ONLY if the pmrt_nl_eq n 8000/24000 cost pilot shows E4 R3 n 24000 is
+      expensive: drop n 24000 in E4 R3 for ALL C3 readers alike (never PMRT alone); then re-simulate C3 F_max + T9.
+  (4) E4 R4: every arm at S (not 300); negative control, no claim.
+  (5) mscr_eq_min dropped; mscr arms out of the kappa sweep. (6) Everything else unchanged.
+  (7) Freeze does not wait for cdl DEV parts at n > 4000 (T1 uses n <= 4000; cdl capped); they finish as descriptive.
+  Expected EVAL ~360-450 CPU-h (was ~1 243), ~17-22 h wall on Kaggle + VPS.

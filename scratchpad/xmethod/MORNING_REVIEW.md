@@ -69,3 +69,14 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   launch plan S 40 ~1 240 CPU-h ~56 h wall on 4 Kaggle + 3 Colab; checklist), aa6d02e EVAL report generator (DEV
   rehearsal: C1 SUPPORTED 5/6 (4/5 without mscr), C2a SUPPORTED, C2b SUPPORTED, C3 NOT SUPPORTED = INCONCLUSIVE cells
   at DEV seed counts, 0 INVALID for pmrt; EVAL uses 300 E4 seeds). eval_report.py frozen with eval_analysis (T7).
+- 05:20 NST (23:25 UTC) Colab reclaimed cdl DEV jobs c1 and c3 after ~7 h (272 / 264 of ~318 units pulled; the slow
+  large-n units remained). aud1 asked to requeue the unfinished units via resume (preferably Kaggle), stop the orphan
+  assignment, and make the dispatcher auto-requeue lost jobs. Watcher now also flags Colab job loss / failed launches.
+  Exp B pilot xm-expb-p0b launched on Kaggle (allowed lowest-priority slot).
+- 06:00 NST Colab refuses new runtimes tonight (capacity / usage limit); dispatcher (aud1 efbf9e2) now auto-requeues
+  incomplete parts to Kaggle first (resume from done keys). Kaggle Exp C k3 done 612/612. pmrt_nl k1 overran (~7 h vs
+  3.5 h est; aud1 checks on pull). Told xm-citests to launch the R-55 calibration on Kaggle's 5th slot (Kaggle-only
+  factors tonight; Colab factors provisional until Colab accepts runtimes).
+- 07:00 NST Exp B pilot done 144/144; P1 GO (1 Kaggle slot at a time, yields to EVAL); over-budget cdl units measured (R-13). Calibration k1 + pmrt_nl k1 COMPLETE (pull asked). Requeue launch hit a slug collision; aud1 fixing.
+- 09:06 NST user: keep R-56 split votes as decided; Lightning GO for remaining credits (aud1: last cdl parts 60-63 on one cpu-4 studio). Paperspace probe proposed (key to be stored by user in env/config, not chat).
+- 11:06 NST R-58 EVAL scope trim (user GO after 4-reviewer panel): ~1 243 -> ~360-450 CPU-h; freeze no longer waits for large-n cdl DEV.
