@@ -320,3 +320,25 @@ hand-back, with measured CPU-s and peak RAM per run).
   (F7) EVAL refuses --no-isolate; isolation mode is stamped.
   (F8) vps --procs sets the scope CPUQuota (procs x 100 %), so NP follows it. (F9) merge summary adds python,
        lock_sha256 and spec_file_sha256 sets. (F10) no change (no effect on the frozen spec), noted in the audit.
+- R-60 Overnight supplementary experiments (user: "run experiments that strengthen the paper"; 4-reviewer panel
+  2026-10-04: referee, paper editor, integrity auditor, compute economist). All EXPLORATORY / supplementary: never
+  change C1-C3 verdicts or the E6 headline; own specs + output dirs (never specs/eval or EVAL shards); methods and
+  procedures exactly as frozen; fresh seed block 3_200_000-3_200_199 (claimed XMETHOD_EXTRAS in SEED_REGISTRY);
+  declared in scratchpad/xmethod/EXTRAS_PROTOCOL.md and committed BEFORE launch and before anyone reads EVAL output;
+  every declared run reported whatever the outcome; start only after EVAL has launched all 96 parts (Kaggle) / its
+  last VPS job is pulled; EVAL requeues keep priority (keep 1 Kaggle slot free until EVAL merge checks pass).
+  (X1) R-55 paper timing run (pre-registered, Exp C exp_c_timing.py --block paper): one uncontended Kaggle session,
+       mscr_eq_min dropped (R-58(5)); log CPU model (EPYC 7B12 = provisional).
+  (X2) Dither dose-response (C1 mechanism): E1, E2, E3 R2, n 1000 and 4000, kappa .25; DITHER_DELTA {.02,.05,.10,
+       .20} at the frozen block count, plus blocks {5, 80} at delta .10; arms corr, pc_eq, notears, shap_dag,
+       pcorr_native, pcorr_eq, pmrt_eq, pmrt_nl_eq; 20 tune + 40 measure seeds per design (tau re-derived per design
+       by the frozen R-29 procedure on its own tune seeds); generator constants overridden by a NEW wrapper module,
+       frozen generate.py untouched; delta .10 / frozen blocks = reproduction check of the EVAL design.
+  (X3) Design-misspecification stress test (C2a assumption): the data stay as generated, the design TOLD to the
+       design-based arms is wrong: dither width x0.5, x0.8, x1.25, x2; setpoint switch times shifted 2 % / 5 % of a
+       block; E1 R2 and E2 R2 at n 1000 (+ E4 R3 lam 1 propensity distortion only if code is small); arms pmrt_nl_eq,
+       pmrt_eq, pmrt_r3, pcorr_eq (contrast); 60 measure seeds. Reported as a degradation curve (where the known-
+       design assumption breaks), not as evidence against C2a.
+  Order X1 > X2 > X3; X3 only if capacity remains. Deferred to the user: Exp B effect injection, the pmrt_nl gap
+  diagnostic (post-hoc optics), Exp B method-RNG replication, bridge figures (paper phase). Rejected: S extension
+  40 -> 100 (S creep), extra kappa sweep (EVAL covers it), anything on seeds 3_100_000-299.
