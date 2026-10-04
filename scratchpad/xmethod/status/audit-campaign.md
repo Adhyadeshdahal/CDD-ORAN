@@ -1,6 +1,21 @@
-READY-TO-MERGE
+READY-TO-MERGE (re-audit)
 
-# audit-campaign status (2026-10-04): DONE. Verdict FAIL (1 blocker, 1 ruling needed)
+# audit-campaign status (2026-10-04): RE-AUDIT DONE, PASS-WITH-NOTES (R-59 fixes at xm/freeze 581317a)
+
+## Re-audit (R-59)
+- Report: scratchpad/xmethod/results/audit/campaign_eval_reaudit.md.
+- F1-F9 fixed as R-59 says, each with a real test. F1: records written by campaign.run_units pass V11 stamps (Linux
+  eval case run in a throwaway Docker container).
+- No new path that skips or duplicates units, accepts a wrong record, or changes method outputs. DEV is unchanged
+  except stamps, the skip-from mode filter, exit code and merge sets.
+- PROTOCOL_A s.11 (853392e): only the stamp field renamed; spec protocol_sha256 = the new LF sha c5f7a4fe...
+- Tests on 581317a: Windows 96 passed / 3 Linux-only skips; Linux 98 passed / 1 git skip.
+- Notes N1-N6 (low / info):
+  - N1 merge ok > infeasible across independent sessions;
+  - N5 FREEZE_NOTE still STALE (current hashes listed);
+  - N6 launch tests need the generated lock export.
+
+## First audit (superseded by the re-audit): FAIL (1 blocker, 1 ruling needed)
 
 Independent audit of `cdd_oran/xmethod/campaign.py` EVAL paths (+ `scratchpad/e6_dev/vps_run.py`), freeze
 checklist B6 / PROTOCOL_A s.11 T7. Worker exp-b (branch xm/exp-b, worktree xm-classic), after merging feat/v2
