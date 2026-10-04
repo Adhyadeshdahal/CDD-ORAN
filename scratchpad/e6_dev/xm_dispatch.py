@@ -3,7 +3,8 @@ launches the next chunk of parts on the first platform with room, at most one la
 used (credits: ask first).
 
   .venv/Scripts/python.exe scratchpad/e6_dev/xm_dispatch.py init NAME --spec S --cost-table T --parts P
-                           [--kaggle-chunk 8] [--colab-chunk 4] [--skip-complete-from GLOB ...]
+                           [--kaggle-chunk 8] [--colab-chunk 4] [--skip-complete-from GLOB ...] [--vps]
+                           [--only kaggle|vps|colab ...]     # restrict the queue to these platforms
   .venv/Scripts/python.exe scratchpad/e6_dev/xm_dispatch.py tick NAME      # one launch at most
   .venv/Scripts/python.exe scratchpad/e6_dev/xm_dispatch.py schedule NAME [MIN] | unschedule NAME | show NAME
 
@@ -249,6 +250,11 @@ def tick(a):
         _tick(a)
 
 
+def _allowed(st, platform) -> bool:
+    """init --only restricts a queue to some platforms (e.g. a VPS-only smoke); default: all."""
+    return platform in (st.get("only") or ("kaggle", "vps", "colab"))
+
+
 def _tick(a):
     st = _load(a.name)
     for j in st["jobs"]:                                   # jobs pulled before check_job existed
@@ -285,7 +291,7 @@ def _tick(a):
         return                                             # nothing else launches before it
     vps_free = st.get("vps", False) and not any(j["platform"] == "vps" and not j.get("pulled") for j in st["jobs"])         and time.time() >= st.get("vps_backoff_until", 0)
     if rq:                                                 # resume lost / cut parts first: Kaggle, else the VPS
-        kag = kn < KAGGLE_MAX and km < KAGGLE_MINE_MAX     # (never Colab: it reclaims runtimes after ~7 h)
+        kag = kn < KAGGLE_MAX and km < KAGGLE_MINE_MAX and _allowed(st, "kaggle")   # (never Colab: ~7 h reclaim)
         if kag or vps_free:
             plat = "kaggle" if kag else "vps"
             ids = rq[:st["kaggle_chunk"] if kag else VPS_CHUNK]
@@ -308,7 +314,7 @@ def _tick(a):
                                 ("vps", vps_ok, VPS_CHUNK),
                                 ("colab", ca < COLAB_MAX and time.time() >= st.get("colab_backoff_until", 0),
                                  st["colab_chunk"])):
-        if not ok:
+        if not ok or not _allowed(st, platform):
             continue
         ids = list(range(st["next"], min(st["next"] + chunk, st.get("parts_end", st["parts"]))))
         job = _job_name(a, st, platform)
@@ -386,6 +392,8 @@ def main() -> int:
     p.add_argument("--colab-chunk", type=int, default=4)
     p.add_argument("--skip-complete-from", nargs="*", default=None)
     p.add_argument("--vps", action="store_true", help="also use the user VPS lane (one 7-part job at a time)")
+    p.add_argument("--only", nargs="+", choices=("kaggle", "vps", "colab"), default=None,
+                   help="use only these platforms (--only vps implies --vps)")
     for c in ("tick", "unschedule", "show"):
         sub.add_parser(c).add_argument("name")
     p = sub.add_parser("schedule")
@@ -394,7 +402,7 @@ def main() -> int:
     a = ap.parse_args()
     if a.action == "init":
         _save(a.name, {"spec": a.spec, "cost_table": a.cost_table, "parts": a.parts, "kaggle_chunk": a.kaggle_chunk,
-                       "colab_chunk": a.colab_chunk, "skip_from": a.skip_complete_from, "vps": a.vps, "next": 0,
+                       "colab_chunk": a.colab_chunk, "skip_from": a.skip_complete_from, "vps": a.vps or "vps" in (a.only or ()), "only": a.only, "next": 0,
                        "jobs": []})
         _log(a.name, "init", _load(a.name))
     elif a.action == "show":

@@ -53,4 +53,7 @@ Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files on
 - VPS lane DONE (daded38): campaign vps = vps_run.py (xm/exp-c, CLI v1) push + venv (Py 3.12.14, exact pin
   check) + launch (<= 7 procs, systemd scope); dispatcher lane (init --vps): 1 job of 7 parts at a time, pulled
   each tick, requeue-able, 30 min backoff on a safety refusal. cpu_quota now reads the process's own cgroup
-  (the scope's 700 %), not only the root. Live smoke pending (VPS was busy with Exp B).
+  (the scope's 700 %), not only the root.
+- VPS LIVE SMOKE PASSED (b8b33d6; xm-citests gave the slot): queue xm-vps-smoke (init --only vps, new) -> tick launched
+  xm-vps-smoke-v1-041259 (specs/dev/vps_smoke.json, 4 DEV units, 2 procs, vps_run 1b33ca1 venv Py 3.12.14, 0 pin mismatches)
+  -> exit 0 in < 1 min -> tick pulled + checked (0 incomplete). Records: 4 / 4 ok, clean, host vps AMD EPYC-Rome, cpu_quota 7; nothing left running.
