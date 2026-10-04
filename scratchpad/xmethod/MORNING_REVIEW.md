@@ -91,3 +91,15 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   provisional T3 read (margin >= 26.8x); _ref/ kept as DEV provenance, outside the manifest; PROTOCOL_A s.11 stamp
   field renamed (R-59). Re-audit N1: every EVAL relaunch uses --skip-complete-from; infeasible+ok key check at merge.
 - Freeze merged: 93856c2 (tree = xm/freeze 22d85c3). EVAL launch GO to aud1 (Kaggle + VPS, Colab if granted).
+
+## 2026-10-04 night: supplementary experiments (user: "run experiments that strengthen the paper")
+- 4-reviewer panel (referee, paper editor, integrity auditor, compute economist) -> R-60 (2f01f1e).
+  Consensus: X1 R-55 paper timing run first (all 4); X2 dither dose-response = C1 mechanism figure (referee #2,
+  editor #1); X3 design-misspecification stress test (referee #1; where PMRT's known-design assumption breaks).
+  Guardrails (auditor): declare before launch and before reading EVAL; fresh seeds 3_200_000+; own dirs; report all.
+- Rejected: S 40 -> 100 seed extension (economist #3; auditor: S creep, worst harm); extra kappa sweep.
+- Deferred to you: Exp B effect injection on E6 (referee #3), pmrt_nl recall-gap diagnostic (editor #3; reads as
+  post-hoc tuning of the primary), Exp B method-RNG replication (auditor #2), zero-compute bridge figures (editor #2,
+  paper phase: Study A recall-vs-n next to Exp B slices; placebo-p QQ adjusted vs unadjusted).
+- Panel capacity estimate: EVAL ~1.75x faster than projected; Kaggle frees ~01:00 UTC, VPS ~02:10; ~160
+  Kaggle-equivalent CPU-h usable before 09:00.
