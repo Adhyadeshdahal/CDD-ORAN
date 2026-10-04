@@ -306,3 +306,17 @@ hand-back, with measured CPU-s and peak RAM per run).
   (5) mscr_eq_min dropped; mscr arms out of the kappa sweep. (6) Everything else unchanged.
   (7) Freeze does not wait for cdl DEV parts at n > 4000 (T1 uses n <= 4000; cdl capped); they finish as descriptive.
   Expected EVAL ~360-450 CPU-h (was ~1 243), ~17-22 h wall on Kaggle + VPS.
+- R-59 Pre-freeze fixes from the independent campaign.py EVAL audit (results/audit/campaign_eval_audit.md, verdict
+  FAIL; 2026-10-04). Nothing was frozen on feat/v2 yet, so these are fixes before the freeze, not amendments; the
+  freeze is re-hashed after them and the auditor re-checks the diff. Code follows the pre-registered text:
+  (F1) eval_analysis checks the spec stamp against integrity.spec_file_sha256 (LF file sha, the rule of
+       file_sha256); plus a test whose records come from campaign.run_units, not hand-built.
+  (F2) PROTOCOL_A s.7 stands: an EVAL unit over the 2x cap (RLIMIT_CPU 14 400) is recorded infeasible with its CPU-s
+       and never re-run; its cell is infeasible. OOM / other signals stay errors (re-run).
+  (F3) --skip-complete-from applies the merge's accept rule (mode, protocol sha, spec sha) before skipping a key.
+  (F4) integrity stamps cost-table sha + part index / count; merge refuses mixed values within one EVAL run.
+  (F5) session exit code non-zero if any part process failed (wait each PID); vps_run records it.
+  (F6) EVAL refuses --budget different from the spec; the effective cap is stamped.
+  (F7) EVAL refuses --no-isolate; isolation mode is stamped.
+  (F8) vps --procs sets the scope CPUQuota (procs x 100 %), so NP follows it. (F9) merge summary adds python,
+       lock_sha256 and spec_file_sha256 sets. (F10) no change (no effect on the frozen spec), noted in the audit.
