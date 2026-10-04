@@ -1,5 +1,5 @@
 {
- "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL. Updated 2026-10-04: cross-method study (Study A) EVAL block 3100000-3100299 claimed for E1-E5 at its freeze (PROTOCOL_A FROZEN; measure seeds 3100000-3100039, E4 R3 C3 readers 3100000-3100299).",
+ "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL. Updated 2026-10-04: cross-method study (Study A) EVAL block 3100000-3100299 claimed for E1-E5 at its freeze (PROTOCOL_A FROZEN; measure seeds 3100000-3100039, E4 R3 C3 readers 3100000-3100299). Updated 2026-10-05: cross-method study supplementary experiments (R-60, exploratory) block 3200000-3200199 claimed as XMETHOD_EXTRAS for E1-E4 (split: X2 tune 3200000-3200019, X2 measure 3200020-3200059, X3 measure 3200060-3200119, 3200120-3200199 unassigned; scratchpad/xmethod/EXTRAS_PROTOCOL.md).",
  "E1": {
   "used": [
    [
@@ -13,6 +13,10 @@
    [
     3100000,
     3100299
+   ],
+   [
+    3200000,
+    3200199
    ]
   ],
   "note": "E1 discovery envelopes/recovery replicates; E1 is not used by Stage 0.",
@@ -27,6 +31,12 @@
     [
      3100000,
      3100299
+    ]
+   ],
+   "XMETHOD_EXTRAS": [
+    [
+     3200000,
+     3200199
     ]
    ]
   }
@@ -84,6 +94,10 @@
    [
     3100000,
     3100299
+   ],
+   [
+    3200000,
+    3200199
    ]
   ],
   "note": "0-39: calibration/dev corpora + Thread-A discovery seeds; 100000-116383 Thread-A deploy states (incl. 100000-100003 anchors); 200000-200399 Thread-A sign seeds; 500000-500039 Thread-B discovery; 600000-616383 Thread-B deploy; 710000-710009 decision study D1; 800000-800099 MSCR-v2 confirmatory; 900000-1099999 Thread-A reference states. The E2 decision-gate bank pool (env seeds 0-4095) is covered by the E2 bank note below. 722000-722019 Stage 0 F-detect test; 723000-723009 Stage 0 F-graph test; 724000-724019 Stage 0 F-dither test (all delta levels). Stage 0 DEV reused 0-19 (F-detect) and 0-4 (F-graph lambda).",
@@ -105,6 +119,12 @@
      3100000,
      3100299
     ]
+   ],
+   "XMETHOD_EXTRAS": [
+    [
+     3200000,
+     3200199
+    ]
    ]
   }
  },
@@ -125,6 +145,10 @@
    [
     3100000,
     3100299
+   ],
+   [
+    3200000,
+    3200199
    ]
   ],
   "note": "corpus seed 0 (DEV probes), 710000-710009 decision study D1.",
@@ -145,6 +169,12 @@
     [
      3100000,
      3100299
+    ]
+   ],
+   "XMETHOD_EXTRAS": [
+    [
+     3200000,
+     3200199
     ]
    ]
   }
@@ -412,6 +442,10 @@
    [
     3100000,
     3100299
+   ],
+   [
+    3200000,
+    3200199
    ]
   ],
   "claimed_by": {
@@ -425,6 +459,12 @@
     [
      3100000,
      3100299
+    ]
+   ],
+   "XMETHOD_EXTRAS": [
+    [
+     3200000,
+     3200199
     ]
    ]
   },
