@@ -49,6 +49,6 @@ costs, R-57) were cherry-picked first; then one R-58 commit. Local only, not pus
 - F3 E4 R4 now runs at S for the C3 readers too, so V6 E4 R4 rows have 40-60 seeds. No claim reads them.
 
 ## Questions
-- Q1 The R-55 calibration anchors still name mscr_eq_min, which R-58(5) dropped. Keep it as a pure cost anchor (it
-  is the costliest CI arm, so its own factor is unused), or switch to mscr_eq? Default: keep; xm-citests' plan is
-  unchanged.
+- Q1 ANSWERED (orchestrator): keep mscr_eq_min as an R-55 anchor. It is only a CPU-workload benchmark, its paired
+  Kaggle / Colab runs exist, and the factor pools anchors. PROTOCOL_A T3 now says the anchor set is fixed and need
+  not match the EVAL arm set.

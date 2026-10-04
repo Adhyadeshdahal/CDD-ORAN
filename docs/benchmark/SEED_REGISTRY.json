@@ -1,5 +1,5 @@
 {
- "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL.",
+ "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL. Updated 2026-10-04: cross-method study (Study A) EVAL block 3100000-3100299 claimed for E1-E5 at its freeze (PROTOCOL_A FROZEN; measure seeds 3100000-3100039, E4 R3 C3 readers 3100000-3100299).",
  "E1": {
   "used": [
    [
@@ -9,6 +9,10 @@
    [
     3000000,
     3000199
+   ],
+   [
+    3100000,
+    3100299
    ]
   ],
   "note": "E1 discovery envelopes/recovery replicates; E1 is not used by Stage 0.",
@@ -17,6 +21,12 @@
     [
      3000000,
      3000199
+    ]
+   ],
+   "XMETHOD_EVAL": [
+    [
+     3100000,
+     3100299
     ]
    ]
   }
@@ -70,6 +80,10 @@
    [
     3000000,
     3000199
+   ],
+   [
+    3100000,
+    3100299
    ]
   ],
   "note": "0-39: calibration/dev corpora + Thread-A discovery seeds; 100000-116383 Thread-A deploy states (incl. 100000-100003 anchors); 200000-200399 Thread-A sign seeds; 500000-500039 Thread-B discovery; 600000-616383 Thread-B deploy; 710000-710009 decision study D1; 800000-800099 MSCR-v2 confirmatory; 900000-1099999 Thread-A reference states. The E2 decision-gate bank pool (env seeds 0-4095) is covered by the E2 bank note below. 722000-722019 Stage 0 F-detect test; 723000-723009 Stage 0 F-graph test; 724000-724019 Stage 0 F-dither test (all delta levels). Stage 0 DEV reused 0-19 (F-detect) and 0-4 (F-graph lambda).",
@@ -84,6 +98,12 @@
     [
      3000000,
      3000199
+    ]
+   ],
+   "XMETHOD_EVAL": [
+    [
+     3100000,
+     3100299
     ]
    ]
   }
@@ -101,6 +121,10 @@
    [
     3000000,
     3000199
+   ],
+   [
+    3100000,
+    3100299
    ]
   ],
   "note": "corpus seed 0 (DEV probes), 710000-710009 decision study D1.",
@@ -115,6 +139,12 @@
     [
      3000000,
      3000199
+    ]
+   ],
+   "XMETHOD_EVAL": [
+    [
+     3100000,
+     3100299
     ]
    ]
   }
@@ -140,6 +170,10 @@
    [
     3000000,
     3000199
+   ],
+   [
+    3100000,
+    3100299
    ]
   ],
   "note": "0-19 DEV corpora/probes; 900000-900099 structure-gate confirmatory. 922000-922019 Stage 0 F-detect test. 930000-930019 E5_NOISE_DETECT test (both kappa levels). E5_NOISE_DETECT reuses DEV 0-19 parameter seeds with fresh noise streams (DEV only, not independent).",
@@ -160,6 +194,12 @@
     [
      3000000,
      3000199
+    ]
+   ],
+   "XMETHOD_EVAL": [
+    [
+     3100000,
+     3100299
     ]
    ]
   }
@@ -368,6 +408,10 @@
    [
     3000000,
     3000199
+   ],
+   [
+    3100000,
+    3100299
    ]
   ],
   "claimed_by": {
@@ -376,8 +420,14 @@
      3000000,
      3000199
     ]
+   ],
+   "XMETHOD_EVAL": [
+    [
+     3100000,
+     3100299
+    ]
    ]
   },
-  "note": "E4 first registered 2026-10-02 by the cross-method study (DEV 3000000-3000199; EVAL 3100000+ reserved, claimed at freeze)."
+  "note": "E4 first registered 2026-10-02 by the cross-method study (DEV 3000000-3000199; EVAL 3100000-3100299 claimed at the 2026-10-04 freeze)."
  }
 }

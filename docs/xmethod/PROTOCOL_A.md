@@ -1,7 +1,6 @@
 # Study A protocol: design-based vs design-blind edge tests on E1-E5 (EVAL pre-registration)
 
-FROZEN: no (DRAFT v5 = freeze candidate, worker `protocol`, 2026-10-04; branch xm/freeze-prep, feat/v2 5a811de;
-rulings R-1..R-58)
+FROZEN: yes (2026-10-04; v5, rulings R-1..R-58; worker `protocol`, branch xm/freeze on feat/v2 41d6c37; S = 40)
 
 Freeze procedure. Before any EVAL unit is generated: (1) every T-item of section 13 is filled by its rule and the
 value is written here; (2) the line above becomes "FROZEN: yes (<date>)"; (3) `specs/eval/full.json` gets
@@ -176,7 +175,8 @@ under T4. Conditioning-set sizes |Z| for focal P0 (native / eq_min / eq): R1 E1 
   (pmrt_nl_eq, pmrt_eq, pmrt_r3, every eq arm; R-39) use S_E4 = 300 seeds (T9) in E4 R3; E4 R4 is at S for every arm
   (R-58(4): negative control, no claim); sweep cells the first ceil(S/2). Tune seeds = DEV tune seeds 3_000_000-019
   re-run at the freeze commit (R-34; sha and declarations vs DEV reported, V11). `specs/eval/full.json`: 24 arms;
-  S 40: 150 960 units / 11 000 datasets (40 520 tune); S 50: 168 970 / 11 750; S 60: 186 980 / 12 500 (projection:
+  at the frozen S 40 (T1): 150 960 units / 11 000 datasets (40 520 tune); S 50 / 60 would have been 168 970 / 11 750
+  and 186 980 / 12 500 (projection:
   `scratchpad/xmethod/freeze/eval_projection.json`).
 - Budget (R-13, R-35): 7200 CPU-s per (method, dataset) decides feasibility (T3, Kaggle reference host). In EVAL
   RLIMIT_CPU = 14 400 (2x safety cap): a unit over it is recorded infeasible with its CPU-s, never re-run, and its
@@ -307,7 +307,8 @@ are Monte Carlo steps of an integer quantile (P(#INVALID <= F_max) >= .95 holds 
 
 - Driver `cdd_oran/xmethod/campaign.py` (xm/dev-runs, built and audited for the freeze, R-35): EVAL seeds only if the
   spec's `protocol_sha256` equals this file's LF sha256 and it says "FROZEN: yes"; records stamp code commit,
-  `run_mode.protocol_sha256`, `run_mode.spec_sha256`, pkgs, host, python (3.12.14, R-57). Shards on Kaggle,
+  `run_mode.protocol_sha256`, `integrity.spec_file_sha256` (the spec file's LF sha256; R-59), pkgs, host, python
+  (3.12.14, R-57). Shards on Kaggle,
   Lightning, Colab and the VPS (R-46, R-57);
 `campaign merge`.
 - `eval_analysis.py` uses only records whose key is an expected unit with the expected role. FINAL (exit 0) needs:
@@ -345,14 +346,19 @@ E4 by lambda, cost vs n.
   n <= 4000 (the T1 cells; cdl's EVAL grid) is the T1 input (T4 (iii) applies, no waiver); the freeze does not wait for
   its DEV parts at n > 4000, which finish as descriptive. Interim (focal
   pmrt_eq, 10 arms + 13 CI arms, 108 pairs; results/dev/ci_c/t1.json): S_power 14, S 40, minimum detectable gap .082.
-  VALUE: TBD (aud1's power calculation on the T1 input with the pmrt_nl_eq and cdl DEV runs, results/dev/).
+  VALUE: 40. Final T1 (focal pmrt_nl_eq; every DEV record: 10 arms + 13 CI arms + pmrt_nl_eq + cdl, 2086 cells,
+  106 840 records, 0 screen issues): 115 pairs, S_power 14 (pc_eq E5 R2 n 4000; cdl's largest pair 11), so S = 40
+  (floor), cap 60 not binding; minimum power at S over the pairs .999, maximum minimum detectable gap .083
+  (`results/dev/final/` REPORT.md, notes.txt, t1.json, t1_pairs.json; dev-runs, feat/v2 41d6c37).
 - T2 tau: from the EVAL tune records (section 6); not a DEV quantity. VALUE: computed in EVAL (no freeze value).
 - T3 infeasible (arm, n): max over worlds, regimes, lambdas of DEV `cpu_s` per unit, in Kaggle reference seconds, >
   7200 makes n and every larger n infeasible (spec `max_n`, `t3_cost_cpu_s`). DEV costs from any platform count
   (R-51): a unit run on another host type is converted as cost x f. Host type = platform + CPU model (R-55; logged per
   record). f = sum of Kaggle CPU-s / sum of host CPU-s over a trimmed paired calibration block (R-55): 6 anchor arms
   spanning cheap / medium / expensive (pcorr_eq, rcot2_eq, shap_dag, pmrt_nl_eq, cdl, mscr_eq_min; mscr at n 500 /
-  1000 only), each at n 500 / 1000 / 4000, E2 R2 kappa .25, DEV seeds 3_000_000-002 (the 3 repeats), built and run by
+  1000 only; the anchor set is fixed and need not match the EVAL arm set: an anchor is a CPU-workload benchmark for
+  the host speed factor, pooled over anchors, so mscr_eq_min stays an anchor although R-58(5) dropped it from EVAL),
+  each at n 500 / 1000 / 4000, E2 R2 kappa .25, DEV seeds 3_000_000-002 (the 3 repeats), built and run by
   xm-citests (`scratchpad/xmethod/exp_c_timing.py calib`, read by `exp_c_runtime.py calib`) as its own job under 1
   process per vCPU on Kaggle (the reference), on each Colab CPU model and on the VPS (R-57), before EVAL where slots
   allow (the full 201-unit plan only with spare capacity). Its error e = max over anchors of |f_anchor / f - 1|. A DEV
@@ -364,11 +370,16 @@ E4 by lambda, cost vs n.
   (spec `t3_cost_wall_s`), f measured against a Kaggle T4. No GPU arm is planned (R-49 revised, R-53). VALUE: no (arm,
   n) infeasible, no spec `max_n`. Max DEV CPU-s per unit before f (`eval_projection.json` `t3_max_cpu_s_by_arm_n`):
   pmrt_nl_eq 1148 at n 24000 (T3 cost pilot, E2 R1, Kaggle, 1 process per vCPU; n 8000: 500; E4 R3 n 24000: 103;
-  `freeze/pmrt_nl_cost_pilot.json`) and 290 at n 4000 (DEV run `results/dev/pmrt_nl`), cdl 365 at n 4000 (its EVAL
+  `freeze/pmrt_nl_cost_pilot.json`) and 290 at n 4000 (DEV run `results/dev/pmrt_nl`), cdl 439 at n 4000 (its EVAL
   grid ends at n 4000, R-58(1)), mscr_eq 192 (n 1000; mscr_eq_min, 719, dropped, R-58(5)), two_tower 156, shap_dag
-  148, pc_eq 80, pmrt_eq 63, pmrt_r3 60, every other arm <= 28 (n 24000). The 10 classic / PMRT arms and pmrt_nl_eq
-  ran on Kaggle only (f = 1); the largest non-Kaggle cost (mscr_eq, 192) is over budget only if f (1 + e) > 37; f and
-  e by host type are recorded in the freeze commit (T7).
+  148, pc_eq 80, pmrt_eq 63, pmrt_r3 60, every other arm <= 28 (n 24000). Calibration (R-55; xm-citests
+  `results/exp_c/calib/factors.json`, xm/exp-c aee2fab, Python 3.12.14, 51 paired units per host type): Kaggle
+  Xeon 2.20GHz = reference (f 1); Colab Xeon 2.20GHz f 1.067, e .101; VPS AMD EPYC-Rome f 2.562, e .253. Converted
+  max over the calibrated host types, cost x f x (1 + e): pmrt_nl_eq 1148 (n 24000), cdl 439 (n 4000), mscr_eq 223
+  (n 1000, Colab), none > 7200. DEV costs from uncalibrated host types are provisional reads, each far from the
+  budget: Kaggle AMD EPYC 7B12 max 268 (cdl n 4000; over only if f > 26.8), Lightning Xeon Platinum 8488C 207 (cdl
+  n 4000; f > 34.7), Colab AMD EPYC 7B12 121 (mscr_eq n 1000; f > 59.4). f and e by host type are recorded in the
+  freeze commit (T7).
 - T4 admitted CI-test arms, HAC arms and cdl: iff (i) the F1-F6 line in `status/xm-citests.md` (HAC: `status/hac.md`;
   cdl: its fidelity line in `status/cdl.md`, R-50) and (ii) the verdict in `status/audit-citests.md` are PASS or
   PASS-WITH-NOTES (audit table: OK, or a doc / protocol FIX whose fix is merged; mscr's M1 protocol fix is R-40, so
@@ -378,20 +389,24 @@ E4 by lambda, cost vs n.
   eq_min, native; F2 / F3 PASS, F4 liberal authors' null disclosed, audit OK), mscr (eq, native; F3 / F4 PASS, audit
   M1 fixed by R-40; a reported-INVALID arm at n 500 / 1000, R-54; mscr_eq_min dropped, R-58(5)), cdl (F2 PASS, F3
   PARTIAL at the paper's seed, F4 primary family VALID; R-53; R1 / R2 n <= 4000, R-58(1)); (iii): the CI arms' DEV run
-  is plan C (`results/dev/ci_c`, 58 480 / 58 480 ok); cdl's DEV run at n <= 4000 must be in the T1 input before the
-  freeze (R-58(7)). Removed: pdcor (R-48), cmi_knn (R-49 revised).
+  is plan C (`results/dev/ci_c`, 58 480 / 58 480 ok); cdl's DEV run (`results/dev/cdl`, 5080 / 5080 ok, full grid)
+  is in the final T1 input (`results/dev/final`), so (iii) holds (R-58(7)). Removed: pdcor (R-48), cmi_knn (R-49
+  revised).
 - T5 DEV validity (R-21): computed by `eval_analysis.py` on the DEV records, reported in the freeze commit; not used.
   VALUE: `results/dev/full/REPORT.md` (10 arms, 824 cells: VALID 268, INVALID 249, INCONCLUSIVE 247, NO_READ 60),
-  `results/dev/ci_c/REPORT.md` (13 CI arms, 1138 cells: VALID 122, INVALID 444, INCONCLUSIVE 572), and the cdl and
-  pmrt_nl_eq DEV reports (at the freeze); paths and LF sha256 in the freeze commit.
+  `results/dev/ci_c/REPORT.md` (13 CI arms, 1138 cells: VALID 122, INVALID 444, INCONCLUSIVE 572), and the final
+  DEV report over every DEV record incl. cdl and pmrt_nl_eq (`results/dev/final/REPORT.md`, 2086 cells; cdl 100
+  cells: INVALID 45, VALID 30, INCONCLUSIVE 13, NO_READ 12; pmrt_nl_eq 24 cells: VALID 11, INCONCLUSIVE 13, 0
+  INVALID); paths and LF sha256 in the freeze commit.
 - T6 S cap: 100, unless `campaign project` at S 100 with the DEV costs (incl. citests) exceeds the compute the user
   states at the freeze; then the largest multiple of 10 that fits, not below 40 (R-34). Projection
   (`eval_projection.json`, DEV costs, 1 process per vCPU, no Lightning; wall with Kaggle 4 sessions + Colab 3 CPU
   jobs + the VPS (7), then Kaggle + VPS, then Kaggle only; R-58 grid; pmrt_nl_eq DEV run + T3 cost pilot, cdl
-  Kaggle costs): S 40 = 150 960 units, ~510 CPU-h, ~18 / 22 / 32 h; S 50 = 168 970, ~560 CPU-h, ~19 / 25 / 35 h;
-  S 60 = 186 980, ~620 CPU-h, ~21 / 27 / 39 h; pmrt_nl_eq ~61 % at S 40. The stated
+  Kaggle costs; host speed by the R-55 factors at f_lo, the VPS ~2.1 Kaggle processes each): S 40 = 150 960 units,
+  ~510 CPU-h, ~14 / 17 / 32 h; S 50 = 168 970, ~560 CPU-h, ~16 / 18 / 35 h; S 60 = 186 980, ~620 CPU-h,
+  ~17 / 20 / 39 h; pmrt_nl_eq ~61 % at S 40. The stated
   compute ceiling (R-56: free tiers; S 100 risks incomplete cells) fits S 60. VALUE: 60, so S = clip(S_power, 40,
-  60) (T1).
+  60) (T1: S = 40).
 - T7 freeze-commit contents: campaign EVAL mode (audited), all adapter branches, `uv.lock`, filled `pkgs_lock`, this
   file FROZEN, the estimand-check re-run. VALUE: one commit on feat/v2 containing `cdd_oran/xmethod/campaign.py` and
   `dev_power.py` (xm/dev-runs), every adapter of the spec (`cdd_oran/xmethod/methods/`: pmrt_core, pmrt_nl, pc,

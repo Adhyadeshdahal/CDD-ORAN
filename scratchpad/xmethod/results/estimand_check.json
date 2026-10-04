@@ -231,7 +231,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 13.5
+   "cpu_s": 7.8
   },
   {
    "world": "E1",
@@ -447,7 +447,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 32.0
+   "cpu_s": 19.3
   },
   {
    "world": "E2",
@@ -974,7 +974,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 59.7
+   "cpu_s": 36.0
   },
   {
    "world": "E2",
@@ -1501,7 +1501,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 61.8
+   "cpu_s": 35.7
   },
   {
    "world": "E3",
@@ -1795,7 +1795,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 37.5
+   "cpu_s": 22.2
   },
   {
    "world": "E3",
@@ -2089,7 +2089,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 40.6
+   "cpu_s": 20.3
   },
   {
    "world": "E4",
@@ -2123,7 +2123,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 33.0
+   "cpu_s": 16.6
   },
   {
    "world": "E4",
@@ -2157,7 +2157,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 33.9
+   "cpu_s": 16.7
   },
   {
    "world": "E4",
@@ -2192,7 +2192,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 45.3
+   "cpu_s": 21.8
   },
   {
    "world": "E4",
@@ -2227,7 +2227,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 43.5
+   "cpu_s": 23.6
   },
   {
    "world": "E4",
@@ -2262,7 +2262,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 47.1
+   "cpu_s": 23.5
   },
   {
    "world": "E4",
@@ -2297,7 +2297,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 45.5
+   "cpu_s": 23.1
   },
   {
    "world": "E4",
@@ -2332,7 +2332,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 38.2
+   "cpu_s": 20.4
   },
   {
    "world": "E4",
@@ -2367,7 +2367,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 40.3
+   "cpu_s": 20.6
   },
   {
    "world": "E4",
@@ -2402,7 +2402,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 42.1
+   "cpu_s": 20.3
   },
   {
    "world": "E4",
@@ -2437,7 +2437,7 @@
    "violations_secondary": [],
    "true_edges_effect_lt_half_units": [],
    "true_edges_zero_effect": [],
-   "cpu_s": 42.2
+   "cpu_s": 21.8
   },
   {
    "world": "E5",
@@ -2655,7 +2655,7 @@
     "P0->K1"
    ],
    "true_edges_zero_effect": [],
-   "cpu_s": 94.3
+   "cpu_s": 52.1
   },
   {
    "world": "E5",
@@ -2873,7 +2873,7 @@
     "P0->K1"
    ],
    "true_edges_zero_effect": [],
-   "cpu_s": 91.8
+   "cpu_s": 51.1
   }
  ]
 }

@@ -310,14 +310,16 @@ def test_eval_guard_refuses(tmp_path, monkeypatch, case):
     assert not (tmp_path / "x.jsonl").exists()
 
 
-def test_eval_guard_real_draft_protocol_refused_and_dev_unchanged():
+def test_eval_guard_real_frozen_protocol_and_dev_unchanged():
     import hashlib
     import os
     if not os.path.exists(C.PROTOCOL_PATH):
         pytest.skip("docs/xmethod/PROTOCOL_A.md not in this bundle")
     sha = hashlib.sha256(open(C.PROTOCOL_PATH, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
     ok, why = C.eval_authorised(_eval_spec(sha))
-    assert not ok and "not frozen" in why                           # PROTOCOL_A is a DRAFT today
+    assert ok, why                                                  # PROTOCOL_A FROZEN (2026-10-04)
+    ok, why = C.eval_authorised(_eval_spec("0" * 64))
+    assert not ok                                                   # any other sha: refused
     assert C.expand(_small_spec()) == C.expand({**_small_spec(), "protocol_sha256": "0" * 64})  # DEV: no guard
     bad = _small_spec()
     bad["blocks"][1]["seeds"] = [3000200]                            # between DEV and EVAL: always refused

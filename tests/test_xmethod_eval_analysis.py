@@ -77,7 +77,9 @@ def _record(arm, world, regime, lam, n, seed, role, liberal, commit=COMMIT):
                                                    "seed": seed, "kappa": 0.25},
             "edges": edges, "notes": {}, "config": {}, "cpu_s": 0.1, "peak_rss_mb": 10.0,
             "dataset_sha256": f"{world}|{regime}|{lam}|{n}|{seed}", "code": {"commit": commit, "dirty": False},
-            "run_mode": {"mode": "eval", "protocol_sha256": PSHA, "spec_sha256": SSHA}, "pkgs": PKGS,
+            "run_mode": {"mode": "eval", "protocol_sha256": PSHA},             # as campaign writes it (R-59 F1)
+            "integrity": {"code_commit": commit, "code_dirty": False, "protocol_sha256": PSHA,
+                          "spec_sha256": "c" * 64, "spec_file_sha256": SSHA}, "pkgs": PKGS,
             "host": {"platform": "kaggle"}}
 
 
@@ -322,7 +324,8 @@ def test_cli_writes_tables_and_guards(tmp_path):
     spec.write_text(json.dumps(spec_d), encoding="utf-8")
     ssha = E.file_sha256(str(spec))
     for r in recs:
-        r["run_mode"] = {"mode": "eval", "protocol_sha256": spec_d["protocol_sha256"], "spec_sha256": ssha}
+        r["run_mode"] = {"mode": "eval", "protocol_sha256": spec_d["protocol_sha256"]}
+        r["integrity"] = {**r["integrity"], "protocol_sha256": spec_d["protocol_sha256"], "spec_file_sha256": ssha}
     merged.write_text("".join(json.dumps(r) + "\n" for r in recs), encoding="utf-8")
     common = ["--spec", str(spec), "--merged", str(merged), "--protocol", str(proto), "--dependence", ""]
     assert E.main([*common, "--out", str(tmp_path / "o"), "--freeze-commit", COMMIT]) == 0
@@ -743,7 +746,8 @@ def test_eval_spec_pmrt_nl_placeholder_r42():
     readers = {a for b in e4 for a in b["arms"]}
     assert readers == {a for a, d in arms.items() if E.arm_kind(d) in ("pmrt", "eq")}     # C3 readers (R-39)
     assert all(b["regimes"] == ["R3"] and b["worlds"] == ["E4"] for b in e4)              # R-58 (3)
-    assert all(b["seeds"] == "TBD" for b in spec["blocks"] if "R4" in b["regimes"] and b["role"] == "measure")
+    assert all(b["seeds"] == [3_100_000, 3_100_039] for b in spec["blocks"]                # frozen S 40 (T1)
+               if "R4" in b["regimes"] and b["role"] == "measure")
     assert {"pmrt_nl_eq", "pmrt_eq"} <= {a for b in spec["blocks"] if b["regimes"] == ["R4"] for a in b["arms"]}
     assert sorted(a for a, d in arms.items() if E.arm_kind(d) == "pmrt") == ["pmrt_eq", "pmrt_nl_eq", "pmrt_r3"]
     assert all(E.power_not_applicable(arms[a], "R4") and not E.power_not_applicable(arms[a], "R3")
@@ -766,8 +770,10 @@ def test_eval_spec_mscr_n1000_r54_and_unit_counts():
     assert all("R-54" in spec["arms"][a]["label"] for a in mscr)
     assert [a for a, d in spec["arms"].items() if d.get("c1_sensitivity_drop")] == ["mscr_native"]   # R-56
 
+    assert len(E.planned_units(spec)) == 150_960                                       # the frozen spec (S 40)
+
     def filled(S):
-        x = copy.deepcopy(spec)
+        x = _unfilled(spec)
         for b in x["blocks"]:
             if b["seeds"] == "TBD":
                 b["seeds"] = [3_100_000, 3_100_000 + S - 1]
@@ -780,6 +786,16 @@ def test_eval_spec_mscr_n1000_r54_and_unit_counts():
         assert len({(x["world"], x["regime"], x["lam"], x["n"], x["kappa"], x["seed"]) for x in u.values()}) == ds
         assert max(x["n"] for x in u.values() if x["arm"] in mscr) == 1000
         assert not any(x["t3"] for x in u.values())
+
+
+def _unfilled(spec):
+    """The frozen spec with its S-dependent seed blocks back to the placeholders (S 40, T1)."""
+    x = copy.deepcopy(spec)
+    back = {(3_100_000, 3_100_039): "TBD", (3_100_000, 3_100_019): "TBD_HALF"}
+    for b in x["blocks"]:
+        if isinstance(b["seeds"], list):
+            b["seeds"] = back.get(tuple(b["seeds"]), b["seeds"])
+    return x
 
 
 def _r58():
@@ -797,7 +813,10 @@ def test_eval_spec_r58_grid_and_fallback_switch():
     with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
         spec = json.load(fh)
     R58 = _r58()
-    assert R58.build(spec, False) == spec and spec["e4r3_fallback"] is False               # generated, idempotent
+    u = _unfilled(spec)
+    keys = ("arms", "blocks", "not_in_grid", "e4r3_fallback")
+    g = R58.build(u, False)
+    assert {k: g[k] for k in keys} == {k: u[k] for k in keys} and spec["e4r3_fallback"] is False   # generated
     ng = E.not_in_grid(spec)
     assert ng["has_rules"] and ng["unexplained"] == []                                     # every gap is ruled
     by = {(r["ruling"], tuple(r["arms"]), json.dumps(r["where"])): r["n_cells"] for r in ng["by_rule"]}
@@ -805,7 +824,7 @@ def test_eval_spec_r58_grid_and_fallback_switch():
     assert {c["arm"] for c in ng["cells"]} == {"cdl", "mscr_eq", "mscr_native"}
     assert not [c for c in ng["cells"] if c["arm"] == "cdl" and c["regime"] in ("R1", "R2") and c["n"] <= 4000
                 and c["kappa"] == 0.25]
-    fb = R58.build(spec, True)                                                            # R-58 (3) fallback
+    fb = R58.build(u, True)                                                               # R-58 (3) fallback
     readers = sorted(a for a, d in fb["arms"].items() if E.arm_kind(d) in ("pmrt", "eq"))
     ngf = E.not_in_grid(fb)
     assert ngf["unexplained"] == [] and fb["e4r3_fallback"] is True
@@ -844,16 +863,25 @@ def test_not_in_grid_cells_never_cap_verdicts():
     assert not run(recs, spec)["V11_integrity"]["checks"]["grid_gaps_ruled"]
 
 
-def test_protocol_t_register_only_t1_open():
-    with open(os.path.join(ROOT, "docs", "xmethod", "PROTOCOL_A.md"), encoding="utf-8") as fh:
+def test_protocol_t_register_filled_and_frozen():
+    ppath = os.path.join(ROOT, "docs", "xmethod", "PROTOCOL_A.md")
+    with open(ppath, encoding="utf-8") as fh:
         prot = fh.read()
     reg = prot.split("## 13. ")[1].split("\n## ")[0]
     items = {t.split(" ", 1)[0]: t for t in reg.split("\n- ")[1:]}
     assert sorted(items, key=lambda t: int(t[1:])) == [f"T{i}" for i in range(1, 12)]
-    assert [t for t, x in items.items() if "VALUE: TBD" in x] == ["T1"]                 # seed count: aud1 (T1)
+    assert not [t for t, x in items.items() if "VALUE: TBD" in x] and "TBD" not in prot
     assert all("VALUE:" in x for x in items.values())
     assert "VALUE: gbm" in items["T10"] and "VALUE: 300" in items["T9"] and "VALUE: 60," in items["T6"]
-    assert "FROZEN: no" in prot.splitlines()[2]                                          # frozen only at the freeze
+    assert "VALUE: 40." in items["T1"]
+    assert prot.splitlines()[2].startswith("FROZEN: yes (2026-10-04")                    # frozen at the freeze
+    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    assert spec["protocol_sha256"] == E.file_sha256(ppath) and spec["status"].startswith("FROZEN")
+    assert not [b for b in spec["blocks"] if isinstance(b["seeds"], str)]
+    from cdd_oran.xmethod import campaign as C
+    assert sorted(spec["pkgs_lock"]) == sorted(C.PKGS) and spec["pkgs_lock"]["torch"] == "2.10.0+cpu"
+    assert C.eval_authorised(spec)[0]
 
 
 def test_r4_real_actions_have_no_design():
@@ -865,3 +893,36 @@ def test_r4_real_actions_have_no_design():
     for regime in ("R1", "R2", "R3"):
         ds, _ = generate.generate_dataset("E4", regime, 500, 3_000_000, lam=1.0)
         assert "none" not in {d.kind for a, d in zip(ds.action_names, ds.designs, strict=True) if a == "P0"}
+
+
+@pytest.mark.parametrize("mode", ["dev", "eval"])
+def test_v11_stamps_pass_on_campaign_written_records(tmp_path, monkeypatch, mode):
+    """R-59 F1: records written by campaign.run_units (not hand-built) pass the V11 stamp check of eval_analysis."""
+    import sys
+
+    from cdd_oran.xmethod import campaign as C
+    if mode == "eval" and not (hasattr(os, "fork") and sys.platform.startswith("linux")):
+        pytest.skip("EVAL units must run isolated (fork + RLIMIT_CPU, Linux only; R-59 F7)")
+    seeds = [3_000_100, 3_000_101] if mode == "dev" else [3_100_000, 3_100_001]
+    spec = {"name": "stamp", "budget_cpu_s": 7200,
+            "arms": {"corr": {"ref": "cdd_oran.xmethod.methods.corr:Corr", "config": {"arm": "native"},
+                              "declare": "by"}},
+            "blocks": [{"role": "measure", "worlds": ["E1"], "regimes": ["R1"], "ns": [300], "kappas": [0.25],
+                        "seeds": seeds}]}
+    if mode == "eval":
+        spec["protocol_sha256"] = C.protocol_sha256()                 # the real PROTOCOL_A, FROZEN
+        monkeypatch.setattr(C, "check_eval_preconditions", lambda *a, **k: None)   # python / commit / lock pins
+        monkeypatch.setattr(C, "check_one_per_cpu", lambda *a, **k: None)
+    sp = tmp_path / "spec.json"
+    sp.write_text(json.dumps(spec, indent=1), encoding="utf-8")
+    ssha = E.file_sha256(str(sp))
+    out = tmp_path / "r.jsonl"
+    C.run_units(spec, C.expand(spec), str(out), isolate=None if mode == "eval" else False, log=lambda *_: None,
+                spec_file_sha256=ssha)
+    recs = C.load_jsonl(str(out))
+    assert len(recs) == 2 and all(r["status"] == "ok" and r["run_mode"]["mode"] == mode for r in recs)
+    use, scr = E.screen(recs, spec)
+    assert len(use) == 2
+    v = E.integrity(use, scr, spec, recs[0]["code"]["commit"], spec_sha=ssha)
+    assert v["checks"]["stamps"] and v["n_stamp_violations"] == 0
+    assert not E.integrity(use, scr, spec, None, spec_sha="0" * 64)["checks"]["stamps"]   # another spec file

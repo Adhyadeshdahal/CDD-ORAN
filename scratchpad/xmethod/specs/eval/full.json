@@ -1,21 +1,34 @@
 {
  "name": "eval_full",
- "status": "DRAFT: not runnable until the freeze (docs/xmethod/PROTOCOL_A.md sections 11, 13)",
+ "status": "FROZEN 2026-10-04 (PROTOCOL_A FROZEN: yes; T-register filled, S = 40 by T1; EVAL block 3100000-3100299 claimed in docs/benchmark/SEED_REGISTRY.json)",
  "protocol": "docs/xmethod/PROTOCOL_A.md",
- "protocol_sha256": "TBD-at-freeze",
+ "protocol_sha256": "c5f7a4fe4dff4bfdeef3ccebac2dcc3748dfa9c2d0c3d17f2ac9d6246379fa22",
  "fmax_dependence_sha256": "402802b15c797f38cf1813aec1b4a912ffdbc3dba2ba3bfe94f1ee7a50d4f73e",
- "pkgs_lock": "TBD-at-freeze",
+ "pkgs_lock": {
+  "numpy": "2.4.2",
+  "scipy": "1.18.1",
+  "scikit-learn": "1.9.1",
+  "statsmodels": "0.15.0",
+  "causal-learn": "0.1.4.8",
+  "xgboost": "3.4.1",
+  "shap": "0.52.0",
+  "torch": "2.10.0+cpu",
+  "threadpoolctl": "3.7.0",
+  "tigramite": "5.2.10.1",
+  "dcor": "0.7",
+  "momentchi2": "0.1.8"
+ },
  "focal": "pmrt_nl_eq",
  "budget_cpu_s": 7200,
  "safety_cap_cpu_s": 14400,
  "tbd": {
-  "seeds": "measure blocks: 'TBD' -> [3100000, 3100000 + S - 1] (S by PROTOCOL_A T1); 'TBD_HALF' -> [3100000, 3100000 + ceil(S/2) - 1]; the C3 readers' E4 R3 blocks (pmrt_nl_eq, pmrt_eq, pmrt_r3, eq arms; R-39) are filled: [3100000, 3100299], S_E4 300 by PROTOCOL_A T9; E4 R4 at S for every arm (R-58(4))",
-  "protocol_sha256": "LF sha256 of the frozen docs/xmethod/PROTOCOL_A.md (campaign EVAL guard and eval_analysis check it)",
-  "pkgs_lock": "dict package -> version from uv.lock for every package campaign.PKGS stamps (R-35); FINAL needs every record's pkgs equal to it",
+  "seeds": "FILLED at the freeze: S = 40 (PROTOCOL_A T1) -> measure blocks [3100000, 3100039], half blocks [3100000, 3100019]; the C3 readers' E4 R3 blocks [3100000, 3100299] (S_E4 300, T9); E4 R4 at S for every arm (R-58(4))",
+  "protocol_sha256": "FILLED at the freeze: LF sha256 of the frozen docs/xmethod/PROTOCOL_A.md (campaign EVAL guard and eval_analysis check it)",
+  "pkgs_lock": "FILLED at the freeze: uv.lock versions of every package campaign.PKGS stamps (R-35); torch '2.10.0+cpu' = the locked public version 2.10.0 in the CPU build every EVAL platform installs (R-35 torch-build amendment; no GPU arm, R-53); FINAL needs every record's pkgs equal to it",
   "citests_arms": "mscr (eq, native) / pcorr / rcot2 arms (eq, native, eq_min) admitted under PROTOCOL_A T4; mscr_eq_min dropped (R-58(5))",
   "pcorr_hac": "T8 filled (R-38, calib F4 on synthetic data, xm/hac2 results/pcorr_hac_f4b.json): set-D member = pcorr_hac_fb (inference fixed_b, max |rate - .05| .0405 vs .0535 for t); pcorr_hac (inference t) secondary",
   "max_n": "an arm infeasible at n under PROTOCOL_A T3 gets 'max_n' and 't3_cost_cpu_s' {n: DEV cost}; eval_analysis shows those cells as infeasible_t3",
-  "driver": "campaign EVAL mode (xm/dev-runs, R-35): guard on protocol_sha256 + 'FROZEN: yes', records stamp run_mode.protocol_sha256 and run_mode.spec_sha256",
+  "driver": "campaign EVAL mode (xm/dev-runs, R-35): guard on protocol_sha256 + 'FROZEN: yes', records stamp run_mode.protocol_sha256 and integrity.spec_file_sha256 (the spec file's LF sha256, checked by eval_analysis V11 stamps; R-59)",
   "pmrt_nl_eq": "filled (T10, R-52): statistic 'gbm' (pmrt_core statistic option -> version pmrt-core-v2, module pmrt-nl-v1; results/pmrt_nl/SELECTION.md); 'focal' names it the primary PMRT arm (C2a, C3, V3, T1); the linear pmrt_eq is secondary",
   "pdcor": "dropped from Study A, all arms (R-48): not a valid CI test under conditioning (audit: E2 R2 eq null .22, P_placebo_conf 5/5), O(n^2) cost, no role in any verdict; PROTOCOL_A section 4",
   "cmi_knn": "dropped from Study A, all arms (R-49 revised): cost (GPU cost probe ~2.4k-6.1k s per dataset at n 4000); RCoT and pcorr remain as CI tests; PROTOCOL_A section 4",
@@ -428,7 +441,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "pmrt_nl_eq",
     "pmrt_eq",
@@ -473,7 +489,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "mscr_eq",
     "mscr_native"
@@ -500,7 +519,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "cdl"
    ]
@@ -578,7 +600,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "pc_native",
     "granger_native",
@@ -611,7 +636,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "mscr_native"
    ]
@@ -634,7 +662,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "pmrt_nl_eq",
     "pmrt_eq",
@@ -674,7 +705,10 @@
    "kappas": [
     0.25
    ],
-   "seeds": "TBD",
+   "seeds": [
+    3100000,
+    3100039
+   ],
    "arms": [
     "mscr_eq",
     "mscr_native"
@@ -699,7 +733,10 @@
     0.125,
     0.5
    ],
-   "seeds": "TBD_HALF",
+   "seeds": [
+    3100000,
+    3100019
+   ],
    "arms": [
     "pmrt_nl_eq",
     "pmrt_eq",

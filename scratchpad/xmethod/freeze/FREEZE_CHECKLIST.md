@@ -14,21 +14,30 @@ cmi_knn (R-49 revised). No GPU arm.
 Units and cost (R-58 grid; tune = DEV tune seeds re-run, R-34; C3 readers at S_E4 300 in E4 R3 only, E4 R4 at S,
 T9 / R-58(4)). T6 cap 60 (R-56): S = clip(S_power, 40, 60). Projection 2026-10-04: pmrt_nl_eq DEV run + T3 cost pilot,
 cdl Kaggle costs. Wall assumes full slots at 1 process per vCPU (R-55): Kaggle 4 sessions x 4 = 16 processes, Colab
-3 jobs x 2 = 6, the VPS 7 (R-57); host speed differences are ignored (T3 converts costs by the R-55 factors).
+3 jobs x 2 = 6, the VPS 7 (R-57). CPU-h are Kaggle-reference CPU-s; host speed by the R-55 factors (`--factors`,
+xm-citests `results/exp_c/calib/factors.json`, xm/exp-c aee2fab, Python 3.12.14): a VPS process counts as f_lo
+Kaggle processes for the workload mix (work-weighted, ~2.09; central f ~2.35), a Colab process ~0.92 (~1.01).
 
 | S | units | datasets | tune units | CPU-h | wall h: Kaggle + Colab + VPS | Kaggle + VPS | Kaggle only |
 |---|---|---|---|---|---|---|---|
-| 40 | 150 960 | 11 000 | 40 520 | 509 | 17.6 | 22.1 | 31.8 |
-| 50 | 168 970 | 11 750 | 40 520 | 564 | 19.4 | 24.5 | 35.2 |
-| 60 | 186 980 | 12 500 | 40 520 | 618 | 21.3 | 26.9 | 38.6 |
+| 40 | 150 960 | 11 000 | 40 520 | 509 | 14.1 | 16.6 | 31.8 |
+| 50 | 168 970 | 11 750 | 40 520 | 564 | 15.6 | 18.4 | 35.2 |
+| 60 | 186 980 | 12 500 | 40 520 | 618 | 17.1 | 20.2 | 38.6 |
+
+With the central f: S 40 13.2 / 15.7 h, S 60 16.0 / 19.0 h (all platforms / Kaggle + VPS). Without host factors
+(every host = Kaggle) it was 17.6 / 22.1 (S 40) and 21.3 / 26.9 (S 60).
 
 - R-58 expected ~360-450 CPU-h and ~17-22 h on Kaggle + VPS; the measured pmrt_nl_eq cost (pilot: E2 ~480 / ~1 100
-  CPU-s per dataset at n 8000 / 24000) puts S 40 at ~510 CPU-h, ~22 h on Kaggle + VPS. Add ~10-15 % for setup
-  (~10-15 min per session, sessions <= 11 h) and error re-runs: S 40 ~1 day on Kaggle + VPS (~1.5 days Kaggle
-  alone); S 60 ~1.3 / ~1.8 days. Colab may be unavailable (it refused runtimes overnight).
+  CPU-s per dataset at n 8000 / 24000) puts S 40 at ~510 CPU-h; the VPS (~2x Kaggle per process) brings it to ~17 h
+  on Kaggle + VPS. Add ~10-15 % for setup (~10-15 min per session, sessions <= 11 h) and error re-runs: S 40
+  ~0.8 day on Kaggle + VPS (~1.5 days Kaggle alone); S 60 ~1 / ~1.8 days. Colab may be unavailable (it refused
+  runtimes overnight). The VPS holds 7 of 23 processes but does ~48 % of the Kaggle + VPS work: keep it fed
+  (one cdd-xm job at a time, `scratchpad/e6_dev/vps_run.py`, vps-run CLI v1; CPUQuota 700 %, MemoryMax 11G).
 - EVAL interpreter: exactly Python 3.12.14 on every platform (R-57; campaign `EVAL_PYTHON`, pin_check refuses any
-  other patch release). The VPS was upgraded to match; it needs its own R-55 calibration (host type 'vps' + CPU
-  model) before its records count for T3, and the dispatcher needs a VPS target (owner dev-runs).
+  other patch release). The VPS was upgraded to match and calibrated on 3.12.14 (R-55, cal-v2: 51 paired units;
+  host 'vps|AMD EPYC-Rome Processor'; pooled f 2.56 [1.92, 2.81]); the 3.12.13 factors apply only to Exp B parts
+  8-15. T3 on a VPS record tests cost x f_hi against 7200 (cdl: 2 870 VPS CPU-s). The dispatcher needs a VPS
+  target (owner dev-runs).
 - By arm at S 40: pmrt_nl_eq 312 CPU-h (61 %), two_tower 33, shap_dag 29, cdl 29, pmrt_eq / pmrt_r3 24 each, the
   rest smaller. By n: 500 34, 1000 68, 4000 113, 8000 82, 24000 207 CPU-h. Tune 122 CPU-h, measure 382.
 - Cost basis (per (arm, world, regime, n) mean CPU-s):
@@ -41,7 +50,8 @@ cdl Kaggle costs. Wall assumes full slots at 1 process per vCPU (R-55): Kaggle 4
   - cdl: Kaggle CPU-s per n 17 / 34 / 121 (n <= 4000, R-58(1)).
 - Command: `eval_projection.py --dev <xm-pmrt results/dev> --extra-agg pmrt_nl/agg.json --pilot
   scratchpad/xmethod/freeze/pmrt_nl_cost_pilot.json --cdl-kaggle 17,34,121,232,487 --proxy pmrt_nl_eq=pmrt_eq
-  --vps-procs 7 --out scratchpad/xmethod/freeze/eval_projection.json`.
+  --vps-procs 7 --factors <xm-citests>/scratchpad/xmethod/results/exp_c/calib/factors.json
+  --out scratchpad/xmethod/freeze/eval_projection.json` (factors.json LF sha256 f86cb61c...18ce at aee2fab).
 - Platforms (user): Kaggle at most 4 of the 5 account sessions (one stays for other workers), the VPS (7 processes,
   R-57), Colab CPU at most 3 jobs if available, NO Lightning.
 - Parts: whole-dataset groups, LPT on the cost table (`campaign.partition`, `--cost-table` from the projection
@@ -70,7 +80,8 @@ cdl Kaggle costs. Wall assumes full slots at 1 process per vCPU (R-55): Kaggle 4
    max 1148 CPU-s (E2 R1 n 24000), E4 R3 n 24000 ~100: feasible; R-58(3) fallback not triggered (user). Records
    merged on xm/dev-runs dea0091 (results/dev/pmrt_nl_cost/merged_{e2,e4r3}.jsonl.gz; sha in FREEZE_NOTE, T3).
 5. R-55 calibration block (xm-citests) run on Kaggle, on each Colab CPU model and on the VPS (R-57) -> f and e
-   by host type (T3).
+   by host type (T3). Colab Xeon 2.20GHz and the VPS (3.12.14) done: factors.json on xm/exp-c aee2fab; it goes
+   into the freeze commit (T3).
 6. campaign.py (xm/dev-runs) R-55 / R-57 changes, audited: EVAL_PYTHON = "3.12.14" with pin_check on the patch
    release; per-record CPU model (/proc/cpuinfo), loadavg, concurrent processes; 1 process per vCPU in the launchers
    (VPS 7); the lane option (A); a VPS target in the dispatcher. Tests pass.

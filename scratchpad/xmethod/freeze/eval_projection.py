@@ -13,7 +13,11 @@ Cost per unit (CPU-s, mean per dataset of the (arm, world, regime, n) cell):
   the measured n (log-log least squares).
 - dataset generation: mean gen_cpu_s of the (world, regime, n) cell, once per dataset.
 Wall (R-55): EVAL runs 1 process per vCPU (Kaggle 4 per session, Colab 2 per job, VPS 7, R-57), so a process's
-wall ~ its CPU-s (host speed differences are ignored here; T3 converts by the R-55 factors). The DEV CPU-s came from oversubscribed sessions (8 / 4 processes on 4 / 2 vCPU): an upper estimate.
+wall ~ its CPU-s. The DEV CPU-s came from oversubscribed sessions (8 / 4 processes on 4 / 2 vCPU): an upper
+estimate. Host speed (--factors, the R-55 calibration factors.json of xm-citests): costs are Kaggle-reference CPU-s;
+a host with factor f (per arm, else the pooled '*') runs a unit in cost / f, so its processes count as f Kaggle
+processes for the workload mix (work-weighted harmonic factor). Wall columns use f_lo (slowest observed ratio,
+conservative); the *_f columns use the central f. Without --factors every host counts as Kaggle.
 """
 from __future__ import annotations
 
@@ -225,6 +229,7 @@ def project(spec: dict, S: int, cpu: dict, gen: dict) -> dict:
     units = E.planned_units(fill(spec, S))
     by_arm, by_n, by_role = defaultdict(float), defaultdict(float), defaultdict(float)
     w_by_arm = defaultdict(float)
+    w_by_arm_n = defaultdict(float)
     missing, ds = set(), set()
     gen_s = 0.0
     for u in units.values():
@@ -236,6 +241,7 @@ def project(spec: dict, S: int, cpu: dict, gen: dict) -> dict:
         by_n[u["n"]] += c
         by_role[u["role"]] += c
         w_by_arm[u["arm"]] += c                                  # 1 process per vCPU (R-55): wall ~ CPU-s
+        w_by_arm_n[(u["arm"], u["n"])] += c
         d = (u["world"], u["regime"], u["lam"], u["n"], u["kappa"], u["seed"])
         if d not in ds:
             ds.add(d)
@@ -248,7 +254,26 @@ def project(spec: dict, S: int, cpu: dict, gen: dict) -> dict:
             "cpu_h_by_arm": {k: round(v / 3600, 1) for k, v in sorted(by_arm.items(), key=lambda x: -x[1])},
             "cpu_h_by_n": {str(k): round(v / 3600, 1) for k, v in sorted(by_n.items())},
             "cpu_h_by_role": {k: round(v / 3600, 1) for k, v in by_role.items()},
-            "units_without_cost": sorted(missing)}
+            "units_without_cost": sorted(missing), "_w_by_arm": dict(w_by_arm), "_gen_s": gen_s}
+
+
+def host_factor(factors: dict | None, host: str | None, arm: str, which: str) -> float:
+    """R-55 factor of `host` for `arm` (else the pooled '*'); 1.0 without factors (host counted as Kaggle)."""
+    if not factors or not host:
+        return 1.0
+    for a in (arm, "*"):
+        v = factors["factors"].get(a, {}).get(host)
+        if v:
+            return float(v[which])
+    raise KeyError(f"no R-55 factor for {arm!r} or '*' on {host!r}")
+
+
+def eff_factor(p: dict, factors: dict | None, host: str | None, which: str) -> float:
+    """Work-weighted harmonic factor: Kaggle-ref process-s of the workload / host process-s of the same workload."""
+    w = sum(p["_w_by_arm"].values()) + p["_gen_s"]
+    h = sum(c / host_factor(factors, host, a, which) for a, c in p["_w_by_arm"].items())
+    h += p["_gen_s"] / host_factor(factors, host, "*", which)
+    return w / h
 
 
 def main() -> int:
@@ -264,36 +289,58 @@ def main() -> int:
     ap.add_argument("--kaggle-procs", type=int, default=4, help="processes per Kaggle session = vCPU (R-55)")
     ap.add_argument("--colab-procs", type=int, default=2, help="processes per Colab job = vCPU (R-55)")
     ap.add_argument("--vps-procs", type=int, default=0, help="processes on the VPS (R-57: 7)")
+    ap.add_argument("--factors", default=None, help="R-55 calibration factors.json (xm-citests exp_c/calib)")
+    ap.add_argument("--vps-host", default="vps|AMD EPYC-Rome Processor", help="host key of the VPS in --factors")
+    ap.add_argument("--colab-host", default="colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+                    help="host key of Colab CPU in --factors")
     ap.add_argument("--pilot", default=None, help="cost-pilot json (cost_mean_cpu_s / cost_max_cpu_s per cell)")
+    ap.add_argument("--s-grid", default=",".join(map(str, S_GRID)), help="seed counts S to project (frozen spec: S)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     spec = json.load(open(SPEC, encoding="utf-8"))
+    s_grid = [int(x) for x in a.s_grid.split(",")]
+    if not any(isinstance(b["seeds"], str) for b in spec["blocks"]) and len(s_grid) > 1:
+        raise SystemExit("the spec's seeds are filled (frozen): pass --s-grid <its S>")
     ck = [float(x) for x in a.cdl_kaggle.split(",")] if a.cdl_kaggle else None
     pilot = json.load(open(a.pilot, encoding="utf-8")) if a.pilot else None
     cpu, _, gen, basis = cost_tables(a.dev, a.cdl_records, a.pmrt_nl_agg, a.extra_agg, ck,
                                      dict(x.split("=", 1) for x in a.proxy), pilot)
     kp, cp = a.kaggle_procs * a.kaggle, a.colab_procs * a.colab          # concurrent processes (1 per vCPU, R-55)
     vp = a.vps_procs
-    slots = kp + cp + vp
+    factors = json.load(open(a.factors, encoding="utf-8")) if a.factors else None
     out = {"spec": "scratchpad/xmethod/specs/eval/full.json", "cost_basis": basis,
            "platforms": {"kaggle_sessions": a.kaggle, "kaggle_processes_per_session": a.kaggle_procs,
                          "colab_jobs": a.colab, "colab_processes_per_job": a.colab_procs, "vps_processes": vp,
                          "lightning": 0},
+           "host_factors": {"source": a.factors, "ref_host": (factors or {}).get("ref_host", "kaggle"),
+                            "vps_host": a.vps_host if factors else None,
+                            "colab_host": a.colab_host if factors else None},
            "t3_max_cpu_s_by_arm_n": t3_max(a.dev, a.cdl_records, a.pmrt_nl_agg, a.extra_agg, ck, pilot),
            "by_S": {}}
-    for S in S_GRID:
+    for S in s_grid:
         p = project(spec, S, cpu, gen)
-        p["wall_h_all_platforms"] = round(p["process_wall_h"] / slots, 1)
-        p["kaggle_share_process_wall_h"] = round(p["process_wall_h"] * kp / slots, 1)
-        p["colab_share_process_wall_h"] = round(p["process_wall_h"] * cp / slots, 1)
-        p["vps_share_process_wall_h"] = round(p["process_wall_h"] * vp / slots, 1)
-        p["wall_h_kaggle_only"] = round(p["process_wall_h"] / kp, 1)          # Colab unavailable
-        p["wall_h_kaggle_vps"] = round(p["process_wall_h"] / (kp + vp), 1)    # Colab unavailable, VPS up
+        pw = p["process_wall_h"]                                          # Kaggle-reference process-h
+        for which, sfx in (("f_lo", ""), ("f", "_f")):
+            fv = eff_factor(p, factors, a.vps_host if factors else None, which)
+            fc = eff_factor(p, factors, a.colab_host if factors else None, which)
+            slots = kp + cp * fc + vp * fv                                # Kaggle-equivalent processes
+            p[f"vps_factor_eff{sfx}"] = round(fv, 3)
+            p[f"colab_factor_eff{sfx}"] = round(fc, 3)
+            p[f"wall_h_all_platforms{sfx}"] = round(pw / slots, 1)
+            p[f"wall_h_kaggle_vps{sfx}"] = round(pw / (kp + vp * fv), 1)  # Colab unavailable, VPS up
+            if not sfx:
+                p["kaggle_share_process_wall_h"] = round(pw * kp / slots, 1)
+                p["colab_share_process_wall_h"] = round(pw * cp * fc / slots, 1)
+                p["vps_share_process_wall_h"] = round(pw * vp * fv / slots, 1)
+        p["wall_h_kaggle_only"] = round(pw / kp, 1)                       # Colab unavailable
+        del p["_w_by_arm"], p["_gen_s"]
         out["by_S"][str(S)] = p
     json.dump(out, open(a.out, "w", encoding="utf-8", newline="\n"), indent=1)
     for S, p in out["by_S"].items():
         print(S, p["units"], p["datasets"], p["tune_units"], p["cpu_h"], p["process_wall_h"], p["wall_h_all_platforms"],
-              p["wall_h_kaggle_only"], p["wall_h_kaggle_vps"], p["units_without_cost"][:5])
+              p["wall_h_kaggle_vps"], p["wall_h_kaggle_only"], "| central f:", p["wall_h_all_platforms_f"],
+              p["wall_h_kaggle_vps_f"], "| f_eff vps", p["vps_factor_eff"], p["vps_factor_eff_f"],
+              "colab", p["colab_factor_eff"], p["colab_factor_eff_f"], p["units_without_cost"][:5])
     print(json.dumps(basis, indent=1))
     return 0
 

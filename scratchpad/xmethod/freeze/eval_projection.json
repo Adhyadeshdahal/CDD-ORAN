@@ -35,6 +35,12 @@
   "vps_processes": 7,
   "lightning": 0
  },
+ "host_factors": {
+  "source": "../xm-citests/scratchpad/xmethod/results/exp_c/calib/factors.json",
+  "ref_host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+  "vps_host": "vps|AMD EPYC-Rome Processor",
+  "colab_host": "colab|Intel(R) Xeon(R) CPU @ 2.20GHz"
+ },
  "t3_max_cpu_s_by_arm_n": {
   "corr": {
    "500": 0.1,
@@ -243,118 +249,18 @@
     "measure": 382.1
    },
    "units_without_cost": [],
-   "wall_h_all_platforms": 17.6,
-   "kaggle_share_process_wall_h": 280.8,
-   "colab_share_process_wall_h": 105.3,
-   "vps_share_process_wall_h": 122.9,
-   "wall_h_kaggle_only": 31.8,
-   "wall_h_kaggle_vps": 22.1
-  },
-  "50": {
-   "S": 50,
-   "units": 168970,
-   "datasets": 11750,
-   "tune_units": 40520,
-   "cpu_h": 563.5,
-   "process_wall_h": 563.5,
-   "cpu_h_generation": 5.5,
-   "cpu_h_by_arm": {
-    "pmrt_nl_eq": 340.7,
-    "two_tower": 37.9,
-    "shap_dag": 34.3,
-    "cdl": 33.4,
-    "mscr_eq": 25.2,
-    "pmrt_eq": 25.2,
-    "pmrt_r3": 24.9,
-    "mscr_native": 8.1,
-    "pc_eq": 6.4,
-    "rcot2_eq": 4.3,
-    "rcot2_native": 3.5,
-    "rcot2_eq_min": 3.5,
-    "pcorr_hac_fb": 2.3,
-    "pcorr_hac_fb_eq_min": 2.3,
-    "notears": 1.7,
-    "pc_native": 1.0,
-    "pcorr_hac_eq_min": 0.8,
-    "pcorr_hac": 0.8,
-    "pcorr_eq": 0.7,
-    "granger_eq": 0.4,
-    "pcorr_eq_min": 0.3,
-    "corr": 0.2,
-    "pcorr_native": 0.1,
-    "granger_native": 0.0
-   },
-   "cpu_h_by_n": {
-    "500": 36.8,
-    "1000": 74.9,
-    "4000": 122.1,
-    "8000": 92.0,
-    "24000": 232.2
-   },
-   "cpu_h_by_role": {
-    "tune": 121.6,
-    "measure": 436.4
-   },
-   "units_without_cost": [],
-   "wall_h_all_platforms": 19.4,
-   "kaggle_share_process_wall_h": 310.9,
-   "colab_share_process_wall_h": 116.6,
-   "vps_share_process_wall_h": 136.0,
-   "wall_h_kaggle_only": 35.2,
-   "wall_h_kaggle_vps": 24.5
-  },
-  "60": {
-   "S": 60,
-   "units": 186980,
-   "datasets": 12500,
-   "tune_units": 40520,
-   "cpu_h": 618.0,
-   "process_wall_h": 618.0,
-   "cpu_h_generation": 5.6,
-   "cpu_h_by_arm": {
-    "pmrt_nl_eq": 370.0,
-    "two_tower": 43.3,
-    "shap_dag": 39.2,
-    "cdl": 38.2,
-    "mscr_eq": 27.9,
-    "pmrt_eq": 26.4,
-    "pmrt_r3": 26.0,
-    "mscr_native": 9.3,
-    "pc_eq": 7.2,
-    "rcot2_eq": 4.9,
-    "rcot2_native": 4.0,
-    "rcot2_eq_min": 4.0,
-    "pcorr_hac_fb": 2.6,
-    "pcorr_hac_fb_eq_min": 2.6,
-    "notears": 1.9,
-    "pc_native": 1.1,
-    "pcorr_hac_eq_min": 0.9,
-    "pcorr_hac": 0.9,
-    "pcorr_eq": 0.7,
-    "granger_eq": 0.4,
-    "pcorr_eq_min": 0.4,
-    "corr": 0.2,
-    "pcorr_native": 0.1,
-    "granger_native": 0.0
-   },
-   "cpu_h_by_n": {
-    "500": 39.9,
-    "1000": 81.7,
-    "4000": 131.2,
-    "8000": 102.3,
-    "24000": 257.3
-   },
-   "cpu_h_by_role": {
-    "tune": 121.6,
-    "measure": 490.8
-   },
-   "units_without_cost": [],
-   "wall_h_all_platforms": 21.3,
-   "kaggle_share_process_wall_h": 341.0,
-   "colab_share_process_wall_h": 127.9,
-   "vps_share_process_wall_h": 149.2,
-   "wall_h_kaggle_only": 38.6,
-   "wall_h_kaggle_vps": 26.9
+   "vps_factor_eff": 2.088,
+   "colab_factor_eff": 0.923,
+   "wall_h_all_platforms": 14.1,
+   "wall_h_kaggle_vps": 16.6,
+   "kaggle_share_process_wall_h": 225.3,
+   "colab_share_process_wall_h": 78.0,
+   "vps_share_process_wall_h": 205.8,
+   "vps_factor_eff_f": 2.349,
+   "colab_factor_eff_f": 1.012,
+   "wall_h_all_platforms_f": 13.2,
+   "wall_h_kaggle_vps_f": 15.7,
+   "wall_h_kaggle_only": 31.8
   }
  }
 }

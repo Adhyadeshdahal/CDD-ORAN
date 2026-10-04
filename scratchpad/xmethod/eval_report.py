@@ -43,7 +43,7 @@ import eval_analysis as E  # noqa: E402
 REPORT_VERSION = "xm-eval-report/1"
 DEV_MARK = ("DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, "
             "not the pre-registered result")
-SLIM_DROP = ("edges", "notes", "scores", "versions", "result_config", "integrity", "config")
+SLIM_DROP = ("edges", "notes", "scores", "versions", "result_config", "config")
 
 
 # ================================================================================================ inputs
@@ -96,7 +96,9 @@ def slim(r: dict) -> dict:
     for k, v in r.items():
         if k in SLIM_DROP:
             continue
-        if isinstance(v, dict) and k in ("code", "run_mode", "pkgs", "host"):
+        if k == "integrity" and isinstance(v, dict):                     # V11 stamps read only the spec file sha
+            v = {"spec_file_sha256": v.get("spec_file_sha256")}
+        if isinstance(v, dict) and k in ("code", "run_mode", "integrity", "pkgs", "host"):
             v = _SHARED.setdefault(f"{k}:{json.dumps(v, sort_keys=True)}", v)
         out[k] = v
     return out

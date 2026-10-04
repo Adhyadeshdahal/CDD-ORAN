@@ -5,8 +5,8 @@
     uv run python scratchpad/xmethod/eval_analysis.py t1 --spec specs/dev/full.json --merged DEV.jsonl.gz [...]
 
 Input: merged campaign records (`cdd_oran/xmethod/campaign.py`, one JSON record per unit = (arm, world, regime,
-lam, n, kappa, seed), fields key / job / role / status / edges / notes / cpu_s / code / run_mode / pkgs / host /
-dataset_sha256). Output: ``eval_tables.json`` and ``EVAL_TABLES.md`` in ``--out``. Deterministic: records sorted
+lam, n, kappa, seed), fields key / job / role / status / edges / notes / cpu_s / code / run_mode / integrity / pkgs /
+host / dataset_sha256). Output: ``eval_tables.json`` and ``EVAL_TABLES.md`` in ``--out``. Deterministic: records sorted
 by key, seeds sorted before every bootstrap, fixed bootstrap and simulation seeds, JSON with sorted keys.
 
 Only records whose key is an expected unit of the spec with the expected role enter the tables (others are listed
@@ -1156,8 +1156,9 @@ def integrity(records: list[dict], screened: dict, spec: dict, freeze_commit: st
                         and (r.get("code") or {}).get("commit") not in allowed.get(r["key"], set()))
     dirty = sorted(r["key"] for r in records if (r.get("code") or {}).get("dirty") is not False)
     psha = spec.get("protocol_sha256")
+    # spec stamp = campaign's integrity.spec_file_sha256 (LF file sha, the rule of file_sha256; R-59 F1)
     bad_stamp = sorted(r["key"] for r in records if (r.get("run_mode") or {}).get("protocol_sha256") != psha
-                       or (spec_sha is not None and (r.get("run_mode") or {}).get("spec_sha256") != spec_sha))
+                       or (spec_sha is not None and (r.get("integrity") or {}).get("spec_file_sha256") != spec_sha))
     persist = {p["key"] for p in amendments["persistent_errors"]}
     errors = sorted(r["key"] for r in records if _status(r) == "error")
     errors_unlisted = sorted(set(errors) - persist)
