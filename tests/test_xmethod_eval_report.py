@@ -109,7 +109,8 @@ def test_main_dev_report_watermarked(recs, tmp_path):
     assert md.startswith("# [DEV, NOT EVAL]") and md.rstrip().endswith(f"> **{RP.DEV_MARK}**")
     secs = md.split("\n## ")[1:]
     assert len(secs) >= 9 and all(RP.DEV_MARK in s for s in secs)                  # watermark in every section
-    for h in ("1. Claim", "2. C1", "3. C2a", "4. C2b", "5. C3", "6. Power", "7. kappa sweep", "8. Figure-ready"):
+    for h in ("1. Claim", "2. C1", "3. C2a", "4. C2b", "5. C3", "6. Power", "7. kappa sweep", "8. Not in grid",
+              "9. Figure-ready"):
         assert f"\n## {h}" in md
     assert "C1 sensitivity (R-56, no effect): without ci_native" in md
     assert "Every eq arm, same rule on R1 + R2, unfiltered (R-56)" in md and "Pre-registered disclosure" in md
@@ -118,7 +119,7 @@ def test_main_dev_report_watermarked(recs, tmp_path):
     assert js["meta"]["mode"] == "DEV" and js["meta"]["watermark"] == RP.DEV_MARK
     assert js["tables"]["V4_verdicts"]["C1"]["sensitivity_without"]["dropped"] == ["ci_native"]
     names = {"validity_cells", "recall_vs_n", "like_for_like", "paired_diff", "information_levels_R2",
-             "e4_by_lambda", "kappa_sweep", "cost", "eq_arms"}
+             "e4_by_lambda", "kappa_sweep", "cost", "eq_arms", "not_in_grid"}
     assert {p[:-4] for p in os.listdir(out / "csv")} == names
     with open(out / "csv" / "validity_cells.csv", encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
@@ -142,6 +143,24 @@ def test_r4_not_applicable_rows_listed(tmp_path):
     assert "| pmrt_eq | E4 R4 lam1 k0.25 n500 | NA (" in sec                      # PMRT in R4: never recall 0
     assert not [r for r in out["V2_recall"] if r["arm"] == "pmrt_eq" and r["recall"] is not None]
     assert "DEV" not in md.split("\n", 1)[0] and RP.DEV_MARK not in md                # EVAL rendering: no watermark
+
+
+def test_report_not_in_grid_section(recs, tmp_path):
+    spec = copy.deepcopy(T.SPEC)
+    spec["blocks"] = [{**b, "arms": [a for a in spec["arms"] if a != "ci_native"]} for b in T.SPEC["blocks"]] + \
+        [{**b, "ns": [500], "arms": ["ci_native"]} for b in T.SPEC["blocks"]]
+    spec["not_in_grid"] = [{"ruling": "R-x", "arms": ["ci_native"], "regimes": None, "ns": [1000], "kappas": None,
+                            "reason": "test trim"}]
+    rs = [r for r in recs if not (r["arm"] == "ci_native" and r["job"]["n"] == 1000)]
+    out, _ = RP.chunked_analyse([_write(rs, tmp_path / "g.jsonl")], spec, T.COMMIT, spec_sha=T.SSHA,
+                                protocol={"ok": True}, tmp_dir=str(tmp_path), log=lambda *_: None)
+    meta = {"mode": "EVAL", "spec_sha256": T.SSHA, "utc": "t", "inputs": [], "records_by_arm": {}, "csv": {}}
+    md = RP.report_md(out, meta)
+    sec = md.split("\n## 8. Not in grid")[1].split("\n## ")[0]
+    assert "| R-x | ci_native | ns [1000] | " in sec and "test trim" in sec and "unexplained gaps: none" in sec
+    assert out["V4_verdicts"]["C1"]["arms"]["ci_native"]["complete"] and out["V11_integrity"]["checks"]["grid_gaps_ruled"]
+    nig = RP.csv_tables(out)["not_in_grid"]
+    assert nig and {r["arm"] for r in nig} == {"ci_native"} and {r["n"] for r in nig} == {1000}
 
 
 def test_eval_mode_refuses_dev_seeds(recs, tmp_path):

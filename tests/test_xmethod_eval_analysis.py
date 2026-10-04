@@ -501,7 +501,7 @@ def test_eval_spec_r40():
         arms = json.load(fh)["arms"]
     assert [a for a, d in arms.items() if d.get("c2b", True) is not True] == ["mscr_eq"]
     assert arms["mscr_eq"]["label"].startswith("single-conditioner max statistic")
-    assert arms["mscr_eq_min"]["label"] == arms["mscr_eq"]["label"]                      # Q11
+    assert "mscr_eq_min" not in arms                                                    # R-58 (5)
     assert sorted(a for a, d in arms.items() if E.arm_kind(d) == "native" and d["declare"] == "by"
                   and d.get("set_D", True) is True) == ["corr", "granger_native", "mscr_native", "pcorr_hac_fb",
                                                         "pcorr_native", "rcot2_native"]
@@ -511,7 +511,7 @@ def test_eval_spec_r40():
 def test_eval_spec_and_protocol_drop_pdcor_cmi_knn_r48_r49():
     with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
         spec = json.load(fh)
-    assert len(spec["arms"]) == 25
+    assert len(spec["arms"]) == 24                                                       # R-58 (5): no mscr_eq_min
     for gone in ("pdcor", "cmi_knn"):                                                    # R-48, R-49 revised
         assert not [a for a, d in spec["arms"].items() if gone in a or gone in d["ref"]]
         assert not [a for b in spec["blocks"] if isinstance(b.get("arms"), list) for a in b["arms"] if gone in a]
@@ -537,8 +537,9 @@ def test_eval_spec_cdl_r50_r53():
     assert d["declare"] == "tau" and d["analysis"] == "primary" and d["fixed_threshold"] == 0.16
     assert E.arm_kind(d) == "native" and E.analysis_block("cdl", spec) == "primary"
     assert [a for a, x in spec["arms"].items() if "fixed_threshold" in x] == ["cdl"]
-    e4 = [b for b in spec["blocks"] if b["regimes"] == ["R3", "R4"] and "two_tower" in b["arms"]]
-    assert len(e4) == 1 and "cdl" in e4[0]["arms"]                                         # E4 R3 / R4 natives
+    cb = [b for b in spec["blocks"] if "cdl" in b["arms"]]                                 # R-58 (1)
+    assert cb and all(set(b["regimes"]) <= {"R1", "R2"} and max(b["ns"]) <= 4000 and b["kappas"] == [0.25]
+                      for b in cb)
     assert spec["tbd"]["cdl"].startswith("filled (R-53)")
 
 
@@ -741,7 +742,9 @@ def test_eval_spec_pmrt_nl_placeholder_r42():
     e4 = [b for b in spec["blocks"] if b["seeds"] == [3_100_000, 3_100_299]]           # S_E4 300 (T9)
     readers = {a for b in e4 for a in b["arms"]}
     assert readers == {a for a, d in arms.items() if E.arm_kind(d) in ("pmrt", "eq")}     # C3 readers (R-39)
-    assert all(b["regimes"] == ["R3", "R4"] and b["worlds"] == ["E4"] for b in e4)
+    assert all(b["regimes"] == ["R3"] and b["worlds"] == ["E4"] for b in e4)              # R-58 (3)
+    assert all(b["seeds"] == "TBD" for b in spec["blocks"] if "R4" in b["regimes"] and b["role"] == "measure")
+    assert {"pmrt_nl_eq", "pmrt_eq"} <= {a for b in spec["blocks"] if b["regimes"] == ["R4"] for a in b["arms"]}
     assert sorted(a for a, d in arms.items() if E.arm_kind(d) == "pmrt") == ["pmrt_eq", "pmrt_nl_eq", "pmrt_r3"]
     assert all(E.power_not_applicable(arms[a], "R4") and not E.power_not_applicable(arms[a], "R3")
                for a in ("pmrt_eq", "pmrt_nl_eq", "pmrt_r3"))
@@ -752,8 +755,9 @@ def test_eval_spec_mscr_n1000_r54_and_unit_counts():
     with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
         spec = json.load(fh)
     mscr = {a for a, d in spec["arms"].items() if "mscr" in d["ref"]}
-    assert mscr == {"mscr_eq", "mscr_native", "mscr_eq_min"}
-    assert all(b["ns"] == [1000] for b in spec["blocks"] if b.get("arms", "all") == "all")   # kappa sweep only
+    assert mscr == {"mscr_eq", "mscr_native"}                                          # R-58 (5)
+    assert all(isinstance(b["arms"], list) for b in spec["blocks"])
+    assert not [a for b in spec["blocks"] if b["kappas"] != [0.25] for a in b["arms"] if a in mscr | {"cdl"}]
     for b in spec["blocks"]:
         names = set(spec["arms"]) if b.get("arms", "all") == "all" else set(b["arms"])
         if names & mscr:
@@ -770,12 +774,74 @@ def test_eval_spec_mscr_n1000_r54_and_unit_counts():
             elif b["seeds"] == "TBD_HALF":
                 b["seeds"] = [3_100_000, 3_100_000 + math.ceil(S / 2) - 1]
         return x
-    for S, units, tune, ds in ((40, 191_600, 43_240, 16_200), (100, 298_940, 43_240, 19_500)):   # PROTOCOL_A s.7
+    for S, units, tune, ds in ((40, 150_960, 40_520, 11_000), (60, 186_980, 40_520, 12_500)):   # PROTOCOL_A s.7
         u = E.planned_units(filled(S))
         assert len(u) == units and sum(x["role"] == "tune" for x in u.values()) == tune
         assert len({(x["world"], x["regime"], x["lam"], x["n"], x["kappa"], x["seed"]) for x in u.values()}) == ds
         assert max(x["n"] for x in u.values() if x["arm"] in mscr) == 1000
         assert not any(x["t3"] for x in u.values())
+
+
+def _r58():
+    return _load_mod("r58_spec", os.path.join(ROOT, "scratchpad", "xmethod", "freeze", "r58_spec.py"))
+
+
+def _load_mod(name, path):
+    sp = importlib.util.spec_from_file_location(name, path)
+    m = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(m)
+    return m
+
+
+def test_eval_spec_r58_grid_and_fallback_switch():
+    with open(os.path.join(ROOT, "scratchpad", "xmethod", "specs", "eval", "full.json"), encoding="utf-8") as fh:
+        spec = json.load(fh)
+    R58 = _r58()
+    assert R58.build(spec, False) == spec and spec["e4r3_fallback"] is False               # generated, idempotent
+    ng = E.not_in_grid(spec)
+    assert ng["has_rules"] and ng["unexplained"] == []                                     # every gap is ruled
+    by = {(r["ruling"], tuple(r["arms"]), json.dumps(r["where"])): r["n_cells"] for r in ng["by_rule"]}
+    assert sum(by.values()) == ng["n_cells"] == 70 + 128
+    assert {c["arm"] for c in ng["cells"]} == {"cdl", "mscr_eq", "mscr_native"}
+    assert not [c for c in ng["cells"] if c["arm"] == "cdl" and c["regime"] in ("R1", "R2") and c["n"] <= 4000
+                and c["kappa"] == 0.25]
+    fb = R58.build(spec, True)                                                            # R-58 (3) fallback
+    readers = sorted(a for a, d in fb["arms"].items() if E.arm_kind(d) in ("pmrt", "eq"))
+    ngf = E.not_in_grid(fb)
+    assert ngf["unexplained"] == [] and fb["e4r3_fallback"] is True
+    extra = [c for c in ngf["cells"] if c["ruling"] == "R-58(3) fallback"]
+    assert {c["arm"] for c in extra} == set(readers) - {"mscr_eq", "granger_eq"}          # mscr <= 1000, granger E3
+    assert all(c["regime"] == "R3" and c["n"] == 24000 for c in extra) and len(extra) == 4 * 6
+    fill = {"TBD": [3_100_000, 3_100_039], "TBD_HALF": [3_100_000, 3_100_019]}
+    for x in (spec, fb):
+        for b in x["blocks"]:
+            b["seeds"] = fill.get(b["seeds"], b["seeds"]) if isinstance(b["seeds"], str) else b["seeds"]
+    assert len(E.planned_units(spec)) - len(E.planned_units(fb)) == 6 * 4 * 300            # 6 readers x 4 lam x S_E4
+    have = E._measure_cells(fb, False)                                  # non-readers keep E4 R3 n 24000
+    non = [a for a in fb["arms"] if a not in readers and a not in ("cdl", "mscr_native", "granger_native")]
+    assert non and all(f"{a}|{E.cell_of('E4', 'R3', 1.0, 24000, 0.25)}" in have for a in non)
+
+
+def test_not_in_grid_cells_never_cap_verdicts():
+    spec = copy.deepcopy(SPEC)
+    spec["blocks"] = [{**b, "arms": [a for a in spec["arms"] if a != "ci_native"]} for b in SPEC["blocks"]] + \
+        [{**b, "ns": [500], "arms": ["ci_native"]} for b in SPEC["blocks"]]               # ci_native: n 500 only
+    recs = synth_records(spec)
+    out = run(recs, spec)
+    assert out["V11_integrity"]["checks"].get("grid_gaps_ruled") is None                  # no rules in this spec
+    assert out["not_in_grid"]["unexplained"] and {c["arm"] for c in out["not_in_grid"]["cells"]} == {"ci_native"}
+    spec["not_in_grid"] = [{"ruling": "R-x", "arms": ["ci_native"], "regimes": None, "ns": [1000], "kappas": None,
+                            "reason": "test"}]
+    out = run(recs, spec)
+    v, c1 = out["V11_integrity"], out["V4_verdicts"]["C1"]["arms"]["ci_native"]
+    assert v["checks"]["grid_gaps_ruled"] and out["not_in_grid"]["unexplained"] == []
+    assert c1["r2_planned"] == c1["r2_counted"] and c1["complete"] and c1["verdict"] != "NOT EVALUABLE"
+    assert not [r for r in out["V1_validity"] if r["arm"] == "ci_native" and r["n"] == 1000]
+    md = E.markdown(out)
+    assert "| ci_native | raw_p | " in md and "nig" in md.split("### E1 R1")[1].split("###")[0]
+    assert "- R-x: ci_native (ns [1000]): " in md
+    spec["not_in_grid"][0]["ns"] = [4000]                                                 # rule misses the gap
+    assert not run(recs, spec)["V11_integrity"]["checks"]["grid_gaps_ruled"]
 
 
 def test_protocol_t_register_only_t1_open():

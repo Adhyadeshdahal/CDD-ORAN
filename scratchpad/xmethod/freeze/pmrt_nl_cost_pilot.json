@@ -1,0 +1,86 @@
+{
+ "source": "dev-runs (worker xm-pmrt) messages 2026-10-04: T3 / R-58(3) cost pilot of pmrt_nl_eq (gbm), Kaggle CPU, 4 parts on 4 vCPU (1 process per vCPU, R-55), CPU-s per dataset; merged records on xm/dev-runs dea0091 under scratchpad/xmethod/results/dev/pmrt_nl_cost/",
+ "runs": {
+  "xm-dev-cdl-p1-040214": {
+   "commit": "96d3a57",
+   "spec": "scratchpad/xmethod/specs/dev/pmrt_nl_cost.json",
+   "units": "12 / 12 ok",
+   "seeds": "3 DEV seeds",
+   "cells": "E2 R1 / R2, n 8000 / 24000"
+  },
+  "xm-dev-cdl-p2-040523": {
+   "commit": "900725c",
+   "spec": "scratchpad/xmethod/specs/dev/pmrt_nl_cost_e4.json",
+   "units": "12 / 12 ok",
+   "seeds": "n 24000: 3_000_100-101; n 8000: 3_000_100",
+   "cells": "E4 R3, lam 0 / .5 / 1 / 1.5, n 8000 / 24000"
+  }
+ },
+ "cost_mean_cpu_s": {
+  "pmrt_nl_eq|E2|R1|n8000": 482.0,
+  "pmrt_nl_eq|E2|R2|n8000": 483.0,
+  "pmrt_nl_eq|E2|R1|n24000": 1135.0,
+  "pmrt_nl_eq|E2|R2|n24000": 1079.0,
+  "pmrt_nl_eq|E4|R3|n8000": 35.0,
+  "pmrt_nl_eq|E4|R3|n24000": 97.25
+ },
+ "cost_max_cpu_s": {
+  "pmrt_nl_eq|E2|R1|n8000": 496.0,
+  "pmrt_nl_eq|E2|R2|n8000": 500.0,
+  "pmrt_nl_eq|E2|R1|n24000": 1148.0,
+  "pmrt_nl_eq|E2|R2|n24000": 1099.0,
+  "pmrt_nl_eq|E4|R3|n8000": 37.0,
+  "pmrt_nl_eq|E4|R3|n24000": 103.0
+ },
+ "peak_rss_mb_max": {
+  "E2": 636,
+  "E4 R3 n 24000": 606,
+  "E4 R3 n 8000": 359
+ },
+ "per_lambda_E4_R3": {
+  "n24000": {
+   "0": [
+    95,
+    94
+   ],
+   "0.5": [
+    103,
+    102
+   ],
+   "1": [
+    98,
+    98
+   ],
+   "1.5": [
+    94,
+    94
+   ]
+  },
+  "n8000": {
+   "0": [
+    36
+   ],
+   "0.5": [
+    37
+   ],
+   "1": [
+    34
+   ],
+   "1.5": [
+    33
+   ]
+  }
+ },
+ "merged": {
+  "scratchpad/xmethod/results/dev/pmrt_nl_cost/merged_e2.jsonl.gz": {
+   "run": "xm-dev-cdl-p1-040214",
+   "commit": "96d3a57",
+   "sha256": "4300cd01dd8808a04ba92e209842a08df91fc3aef90a2ca293a296dfe6432abf"
+  },
+  "scratchpad/xmethod/results/dev/pmrt_nl_cost/merged_e4r3.jsonl.gz": {
+   "run": "xm-dev-cdl-p2-040523",
+   "commit": "900725c",
+   "sha256": "6ff0389b97451d8da18d0e972b92c2ec31bc7201cef875409eba86d35e53b145"
+  }
+ }
+}

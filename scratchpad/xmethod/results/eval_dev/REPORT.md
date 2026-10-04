@@ -2,19 +2,21 @@
 
 > **DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, not the pre-registered result**
 
-Generator `xm-eval-report/1` on `xm-eval-analysis/5`; spec `DEV:dev_full+dev_ci_c` (sha256 cfb752d2ba36ea6d); protocol docs/xmethod/PROTOCOL_A.md (NOT verified: frozen False, spec protocol_sha256 TBD-at-freeze vs file 6c8ef16129cfe134); integrity **PROVISIONAL** (failed: clean, commits, dataset_hash, freeze_commit_given, one_platform_per_dataset, pkgs_uniform, protocol_frozen_sha, stamps).
-Primary PMRT arm (focal): pmrt_eq; primary kappa 0.25; generated 2026-10-03T20:24:16Z.
+Generator `xm-eval-report/1` on `xm-eval-analysis/5`; spec `DEV:dev_full+dev_ci_c+dev_pmrt_nl` (sha256 e1a7e846de563e16); protocol docs/xmethod/PROTOCOL_A.md (NOT verified: frozen False, spec protocol_sha256 TBD-at-freeze vs file 5acfbcff1226e180); integrity **PROVISIONAL** (failed: clean, commits, dataset_hash, freeze_commit_given, one_platform_per_dataset, pkgs_uniform, protocol_frozen_sha, stamps, unexpected).
+Primary PMRT arm (focal): pmrt_nl_eq; primary kappa 0.25; generated 2026-10-04T06:15:24Z.
 
 Inputs:
 
-- `D:/academia/major-project/CDD-ORAN-wt/xm-harness/scratchpad/xmethod/specs/eval/full.json`: sha256 64703101430d7877
+- `D:/academia/major-project/CDD-ORAN-wt/xm-harness/scratchpad/xmethod/specs/eval/full.json`: sha256 81ec2718e17c9ae4
 - `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/specs/dev/full.json`: sha256 5ed77b4d3c7edeeb
 - `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/specs/dev/ci_c.json`: sha256 4bce54235d15c5dd
+- `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/specs/dev/pmrt_nl.json`: sha256 68e18a32ef86e0e1
 - `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/results/dev/full/merged.jsonl.gz`: sha256 6a74cb85e3ebb1f6
 - `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/results/dev/ci_c/merged.jsonl.gz`: sha256 1b0484798f5dfd2f
-- records by arm: corr 5080, granger_eq 600, granger_native 600, mscr_eq 2560, mscr_eq_min 2560, mscr_native 2560, notears 5080, pc_eq 5080, pc_native 5080, pcorr_eq 5080, pcorr_eq_min 5080, pcorr_hac 5080, pcorr_hac_eq_min 5080, pcorr_hac_fb 5080, pcorr_hac_fb_eq_min 5080, pcorr_native 5080, pmrt_eq 5080, pmrt_r3 5080, rcot2_eq 5080, rcot2_eq_min 5080, rcot2_native 5080, shap_dag 5080, two_tower 5080
-- note: pmrt_nl_eq has no DEV records: PROTOCOL_A T10 fallback applied for this DEV rendering only (pmrt_eq focal and primary, label dropped)
-- note: EVAL arms without DEV records (absent from this rendering): cdl, pmrt_nl_eq
+- `D:/academia/major-project/CDD-ORAN-wt/xm-pmrt/scratchpad/xmethod/results/dev/pmrt_nl/merged.jsonl.gz`: sha256 d8894fd3a1dee29f
+- records by arm: corr 5080, granger_eq 600, granger_native 600, mscr_eq 2560, mscr_eq_min 2560, mscr_native 2560, notears 5080, pc_eq 5080, pc_native 5080, pcorr_eq 5080, pcorr_eq_min 5080, pcorr_hac 5080, pcorr_hac_eq_min 5080, pcorr_hac_fb 5080, pcorr_hac_fb_eq_min 5080, pcorr_native 5080, pmrt_eq 5080, pmrt_nl_eq 1440, pmrt_r3 5080, rcot2_eq 5080, rcot2_eq_min 5080, rcot2_native 5080, shap_dag 5080, two_tower 5080
+- note: DEV arm mscr_eq_min is not in the EVAL spec: left out
+- note: EVAL arms without DEV records (absent from this rendering): cdl
 
 ## 1. Claim (PROTOCOL_A s.10)
 
@@ -27,7 +29,7 @@ Inputs:
 | C1 design-blind tests invalid on R2 | SUPPORTED | design-blind tests are invalid on the R2 (setpoint + dither) design tested |
 | C2a design-based test valid (R1 + R2) | SUPPORTED | using the design restores validity (design-based inference and design-covariate adjustment); rcot2_eq INVALID in R2 as already in R1 (not restored by design covariates) |
 | C2b design covariates restore validity | SUPPORTED | (C2 wording above) |
-| C3 valid under the logged confounded policy | NOT SUPPORTED | not supported |
+| C3 valid under the logged confounded policy | NOT EVALUABLE | not supported |
 
 ## 2. C1: design-blind arms (set D)
 
@@ -53,7 +55,8 @@ C1 sensitivity (R-56, no effect): without mscr_native: **SUPPORTED** (4 of 5 ass
 
 | arm | verdict | cells counted / planned | INVALID (F_max) | pooled rates |
 |---|---|---|---|---|
-| pmrt_eq (primary) | SUPPORTED | 50/50 | 0 (3) | null_raw .048 [.044, .052] VALID; plac_raw .048 [.042, .054] VALID |
+| pmrt_nl_eq (primary) | SUPPORTED | 24/24 | 0 (2) | null_raw .043 [.040, .047] VALID; plac_raw .046 [.039, .053] VALID |
+| pmrt_eq [linear statistic (pmrt-core-v1); secondary PMRT arm (R-42)] (secondary PMRT arm, no effect) | SUPPORTED | 50/50 | 0 (3) | null_raw .048 [.044, .052] VALID; plac_raw .048 [.042, .054] VALID |
 | pmrt_r3 (secondary PMRT arm, no effect) | SUPPORTED | 50/50 | 1 (3) | null_raw .050 [.046, .053] VALID; plac_raw .049 [.043, .056] VALID |
 
 ## 4. C2b: design-covariate adjustment (eq arms whose native partner is a C1 FAILURE)
@@ -90,19 +93,20 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 
 | arm | verdict | cells counted / planned | INVALID (F_max) | pooled rates |
 |---|---|---|---|---|
-| pmrt_eq (primary) | NOT SUPPORTED | 20/20 | 0 (1) | plac_raw .045 [.018, .082] INCONCLUSIVE; conf_raw .039 [.019, .062] VALID |
+| pmrt_nl_eq (primary) | NOT EVALUABLE | 0/0 | 0 (0) | plac_raw -; conf_raw - |
 | granger_eq (eq arm, no claim effect) | NOT EVALUABLE | 0/0 | 0 (0) | plac_raw -; conf_raw - |
 | mscr_eq [single-conditioner max statistic; cannot condition on the joint design set; reported INVALID arm, EVAL n <= 1000 (R-54)] (eq arm, no claim effect) | NOT SUPPORTED | 8/8 | 6 (0) | plac_raw .115 [.079, .154] INVALID; conf_raw .758 [.752, .767] INVALID |
 | pc_eq (eq arm, no claim effect) | NOT SUPPORTED | 20/20 | 2 (0) | conf_decl .064 [.043, .088] INCONCLUSIVE |
 | pcorr_eq (eq arm, no claim effect) | NOT SUPPORTED | 20/20 | 0 (1) | plac_raw .052 [.023, .088] INCONCLUSIVE; conf_raw .040 [.020, .065] VALID |
 | rcot2_eq (eq arm, no claim effect) | NOT SUPPORTED | 20/20 | 15 (1) | plac_raw .043 [.019, .073] VALID; conf_raw .658 [.620, .691] INVALID |
+| pmrt_eq [linear statistic (pmrt-core-v1); secondary PMRT arm (R-42)] (secondary PMRT arm, no effect) | NOT SUPPORTED | 20/20 | 0 (1) | plac_raw .045 [.018, .082] INCONCLUSIVE; conf_raw .039 [.019, .062] VALID |
 | pmrt_r3 (secondary PMRT arm, no effect) | NOT SUPPORTED | 20/20 | 0 (1) | plac_raw .048 [.020, .083] INCONCLUSIVE; conf_raw .040 [.019, .064] VALID |
 
 ## 6. Power among cells not INVALID (V2) and the R4 'not applicable' rows
 
 > **DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, not the pre-registered result**
 
-1110 (arm, cell) with recall (counted, not INVALID; R-39); the grid is in the appendix (V2) and `csv/recall_vs_n.csv`. PMRT arms in R4 (no known design): power NOT APPLICABLE, never recall 0 (R-42); their placebo rates are still read:
+1118 (arm, cell) with recall (counted, not INVALID; R-39); the grid is in the appendix (V2) and `csv/recall_vs_n.csv`. PMRT arms in R4 (no known design): power NOT APPLICABLE, never recall 0 (R-42); their placebo rates are still read:
 
 | arm | cell | state | placebo raw (P_placebo) |
 |---|---|---|---|
@@ -189,21 +193,6 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 | mscr_eq | E5 | 0.125 | ok | INVALID | 1.00 |
 | mscr_eq | E5 | 0.25 | ok | INVALID | 1.00 |
 | mscr_eq | E5 | 0.5 | ok | INVALID | 1.00 |
-| mscr_eq_min | E1 | 0.125 | ok | INVALID | 1.00 |
-| mscr_eq_min | E1 | 0.25 | ok | INVALID | 1.00 |
-| mscr_eq_min | E1 | 0.5 | ok | INVALID | 1.00 |
-| mscr_eq_min | E2 | 0.125 | ok | INVALID | .96 |
-| mscr_eq_min | E2 | 0.25 | ok | INVALID | .96 |
-| mscr_eq_min | E2 | 0.5 | ok | INVALID | .95 |
-| mscr_eq_min | E3 | 0.125 | ok | INVALID | 1.00 |
-| mscr_eq_min | E3 | 0.25 | ok | INVALID | 1.00 |
-| mscr_eq_min | E3 | 0.5 | ok | INVALID | 1.00 |
-| mscr_eq_min | E4 | 0.125 | ok | INCONCLUSIVE | .05 |
-| mscr_eq_min | E4 | 0.25 | ok | INCONCLUSIVE | .03 |
-| mscr_eq_min | E4 | 0.5 | ok | INCONCLUSIVE | .00 |
-| mscr_eq_min | E5 | 0.125 | ok | INVALID | 1.00 |
-| mscr_eq_min | E5 | 0.25 | ok | INVALID | 1.00 |
-| mscr_eq_min | E5 | 0.5 | ok | INVALID | 1.00 |
 | mscr_native | E1 | 0.125 | ok | INVALID | 1.00 |
 | mscr_native | E1 | 0.25 | ok | INVALID | 1.00 |
 | mscr_native | E1 | 0.5 | ok | INVALID | 1.00 |
@@ -384,6 +373,10 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 | pmrt_eq | E5 | 0.125 | ok | INCONCLUSIVE | .47 |
 | pmrt_eq | E5 | 0.25 | ok | VALID | .46 |
 | pmrt_eq | E5 | 0.5 | ok | VALID | .48 |
+| pmrt_nl_eq | E1 | 0.25 | ok | INCONCLUSIVE | 1.00 |
+| pmrt_nl_eq | E2 | 0.25 | ok | INCONCLUSIVE | .64 |
+| pmrt_nl_eq | E3 | 0.25 | ok | VALID | 1.00 |
+| pmrt_nl_eq | E5 | 0.25 | ok | VALID | .68 |
 | pmrt_r3 | E1 | 0.125 | ok | VALID | 1.00 |
 | pmrt_r3 | E1 | 0.25 | ok | INCONCLUSIVE | 1.00 |
 | pmrt_r3 | E1 | 0.5 | ok | VALID | 1.00 |
@@ -475,19 +468,37 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 | two_tower | E5 | 0.25 | ok | VALID | .70 |
 | two_tower | E5 | 0.5 | ok | VALID | .67 |
 
-## 8. Figure-ready CSVs
+## 8. Not in grid (pre-registered grid choices, R-54 / R-58)
 
 > **DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, not the pre-registered result**
 
-- `csv/cost.csv` (sha256 001d692963e4ed23)
-- `csv/e4_by_lambda.csv` (sha256 c878913683f140c7)
+Cells outside an arm's grid are not planned: they never count as missing, never cap a verdict at PARTIAL and never make a component NOT EVALUABLE; every table labels them `nig`.
+
+| ruling | arms | where | cells | reason |
+|---|---|---|---|---|
+| R-58(1) | cdl | regimes ['R3', 'R4'] | 0 | cdl: training cost; feeds no claim (R1 / R2, n <= 4000 only) |
+| R-58(1) | cdl | ns [8000, 24000] | 0 | cdl: training cost; feeds no claim (R1 / R2, n <= 4000 only) |
+| R-58(1) | cdl | kappas [0.125, 0.5] | 0 | cdl: not in the kappa sweep |
+| R-54 | mscr_eq, mscr_native | ns [4000, 8000, 24000] | 108 | mscr: reported-INVALID arm, EVAL n <= 1000 only |
+| R-58(5) | mscr_eq, mscr_native | kappas [0.125, 0.5] | 0 | mscr: not in the kappa sweep |
+| DEV scope | pmrt_eq, pmrt_r3, pc_eq, pc_native, granger_eq, granger_native, corr, notears, shap_dag, two_tower, pcorr_eq, pcorr_native, pcorr_hac, pcorr_hac_fb, rcot2_eq, rcot2_native, pcorr_eq_min, rcot2_eq_min, pcorr_hac_eq_min, pcorr_hac_fb_eq_min, mscr_eq, mscr_native, pmrt_nl_eq | all | 76 | the DEV specs ran a subset of the EVAL grid (DEV rendering only) |
+
+184 cells in total; unexplained gaps: none.
+
+## 9. Figure-ready CSVs
+
+> **DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, not the pre-registered result**
+
+- `csv/cost.csv` (sha256 e88f54164d62e75b)
+- `csv/e4_by_lambda.csv` (sha256 1b466987908eb56a)
 - `csv/eq_arms.csv` (sha256 57d68ced1532ea9a)
-- `csv/information_levels_R2.csv` (sha256 e1b07a2b344048f6)
-- `csv/kappa_sweep.csv` (sha256 10ee70cf0a43d286)
-- `csv/like_for_like.csv` (sha256 295379e69011e178)
-- `csv/paired_diff.csv` (sha256 32e2c4b2ed218f36)
-- `csv/recall_vs_n.csv` (sha256 54165329805aeed6)
-- `csv/validity_cells.csv` (sha256 e52671267cc1f04d)
+- `csv/information_levels_R2.csv` (sha256 7f5c38742c84b691)
+- `csv/kappa_sweep.csv` (sha256 cb3b857563fa0ae2)
+- `csv/like_for_like.csv` (sha256 2446c556817ac9fa)
+- `csv/not_in_grid.csv` (sha256 cac84ffd9a4a0e07)
+- `csv/paired_diff.csv` (sha256 c354212629b6d733)
+- `csv/recall_vs_n.csv` (sha256 f2d1e12972ba320e)
+- `csv/validity_cells.csv` (sha256 4001b31a04e36cdb)
 
 ## Appendix: every eval_analysis table (V0-V11)
 
@@ -496,24 +507,24 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 
 ### V0 like-for-like (headline, R-42): recall / truth-null rate / placebo rate per cell
 
-Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal placebo tau (tau), next to the score-only arms (tau; cdl also at the conference's fixed threshold, fixed). Rates are declaration rates; * INVALID, ~ INCONCLUSIVE; a tau row's placebo is its tuning column (reported, not in its validity). NA = not applicable (PMRT in R4: no known design, never recall 0); inv INVALID, inf infeasible (EVAL or T3), mis missing, unt untuned, few < 10 seeds.
+Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal placebo tau (tau), next to the score-only arms (tau; cdl also at the conference's fixed threshold, fixed). Rates are declaration rates; * INVALID, ~ INCONCLUSIVE; a tau row's placebo is its tuning column (reported, not in its validity). NA = not applicable (PMRT in R4: no known design, never recall 0); inv INVALID, inf infeasible (EVAL or T3), mis missing, unt untuned, few < 10 seeds; nig not in the arm's grid (pre-registered grid choice, R-54 / R-58).
 
 ### E1 R1
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | 1.00 / .029 / .050~ | 1.00 / .037 / .050~ | 1.00 / .029 / .050~ | nig | nig |
+| pmrt_nl_eq | tau | 1.00 / .033 / .050~ | 1.00 / .017 / .050~ | 1.00 / .029 / .050~ | nig | nig |
 | pmrt_eq | raw_p | 1.00 / .046 / .025 | 1.00 / .037 / .050~ | 1.00 / .037 / .087~ | 1.00 / .046 / .062~ | 1.00 / .029 / .050~ |
 | pmrt_eq | tau | 1.00 / .025 / .013 | 1.00 / .100* / .138* | 1.00 / .037 / .075~ | 1.00 / .046 / .062~ | 1.00 / .033 / .087~ |
 | pmrt_r3 | raw_p | 1.00 / .071~ / .050~ | 1.00 / .046 / .050~ | 1.00 / .029 / .100~ | 1.00 / .054~ / .062~ | 1.00 / .037 / .025 |
 | pmrt_r3 | tau | 1.00 / .054 / .050~ | 1.00 / .071~ / .125~ | 1.00 / .033 / .113~ | 1.00 / .042 / .050~ | 1.00 / .037 / .025 |
 | corr | raw_p | 1.00 / .050~ / .025 | 1.00 / .037 / .062~ | 1.00 / .029 / .050~ | 1.00 / .046 / .025 | 1.00 / .087~ / .025 |
 | corr | tau | 1.00 / .075~ / .037 | 1.00 / .037 / .062~ | 1.00 / .025 / .037~ | 1.00 / .046 / .025 | 1.00 / .029 / .000 |
-| mscr_eq | raw_p | 1.00 / .042 / .025 | 1.00 / .037 / .050~ | - | - | - |
-| mscr_eq | tau | 1.00 / .050 / .050~ | 1.00 / .054~ / .050~ | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / .046~ / .025 | 1.00 / .033 / .075~ | - | - | - |
-| mscr_eq_min | tau | 1.00 / .050~ / .050~ | 1.00 / .029 / .025 | - | - | - |
-| mscr_native | raw_p | 1.00 / .046~ / .025 | 1.00 / .033 / .075~ | - | - | - |
-| mscr_native | tau | 1.00 / .050~ / .050~ | 1.00 / .029 / .025 | - | - | - |
+| mscr_eq | raw_p | 1.00 / .042 / .025 | 1.00 / .037 / .050~ | nig | nig | nig |
+| mscr_eq | tau | 1.00 / .050 / .050~ | 1.00 / .054~ / .050~ | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / .046~ / .025 | 1.00 / .033 / .075~ | nig | nig | nig |
+| mscr_native | tau | 1.00 / .050~ / .050~ | 1.00 / .029 / .025 | nig | nig | nig |
 | notears | tau | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 |
 | pc_eq | tau | 1.00 / .087~ / .075~ | 1.00 / .037 / .013 | 1.00 / .054~ / .062~ | 1.00 / .013 / .025 | 1.00 / .050~ / .062~ |
 | pc_native | tau | 1.00 / .092* / .050~ | 1.00 / .033 / .013 | 1.00 / .054~ / .075~ | 1.00 / .017 / .025 | 1.00 / .058~ / .062~ |
@@ -544,18 +555,18 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | 1.00 / .042 / .058~ | 1.00 / .053 / .067~ | 1.00 / .051 / .029 | nig | nig |
+| pmrt_nl_eq | tau | 1.00 / .028 / .033 | 1.00 / .036 / .054~ | 1.00 / .068~ / .058~ | nig | nig |
 | pmrt_eq | raw_p | .99 / .039 / .050~ | .99 / .039 / .046 | 1.00 / .050 / .042 | 1.00 / .054~ / .075~ | 1.00 / .025 / .025 |
 | pmrt_eq | tau | .99 / .043 / .071~ | .99 / .024 / .033 | 1.00 / .103* / .129* | 1.00 / .037 / .050~ | 1.00 / .013 / .000 |
 | pmrt_r3 | raw_p | 1.00 / .044 / .037 | 1.00 / .050 / .050~ | 1.00 / .056 / .046 | 1.00 / .042 / .050~ | 1.00 / .017 / .025 |
 | pmrt_r3 | tau | 1.00 / .064~ / .071~ | 1.00 / .029 / .037 | 1.00 / .056 / .042 | 1.00 / .042 / .037 | 1.00 / .033 / .037~ |
 | corr | raw_p | 1.00 / .681* / .617* | 1.00 / .764* / .733* | 1.00 / .883* / .896* | 1.00 / .925* / .988* | 1.00 / .958* / .988* |
 | corr | tau | 1.00 / .219* / .129* | 1.00 / .214* / .096* | 1.00 / .201* / .100* | 1.00 / .221* / .100~ | 1.00 / .212* / .087~ |
-| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq | tau | 1.00 / .085* / .050~ | 1.00 / .128* / .092* | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / .999* / 1.000* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq_min | tau | 1.00 / .249* / .096* | 1.00 / .211* / .042 | - | - | - |
-| mscr_native | raw_p | 1.00 / .997* / .996* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_native | tau | 1.00 / .249* / .096* | 1.00 / .211* / .042 | - | - | - |
+| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_eq | tau | 1.00 / .085* / .050~ | 1.00 / .128* / .092* | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / .997* / .996* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_native | tau | 1.00 / .249* / .096* | 1.00 / .211* / .042 | nig | nig | nig |
 | notears | tau | 1.00 / .157* / .000 | 1.00 / .168* / .000 | 1.00 / .167* / .000 | 1.00 / .167* / .000 | 1.00 / .167* / .000 |
 | pc_eq | tau | 1.00 / .099* / .100* | 1.00 / .071* / .054~ | 1.00 / .028 / .017 | 1.00 / .033 / .013 | 1.00 / .042 / .037 |
 | pc_native | tau | 1.00 / .101* / .067~ | 1.00 / .028 / .017 | 1.00 / .042 / .017 | 1.00 / .067~ / .075~ | 1.00 / .042 / .037 |
@@ -586,18 +597,18 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | .83 / .030 / .067~ | .90 / .025 / .067~ | .96 / .034 / .075~ | nig | nig |
+| pmrt_nl_eq | tau | .83 / .022 / .058~ | .90 / .027 / .067~ | .97 / .044 / .083~ | nig | nig |
 | pmrt_eq | raw_p | .38 / .070~ / .042~ | .38 / .056~ / .050~ | .42 / .058~ / .075~ | .41 / .048 / .075~ | .41 / .059~ / .075~ |
 | pmrt_eq | tau | .40 / .130* / .150* | .42 / .098* / .100* | .42 / .064~ / .075~ | .40 / .028 / .067~ | .40 / .041 / .067~ |
 | pmrt_r3 | raw_p | .36 / .067~ / .058~ | .38 / .058~ / .042 | .42 / .056~ / .075~ | .41 / .048 / .075~ | .41 / .059~ / .075~ |
 | pmrt_r3 | tau | .39 / .116* / .108* | .42 / .122* / .108* | .42 / .062~ / .058~ | .40 / .028 / .042~ | .40 / .041 / .058~ |
 | corr | raw_p | .36 / .069~ / .083~ | .38 / .052 / .058~ | .42 / .064~ / .050~ | .42 / .042 / .092~ | .41 / .056~ / .100~ |
 | corr | tau | .38 / .091* / .100~ | .41 / .092* / .067~ | .42 / .062~ / .050~ | .41 / .033 / .067~ | .39 / .030 / .067~ |
-| mscr_eq | raw_p | .92 / .042 / .042~ | .95 / .053 / .050~ | - | - | - |
-| mscr_eq | tau | .93 / .034 / .025 | .95 / .028 / .033 | - | - | - |
-| mscr_eq_min | raw_p | .93 / .055 / .050~ | .95 / .059~ / .042 | - | - | - |
-| mscr_eq_min | tau | .94 / .077* / .083~ | .95 / .041 / .025 | - | - | - |
-| mscr_native | raw_p | .93 / .055 / .050~ | .95 / .059~ / .042 | - | - | - |
-| mscr_native | tau | .94 / .077* / .083~ | .95 / .041 / .025 | - | - | - |
+| mscr_eq | raw_p | .92 / .042 / .042~ | .95 / .053 / .050~ | nig | nig | nig |
+| mscr_eq | tau | .93 / .034 / .025 | .95 / .028 / .033 | nig | nig | nig |
+| mscr_native | raw_p | .93 / .055 / .050~ | .95 / .059~ / .042 | nig | nig | nig |
+| mscr_native | tau | .94 / .077* / .083~ | .95 / .041 / .025 | nig | nig | nig |
 | notears | tau | .28 / .017 / .008 | .26 / .000 / .000 | .25 / .000 / .000 | .25 / .000 / .000 | .25 / .000 / .000 |
 | pc_eq | tau | .32 / .055 / .067~ | .35 / .050 / .042 | .40 / .027 / .017 | .40 / .017 / .033 | .41 / .052 / .092~ |
 | pc_native | tau | .31 / .055 / .058~ | .36 / .062~ / .050~ | .40 / .025 / .008 | .40 / .016 / .033 | .42 / .052 / .083~ |
@@ -628,18 +639,18 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | .62 / .051 / .047 | .78 / .046 / .050~ | .93 / .041 / .053 | nig | nig |
+| pmrt_nl_eq | tau | .66 / .081* / .081* | .80 / .069* / .072~ | .94 / .110* / .111* | nig | nig |
 | pmrt_eq | raw_p | .35 / .042 / .039 | .44 / .061 / .042 | .61 / .049 / .033 | .68 / .064~ / .050~ | .83 / .039 / .042~ |
 | pmrt_eq | tau | .37 / .054 / .047 | .43 / .049 / .031 | .64 / .077* / .053~ | .64 / .039 / .025 | .78 / .019 / .008 |
 | pmrt_r3 | raw_p | .38 / .050 / .053~ | .46 / .063* / .056~ | .65 / .046 / .047 | .71 / .050~ / .025 | .88 / .041 / .008 |
 | pmrt_r3 | tau | .40 / .062* / .061~ | .49 / .084* / .064~ | .63 / .035 / .028 | .74 / .069~ / .025 | .88 / .058 / .017 |
 | corr | raw_p | .68 / .503* / .536* | .76 / .627* / .619* | .87 / .799* / .797* | .90 / .872* / .883* | .96 / .919* / .942* |
 | corr | tau | .28 / .028 / .031 | .28 / .022 / .033 | .28 / .026 / .025 | .30 / .027 / .025 | .30 / .028 / .025 |
-| mscr_eq | raw_p | .95 / .867* / .869* | .99 / .948* / .944* | - | - | - |
-| mscr_eq | tau | .56 / .074* / .075~ | .53 / .050 / .072~ | - | - | - |
-| mscr_eq_min | raw_p | .95 / .830* / .800* | .98 / .931* / .914* | - | - | - |
-| mscr_eq_min | tau | .77 / .104* / .097* | .80 / .094* / .114* | - | - | - |
-| mscr_native | raw_p | .95 / .834* / .803* | .97 / .931* / .919* | - | - | - |
-| mscr_native | tau | .77 / .104* / .097* | .80 / .094* / .114* | - | - | - |
+| mscr_eq | raw_p | .95 / .867* / .869* | .99 / .948* / .944* | nig | nig | nig |
+| mscr_eq | tau | .56 / .074* / .075~ | .53 / .050 / .072~ | nig | nig | nig |
+| mscr_native | raw_p | .95 / .834* / .803* | .97 / .931* / .919* | nig | nig | nig |
+| mscr_native | tau | .77 / .104* / .097* | .80 / .094* / .114* | nig | nig | nig |
 | notears | tau | .29 / .035 / .019 | .33 / .042 / .050 | .33 / .039 / .039 | .30 / .033 / .025 | .29 / .030 / .017 |
 | pc_eq | tau | .21 / .027 / .022 | .30 / .065* / .058~ | .42 / .051 / .033 | .49 / .039 / .067~ | .54 / .048 / .042~ |
 | pc_native | tau | .27 / .033 / .025 | .31 / .038 / .050 | .27 / .024 / .033 | .00 / .000 / .000 | .00 / .000 / .000 |
@@ -670,6 +681,8 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | 1.00 / .066~ / .030 | 1.00 / .050 / .020 | 1.00 / .050 / .040~ | nig | nig |
+| pmrt_nl_eq | tau | 1.00 / .081* / .040~ | 1.00 / .056~ / .020 | 1.00 / .078* / .050~ | nig | nig |
 | pmrt_eq | raw_p | 1.00 / .050 / .020 | 1.00 / .044 / .030~ | 1.00 / .041 / .050~ | 1.00 / .050 / .080~ | 1.00 / .041 / .090~ |
 | pmrt_eq | tau | 1.00 / .047 / .020 | 1.00 / .022 / .020 | 1.00 / .047 / .040~ | 1.00 / .050 / .060~ | 1.00 / .062~ / .130~ |
 | pmrt_r3 | raw_p | 1.00 / .053~ / .060~ | 1.00 / .041 / .030 | 1.00 / .059~ / .080~ | 1.00 / .044 / .070~ | 1.00 / .041 / .080~ |
@@ -680,12 +693,10 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 | granger_eq | tau | 1.00 / .041 / .040~ | 1.00 / .028 / .030 | 1.00 / .050 / .050~ | 1.00 / .078~ / .100~ | 1.00 / .072~ / .130* |
 | granger_native | raw_p | 1.00 / .069~ / .060~ | 1.00 / .087* / .050~ | 1.00 / .037 / .040~ | 1.00 / .047~ / .050~ | 1.00 / .041 / .040~ |
 | granger_native | tau | 1.00 / .059~ / .060~ | 1.00 / .113* / .080~ | 1.00 / .044~ / .040~ | 1.00 / .066~ / .120* | 1.00 / .050 / .050~ |
-| mscr_eq | raw_p | 1.00 / .062~ / .060~ | 1.00 / .041 / .060~ | - | - | - |
-| mscr_eq | tau | 1.00 / .072~ / .070~ | 1.00 / .041 / .060~ | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / .056~ / .020 | 1.00 / .044 / .060~ | - | - | - |
-| mscr_eq_min | tau | 1.00 / .050~ / .020 | 1.00 / .047 / .050~ | - | - | - |
-| mscr_native | raw_p | 1.00 / .056~ / .020 | 1.00 / .044 / .060~ | - | - | - |
-| mscr_native | tau | 1.00 / .050~ / .020 | 1.00 / .047 / .050~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / .062~ / .060~ | 1.00 / .041 / .060~ | nig | nig | nig |
+| mscr_eq | tau | 1.00 / .072~ / .070~ | 1.00 / .041 / .060~ | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / .056~ / .020 | 1.00 / .044 / .060~ | nig | nig | nig |
+| mscr_native | tau | 1.00 / .050~ / .020 | 1.00 / .047 / .050~ | nig | nig | nig |
 | notears | tau | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 | 1.00 / .000 / .000 |
 | pc_eq | tau | 1.00 / .025 / .060~ | 1.00 / .056~ / .040~ | 1.00 / .056~ / .040~ | 1.00 / .050~ / .100* | 1.00 / .050~ / .040~ |
 | pc_native | tau | 1.00 / .016 / .050~ | 1.00 / .050 / .050~ | 1.00 / .059~ / .050~ | 1.00 / .047~ / .100* | 1.00 / .047~ / .040~ |
@@ -716,6 +727,8 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | 1.00 / .047 / .043 | 1.00 / .035 / .033 | 1.00 / .043 / .043 | nig | nig |
+| pmrt_nl_eq | tau | 1.00 / .050 / .043 | 1.00 / .036 / .037 | 1.00 / .041 / .053~ | nig | nig |
 | pmrt_eq | raw_p | .97 / .044 / .047~ | .96 / .046 / .073~ | .97 / .044 / .027 | 1.00 / .050 / .050~ | 1.00 / .047 / .070~ |
 | pmrt_eq | tau | .97 / .052 / .067~ | .96 / .037 / .057~ | .97 / .020 / .010 | 1.00 / .059~ / .050~ | .99 / .047 / .060~ |
 | pmrt_r3 | raw_p | 1.00 / .046 / .060~ | 1.00 / .047 / .053~ | 1.00 / .043 / .027 | 1.00 / .044 / .060~ | 1.00 / .041 / .070~ |
@@ -726,12 +739,10 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 | granger_eq | tau | 1.00 / .033 / .047 | 1.00 / .037 / .033 | 1.00 / .040 / .017 | 1.00 / .072~ / .070~ | 1.00 / .059~ / .090~ |
 | granger_native | raw_p | 1.00 / .445* / .297* | 1.00 / .548* / .390* | 1.00 / .750* / .640* | 1.00 / .884* / .800* | 1.00 / .928* / .900* |
 | granger_native | tau | 1.00 / .325* / .180* | 1.00 / .318* / .177* | 1.00 / .328* / .167* | 1.00 / .359* / .160* | 1.00 / .366* / .170* |
-| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq | tau | 1.00 / .192* / .030 | 1.00 / .171* / .030 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / .995* / .997* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq_min | tau | 1.00 / .252* / .083~ | 1.00 / .265* / .057~ | - | - | - |
-| mscr_native | raw_p | 1.00 / .996* / .997* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_native | tau | 1.00 / .252* / .083~ | 1.00 / .265* / .057~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_eq | tau | 1.00 / .192* / .030 | 1.00 / .171* / .030 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / .996* / .997* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_native | tau | 1.00 / .252* / .083~ | 1.00 / .265* / .057~ | nig | nig | nig |
 | notears | tau | 1.00 / .180* / .000 | 1.00 / .189* / .003 | 1.00 / .188* / .000 | 1.00 / .188* / .000 | 1.00 / .188* / .000 |
 | pc_eq | tau | 1.00 / .048 / .040 | 1.00 / .040 / .023 | 1.00 / .014 / .017 | 1.00 / .034 / .030 | 1.00 / .034 / .010 |
 | pc_native | tau | 1.00 / .136* / .043 | 1.00 / .114* / .047 | 1.00 / .143* / .060~ | 1.00 / .131* / .040~ | 1.00 / .166* / .100~ |
@@ -762,18 +773,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | .70 / - / .050~ | .90 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | pmrt_eq | tau | .45 / - / .000 | .65 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .100~ |
 | pmrt_r3 | raw_p | .75 / - / .050~ | .90 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | pmrt_r3 | tau | .45 / - / .000 | .65 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | corr | raw_p | .75 / - / .050~ | .95 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | corr | tau | .40 / - / .000 | .60 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .050~ |
-| mscr_eq | raw_p | .15 / - / .050~ | .20 / - / .100~ | - | - | - |
-| mscr_eq | tau | .15 / - / .050~ | .10 / - / .050~ | - | - | - |
-| mscr_eq_min | raw_p | .30 / - / .050~ | .35 / - / .100~ | - | - | - |
-| mscr_eq_min | tau | .20 / - / .050~ | .00 / - / .000 | - | - | - |
-| mscr_native | raw_p | .30 / - / .050~ | .35 / - / .100~ | - | - | - |
-| mscr_native | tau | .20 / - / .050~ | .00 / - / .000 | - | - | - |
+| mscr_eq | raw_p | .15 / - / .050~ | .20 / - / .100~ | nig | nig | nig |
+| mscr_eq | tau | .15 / - / .050~ | .10 / - / .050~ | nig | nig | nig |
+| mscr_native | raw_p | .30 / - / .050~ | .35 / - / .100~ | nig | nig | nig |
+| mscr_native | tau | .20 / - / .050~ | .00 / - / .000 | nig | nig | nig |
 | notears | tau | .40 / - / .000 | .60 / - / .000 | .90 / - / .000 | .85 / - / .000 | .95 / - / .000 |
 | pc_eq | tau | .40 / - / .000 | .60 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | pc_native | tau | .40 / - / .000 | .60 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
@@ -804,18 +814,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | .10 / - / .067~ | .12 / - / .100~ | .25 / - / .067~ | .30 / - / .000 | .95 / - / .100~ |
 | pmrt_eq | tau | .03 / - / .000 | .10 / - / .050~ | .53 / - / .233* | .25 / - / .000 | 1.00 / - / .200~ |
 | pmrt_r3 | raw_p | .10 / - / .050~ | .12 / - / .100~ | .23 / - / .067~ | .30 / - / .000 | .95 / - / .100~ |
 | pmrt_r3 | tau | .03 / - / .000 | .08 / - / .067~ | .48 / - / .183* | .30 / - / .000 | 1.00 / - / .200~ |
 | corr | raw_p | .20 / - / .017 | .45 / - / .033~ | .98 / - / .083~ | 1.00 / - / .050~ | 1.00 / - / .300* |
 | corr | tau | .30 / - / .067~ | .50 / - / .050~ | .82 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
-| mscr_eq | raw_p | .05 / - / .050~ | .10 / - / .083~ | - | - | - |
-| mscr_eq | tau | .02 / - / .033~ | .17 / - / .083~ | - | - | - |
-| mscr_eq_min | raw_p | .07 / - / .050~ | .12 / - / .067~ | - | - | - |
-| mscr_eq_min | tau | .07 / - / .050~ | .05 / - / .033~ | - | - | - |
-| mscr_native | raw_p | .05 / - / .033~ | .13 / - / .083~ | - | - | - |
-| mscr_native | tau | .03 / - / .033~ | .05 / - / .033~ | - | - | - |
+| mscr_eq | raw_p | .05 / - / .050~ | .10 / - / .083~ | nig | nig | nig |
+| mscr_eq | tau | .02 / - / .033~ | .17 / - / .083~ | nig | nig | nig |
+| mscr_native | raw_p | .05 / - / .033~ | .13 / - / .083~ | nig | nig | nig |
+| mscr_native | tau | .03 / - / .033~ | .05 / - / .033~ | nig | nig | nig |
 | notears | tau | .17 / - / .017 | .12 / - / .017 | .03 / - / .000 | .00 / - / .000 | .00 / - / .000 |
 | pc_eq | tau | .08 / - / .050~ | .05 / - / .000 | .18 / - / .017 | .60 / - / .250~ | 1.00 / - / .100~ |
 | pc_native | tau | .30 / - / .067~ | .50 / - / .050~ | .98 / - / .033~ | 1.00 / - / .150~ | 1.00 / - / .100~ |
@@ -846,18 +855,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | 1.00 / - / .050~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | pmrt_eq | tau | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | raw_p | 1.00 / - / .050~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .100~ |
 | pmrt_r3 | tau | 1.00 / - / .083~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | corr | raw_p | .87 / - / .033~ | 1.00 / - / .033~ | 1.00 / - / .100~ | 1.00 / - / .050~ | 1.00 / - / .050~ |
 | corr | tau | .58 / - / .000 | .95 / - / .033~ | 1.00 / - / .017 | 1.00 / - / .050~ | 1.00 / - / .100~ |
-| mscr_eq | raw_p | 1.00 / - / .050~ | 1.00 / - / .017 | - | - | - |
-| mscr_eq | tau | 1.00 / - / .067~ | 1.00 / - / .017 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .067~ | 1.00 / - / .017 | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .017 | 1.00 / - / .033~ | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .067~ | 1.00 / - / .017 | - | - | - |
-| mscr_native | tau | 1.00 / - / .017 | 1.00 / - / .033~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .050~ | 1.00 / - / .017 | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .067~ | 1.00 / - / .017 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .067~ | 1.00 / - / .017 | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .017 | 1.00 / - / .033~ | nig | nig | nig |
 | notears | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_eq | tau | .92 / - / .017 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ |
 | pc_native | tau | .87 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ |
@@ -888,18 +896,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | 1.00 / - / .033~ | 1.00 / - / .067~ | 1.00 / - / .033~ | 1.00 / - / .000 | 1.00 / - / .050~ |
 | pmrt_eq | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | raw_p | 1.00 / - / .050~ | 1.00 / - / .083~ | 1.00 / - / .017 | 1.00 / - / .000 | 1.00 / - / .050~ |
 | pmrt_r3 | tau | 1.00 / - / .083~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | corr | raw_p | 1.00 / - / .033~ | 1.00 / - / .033~ | 1.00 / - / .100~ | 1.00 / - / .050~ | 1.00 / - / .050~ |
 | corr | tau | 1.00 / - / .000 | 1.00 / - / .017 | 1.00 / - / .033~ | 1.00 / - / .050~ | 1.00 / - / .100~ |
-| mscr_eq | raw_p | 1.00 / - / .033~ | 1.00 / - / .067~ | - | - | - |
-| mscr_eq | tau | 1.00 / - / .033~ | 1.00 / - / .050~ | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .083~ | 1.00 / - / .033~ | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .033~ | 1.00 / - / .033~ | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .083~ | 1.00 / - / .033~ | - | - | - |
-| mscr_native | tau | 1.00 / - / .033~ | 1.00 / - / .033~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .033~ | 1.00 / - / .067~ | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .033~ | 1.00 / - / .050~ | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .083~ | 1.00 / - / .033~ | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .033~ | 1.00 / - / .033~ | nig | nig | nig |
 | notears | tau | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .033~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ |
 | pc_native | tau | 1.00 / - / .017 | 1.00 / - / .033~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ |
@@ -930,18 +937,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | 1.00 / - / .067~ | 1.00 / - / .067~ | 1.00 / - / .033~ | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_eq | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | raw_p | 1.00 / - / .083~ | 1.00 / - / .067~ | 1.00 / - / .033~ | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | corr | raw_p | 1.00 / - / .017 | 1.00 / - / .033~ | 1.00 / - / .067~ | 1.00 / - / .050~ | 1.00 / - / .050~ |
 | corr | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .050~ | 1.00 / - / .050~ |
-| mscr_eq | raw_p | 1.00 / - / .083~ | 1.00 / - / .017 | - | - | - |
-| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .017 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .050~ | 1.00 / - / .017 | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .000 | 1.00 / - / .033~ | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .050~ | 1.00 / - / .017 | - | - | - |
-| mscr_native | tau | 1.00 / - / .000 | 1.00 / - / .033~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .083~ | 1.00 / - / .017 | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .017 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .050~ | 1.00 / - / .017 | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .000 | 1.00 / - / .033~ | nig | nig | nig |
 | notears | tau | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .100~ | 1.00 / - / .000 | 1.00 / - / .000 |
@@ -972,18 +978,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | 1.00 / - / .067~ | 1.00 / - / .083~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_eq | tau | 1.00 / - / .067~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | raw_p | 1.00 / - / .083~ | 1.00 / - / .067~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 |
 | pmrt_r3 | tau | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | corr | raw_p | 1.00 / - / .017 | 1.00 / - / .033~ | 1.00 / - / .083~ | 1.00 / - / .050~ | 1.00 / - / .050~ |
 | corr | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ |
-| mscr_eq | raw_p | 1.00 / - / .167* | 1.00 / - / .483* | - | - | - |
-| mscr_eq | tau | 1.00 / - / .217* | 1.00 / - / .000 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .150* | 1.00 / - / .567* | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .083~ | 1.00 / - / .000 | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .150* | 1.00 / - / .567* | - | - | - |
-| mscr_native | tau | 1.00 / - / .083~ | 1.00 / - / .000 | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .167* | 1.00 / - / .483* | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .217* | 1.00 / - / .000 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .150* | 1.00 / - / .567* | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .083~ | 1.00 / - / .000 | nig | nig | nig |
 | notears | tau | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 | .00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .117~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
@@ -1014,18 +1019,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .100~ | NA / - / .000 |
 | pmrt_eq | tau | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .100~ | NA / - / .000 |
 | pmrt_r3 | tau | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | corr | raw_p | .95 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .100~ | 1.00 / - / .000 |
 | corr | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
-| mscr_eq | raw_p | .35 / - / .000 | .65 / - / .100~ | - | - | - |
-| mscr_eq | tau | .30 / - / .000 | .70 / - / .100~ | - | - | - |
-| mscr_eq_min | raw_p | .25 / - / .050~ | .45 / - / .050~ | - | - | - |
-| mscr_eq_min | tau | .20 / - / .000 | .75 / - / .050~ | - | - | - |
-| mscr_native | raw_p | .25 / - / .050~ | .45 / - / .050~ | - | - | - |
-| mscr_native | tau | .20 / - / .000 | .75 / - / .050~ | - | - | - |
+| mscr_eq | raw_p | .35 / - / .000 | .65 / - / .100~ | nig | nig | nig |
+| mscr_eq | tau | .30 / - / .000 | .70 / - / .100~ | nig | nig | nig |
+| mscr_native | raw_p | .25 / - / .050~ | .45 / - / .050~ | nig | nig | nig |
+| mscr_native | tau | .20 / - / .000 | .75 / - / .050~ | nig | nig | nig |
 | notears | tau | .95 / - / .000 | .85 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
@@ -1056,18 +1060,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .100~ | NA / - / .000 |
 | pmrt_eq | tau | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .100~ | NA / - / .000 |
 | pmrt_r3 | tau | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | corr | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .100~ | 1.00 / - / .000 |
 | corr | tau | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
-| mscr_eq | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | - | - | - |
-| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .100~ | 1.00 / - / .050~ | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .050~ | 1.00 / - / .000 | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .100~ | 1.00 / - / .050~ | - | - | - |
-| mscr_native | tau | 1.00 / - / .050~ | 1.00 / - / .000 | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .100~ | 1.00 / - / .050~ | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .050~ | 1.00 / - / .000 | nig | nig | nig |
 | notears | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
@@ -1098,18 +1101,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .050~ | NA / - / .000 |
 | pmrt_eq | tau | NA / - / .050~ | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | tau | NA / - / .050~ | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | corr | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .000 |
 | corr | tau | 1.00 / - / .150~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
-| mscr_eq | raw_p | 1.00 / - / .100~ | 1.00 / - / .050~ | - | - | - |
-| mscr_eq | tau | 1.00 / - / .100~ | 1.00 / - / .000 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .050~ | 1.00 / - / .050~ | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .050~ | 1.00 / - / .050~ | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .050~ | 1.00 / - / .050~ | - | - | - |
-| mscr_native | tau | 1.00 / - / .050~ | 1.00 / - / .050~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .100~ | 1.00 / - / .050~ | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .100~ | 1.00 / - / .000 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .050~ | 1.00 / - / .050~ | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .050~ | 1.00 / - / .050~ | nig | nig | nig |
 | notears | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .100~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .150~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
@@ -1140,18 +1142,17 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | - | nig | nig | nig | nig | nig |
 | pmrt_eq | raw_p | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_eq | tau | NA / - / .050~ | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | raw_p | NA / - / .050~ | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | pmrt_r3 | tau | NA / - / .050~ | NA / - / .000 | NA / - / .000 | NA / - / .000 | NA / - / .000 |
 | corr | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | corr | tau | 1.00 / - / .150~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
-| mscr_eq | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | - | - | - |
-| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | - | - | - |
-| mscr_eq_min | raw_p | 1.00 / - / .250~ | 1.00 / - / .650* | - | - | - |
-| mscr_eq_min | tau | 1.00 / - / .000 | 1.00 / - / .050~ | - | - | - |
-| mscr_native | raw_p | 1.00 / - / .250~ | 1.00 / - / .650* | - | - | - |
-| mscr_native | tau | 1.00 / - / .000 | 1.00 / - / .050~ | - | - | - |
+| mscr_eq | raw_p | 1.00 / - / .000 | 1.00 / - / .000 | nig | nig | nig |
+| mscr_eq | tau | 1.00 / - / .000 | 1.00 / - / .000 | nig | nig | nig |
+| mscr_native | raw_p | 1.00 / - / .250~ | 1.00 / - / .650* | nig | nig | nig |
+| mscr_native | tau | 1.00 / - / .000 | 1.00 / - / .050~ | nig | nig | nig |
 | notears | tau | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_eq | tau | 1.00 / - / .100~ | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 | 1.00 / - / .000 |
 | pc_native | tau | 1.00 / - / .150~ | 1.00 / - / .050~ | 1.00 / - / .000 | 1.00 / - / .050~ | 1.00 / - / .000 |
@@ -1182,18 +1183,18 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | .78 / .045 / .062~ | .90 / .040 / .025 | 1.00 / .030 / .062~ | nig | nig |
+| pmrt_nl_eq | tau | .82 / .075~ / .100~ | .92 / .050~ / .062~ | 1.00 / .060~ / .087~ | nig | nig |
 | pmrt_eq | raw_p | .41 / .050~ / .050~ | .47 / .050~ / .000 | .56 / .065~ / .013 | .61 / .060~ / .037 | .67 / .045~ / .062~ |
 | pmrt_eq | tau | .39 / .045~ / .025 | .42 / .025 / .000 | .54 / .055~ / .000 | .59 / .025 / .013 | .67 / .045~ / .050~ |
 | pmrt_r3 | raw_p | .42 / .055~ / .037~ | .46 / .055~ / .000 | .56 / .075~ / .025 | .61 / .065~ / .025 | .67 / .055~ / .062~ |
 | pmrt_r3 | tau | .39 / .050~ / .025 | .42 / .030 / .000 | .53 / .055~ / .000 | .59 / .015 / .013 | .67 / .045~ / .050~ |
 | corr | raw_p | .44 / .040~ / .100~ | .47 / .080~ / .000 | .57 / .070~ / .025 | .61 / .060~ / .025 | .67 / .055~ / .062~ |
 | corr | tau | .42 / .025 / .050~ | .46 / .035 / .000 | .55 / .060~ / .000 | .61 / .065~ / .025 | .67 / .060~ / .062~ |
-| mscr_eq | raw_p | .69 / .055~ / .062~ | .70 / .050~ / .037 | - | - | - |
-| mscr_eq | tau | .69 / .075~ / .087~ | .72 / .040 / .037 | - | - | - |
-| mscr_eq_min | raw_p | .69 / .040~ / .050~ | .75 / .040 / .025 | - | - | - |
-| mscr_eq_min | tau | .70 / .035 / .050~ | .75 / .040 / .037 | - | - | - |
-| mscr_native | raw_p | .69 / .040~ / .050~ | .75 / .040 / .025 | - | - | - |
-| mscr_native | tau | .70 / .035 / .050~ | .75 / .040 / .037 | - | - | - |
+| mscr_eq | raw_p | .69 / .055~ / .062~ | .70 / .050~ / .037 | nig | nig | nig |
+| mscr_eq | tau | .69 / .075~ / .087~ | .72 / .040 / .037 | nig | nig | nig |
+| mscr_native | raw_p | .69 / .040~ / .050~ | .75 / .040 / .025 | nig | nig | nig |
+| mscr_native | tau | .70 / .035 / .050~ | .75 / .040 / .037 | nig | nig | nig |
 | notears | tau | .37 / .005 / .025 | .37 / .000 / .000 | .33 / .000 / .000 | .33 / .000 / .000 | .33 / .000 / .000 |
 | pc_eq | tau | .42 / .030 / .050~ | .44 / .020 / .000 | .50 / .020 / .000 | .52 / .060~ / .025 | .52 / .015 / .025 |
 | pc_native | tau | .42 / .030 / .050~ | .44 / .025 / .000 | .50 / .020 / .000 | .52 / .060~ / .025 | .52 / .015 / .025 |
@@ -1224,18 +1225,18 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 | arm | rule | n 500 | n 1000 | n 4000 | n 8000 | n 24000 |
 |---|---|---|---|---|---|---|
+| pmrt_nl_eq | raw_p | .71 / .053 / .037 | .72 / .040 / .029 | .81 / .045 / .037 | nig | nig |
+| pmrt_nl_eq | tau | .76 / .143* / .096* | .71 / .012 / .021 | .81 / .052 / .037 | nig | nig |
 | pmrt_eq | raw_p | .52 / .025 / .037 | .54 / .057 / .037 | .62 / .045 / .050 | .68 / .050~ / .050~ | .77 / .045~ / .037 |
 | pmrt_eq | tau | .54 / .055 / .071~ | .53 / .047 / .029 | .62 / .048 / .050 | .64 / .035 / .025 | .81 / .060~ / .050~ |
 | pmrt_r3 | raw_p | .54 / .025 / .042 | .58 / .055~ / .033 | .66 / .045 / .046 | .69 / .045 / .075~ | .81 / .060~ / .013 |
 | pmrt_r3 | tau | .59 / .062~ / .096* | .54 / .022 / .021 | .62 / .012 / .013 | .68 / .040 / .062~ | .82 / .085~ / .062~ |
 | corr | raw_p | .78 / .602* / .596* | .86 / .708* / .696* | .91 / .862* / .833* | .89 / .920* / .838* | .94 / .965* / .900* |
 | corr | tau | .38 / .005 / .000 | .36 / .002 / .000 | .37 / .002 / .000 | .38 / .005 / .000 | .38 / .005 / .000 |
-| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq | tau | .67 / .017 / .013 | .67 / .028 / .017 | - | - | - |
-| mscr_eq_min | raw_p | .99 / .983* / .983* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_eq_min | tau | .67 / .005 / .008 | .67 / .007 / .004 | - | - | - |
-| mscr_native | raw_p | .99 / .983* / .979* | 1.00 / 1.000* / 1.000* | - | - | - |
-| mscr_native | tau | .67 / .005 / .008 | .67 / .007 / .004 | - | - | - |
+| mscr_eq | raw_p | 1.00 / 1.000* / 1.000* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_eq | tau | .67 / .017 / .013 | .67 / .028 / .017 | nig | nig | nig |
+| mscr_native | raw_p | .99 / .983* / .979* | 1.00 / 1.000* / 1.000* | nig | nig | nig |
+| mscr_native | tau | .67 / .005 / .008 | .67 / .007 / .004 | nig | nig | nig |
 | notears | tau | .43 / .012 / .029 | .46 / .023 / .042 | .45 / .022 / .037 | .47 / .035 / .037 | .46 / .035 / .037 |
 | pc_eq | tau | .46 / .022 / .037 | .50 / .043 / .025 | .55 / .032 / .021 | .60 / .035 / .000 | .67 / .030 / .013 |
 | pc_native | tau | .44 / .015 / .033 | .47 / .020 / .054~ | .00 / .000 / .000 | .00 / .000 / .000 | .00 / .000 / .000 |
@@ -1264,12 +1265,12 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
 
 ### V4 claim verdicts
 
-- **Claim: NOT SUPPORTED** (components {'C1': 'SUPPORTED', 'C2a': 'SUPPORTED', 'C2b': 'SUPPORTED', 'C3': 'NOT SUPPORTED'})
+- **Claim: NOT SUPPORTED** (components {'C1': 'SUPPORTED', 'C2a': 'SUPPORTED', 'C2b': 'SUPPORTED', 'C3': 'NOT EVALUABLE'})
 - C1: **SUPPORTED** (5 / 6 counted arms of D are design-blind failures; |D| = 6). Wording: design-blind tests are invalid on the R2 (setpoint + dither) design tested.
 - C1 sensitivity without mscr_native (R-56, no effect): **SUPPORTED** (4 / 5 counted arms fail)
 - Arm labels (R-40; every table): mscr_eq: single-conditioner max statistic; cannot condition on the joint design set; reported INVALID arm, EVAL n <= 1000 (R-54)
-- Arm labels (R-40; every table): mscr_eq_min: single-conditioner max statistic; cannot condition on the joint design set; reported INVALID arm, EVAL n <= 1000 (R-54)
 - Arm labels (R-40; every table): mscr_native: single-conditioner max statistic; reported INVALID arm, EVAL n <= 1000 (R-54)
+- Arm labels (R-40; every table): pmrt_eq: linear statistic (pmrt-core-v1); secondary PMRT arm (R-42)
   - corr: **FAILURE**; R2 INVALID 21/25 (counted 25), pooled R2 null_raw .750 [.734, .766] INVALID; plac_raw .709 [.683, .734] INVALID; R1 INVALID 1/25 (F_max 2)
   - granger_native: **FAILURE**; R2 INVALID 5/5 (counted 5), pooled R2 null_raw .640 [.599, .676] INVALID; plac_raw .516 [.444, .580] INVALID; R1 INVALID 1/5 (F_max 1)
   - mscr_native [single-conditioner max statistic; reported INVALID arm, EVAL n <= 1000 (R-54)]: **FAILURE**; R2 INVALID 8/10 (counted 10), pooled R2 null_raw .945 [.935, .955] INVALID; plac_raw .908 [.892, .923] INVALID; R1 INVALID 0/10 (F_max 1)
@@ -1277,8 +1278,8 @@ Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal place
   - pcorr_native: **FAILURE**; R2 INVALID 20/25 (counted 25), pooled R2 null_raw .424 [.399, .447] INVALID; plac_raw .295 [.261, .327] INVALID; R1 INVALID 0/25 (F_max 2)
   - rcot2_native: **INVALID IN R1**; R2 INVALID 20/25 (counted 25), pooled R2 null_raw .252 [.238, .265] INVALID; plac_raw .238 [.219, .256] INVALID; R1 INVALID 7/25 (F_max 2)
   - pcorr_hac (not in D, descriptive): **FAILURE**; R2 INVALID 20/25 (counted 25), pooled R2 null_raw .426 [.400, .449] INVALID; plac_raw .297 [.264, .330] INVALID; R1 INVALID 0/25 (F_max 2)
-- C2a pmrt_eq valid in R1 / R2: **SUPPORTED**
-  - cells 50/50, INVALID 0 (F_max 3), VALID 14, INCONCLUSIVE 36; pooled null_raw .048 [.044, .052] VALID; plac_raw .048 [.042, .054] VALID
+- C2a pmrt_nl_eq valid in R1 / R2: **SUPPORTED**
+  - cells 24/24, INVALID 0 (F_max 2), VALID 11, INCONCLUSIVE 13; pooled null_raw .043 [.040, .047] VALID; plac_raw .046 [.039, .053] VALID
 - C2b eq arms whose native partner is a C1 failure: **SUPPORTED**
   - granger_eq (native granger_native): **SUPPORTED**
     - cells 10/10, INVALID 0 (F_max 1), VALID 3, INCONCLUSIVE 7; pooled null_raw .045 [.038, .052] VALID; plac_raw .046 [.034, .057] VALID
@@ -1300,9 +1301,13 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 | pcorr_eq | member | FAILURE | SUPPORTED | 0/50 (3) | 0/25 | 0.051 [0.044, 0.059] | 0.048 [0.045, 0.052] |
 | rcot2_eq | not a member (native rcot2_native: INVALID IN R1) | INVALID IN R1 | NOT SUPPORTED | 27/50 (3) | 20/25 | 0.067 [0.060, 0.073] | 0.208 [0.196, 0.220] |
 
-- C3 pmrt_eq valid in E4 R3: **NOT SUPPORTED**
-  - cells 20/20, INVALID 0 (F_max 1), VALID 1, INCONCLUSIVE 19; pooled plac_raw .045 [.018, .082] INCONCLUSIVE; conf_raw .039 [.019, .062] VALID
+- C3 pmrt_nl_eq valid in E4 R3: **NOT EVALUABLE**
+  - cells 0/0, INVALID 0 (F_max 0), VALID 0, INCONCLUSIVE 0; pooled 
   - wording: not supported.
+- pmrt_eq [linear statistic (pmrt-core-v1); secondary PMRT arm (R-42)] (secondary PMRT arm, same rules reported, no claim effect): C2a: **SUPPORTED**
+  - cells 50/50, INVALID 0 (F_max 3), VALID 14, INCONCLUSIVE 36; pooled null_raw .048 [.044, .052] VALID; plac_raw .048 [.042, .054] VALID
+  - pmrt_eq: C3: **NOT SUPPORTED**
+    - cells 20/20, INVALID 0 (F_max 1), VALID 1, INCONCLUSIVE 19; pooled plac_raw .045 [.018, .082] INCONCLUSIVE; conf_raw .039 [.019, .062] VALID
 - pmrt_r3 (secondary PMRT arm, same rules reported, no claim effect): C2a: **SUPPORTED**
   - cells 50/50, INVALID 1 (F_max 3), VALID 12, INCONCLUSIVE 37; pooled null_raw .050 [.046, .053] VALID; plac_raw .049 [.043, .056] VALID
   - pmrt_r3: C3: **NOT SUPPORTED**
@@ -1311,30 +1316,39 @@ Every eq arm, same rule on R1 + R2, unfiltered (R-56):
 
 ### V1 validity: INVALID / VALID / counted cells per world-regime (all n)
 
-| world regime | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_eq_min | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
+| world regime | pmrt_nl_eq | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| E1 R1 | 0/1/5 | 0/1/5 | 0/1/5 | - | - | 0/1/2 | 0/0/2 | 0/0/2 | 0/5/5 | 0/2/5 | **1**/2/5 | 0/1/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | **1**/2/5 | 0/0/5 | **2**/1/5 | **2**/2/5 | **1**/4/5 |
-| E1 R2 | 0/3/5 | 0/3/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | **5**/0/5 | **2**/3/5 | **1**/3/5 | 0/2/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
-| E2 R1 | 0/0/5 | 0/0/5 | 0/0/5 | - | - | 0/0/2 | 0/0/2 | 0/0/2 | 0/5/5 | 0/5/5 | 0/4/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **2**/0/5 | **2**/1/5 | **1**/0/5 | **1**/4/5 | **2**/3/5 |
-| E2 R2 | 0/3/5 | **1**/2/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/4/5 | 0/5/5 | 0/2/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | 0/5/5 | 0/4/5 |
-| E3 R1 | 0/1/5 | 0/1/5 | **1**/0/5 | 0/1/5 | **1**/0/5 | 0/0/2 | 0/0/2 | 0/0/2 | 0/5/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **1**/0/5 | **2**/0/5 | **3**/0/5 | **2**/2/5 | **2**/1/5 |
-| E3 R2 | 0/1/5 | 0/1/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **2**/0/2 | **2**/0/2 | **2**/0/2 | **5**/0/5 | 0/5/5 | **5**/0/5 | 0/2/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R1 l1 | 0/1/5 | 0/1/5 | 0/1/5 | - | - | 0/0/2 | 0/0/2 | 0/0/2 | 0/0/5 | 0/0/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/2/5 | 0/0/5 | 0/0/5 |
-| E4 R2 l1 | 0/1/5 | 0/1/5 | **1**/1/5 | - | - | 0/0/2 | 0/0/2 | 0/0/2 | 0/0/5 | 0/0/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/0/5 |
-| E4 R3 l0 | 0/1/5 | 0/1/5 | 0/0/5 | - | - | 0/0/2 | 0/0/2 | 0/0/2 | 0/5/5 | 0/3/5 | 0/4/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/3/5 | 0/1/5 |
-| E4 R3 l0.5 | 0/0/5 | 0/1/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/2/5 | **1**/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | 0/0/5 | **1**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R3 l1 | 0/0/5 | 0/0/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/1/5 | **1**/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | **3**/0/5 | **3**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R3 l1.5 | 0/0/5 | 0/0/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | 0/5/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | **3**/0/5 | **3**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R4 l0 | 0/4/5 | 0/4/5 | 0/1/5 | - | - | 0/1/2 | 0/0/2 | 0/0/2 | 0/4/5 | 0/2/5 | 0/2/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/3/5 |
-| E4 R4 l0.5 | 0/4/5 | 0/4/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R4 l1 | 0/4/5 | 0/5/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
-| E4 R4 l1.5 | 0/5/5 | 0/4/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
-| E5 R1 | 0/0/5 | 0/0/5 | 0/0/5 | - | - | 0/0/2 | 0/1/2 | 0/1/2 | 0/5/5 | 0/4/5 | 0/4/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **3**/1/5 | 0/0/5 | **1**/0/5 | 0/4/5 | **2**/2/5 |
-| E5 R2 | 0/3/5 | 0/2/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **2**/0/2 | 0/5/5 | 0/5/5 | 0/5/5 | 0/3/5 | 0/2/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **1**/1/5 | **1**/2/5 |
+| E1 R1 | 0/0/3 | 0/1/5 | 0/1/5 | 0/1/5 | - | - | 0/1/2 | 0/0/2 | 0/5/5 | 0/2/5 | **1**/2/5 | 0/1/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | 0/2/5 | **1**/2/5 | 0/0/5 | **2**/1/5 | **2**/2/5 | **1**/4/5 |
+| E1 R2 | 0/1/3 | 0/3/5 | 0/3/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **5**/0/5 | **2**/3/5 | **1**/3/5 | 0/2/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
+| E2 R1 | 0/0/3 | 0/0/5 | 0/0/5 | 0/0/5 | - | - | 0/0/2 | 0/0/2 | 0/5/5 | 0/5/5 | 0/4/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **2**/0/5 | **2**/1/5 | **1**/0/5 | **1**/4/5 | **2**/3/5 |
+| E2 R2 | 0/2/3 | 0/3/5 | **1**/2/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/4/5 | 0/5/5 | 0/2/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | 0/5/5 | 0/4/5 |
+| E3 R1 | 0/1/3 | 0/1/5 | 0/1/5 | **1**/0/5 | 0/1/5 | **1**/0/5 | 0/0/2 | 0/0/2 | 0/5/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **1**/0/5 | **2**/0/5 | **3**/0/5 | **2**/2/5 | **2**/1/5 |
+| E3 R2 | 0/3/3 | 0/1/5 | 0/1/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **2**/0/2 | **2**/0/2 | **5**/0/5 | 0/5/5 | **5**/0/5 | 0/2/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | 0/2/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R1 l1 | nig | 0/1/5 | 0/1/5 | 0/1/5 | - | - | 0/0/2 | 0/0/2 | 0/0/5 | 0/0/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/2/5 | 0/0/5 | 0/0/5 |
+| E4 R2 l1 | nig | 0/1/5 | 0/1/5 | **1**/1/5 | - | - | 0/0/2 | 0/0/2 | 0/0/5 | 0/0/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/2/5 | 0/1/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/0/5 |
+| E4 R3 l0 | nig | 0/1/5 | 0/1/5 | 0/0/5 | - | - | 0/0/2 | 0/0/2 | 0/5/5 | 0/3/5 | 0/4/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/3/5 | 0/1/5 |
+| E4 R3 l0.5 | nig | 0/0/5 | 0/1/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/2/5 | **1**/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | 0/0/5 | **1**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R3 l1 | nig | 0/0/5 | 0/0/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | 0/5/5 | **1**/1/5 | **1**/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | **3**/0/5 | **3**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R3 l1.5 | nig | 0/0/5 | 0/0/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | 0/5/5 | 0/0/5 | 0/1/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **5**/0/5 | **3**/0/5 | **3**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R4 l0 | nig | 0/4/5 | 0/4/5 | 0/1/5 | - | - | 0/1/2 | 0/0/2 | 0/4/5 | 0/2/5 | 0/2/5 | 0/0/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/1/5 | 0/2/5 | 0/3/5 |
+| E4 R4 l0.5 | nig | 0/4/5 | 0/4/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R4 l1 | nig | 0/4/5 | 0/5/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
+| E4 R4 l1.5 | nig | 0/5/5 | 0/4/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 |
+| E5 R1 | 0/1/3 | 0/0/5 | 0/0/5 | 0/0/5 | - | - | 0/0/2 | 0/1/2 | 0/5/5 | 0/4/5 | 0/4/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | 0/0/5 | **3**/1/5 | 0/0/5 | **1**/0/5 | 0/4/5 | **2**/2/5 |
+| E5 R2 | 0/3/3 | 0/3/5 | 0/2/5 | **5**/0/5 | - | - | **2**/0/2 | **2**/0/2 | 0/5/5 | 0/5/5 | 0/5/5 | 0/3/5 | 0/2/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | 0/4/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **5**/0/5 | **1**/1/5 | **1**/2/5 |
 
-(Nx) = planned cells not counted (missing, infeasible, T3-infeasible, untuned or < 10 seeds).
+(Nx) = planned cells not counted (missing, infeasible, T3-infeasible, untuned or < 10 seeds); nig = not in the arm's grid (pre-registered grid choice, R-54 / R-58: not planned, never missing / PARTIAL).
 
-INVALID cells (598; first 30):
+Not in grid (pre-registered grid choices):
+
+- R-58(1): cdl (regimes ['R3', 'R4']): 0 cells; cdl: training cost; feeds no claim (R1 / R2, n <= 4000 only)
+- R-58(1): cdl (ns [8000, 24000]): 0 cells; cdl: training cost; feeds no claim (R1 / R2, n <= 4000 only)
+- R-58(1): cdl (kappas [0.125, 0.5]): 0 cells; cdl: not in the kappa sweep
+- R-54: mscr_eq, mscr_native (ns [4000, 8000, 24000]): 108 cells; mscr: reported-INVALID arm, EVAL n <= 1000 only
+- R-58(5): mscr_eq, mscr_native (kappas [0.125, 0.5]): 0 cells; mscr: not in the kappa sweep
+- DEV scope: pmrt_eq, pmrt_r3, pc_eq, pc_native, granger_eq, granger_native, corr, notears, shap_dag, two_tower, pcorr_eq, pcorr_native, pcorr_hac, pcorr_hac_fb, rcot2_eq, rcot2_native, pcorr_eq_min, rcot2_eq_min, pcorr_hac_eq_min, pcorr_hac_fb_eq_min, mscr_eq, mscr_native, pmrt_nl_eq (): 76 cells; the DEV specs ran a subset of the EVAL grid (DEV rendering only)
+
+INVALID cells (578; first 30):
 - corr|E1|R2|k0.25|n1000: null_raw .764 [.733, .794]; null_decl .704 [.668, .738]; plac_raw .733 [.679, .788]; plac_decl .629 [.571, .692]
 - corr|E1|R2|k0.25|n24000: null_raw .958 [.933, .983]; null_decl .950 [.921, .975]; plac_raw .988 [.963, 1.000]; plac_decl .988 [.963, 1.000]
 - corr|E1|R2|k0.25|n4000: null_raw .883 [.864, .903]; null_decl .846 [.821, .871]; plac_raw .896 [.858, .933]; plac_decl .850 [.796, .900]
@@ -1368,118 +1382,118 @@ INVALID cells (598; first 30):
 
 ### V2 recall among cells not INVALID (n 500 / 1000 / 4000 / 8000 / 24000; inv INVALID, inf infeasible, mis missing, unt untuned, few < 10 seeds; NA not applicable, R-42)
 
-| world regime | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_eq_min | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
+| world regime | pmrt_nl_eq | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| E1 R1 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | - | - | 1.00/1.00/-/-/- | 1.00/1.00/-/-/- | 1.00/1.00/-/-/- | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/inv | 1.00/1.00/inv/inv/1.00 | 1.00/1.00/1.00/1.00/inv |
-| E1 R2 | .98/.99/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/inv/inv/inv | inv/inv/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E2 R1 | .28/.32/.35/.37/.38 | .29/.32/.35/.37/.38 | .30/.33/.36/.37/.38 | - | - | .87/.93/-/-/- | .88/.94/-/-/- | .88/.94/-/-/- | .28/.26/.25/.25/.25 | .32/.35/.40/.40/.41 | .31/.36/.40/.40/.42 | .29/.32/.36/.37/.38 | .29/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .29/.32/.35/.37/.38 | inv/inv/.62/.63/.68 | inv/inv/.62/.63/.68 | inv/.56/.62/.63/.68 | inv/.95/.99/1.00/1.00 | .69/.68/.78/inv/inv |
-| E2 R2 | .17/.28/.45/.55/.70 | .21/inv/.50/.63/.75 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | .29/.33/.33/.30/.29 | .21/inv/.42/.49/.54 | .27/.31/.27/.00/.00 | .29/.36/.55/.64/.79 | .29/.36/.54/.64/.78 | inv/inv/inv/inv/inv | .22/.28/.42/.53/.71 | inv/inv/inv/inv/inv | .22/.28/.42/.53/.70 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | .77/.90/.95/.97/.98 | .56/.42/.63/.57/.59 |
-| E3 R1 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/inv/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/inv/1.00/1.00/1.00 | 1.00/1.00/-/-/- | 1.00/1.00/-/-/- | 1.00/1.00/-/-/- | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | inv/inv/1.00/1.00/1.00 | inv/inv/inv/1.00/1.00 | 1.00/inv/1.00/inv/1.00 | inv/1.00/1.00/1.00/inv |
-| E3 R2 | .96/.95/.97/.99/.99 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R1 l1 | .60/.80/1.00/1.00/1.00 | .60/.80/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | - | - | .05/.15/-/-/- | .20/.25/-/-/- | .20/.25/-/-/- | .40/.60/.90/.85/.95 | .40/.60/1.00/1.00/1.00 | .40/.60/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .30/.40/.95/1.00/1.00 | .20/.40/.95/1.00/1.00 | .20/.40/.95/1.00/1.00 | .30/.40/1.00/1.00/1.00 | .75/.75/1.00/1.00/1.00 |
-| E4 R2 l1 | .07/.08/.18/.20/.80 | .07/.08/.18/.15/.80 | .12/.27/.92/1.00/inv | - | - | .02/.02/-/-/- | .02/.03/-/-/- | .02/.10/-/-/- | .17/.12/.03/.00/.00 | .08/.05/.18/.60/1.00 | .30/.50/.98/1.00/1.00 | .07/.05/.18/.25/.85 | .07/.05/.18/.20/.85 | .17/.30/.92/1.00/1.00 | .07/.05/.18/.20/.85 | .17/.28/.92/1.00/1.00 | .07/.05/.18/.20/.85 | .17/.30/.92/1.00/1.00 | .07/.02/.03/.10/.10 | .03/.02/.05/.15/.10 | .05/.13/.25/.50/.95 | .05/.10/.08/.40/.60 | .13/.18/.98/.95/1.00 |
-| E4 R3 l0 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .70/.97/1.00/1.00/1.00 | - | - | .98/1.00/-/-/- | .98/1.00/-/-/- | .98/1.00/-/-/- | 1.00/1.00/1.00/1.00/1.00 | .92/1.00/1.00/1.00/1.00 | .87/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .92/.97/1.00/1.00/1.00 | .98/.98/1.00/1.00/1.00 | .98/.98/1.00/1.00/1.00 | .70/.67/1.00/1.00/1.00 | .53/.87/1.00/1.00/1.00 |
-| E4 R3 l0.5 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | .00/.00/.00/.00/.00 | 1.00/1.00/1.00/1.00/inv | 1.00/1.00/1.00/1.00/inv | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .98/.98/1.00/1.00/1.00 | .98/.98/1.00/1.00/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R3 l1 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | .00/.00/.00/.00/.00 | inv/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .95/.98/inv/inv/inv | .97/.98/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R3 l1.5 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | .00/.00/.00/.00/.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .95/.97/inv/inv/inv | .98/.98/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R4 l0 | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | .95/1.00/1.00/1.00/1.00 | - | - | .20/.50/-/-/- | .15/.40/-/-/- | .15/.40/-/-/- | .95/.85/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .40/.65/1.00/1.00/1.00 | .40/.70/1.00/1.00/1.00 | .40/.70/1.00/1.00/1.00 | .70/.90/1.00/1.00/1.00 | .45/.95/1.00/1.00/1.00 |
-| E4 R4 l0.5 | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R4 l1 | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E4 R4 l1.5 | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
-| E5 R1 | .34/.37/.46/.55/.63 | .34/.37/.45/.55/.63 | .33/.37/.47/.55/.63 | - | - | .67/.68/-/-/- | .67/.67/-/-/- | .67/.67/-/-/- | .37/.37/.33/.33/.33 | .42/.44/.50/.52/.52 | .42/.44/.50/.52/.52 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | inv/inv/.78/.85/inv | .67/.74/.82/.88/.97 | .67/inv/.82/.87/.97 | .93/.97/.99/1.00/1.00 | .77/.75/.76/inv/inv |
-| E5 R2 | .42/.46/.56/.61/.65 | .46/.50/.60/.62/.68 | inv/inv/inv/inv/inv | - | - | inv/inv/-/-/- | inv/inv/-/-/- | inv/inv/-/-/- | .43/.46/.45/.47/.46 | .46/.50/.55/.60/.67 | .44/.47/.00/.00/.00 | .48/.53/.61/.62/.70 | .49/.53/.61/.62/.70 | inv/inv/inv/inv/inv | .39/.41/.48/.54/.64 | inv/inv/inv/inv/inv | .38/.41/.48/.54/.64 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/.67/.71/.76/.91 | .68/.70/inv/.80/.81 |
+| E1 R1 | 1.00/1.00/1.00/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | - | - | 1.00/1.00/nig/nig/nig | 1.00/1.00/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/inv | 1.00/1.00/inv/inv/1.00 | 1.00/1.00/1.00/1.00/inv |
+| E1 R2 | 1.00/1.00/1.00/nig/nig | .98/.99/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | inv/inv/inv/inv/inv | inv/inv/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E2 R1 | .80/.87/.94/nig/nig | .28/.32/.35/.37/.38 | .29/.32/.35/.37/.38 | .30/.33/.36/.37/.38 | - | - | .87/.93/nig/nig/nig | .88/.94/nig/nig/nig | .28/.26/.25/.25/.25 | .32/.35/.40/.40/.41 | .31/.36/.40/.40/.42 | .29/.32/.36/.37/.38 | .29/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .31/.32/.35/.37/.38 | .29/.32/.35/.37/.38 | inv/inv/.62/.63/.68 | inv/inv/.62/.63/.68 | inv/.56/.62/.63/.68 | inv/.95/.99/1.00/1.00 | .69/.68/.78/inv/inv |
+| E2 R2 | .49/.64/.92/nig/nig | .17/.28/.45/.55/.70 | .21/inv/.50/.63/.75 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | .29/.33/.33/.30/.29 | .21/inv/.42/.49/.54 | .27/.31/.27/.00/.00 | .29/.36/.55/.64/.79 | .29/.36/.54/.64/.78 | inv/inv/inv/inv/inv | .22/.28/.42/.53/.71 | inv/inv/inv/inv/inv | .22/.28/.42/.53/.70 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | .77/.90/.95/.97/.98 | .56/.42/.63/.57/.59 |
+| E3 R1 | 1.00/1.00/1.00/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/inv/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/inv/1.00/1.00/1.00 | 1.00/1.00/nig/nig/nig | 1.00/1.00/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | inv/inv/1.00/1.00/1.00 | inv/inv/inv/1.00/1.00 | 1.00/inv/1.00/inv/1.00 | inv/1.00/1.00/1.00/inv |
+| E3 R2 | 1.00/1.00/1.00/nig/nig | .96/.95/.97/.99/.99 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R1 l1 | nig/nig/nig/nig/nig | .60/.80/1.00/1.00/1.00 | .60/.80/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | - | - | .05/.15/nig/nig/nig | .20/.25/nig/nig/nig | .40/.60/.90/.85/.95 | .40/.60/1.00/1.00/1.00 | .40/.60/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .55/.85/1.00/1.00/1.00 | .30/.40/.95/1.00/1.00 | .20/.40/.95/1.00/1.00 | .20/.40/.95/1.00/1.00 | .30/.40/1.00/1.00/1.00 | .75/.75/1.00/1.00/1.00 |
+| E4 R2 l1 | nig/nig/nig/nig/nig | .07/.08/.18/.20/.80 | .07/.08/.18/.15/.80 | .12/.27/.92/1.00/inv | - | - | .02/.02/nig/nig/nig | .02/.10/nig/nig/nig | .17/.12/.03/.00/.00 | .08/.05/.18/.60/1.00 | .30/.50/.98/1.00/1.00 | .07/.05/.18/.25/.85 | .07/.05/.18/.20/.85 | .17/.30/.92/1.00/1.00 | .07/.05/.18/.20/.85 | .17/.28/.92/1.00/1.00 | .07/.05/.18/.20/.85 | .17/.30/.92/1.00/1.00 | .07/.02/.03/.10/.10 | .03/.02/.05/.15/.10 | .05/.13/.25/.50/.95 | .05/.10/.08/.40/.60 | .13/.18/.98/.95/1.00 |
+| E4 R3 l0 | nig/nig/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .70/.97/1.00/1.00/1.00 | - | - | .98/1.00/nig/nig/nig | .98/1.00/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | .92/1.00/1.00/1.00/1.00 | .87/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .92/.97/1.00/1.00/1.00 | .98/.98/1.00/1.00/1.00 | .98/.98/1.00/1.00/1.00 | .70/.67/1.00/1.00/1.00 | .53/.87/1.00/1.00/1.00 |
+| E4 R3 l0.5 | nig/nig/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | .00/.00/.00/.00/.00 | 1.00/1.00/1.00/1.00/inv | 1.00/1.00/1.00/1.00/inv | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .98/.98/1.00/1.00/1.00 | .98/.98/1.00/1.00/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R3 l1 | nig/nig/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | .00/.00/.00/.00/.00 | inv/1.00/1.00/1.00/1.00 | inv/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .95/.98/inv/inv/inv | .97/.98/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R3 l1.5 | nig/nig/nig/nig/nig | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | .00/.00/.00/.00/.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | inv/inv/inv/inv/inv | .95/.97/inv/inv/inv | .98/.98/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R4 l0 | nig/nig/nig/nig/nig | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | .95/1.00/1.00/1.00/1.00 | - | - | .20/.50/nig/nig/nig | .15/.40/nig/nig/nig | .95/.85/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | 1.00/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .95/1.00/1.00/1.00/1.00 | .40/.65/1.00/1.00/1.00 | .40/.70/1.00/1.00/1.00 | .40/.70/1.00/1.00/1.00 | .70/.90/1.00/1.00/1.00 | .45/.95/1.00/1.00/1.00 |
+| E4 R4 l0.5 | nig/nig/nig/nig/nig | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R4 l1 | nig/nig/nig/nig/nig | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E4 R4 l1.5 | nig/nig/nig/nig/nig | NA/NA/NA/NA/NA | NA/NA/NA/NA/NA | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv |
+| E5 R1 | .72/.79/1.00/nig/nig | .34/.37/.46/.55/.63 | .34/.37/.45/.55/.63 | .33/.37/.47/.55/.63 | - | - | .67/.68/nig/nig/nig | .67/.67/nig/nig/nig | .37/.37/.33/.33/.33 | .42/.44/.50/.52/.52 | .42/.44/.50/.52/.52 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | .33/.37/.47/.55/.62 | inv/inv/.78/.85/inv | .67/.74/.82/.88/.97 | .67/inv/.82/.87/.97 | .93/.97/.99/1.00/1.00 | .77/.75/.76/inv/inv |
+| E5 R2 | .67/.68/.73/nig/nig | .42/.46/.56/.61/.65 | .46/.50/.60/.62/.68 | inv/inv/inv/inv/inv | - | - | inv/inv/nig/nig/nig | inv/inv/nig/nig/nig | .43/.46/.45/.47/.46 | .46/.50/.55/.60/.67 | .44/.47/.00/.00/.00 | .48/.53/.61/.62/.70 | .49/.53/.61/.62/.70 | inv/inv/inv/inv/inv | .39/.41/.48/.54/.64 | inv/inv/inv/inv/inv | .38/.41/.48/.54/.64 | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/inv/inv/inv/inv | inv/.67/.71/.76/.91 | .68/.70/inv/.80/.81 |
 
-### V3 paired recall difference pmrt_eq - arm (neither INVALID, same declaration rule; per-cell 95 % paired-t CI, descriptive)
+### V3 paired recall difference pmrt_nl_eq - arm (neither INVALID, same declaration rule; per-cell 95 % paired-t CI, descriptive)
 
 | arm | rule | block | cells pmrt higher | pmrt lower | CI covers 0 |
 |---|---|---|---|---|---|
-| corr | BY | primary | 1 | 3 | 29 |
-| granger_eq | BY | primary | 0 | 1 | 9 |
-| granger_native | BY | secondary | 0 | 0 | 4 |
-| mscr_eq | BY | primary | 2 | 4 | 8 |
-| mscr_eq_min | BY | secondary | 2 | 4 | 8 |
-| mscr_native | BY | secondary | 2 | 4 | 8 |
-| notears | tau | primary | 34 | 1 | 21 |
-| pc_eq | tau | primary | 11 | 2 | 47 |
-| pc_native | tau | secondary | 13 | 5 | 38 |
-| pcorr_eq | BY | primary | 0 | 9 | 61 |
-| pcorr_eq_min | BY | secondary | 0 | 9 | 61 |
-| pcorr_hac | BY | secondary | 0 | 5 | 45 |
-| pcorr_hac_eq_min | BY | secondary | 4 | 3 | 63 |
-| pcorr_hac_fb | BY | secondary | 0 | 5 | 45 |
-| pcorr_hac_fb_eq_min | BY | secondary | 5 | 3 | 62 |
-| pcorr_native | BY | secondary | 0 | 4 | 46 |
-| pmrt_r3 | BY | secondary | 0 | 9 | 60 |
-| rcot2_eq | BY | primary | 4 | 5 | 19 |
-| rcot2_eq_min | BY | secondary | 4 | 8 | 28 |
-| rcot2_native | BY | secondary | 2 | 8 | 26 |
-| shap_dag | tau | primary | 4 | 16 | 16 |
-| two_tower | tau | primary | 4 | 11 | 18 |
+| corr | BY | primary | 6 | 0 | 5 |
+| granger_eq | BY | primary | 0 | 0 | 6 |
+| granger_native | BY | secondary | 0 | 0 | 2 |
+| mscr_eq | BY | primary | 2 | 2 | 4 |
+| mscr_native | BY | secondary | 2 | 2 | 4 |
+| notears | tau | primary | 8 | 0 | 4 |
+| pc_eq | tau | primary | 8 | 0 | 8 |
+| pc_native | tau | secondary | 8 | 0 | 5 |
+| pcorr_eq | BY | primary | 12 | 0 | 12 |
+| pcorr_eq_min | BY | secondary | 12 | 0 | 12 |
+| pcorr_hac | BY | secondary | 6 | 0 | 6 |
+| pcorr_hac_eq_min | BY | secondary | 12 | 0 | 12 |
+| pcorr_hac_fb | BY | secondary | 6 | 0 | 6 |
+| pcorr_hac_fb_eq_min | BY | secondary | 12 | 0 | 12 |
+| pcorr_native | BY | secondary | 6 | 0 | 6 |
+| pmrt_eq | BY | secondary | 13 | 0 | 11 |
+| pmrt_r3 | BY | secondary | 11 | 0 | 12 |
+| rcot2_eq | BY | primary | 2 | 0 | 4 |
+| rcot2_eq_min | BY | secondary | 2 | 0 | 6 |
+| rcot2_native | BY | secondary | 4 | 0 | 2 |
+| shap_dag | tau | primary | 2 | 3 | 4 |
+| two_tower | tau | primary | 5 | 0 | 6 |
 
 ### V5 information levels in R2 (pmrt, eq, eq_min, native): recall (* INVALID, ~ INCONCLUSIVE)
 
-| row | pmrt_eq | pmrt_r3 | granger_eq | granger_native | mscr_eq | mscr_eq_min | mscr_native | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native |
+| row | pmrt_nl_eq | pmrt_eq | pmrt_r3 | granger_eq | granger_native | mscr_eq | mscr_native | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| E1 n500 | .98~ | 1.00 | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00* | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .97* | 1.00* |
-| E1 n1000 | .99 | 1.00~ | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .99* | 1.00* |
-| E1 n4000 | 1.00 | 1.00 | - | - | - | - | - | 1.00 | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
-| E1 n8000 | 1.00~ | 1.00~ | - | - | - | - | - | 1.00 | 1.00~ | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
-| E1 n24000 | 1.00 | 1.00 | - | - | - | - | - | 1.00 | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
-| E2 n500 | .17 | .21~ | - | - | .94* | .93* | .93* | .21 | .27 | .29 | .29~ | .42* | .22~ | .42* | .22~ | .45* | .41* | .39* | .44* |
-| E2 n1000 | .28 | .33* | - | - | .97* | .96* | .97* | .30* | .31 | .36~ | .36~ | .53* | .28~ | .53* | .28~ | .55* | .49* | .50* | .54* |
-| E2 n4000 | .45 | .50 | - | - | - | - | - | .42 | .27 | .55~ | .54~ | .73* | .42~ | .73* | .42~ | .76* | .63* | .63* | .67* |
-| E2 n8000 | .55~ | .63~ | - | - | - | - | - | .49 | .00 | .64~ | .64 | .79* | .53 | .79* | .53 | .83* | .75* | .73* | .77* |
-| E2 n24000 | .70~ | .75 | - | - | - | - | - | .54 | .00 | .79 | .78 | .85* | .71 | .85* | .70 | .88* | .86* | .88* | .91* |
-| E3 n500 | .96~ | 1.00~ | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .93* | .90* | .99* |
-| E3 n1000 | .95~ | 1.00~ | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .97* | .97* | 1.00* |
-| E3 n4000 | .97 | 1.00 | 1.00 | 1.00* | - | - | - | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
-| E3 n8000 | .99~ | 1.00~ | 1.00~ | 1.00* | - | - | - | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
-| E3 n24000 | .99~ | 1.00~ | 1.00~ | 1.00* | - | - | - | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
-| E4 n500 | .07~ | .07~ | - | - | .02~ | .02~ | .02~ | .08~ | .30~ | .07~ | .07~ | .17~ | .07~ | .17~ | .07~ | .17~ | .07~ | .03~ | .05~ |
-| E4 n1000 | .08~ | .08~ | - | - | .02~ | .03~ | .10~ | .05~ | .50~ | .05~ | .05~ | .30~ | .05~ | .28~ | .05~ | .30~ | .02~ | .02~ | .13~ |
-| E4 n4000 | .18~ | .18~ | - | - | - | - | - | .18~ | .98~ | .18~ | .18~ | .92~ | .18~ | .92~ | .18~ | .92~ | .03~ | .05~ | .25~ |
-| E4 n8000 | .20 | .15 | - | - | - | - | - | .60~ | 1.00~ | .25 | .20 | 1.00 | .20 | 1.00 | .20 | 1.00 | .10 | .15~ | .50 |
-| E4 n24000 | .80~ | .80~ | - | - | - | - | - | 1.00~ | 1.00~ | .85~ | .85~ | 1.00 | .85~ | 1.00 | .85~ | 1.00 | .10~ | .10~ | .95~ |
-| E5 n500 | .42 | .46 | - | - | 1.00* | .98* | .98* | .46 | .44 | .48 | .49 | .50* | .39 | .50* | .38 | .55* | .67* | .66* | .69* |
-| E5 n1000 | .46 | .50~ | - | - | 1.00* | 1.00* | 1.00* | .50 | .47 | .53~ | .53~ | .60* | .41 | .59* | .41 | .64* | .68* | .67* | .70* |
-| E5 n4000 | .56 | .60 | - | - | - | - | - | .55 | .00 | .61 | .61 | .74* | .48 | .74* | .48 | .80* | .71* | .70* | .77* |
-| E5 n8000 | .61~ | .62~ | - | - | - | - | - | .60 | .00 | .62 | .62~ | .78* | .54 | .78* | .54 | .84* | .77* | .76* | .84* |
-| E5 n24000 | .65~ | .68~ | - | - | - | - | - | .67 | .00 | .70~ | .70~ | .88* | .64~ | .88* | .64~ | .92* | .89* | .88* | .97* |
+| E1 n500 | 1.00~ | .98~ | 1.00 | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .97* | 1.00* |
+| E1 n1000 | 1.00~ | .99 | 1.00~ | - | - | 1.00* | 1.00* | 1.00* | 1.00 | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .99* | 1.00* |
+| E1 n4000 | 1.00 | 1.00 | 1.00 | - | - | - | - | 1.00 | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
+| E1 n8000 | - | 1.00~ | 1.00~ | - | - | - | - | 1.00 | 1.00~ | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
+| E1 n24000 | - | 1.00 | 1.00 | - | - | - | - | 1.00 | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
+| E2 n500 | .49 | .17 | .21~ | - | - | .94* | .93* | .21 | .27 | .29 | .29~ | .42* | .22~ | .42* | .22~ | .45* | .41* | .39* | .44* |
+| E2 n1000 | .64~ | .28 | .33* | - | - | .97* | .97* | .30* | .31 | .36~ | .36~ | .53* | .28~ | .53* | .28~ | .55* | .49* | .50* | .54* |
+| E2 n4000 | .92 | .45 | .50 | - | - | - | - | .42 | .27 | .55~ | .54~ | .73* | .42~ | .73* | .42~ | .76* | .63* | .63* | .67* |
+| E2 n8000 | - | .55~ | .63~ | - | - | - | - | .49 | .00 | .64~ | .64 | .79* | .53 | .79* | .53 | .83* | .75* | .73* | .77* |
+| E2 n24000 | - | .70~ | .75 | - | - | - | - | .54 | .00 | .79 | .78 | .85* | .71 | .85* | .70 | .88* | .86* | .88* | .91* |
+| E3 n500 | 1.00 | .96~ | 1.00~ | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .93* | .90* | .99* |
+| E3 n1000 | 1.00 | .95~ | 1.00~ | 1.00 | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .97* | .97* | 1.00* |
+| E3 n4000 | 1.00 | .97 | 1.00 | 1.00 | 1.00* | - | - | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* |
+| E3 n8000 | - | .99~ | 1.00~ | 1.00~ | 1.00* | - | - | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
+| E3 n24000 | - | .99~ | 1.00~ | 1.00~ | 1.00* | - | - | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* |
+| E4 n500 | - | .07~ | .07~ | - | - | .02~ | .02~ | .08~ | .30~ | .07~ | .07~ | .17~ | .07~ | .17~ | .07~ | .17~ | .07~ | .03~ | .05~ |
+| E4 n1000 | - | .08~ | .08~ | - | - | .02~ | .10~ | .05~ | .50~ | .05~ | .05~ | .30~ | .05~ | .28~ | .05~ | .30~ | .02~ | .02~ | .13~ |
+| E4 n4000 | - | .18~ | .18~ | - | - | - | - | .18~ | .98~ | .18~ | .18~ | .92~ | .18~ | .92~ | .18~ | .92~ | .03~ | .05~ | .25~ |
+| E4 n8000 | - | .20 | .15 | - | - | - | - | .60~ | 1.00~ | .25 | .20 | 1.00 | .20 | 1.00 | .20 | 1.00 | .10 | .15~ | .50 |
+| E4 n24000 | - | .80~ | .80~ | - | - | - | - | 1.00~ | 1.00~ | .85~ | .85~ | 1.00 | .85~ | 1.00 | .85~ | 1.00 | .10~ | .10~ | .95~ |
+| E5 n500 | .67 | .42 | .46 | - | - | 1.00* | .98* | .46 | .44 | .48 | .49 | .50* | .39 | .50* | .38 | .55* | .67* | .66* | .69* |
+| E5 n1000 | .68 | .46 | .50~ | - | - | 1.00* | 1.00* | .50 | .47 | .53~ | .53~ | .60* | .41 | .59* | .41 | .64* | .68* | .67* | .70* |
+| E5 n4000 | .73 | .56 | .60 | - | - | - | - | .55 | .00 | .61 | .61 | .74* | .48 | .74* | .48 | .80* | .71* | .70* | .77* |
+| E5 n8000 | - | .61~ | .62~ | - | - | - | - | .60 | .00 | .62 | .62~ | .78* | .54 | .78* | .54 | .84* | .77* | .76* | .84* |
+| E5 n24000 | - | .65~ | .68~ | - | - | - | - | .67 | .00 | .70~ | .70~ | .88* | .64~ | .88* | .64~ | .92* | .89* | .88* | .97* |
 
 ### V6 E4: placebo_conf rate (raw p, else declared) / wrong-sign rate of the true edge (* INVALID)
 
-| row | pmrt_eq | pmrt_r3 | corr | mscr_eq | mscr_eq_min | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| R1 l1 n1000 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
-| R1 l1 n4000 | -/.00 | -/.00 | -/.00 | - | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00~ | -/.00 | -/.00 | -/.00~ | -/.00~ |
-| R1 l1 n24000 | -/.00~ | -/.00~ | -/.00~ | - | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
-| R2 l1 n1000 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.02~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
-| R2 l1 n4000 | -/.00~ | -/.00~ | -/.00~ | - | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
-| R2 l1 n24000 | -/.00~ | -/.00~ | -/.00* | - | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00~ | -/.00 | -/.00~ | -/.00 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
-| R3 l0 n1000 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .08/.00~ | .08/.00~ | .00/.00 | .00/.00 | .00/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .13/.00~ | .07/.00~ | .07/.00~ | .02/.00 | .03/.00~ |
-| R3 l0 n4000 | .00/.00 | .00/.00 | .03/.00~ | - | - | - | .00/.00 | .00/.00 | .00/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .03/.00~ | .07/.00~ | .05/.00~ | .12/.00~ | .03/.00~ |
-| R3 l0 n24000 | .05/.00~ | .05/.00~ | .05/.00~ | - | - | - | .00/.00 | .15/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .00/.00 | .15/.00~ |
-| R3 l0.5 n1000 | .05/.00~ | .07/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .02/.00 | .05/.00~ | .05/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .52/.00* | .08/.00~ | .08/.00~ | 1.00/.00* | 1.00/.00* |
-| R3 l0.5 n4000 | .00/.00~ | .00/.00 | 1.00/1.00* | - | - | - | .00/.00 | .05/.00~ | .10/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .95/.00* | .03/.00~ | .07/.00~ | 1.00/.00* | 1.00/.00* |
-| R3 l0.5 n24000 | .10/.00~ | .10/.00~ | 1.00/1.00* | - | - | - | .00/.00 | .25/.00* | .25/.00* | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .95/.00* | .25/.00~ | .40/.00* | 1.00/.00* | 1.00/.00* |
-| R3 l1 n1000 | .07/.00~ | .05/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .02/.00 | .02/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .92/.00* | .10/.00~ | .07/.00~ | 1.00/.00* | 1.00/.00* |
-| R3 l1 n4000 | .02/.00~ | .03/.00~ | 1.00/1.00* | - | - | - | .00/.00 | .13/.00~ | .13/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .97/.00* | .40/.00* | .43/.00* | 1.00/.00* | 1.00/.00* |
-| R3 l1 n24000 | .10/.00~ | .10/.00~ | 1.00/1.00* | - | - | - | .00/.00 | .20/.00~ | .15/.00~ | .05/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | 1.00/.00* | .50/.00* | .60/.00* | 1.00/.00* | 1.00/.00* |
-| R3 l1.5 n1000 | .07/.00~ | .07/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .03/.00~ | .02/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .93/.00* | .10/.00~ | .12/.00~ | 1.00/.00* | 1.00/.00* |
-| R3 l1.5 n4000 | .02/.00~ | .02/.00~ | 1.00/1.00* | - | - | - | .00/.00 | .03/.00~ | .03/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .98/.00* | .30/.00* | .32/.00* | 1.00/.00* | 1.00/.00* |
-| R3 l1.5 n24000 | .05/.00~ | .05/.00~ | 1.00/1.00* | - | - | - | .00/.00 | .15/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | 1.00/.00* | .55/.00* | .55/.00* | 1.00/.00* | 1.00/.00* |
-| R4 l0 n1000 | .00/NA | .00/NA | .00/.00 | .05/.00~ | .00/.00~ | .00/.00~ | .00/.00 | .05/.00~ | .05/.00~ | .05/.00~ | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00 | .20/.00~ |
-| R4 l0 n4000 | .00/NA | .00/NA | .05/.00~ | - | - | - | .00/.00 | .00/.00 | .00/.00 | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .10/.00~ |
-| R4 l0 n24000 | .00/NA | .00/NA | .15/.00~ | - | - | - | .00/.00 | .10/.00~ | .10/.00~ | .15/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .00/.00 | .00/.00 |
-| R4 l0.5 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l0.5 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l0.5 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1.5 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1.5 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
-| R4 l1.5 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| row | pmrt_eq | pmrt_r3 | corr | mscr_eq | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| R1 l1 n1000 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
+| R1 l1 n4000 | -/.00 | -/.00 | -/.00 | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00 | -/.00~ | -/.00 | -/.00 | -/.00~ | -/.00~ |
+| R1 l1 n24000 | -/.00~ | -/.00~ | -/.00~ | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
+| R2 l1 n1000 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.02~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
+| R2 l1 n4000 | -/.00~ | -/.00~ | -/.00~ | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
+| R2 l1 n24000 | -/.00~ | -/.00~ | -/.00* | - | - | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00 | -/.00~ | -/.00 | -/.00~ | -/.00 | -/.00~ | -/.00~ | -/.00~ | -/.00~ | -/.00~ |
+| R3 l0 n1000 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .08/.00~ | .00/.00 | .00/.00 | .00/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .13/.00~ | .07/.00~ | .07/.00~ | .02/.00 | .03/.00~ |
+| R3 l0 n4000 | .00/.00 | .00/.00 | .03/.00~ | - | - | .00/.00 | .00/.00 | .00/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .02/.00 | .03/.00~ | .07/.00~ | .05/.00~ | .12/.00~ | .03/.00~ |
+| R3 l0 n24000 | .05/.00~ | .05/.00~ | .05/.00~ | - | - | .00/.00 | .15/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .00/.00 | .15/.00~ |
+| R3 l0.5 n1000 | .05/.00~ | .07/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .02/.00 | .05/.00~ | .05/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .07/.00~ | .52/.00* | .08/.00~ | .08/.00~ | 1.00/.00* | 1.00/.00* |
+| R3 l0.5 n4000 | .00/.00~ | .00/.00 | 1.00/1.00* | - | - | .00/.00 | .05/.00~ | .10/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00~ | .95/.00* | .03/.00~ | .07/.00~ | 1.00/.00* | 1.00/.00* |
+| R3 l0.5 n24000 | .10/.00~ | .10/.00~ | 1.00/1.00* | - | - | .00/.00 | .25/.00* | .25/.00* | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .95/.00* | .25/.00~ | .40/.00* | 1.00/.00* | 1.00/.00* |
+| R3 l1 n1000 | .07/.00~ | .05/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .02/.00 | .02/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .92/.00* | .10/.00~ | .07/.00~ | 1.00/.00* | 1.00/.00* |
+| R3 l1 n4000 | .02/.00~ | .03/.00~ | 1.00/1.00* | - | - | .00/.00 | .13/.00~ | .13/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .97/.00* | .40/.00* | .43/.00* | 1.00/.00* | 1.00/.00* |
+| R3 l1 n24000 | .10/.00~ | .10/.00~ | 1.00/1.00* | - | - | .00/.00 | .20/.00~ | .15/.00~ | .05/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | 1.00/.00* | .50/.00* | .60/.00* | 1.00/.00* | 1.00/.00* |
+| R3 l1.5 n1000 | .07/.00~ | .07/.00~ | 1.00/1.00* | 1.00/.00* | 1.00/.00* | .00/.00 | .03/.00~ | .02/.00 | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .03/.00~ | .93/.00* | .10/.00~ | .12/.00~ | 1.00/.00* | 1.00/.00* |
+| R3 l1.5 n4000 | .02/.00~ | .02/.00~ | 1.00/1.00* | - | - | .00/.00 | .03/.00~ | .03/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .98/.00* | .30/.00* | .32/.00* | 1.00/.00* | 1.00/.00* |
+| R3 l1.5 n24000 | .05/.00~ | .05/.00~ | 1.00/1.00* | - | - | .00/.00 | .15/.00~ | .15/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | 1.00/.00* | .55/.00* | .55/.00* | 1.00/.00* | 1.00/.00* |
+| R4 l0 n1000 | .00/NA | .00/NA | .00/.00 | .05/.00~ | .00/.00~ | .00/.00 | .05/.00~ | .05/.00~ | .05/.00~ | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00 | .00/.00~ | .00/.00~ | .00/.00~ | .00/.00 | .20/.00~ |
+| R4 l0 n4000 | .00/NA | .00/NA | .05/.00~ | - | - | .00/.00 | .00/.00 | .00/.00 | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .05/.00~ | .10/.00~ |
+| R4 l0 n24000 | .00/NA | .00/NA | .15/.00~ | - | - | .00/.00 | .10/.00~ | .10/.00~ | .15/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .10/.00~ | .00/.00 | .00/.00 |
+| R4 l0.5 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l0.5 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l0.5 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1.5 n1000 | .00/NA | .00/NA | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1.5 n4000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
+| R4 l1.5 n24000 | .00/NA | .00/NA | 1.00/1.00* | - | - | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* | 1.00/1.00* |
 
 ### V7 not testable / not applicable
 
@@ -1487,39 +1501,39 @@ INVALID cells (598; first 30):
 
 ### V8 secondary KPI -> KPI family
 
-596 (arm, cell) rows (JSON V8).
+602 (arm, cell) rows (JSON V8).
 
 ### V9 kappa sweep (R2, n 1000): recall
 
-| row | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_eq_min | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
+| row | pmrt_nl_eq | pmrt_eq | pmrt_r3 | corr | granger_eq | granger_native | mscr_eq | mscr_native | notears | pc_eq | pc_native | pcorr_eq | pcorr_eq_min | pcorr_hac | pcorr_hac_eq_min | pcorr_hac_fb | pcorr_hac_fb_eq_min | pcorr_native | rcot2_eq | rcot2_eq_min | rcot2_native | shap_dag | two_tower |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| E1 k0.125 | .97~ | 1.00 | 1.00* | - | - | 1.00* | 1.00* | 1.00* | 1.00~ | 1.00~ | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00~ | .99* | 1.00* | 1.00* |
-| E1 k0.25 | .99 | 1.00~ | 1.00* | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .99* | 1.00* | 1.00* | .99* |
-| E1 k0.5 | 1.00 | 1.00 | 1.00* | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .94* | .95~ | .99* | 1.00* | 1.00* |
-| E2 k0.125 | .27* | .31~ | .64* | - | - | .97* | .96* | .96* | .31 | .28 | .24 | .35~ | .35* | .51* | .26* | .51* | .25* | .52* | .53* | .54* | .55* | .92 | .45 |
-| E2 k0.25 | .28 | .33* | .68* | - | - | .97* | .96* | .97* | .33 | .30* | .31 | .36~ | .36~ | .53* | .28~ | .53* | .28~ | .55* | .49* | .50* | .54* | .90 | .42 |
-| E2 k0.5 | .24* | .30* | .61* | - | - | .97* | .95* | .95* | .31 | .30 | .35 | .32~ | .32~ | .51* | .25~ | .51* | .25~ | .52* | .44* | .44* | .50* | .89 | .49 |
-| E3 k0.125 | .97~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .99* | .97* | 1.00* | 1.00* | .99* |
-| E3 k0.25 | .95~ | 1.00~ | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .97* | .97* | 1.00* | 1.00* | .99* |
-| E3 k0.5 | .97~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .84* | .81~ | .99* | 1.00* | .99* |
-| E4 k0.125 | .00 | .00~ | .20~ | - | - | .00~ | .05~ | .00~ | .05~ | .00~ | .50~ | .00~ | .00~ | .35~ | .00~ | .35~ | .00~ | .35~ | .05~ | .05~ | .15~ | .10~ | .30~ |
-| E4 k0.25 | .08~ | .08~ | .27~ | - | - | .02~ | .03~ | .10~ | .12~ | .05~ | .50~ | .05~ | .05~ | .30~ | .05~ | .28~ | .05~ | .30~ | .02~ | .02~ | .13~ | .10~ | .18~ |
-| E4 k0.5 | .00 | .00 | .25 | - | - | .00~ | .00~ | .00~ | .05~ | .00~ | .40~ | .00 | .00 | .30 | .00 | .30 | .00 | .30 | .10~ | .10~ | .25~ | .20~ | .00~ |
-| E5 k0.125 | .47~ | .54~ | .76* | - | - | 1.00* | 1.00* | 1.00* | .46 | .51~ | .46 | .54~ | .54~ | .57* | .42~ | .57* | .42~ | .62* | .67* | .67~ | .70* | .79~ | .78 |
-| E5 k0.25 | .46 | .50~ | .79* | - | - | 1.00* | 1.00* | 1.00* | .46 | .50 | .47 | .53~ | .53~ | .60* | .41 | .59* | .41 | .64* | .68* | .67* | .70* | .67 | .70 |
-| E5 k0.5 | .48 | .51~ | .71* | - | - | 1.00* | 1.00* | 1.00* | .46 | .47 | .43 | .52~ | .51~ | .58* | .42~ | .58* | .42~ | .61* | .67~ | .67~ | .68~ | .67 | .67 |
+| E1 k0.125 | - | .97~ | 1.00 | 1.00* | - | - | 1.00* | 1.00* | 1.00~ | 1.00~ | 1.00 | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | 1.00~ | .99* | 1.00* | 1.00* |
+| E1 k0.25 | 1.00~ | .99 | 1.00~ | 1.00* | - | - | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00~ | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | 1.00* | .99* | 1.00* | 1.00* | .99* |
+| E1 k0.5 | - | 1.00 | 1.00 | 1.00* | - | - | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .94* | .95~ | .99* | 1.00* | 1.00* |
+| E2 k0.125 | - | .27* | .31~ | .64* | - | - | .97* | .96* | .31 | .28 | .24 | .35~ | .35* | .51* | .26* | .51* | .25* | .52* | .53* | .54* | .55* | .92 | .45 |
+| E2 k0.25 | .64~ | .28 | .33* | .68* | - | - | .97* | .97* | .33 | .30* | .31 | .36~ | .36~ | .53* | .28~ | .53* | .28~ | .55* | .49* | .50* | .54* | .90 | .42 |
+| E2 k0.5 | - | .24* | .30* | .61* | - | - | .97* | .95* | .31 | .30 | .35 | .32~ | .32~ | .51* | .25~ | .51* | .25~ | .52* | .44* | .44* | .50* | .89 | .49 |
+| E3 k0.125 | - | .97~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .99* | .97* | 1.00* | 1.00* | .99* |
+| E3 k0.25 | 1.00 | .95~ | 1.00~ | 1.00* | 1.00 | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00 | 1.00 | 1.00* | 1.00 | 1.00* | 1.00 | 1.00* | .97* | .97* | 1.00* | 1.00* | .99* |
+| E3 k0.5 | - | .97~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00* | 1.00* | 1.00* | 1.00 | 1.00* | 1.00~ | 1.00~ | 1.00* | 1.00~ | 1.00* | 1.00~ | 1.00* | .84* | .81~ | .99* | 1.00* | .99* |
+| E4 k0.125 | - | .00 | .00~ | .20~ | - | - | .00~ | .00~ | .05~ | .00~ | .50~ | .00~ | .00~ | .35~ | .00~ | .35~ | .00~ | .35~ | .05~ | .05~ | .15~ | .10~ | .30~ |
+| E4 k0.25 | - | .08~ | .08~ | .27~ | - | - | .02~ | .10~ | .12~ | .05~ | .50~ | .05~ | .05~ | .30~ | .05~ | .28~ | .05~ | .30~ | .02~ | .02~ | .13~ | .10~ | .18~ |
+| E4 k0.5 | - | .00 | .00 | .25 | - | - | .00~ | .00~ | .05~ | .00~ | .40~ | .00 | .00 | .30 | .00 | .30 | .00 | .30 | .10~ | .10~ | .25~ | .20~ | .00~ |
+| E5 k0.125 | - | .47~ | .54~ | .76* | - | - | 1.00* | 1.00* | .46 | .51~ | .46 | .54~ | .54~ | .57* | .42~ | .57* | .42~ | .62* | .67* | .67~ | .70* | .79~ | .78 |
+| E5 k0.25 | .68 | .46 | .50~ | .79* | - | - | 1.00* | 1.00* | .46 | .50 | .47 | .53~ | .53~ | .60* | .41 | .59* | .41 | .64* | .68* | .67* | .70* | .67 | .70 |
+| E5 k0.5 | - | .48 | .51~ | .71* | - | - | 1.00* | 1.00* | .46 | .47 | .43 | .52~ | .51~ | .58* | .42~ | .58* | .42~ | .61* | .67~ | .67~ | .68~ | .67 | .67 |
 
 ### V10 cost (CPU-s per dataset; mean / max over worlds, regimes; peak RSS MB; infeasible units; T3 = infeasible from DEV cost)
 
 | arm | n 500 | n 1000 | n 4000 | n 8000 | n 24000 | RSS | infeasible |
 |---|---|---|---|---|---|---|---|
+| pmrt_nl_eq | 35.5 / 64.1 | 54.0 / 97.9 | 145.2 / 289.9 | - | - | 279 | 0 |
 | pmrt_eq | 0.6 / 1.3 | 1.0 / 2.3 | 3.9 / 8.3 | 8.5 / 18.4 | 25.3 / 62.5 | 778 | 0 |
 | pmrt_r3 | 0.6 / 1.4 | 1.0 / 2.3 | 3.8 / 8.5 | 8.3 / 17.3 | 24.5 / 59.9 | 778 | 0 |
 | corr | 0.1 / 0.1 | 0.1 / 0.2 | 0.1 / 0.2 | 0.1 / 0.2 | 0.1 / 0.4 | 538 | 0 |
 | granger_eq | 0.2 / 0.3 | 0.3 / 0.4 | 0.8 / 1.0 | 1.7 / 2.3 | 5.7 / 7.4 | 394 | 0 |
 | granger_native | 0.1 / 0.1 | 0.1 / 0.1 | 0.1 / 0.2 | 0.2 / 0.2 | 0.4 / 0.4 | 374 | 0 |
 | mscr_eq | 22.3 / 87.8 | 53.1 / 192.2 | - | - | - | 348 | 0 |
-| mscr_eq_min | 38.9 / 333.4 | 99.1 / 719.2 | - | - | - | 260 | 0 |
 | mscr_native | 9.2 / 34.0 | 21.8 / 68.6 | - | - | - | 257 | 0 |
 | notears | 0.4 / 2.1 | 0.4 / 2.3 | 0.8 / 4.7 | 1.4 / 7.3 | 3.9 / 24.3 | 539 | 0 |
 | pc_eq | 2.0 / 15.4 | 2.4 / 19.6 | 3.7 / 33.6 | 4.9 / 42.8 | 10.1 / 79.5 | 539 | 0 |
@@ -1539,11 +1553,11 @@ INVALID cells (598; first 30):
 
 ### V11 integrity
 
-- label PROVISIONAL; failed checks: clean, commits, dataset_hash, freeze_commit_given, one_platform_per_dataset, pkgs_uniform, protocol_frozen_sha, stamps
-- freeze commit None; amendments []; records used 100320 / expected 100320; missing 0; unexpected 0; role mismatch 0; duplicates 0
-- commit violations 100320; not clean 17176; stamp violations 100320; candidates incomplete 0; pkgs sets 2
-- role:status {'measure:ok': 61080, 'tune:ok': 39240}; errors 0 (not listed persistent 0); infeasible 0; dataset-hash mismatches 1 (R-41a: equal across all arms of a dataset); ok records without a dataset hash 0 (not-ok 0); multi-platform datasets 20
-- BY recheck (p arms): 74920 / 74920 records agree; tune reproducibility vs DEV: None
+- label PROVISIONAL; failed checks: clean, commits, dataset_hash, freeze_commit_given, one_platform_per_dataset, pkgs_uniform, protocol_frozen_sha, stamps, unexpected
+- freeze commit None; amendments []; records used 99200 / expected 99200; missing 0; unexpected 2560; role mismatch 0; duplicates 0
+- commit violations 99200; not clean 16104; stamp violations 99200; candidates incomplete 0; pkgs sets 2
+- role:status {'measure:ok': 60400, 'tune:ok': 38800}; errors 0 (not listed persistent 0); infeasible 0; dataset-hash mismatches 1 (R-41a: equal across all arms of a dataset); ok records without a dataset hash 0 (not-ok 0); multi-platform datasets 20
+- BY recheck (p arms): 73800 / 73800 records agree; tune reproducibility vs DEV: None
 
 
 > **DEV DATA, NOT EVAL: development seeds 3_000_000-3_000_199 on the DEV specs; a rehearsal of the report, not the pre-registered result**

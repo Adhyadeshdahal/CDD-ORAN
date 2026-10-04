@@ -23,7 +23,7 @@ commit, unchanged after it.
 | item | input | LF sha256 |
 |---|---|---|
 | T1 | results/dev/full/merged.jsonl.gz, results/dev/ci_c/merged.jsonl.gz, pmrt_nl_eq DEV merged, cdl DEV merged; aud1 output | <sha each> |
-| T3 | DEV cost maxima (eval_projection.json t3_max_cpu_s_by_arm_n, re-run), R-55 calibration block records (f, e by host type), pmrt_nl_eq cost pilot records | <sha each> |
+| T3 | DEV cost maxima (eval_projection.json t3_max_cpu_s_by_arm_n, re-run), R-55 calibration block records (f, e by host type), pmrt_nl_eq cost pilot: results/dev/pmrt_nl_cost/merged_e2.jsonl.gz (4300cd01dd8808a0...) and merged_e4r3.jsonl.gz (6ff0389b97451d8d...), full sha in freeze/pmrt_nl_cost_pilot.json | <sha each> |
 | T5 | results/dev/{full, ci_c, cdl, pmrt_nl}/REPORT.md | <sha each> |
 | T9 | results/fmax_sim/s_e4_rule.json | <sha> |
 | T10 | results/pmrt_nl/SELECTION.md | <sha> |

@@ -143,6 +143,49 @@ def planned_units(spec: dict) -> dict[str, dict]:
     return out
 
 
+def _measure_cells(spec: dict, every_arm: bool) -> dict[str, dict]:
+    """arm|cell -> cell fields of the spec's measurement cells (placeholder seeds read as one seed); with
+    ``every_arm`` every block holds every arm: the nominal grid."""
+    x = json.loads(json.dumps(spec))
+    for b in x["blocks"]:
+        if isinstance(b["seeds"], str):
+            b["seeds"] = [3_100_000]
+        if every_arm:
+            b["arms"] = "all"
+    out = {}
+    for u in planned_units(x).values():
+        if u["role"] == "measure":
+            out[f"{u['arm']}|{cell_of(u['world'], u['regime'], u['lam'], u['n'], u['kappa'])}"] = {
+                f: u[f] for f in ("arm", "world", "regime", "lam", "n", "kappa")}
+    return out
+
+
+def not_in_grid(spec: dict) -> dict:
+    """Cells of the nominal grid (every arm in every measurement block) that an arm does not have: pre-registered
+    grid choices (R-54, R-58; spec ``not_in_grid`` rules). They are not planned cells, so they never count as
+    missing and never cap a verdict at PARTIAL or make a component NOT EVALUABLE; tables label them 'nig'. A gap
+    no rule explains is listed as unexplained (V11 check 'grid_gaps_ruled' when the spec has rules)."""
+    have = _measure_cells(spec, False)
+    rules = spec.get("not_in_grid") or []
+
+    def hit(r: dict, c: dict) -> bool:
+        return (c["arm"] in r["arms"] and (r.get("regimes") is None or c["regime"] in r["regimes"])
+                and (r.get("ns") is None or c["n"] in r["ns"]) and (r.get("kappas") is None or c["kappa"] in r["kappas"]))
+    cells, unexplained = [], []
+    for k, c in sorted(_measure_cells(spec, True).items()):
+        if k in have:
+            continue
+        i = next((i for i, r in enumerate(rules) if hit(r, c)), None)       # first matching rule
+        if i is None:
+            unexplained.append(k)
+        cells.append({**c, "key": k, "rule": i, "ruling": None if i is None else rules[i]["ruling"]})
+    by_rule = [{"ruling": r["ruling"], "reason": r.get("reason"), "arms": r["arms"],
+                "where": {f: r.get(f) for f in ("regimes", "ns", "kappas")},
+                "n_cells": sum(c["rule"] == i for c in cells)} for i, r in enumerate(rules)]
+    return {"cells": cells, "n_cells": len(cells), "by_rule": by_rule, "unexplained": unexplained,
+            "has_rules": bool(rules)}
+
+
 def expected_units(spec: dict) -> dict[str, dict]:
     """key -> unit for every unit the campaign runs (T3-infeasible units excluded, as ``campaign.expand``)."""
     return {k: u for k, u in planned_units(spec).items() if not u["t3"]}
@@ -1175,6 +1218,7 @@ def integrity(records: list[dict], screened: dict, spec: dict, freeze_commit: st
                  "declarations_equal": sum([bool(e.get("declared")) for e in a["edges"]]
                                            == [bool(e.get("declared")) for e in b["edges"]] for a, b in both)}
     protocol = protocol or {"ok": False, "why": "not checked"}
+    nig = not_in_grid(spec)
     checks = {"protocol_frozen_sha": protocol["ok"], "freeze_commit_given": freeze_commit is not None,
               "commits": not bad_commit, "clean": not dirty, "stamps": not bad_stamp, "missing": not missing,
               "unexpected": not screened["unexpected"], "role": not screened["role_mismatch"],
@@ -1182,6 +1226,8 @@ def integrity(records: list[dict], screened: dict, spec: dict, freeze_commit: st
               "errors_listed": not errors_unlisted, "dataset_hash": not hash_mismatch,
               "dataset_hash_stamped": not hash_unstamped,
               "one_platform_per_dataset": not multi_platform, "pkgs_uniform": pkgs_ok, "fmax_dependence": dep_ok}
+    if nig["has_rules"]:                         # R-58: every gap in an arm's grid is a pre-registered grid choice
+        checks["grid_gaps_ruled"] = not nig["unexplained"]
     return {"label": "FINAL" if all(checks.values()) else "PROVISIONAL", "checks": checks,
             "failed": sorted(k for k, v in checks.items() if not v),
             "freeze_commit": freeze_commit, "commits": commits, "commit_violations": bad_commit[:20],
@@ -1200,6 +1246,7 @@ def integrity(records: list[dict], screened: dict, spec: dict, freeze_commit: st
             "dataset_hash_unstamped": sorted(hash_unstamped)[:20], "n_dataset_hash_unstamped": len(hash_unstamped),
             "n_dataset_hash_unstamped_not_ok": len(hash_unstamped_not_ok),
             "multi_platform_datasets": multi_platform[:20],
+            "not_in_grid_cells": nig["n_cells"], "not_in_grid_unexplained": nig["unexplained"][:20],
             "pkgs_sets": len(pkgs), "fmax_dependence_sha256": (dep or {}).get("_sha"),
             "by_recheck": {"records": by_n, "agree": by_agree, "disagree_first": by_bad},
             "tune_reproducibility_vs_dev": repro}
@@ -1302,7 +1349,8 @@ def assemble(cells: dict, rows: dict, records: list[dict], spec: dict, dep: dict
             "V7_not_testable": v7, "V8_secondary": v8, "V9_kappa_sweep": v9,
             "V10_cost": cost_table(records, cells, spec), "V11_integrity": v11,
             "secondary_tau_of_p_arms": {k: e["secondary_tau"]["validity"] for k, e in sorted(prim.items())
-                                        if e.get("secondary_tau")}}
+                                        if e.get("secondary_tau")},
+            "not_in_grid": not_in_grid(spec)}
 
 
 # ================================================================================================ markdown
@@ -1336,8 +1384,15 @@ _STATE_TAG = {"INVALID": "inv", "NO_READ": "nr", "infeasible": "inf", "infeasibl
 _RATE_MARK = {"VALID": "", "INVALID": "*", "INCONCLUSIVE": "~", None: "?"}
 
 
-def _md_like(rows: list[dict], arms: list[str]) -> list[str]:
-    """V0 markdown: one table per (world, regime, lambda); rows arm x rule, columns n."""
+def _nig_index(out: dict) -> set[tuple]:
+    """(arm, world-regime label, n, kappa) of the cells outside an arm's grid (R-54 / R-58; label 'nig')."""
+    return {(c["arm"], _wr(c), c["n"], c["kappa"]) for c in (out.get("not_in_grid") or {}).get("cells", [])}
+
+
+def _md_like(rows: list[dict], arms: list[str], nig: set | None = None) -> list[str]:
+    """V0 markdown: one table per (world, regime, lambda); rows arm x rule, columns n; 'nig' = not in the arm's
+    grid (R-54 / R-58)."""
+    nig = nig or set()
     def rt(x: dict | None) -> str:
         return "-" if not x else _f(x["rate"], 3) + _RATE_MARK.get(x["validity"], "?")
 
@@ -1352,7 +1407,8 @@ def _md_like(rows: list[dict], arms: list[str]) -> list[str]:
          "Every p arm scored at raw p <= .05 per edge (raw_p) and with the conformal placebo tau (tau), next to the "
          "score-only arms (tau; cdl also at the conference's fixed threshold, fixed). Rates are declaration rates; * INVALID, ~ INCONCLUSIVE; a tau row's placebo is "
          "its tuning column (reported, not in its validity). NA = not applicable (PMRT in R4: no known design, "
-         "never recall 0); inv INVALID, inf infeasible (EVAL or T3), mis missing, unt untuned, few < 10 seeds."]
+         "never recall 0); inv INVALID, inf infeasible (EVAL or T3), mis missing, unt untuned, few < 10 seeds; "
+         "nig not in the arm's grid (pre-registered grid choice, R-54 / R-58)."]
     ns = sorted({r["n"] for r in rows})
     idx = {(_wr(r), r["arm"], r["rule"], r["n"]): r for r in rows}
     order = sorted({(r["world"], r["regime"], -1.0 if r["lam"] is None else r["lam"], _wr(r)) for r in rows})
@@ -1362,8 +1418,13 @@ def _md_like(rows: list[dict], arms: list[str]) -> list[str]:
         for a in arms:
             for rule in ("raw_p", "tau", "fixed"):
                 if not any((w, a, rule, n) in idx for n in ns):
+                    if rule == "raw_p" and any((a, w, n, PRIMARY_KAPPA) in nig for n in ns):
+                        L.append(f"| {a} | - | " + " | ".join("nig" if (a, w, n, PRIMARY_KAPPA) in nig else "-"
+                                                              for n in ns) + " |")
                     continue
-                L.append(f"| {a} | {rule} | " + " | ".join(txt(idx.get((w, a, rule, n))) for n in ns) + " |")
+                L.append(f"| {a} | {rule} | " + " | ".join(
+                    "nig" if (w, a, rule, n) not in idx and (a, w, n, PRIMARY_KAPPA) in nig
+                    else txt(idx.get((w, a, rule, n))) for n in ns) + " |")
     return L
 
 
@@ -1374,7 +1435,8 @@ def markdown(out: dict) -> str:
     L = [f"# Study A EVAL tables ({v11['label']})", "",
          f"`{out['analysis']}`, spec `{out['spec_name']}`, primary kappa {out['primary_kappa']}, primary PMRT arm "
          f"{focal}; commits {', '.join(c[:9] for c in v11['commits'])}. Protocol: docs/xmethod/PROTOCOL_A.md.", ""]
-    L += _md_like(out.get("V0_like_for_like", []), arms) + [""]
+    nig = _nig_index(out)
+    L += _md_like(out.get("V0_like_for_like", []), arms, nig) + [""]
     v4 = out["V4_verdicts"]
     c1 = v4["C1"]
     L += ["## V4 claim verdicts", "", f"- **Claim: {v4['claim']}** (components {v4['components']})",
@@ -1450,10 +1512,18 @@ def markdown(out: dict) -> str:
         cells = []
         for a in arms:
             c = cnt.get((w, a))
-            cells.append("-" if not c else (f"**{c[0]}**" if c[0] else "0") + f"/{c[1]}/{c[2]}"
-                         + (f" ({c[3]}x)" if c[3] else ""))
+            cells.append(("nig" if any(x[0] == a and x[1] == w for x in nig) else "-") if not c
+                         else (f"**{c[0]}**" if c[0] else "0") + f"/{c[1]}/{c[2]}" + (f" ({c[3]}x)" if c[3] else ""))
         L.append(f"| {w} | " + " | ".join(cells) + " |")
-    L += ["", "(Nx) = planned cells not counted (missing, infeasible, T3-infeasible, untuned or < 10 seeds)."]
+    L += ["", "(Nx) = planned cells not counted (missing, infeasible, T3-infeasible, untuned or < 10 seeds); nig = "
+          "not in the arm's grid (pre-registered grid choice, R-54 / R-58: not planned, never missing / PARTIAL)."]
+    ng = out.get("not_in_grid") or {}
+    if ng.get("by_rule") or ng.get("unexplained"):
+        L += ["", "Not in grid (pre-registered grid choices):", ""]
+        L += [f"- {r['ruling']}: {', '.join(r['arms'])} ({', '.join(f'{k} {v}' for k, v in r['where'].items() if v)}"
+              f"): {r['n_cells']} cells; {r['reason']}" for r in ng.get("by_rule", [])]
+        if ng.get("unexplained"):
+            L.append(f"- UNEXPLAINED gaps ({len(ng['unexplained'])}): " + ", ".join(ng["unexplained"][:10]))
     flagged = [r for r in out["V1_validity"] if r["validity"] == "INVALID"]
     L += ["", f"INVALID cells ({len(flagged)}; first 30):"]
     for r in flagged[:30]:
@@ -1482,6 +1552,7 @@ def markdown(out: dict) -> str:
                 r = idx.get((a, w, n))
                 v.append("-" if r is None else _f(r["recall"]["mean"]) if r["recall"]
                          else "NA" if r.get("power_not_applicable") and r["state"] not in tag else tag.get(r["state"], "-"))
+            v = ["nig" if x == "-" and (a, w, n, PRIMARY_KAPPA) in nig else x for x, n in zip(v, ns, strict=True)]
             cells.append("-" if all(x == "-" for x in v) else "/".join(v))
         L.append(f"| {w} | " + " | ".join(cells) + " |")
     # V3

@@ -134,7 +134,10 @@ def dev_spec(eval_spec: dict, dev_specs: list[dict]) -> tuple[dict, list[str]]:
     focal = eval_spec.get("focal")
     out = {"name": "DEV:" + "+".join(str(s.get("name")) for s in dev_specs), "arms": arms, "blocks": blocks,
            "budget_cpu_s": eval_spec.get("budget_cpu_s"), "fmax_dependence_sha256": eval_spec.get("fmax_dependence_sha256"),
-           "protocol_sha256": eval_spec.get("protocol_sha256"), "focal": focal}
+           "protocol_sha256": eval_spec.get("protocol_sha256"), "focal": focal,
+           "not_in_grid": (eval_spec.get("not_in_grid") or []) + [   # last: gaps of the DEV runs' own scope
+               {"ruling": "DEV scope", "arms": list(arms), "regimes": None, "ns": None, "kappas": None,
+                "reason": "the DEV specs ran a subset of the EVAL grid (DEV rendering only)"}]}
     if focal not in arms:
         if "pmrt_eq" not in arms:
             raise SystemExit(f"DEV specs have neither the EVAL focal arm {focal} nor pmrt_eq")
@@ -261,6 +264,7 @@ def csv_tables(out: dict) -> dict[str, list[dict]]:
     t["cost"] = [{f: r.get(f) for f in ("arm", "world", "regime", "n", "budget", "n_runs", "cpu_s_mean", "cpu_s_max",
                                         "wall_s_mean", "wall_s_max", "peak_rss_mb_max", "gpu_s_mean", "n_infeasible",
                                         "n_errors", "t3")} for r in out["V10_cost"]]
+    t["not_in_grid"] = [{f: c.get(f) for f in (*CELL, "ruling")} for c in (out.get("not_in_grid") or {}).get("cells", [])]
     v4 = out["V4_verdicts"]
     t["eq_arms"] = [{"arm": a, **{k: x.get(k) for k in ("membership", "native", "native_c1", "verdict", "n_cells",
                                                         "n_invalid", "f_max", "r2_invalid", "r2_planned")},
@@ -392,8 +396,20 @@ def report_md(out: dict, meta: dict) -> str:
     L += [f"| {r['arm']} | {r['world']} | {r['kappa']:g} | {r['status']} | {r['validity']} | "
           f"{E._f((r['recall'] or {}).get('mean'))} |" for r in sorted(out["V9_kappa_sweep"],
                                                                      key=lambda r: (r["arm"], r["world"], r["kappa"]))]
-    # 8. files
-    L += ["", "## 8. Figure-ready CSVs", "", *mark]
+    # 8. not in grid
+    ng = out.get("not_in_grid") or {}
+    L += ["", "## 8. Not in grid (pre-registered grid choices, R-54 / R-58)", "", *mark,
+          "Cells outside an arm's grid are not planned: they never count as missing, never cap a verdict at PARTIAL "
+          "and never make a component NOT EVALUABLE; every table labels them `nig`.", "",
+          "| ruling | arms | where | cells | reason |", "|---|---|---|---|---|"]
+    L += [f"| {r['ruling']} | {', '.join(r['arms'])} | "
+          f"{'; '.join(f'{k} {v}' for k, v in r['where'].items() if v) or 'all'} | {r['n_cells']} | {r['reason']} |"
+          for r in ng.get("by_rule", [])]
+    L += ["", f"{ng.get('n_cells', 0)} cells in total; unexplained gaps: "
+          + (", ".join(ng["unexplained"][:10]) + (" ..." if len(ng["unexplained"]) > 10 else "")
+             if ng.get("unexplained") else "none") + "."]
+    # 9. files
+    L += ["", "## 9. Figure-ready CSVs", "", *mark]
     L += [f"- `{p}` (sha256 {s[:16]})" for p, s in sorted(meta["csv"].items())]
     L += ["", "## Appendix: every eval_analysis table (V0-V11)", "", *mark]
     body = E.markdown(out).split("\n", 3)[3] if "\n" in E.markdown(out) else ""

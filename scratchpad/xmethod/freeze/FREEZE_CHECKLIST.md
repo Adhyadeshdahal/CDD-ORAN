@@ -6,37 +6,47 @@ Nothing here touches an EVAL seed; EVAL needs the freeze (section C) first.
 
 ## A. EVAL launch plan
 
-Method set (25 arms): pmrt_nl_eq (primary, gbm, R-52), pmrt_eq, pmrt_r3, pc_eq / _native, granger_eq / _native,
-corr, notears, shap_dag, two_tower, cdl (R-53), mscr x3 (n 500 / 1000 only, R-54), pcorr x3, pcorr_hac / _fb (+ eq_min),
-rcot2 x3. Dropped: pdcor (R-48), cmi_knn (R-49 revised). No GPU arm.
+Method set (24 arms): pmrt_nl_eq (primary, gbm, R-52), pmrt_eq, pmrt_r3, pc_eq / _native, granger_eq / _native,
+corr, notears, shap_dag, two_tower, cdl (R-53; R1 / R2 n <= 4000, R-58(1)), mscr_eq / _native (n 500 / 1000 only,
+R-54; mscr_eq_min dropped, R-58(5)), pcorr x3, pcorr_hac / _fb (+ eq_min), rcot2 x3. Dropped: pdcor (R-48),
+cmi_knn (R-49 revised). No GPU arm.
 
-Units and cost (DEV costs; tune = DEV tune seeds re-run, R-34; E4 R3 / R4 C3 readers at S_E4 300, T9). T6 cap 60
-(R-56): S = clip(S_power, 40, 60), so only the first three rows can occur; S 70-100 are shown for reference only.
+Units and cost (R-58 grid; tune = DEV tune seeds re-run, R-34; C3 readers at S_E4 300 in E4 R3 only, E4 R4 at S,
+T9 / R-58(4)). T6 cap 60 (R-56): S = clip(S_power, 40, 60). Projection 2026-10-04: pmrt_nl_eq DEV run + T3 cost pilot,
+cdl Kaggle costs. Wall assumes full slots at 1 process per vCPU (R-55): Kaggle 4 sessions x 4 = 16 processes, Colab
+3 jobs x 2 = 6, the VPS 7 (R-57); host speed differences are ignored (T3 converts costs by the R-55 factors).
 
-| S | units | datasets | tune units | CPU-h | wall h (all slots) | Kaggle process-h | Colab process-h |
+| S | units | datasets | tune units | CPU-h | wall h: Kaggle + Colab + VPS | Kaggle + VPS | Kaggle only |
 |---|---|---|---|---|---|---|---|
-| 40 | 191 600 | 16 200 | 43 240 | 1 243 | 56.5 | 904 | 339 |
-| 50 | 209 490 | 16 750 | 43 240 | 1 381 | 62.8 | 1 004 | 377 |
-| 60 | 227 380 | 17 300 | 43 240 | 1 519 | 69.1 | 1 105 | 414 |
-| 70 | 245 270 | 17 850 | 43 240 | 1 657 | 75.3 | 1 205 | 452 |
-| 80 | 263 160 | 18 400 | 43 240 | 1 796 | 81.6 | 1 306 | 490 |
-| 90 | 281 050 | 18 950 | 43 240 | 1 934 | 87.9 | 1 406 | 527 |
-| 100 | 298 940 | 19 500 | 43 240 | 2 072 | 94.2 | 1 507 | 565 |
+| 40 | 150 960 | 11 000 | 40 520 | 509 | 17.6 | 22.1 | 31.8 |
+| 50 | 168 970 | 11 750 | 40 520 | 564 | 19.4 | 24.5 | 35.2 |
+| 60 | 186 980 | 12 500 | 40 520 | 618 | 21.3 | 26.9 | 38.6 |
 
-- By arm at S 40: cdl 574 CPU-h (46 %), pmrt_nl_eq 426 (34 %; 12 000 E4 R3 / R4 units at S_E4 300), mscr_eq_min 52,
-  mscr_eq 38, two_tower 33, shap_dag 29, pmrt_eq / pmrt_r3 24 each, the rest < 10 each. By n: 500 43, 1000 134,
-  4000 155, 8000 287, 24000 617 CPU-h; generation 7 CPU-h. Tune 312 CPU-h.
-- Cost basis (per (arm, world, regime, n) DEV mean): 10 arms results/dev/full (Kaggle); CI arms results/dev/ci_c
-  (Kaggle / Colab / Lightning); cdl: its DEV run so far (504 Colab units, n <= 4000; n 8000 / 24000 scaled by
-  training steps); pmrt_nl_eq: the R-42 gbm validity run (n <= 4000; n 8000 / 24000 extrapolated n^0.73). The DEV
-  CPU-s came from oversubscribed sessions (8 / 4 processes on 4 / 2 vCPU): an upper estimate. Re-run the script
-  when the cdl and pmrt_nl_eq DEV runs are merged.
-- Platforms (user, tonight): Kaggle at most 4 of the 5 account sessions (one stays for other workers), Colab CPU at
-  most 3 jobs, NO Lightning. R-55: 1 process per vCPU (Kaggle 4, Colab 2), so 22 concurrent processes; wall =
-  process-h / 22, assuming full slots. Add setup (~10-15 min per session) and Colab reclaims: S 40 ~2.5-3 days.
+- R-58 expected ~360-450 CPU-h and ~17-22 h on Kaggle + VPS; the measured pmrt_nl_eq cost (pilot: E2 ~480 / ~1 100
+  CPU-s per dataset at n 8000 / 24000) puts S 40 at ~510 CPU-h, ~22 h on Kaggle + VPS. Add ~10-15 % for setup
+  (~10-15 min per session, sessions <= 11 h) and error re-runs: S 40 ~1 day on Kaggle + VPS (~1.5 days Kaggle
+  alone); S 60 ~1.3 / ~1.8 days. Colab may be unavailable (it refused runtimes overnight).
+- EVAL interpreter: exactly Python 3.12.14 on every platform (R-57; campaign `EVAL_PYTHON`, pin_check refuses any
+  other patch release). The VPS was upgraded to match; it needs its own R-55 calibration (host type 'vps' + CPU
+  model) before its records count for T3, and the dispatcher needs a VPS target (owner dev-runs).
+- By arm at S 40: pmrt_nl_eq 312 CPU-h (61 %), two_tower 33, shap_dag 29, cdl 29, pmrt_eq / pmrt_r3 24 each, the
+  rest smaller. By n: 500 34, 1000 68, 4000 113, 8000 82, 24000 207 CPU-h. Tune 122 CPU-h, measure 382.
+- Cost basis (per (arm, world, regime, n) mean CPU-s):
+  - 10 arms: results/dev/full (Kaggle). CI arms: results/dev/ci_c (Kaggle / Colab / Lightning; oversubscribed
+    sessions, an upper estimate).
+  - pmrt_nl_eq: results/dev/pmrt_nl (E1 / E2 / E3 / E5 R1 / R2, n <= 4000) + the T3 cost pilot
+    (`freeze/pmrt_nl_cost_pilot.json`: E2 R1 / R2 and E4 R3 at n 8000 / 24000, Kaggle, 1 process per vCPU). Other
+    worlds at n 8000 / 24000 = their n 4000 cost x the E2 growth (x1.85 / x4.24). Cells with no cost at all (E4 R1 /
+    R2 / R4, E4 R3 n <= 4000) = the per-n mean x pmrt_eq's per-cell / per-n ratio (`--proxy`).
+  - cdl: Kaggle CPU-s per n 17 / 34 / 121 (n <= 4000, R-58(1)).
+- Command: `eval_projection.py --dev <xm-pmrt results/dev> --extra-agg pmrt_nl/agg.json --pilot
+  scratchpad/xmethod/freeze/pmrt_nl_cost_pilot.json --cdl-kaggle 17,34,121,232,487 --proxy pmrt_nl_eq=pmrt_eq
+  --vps-procs 7 --out scratchpad/xmethod/freeze/eval_projection.json`.
+- Platforms (user): Kaggle at most 4 of the 5 account sessions (one stays for other workers), the VPS (7 processes,
+  R-57), Colab CPU at most 3 jobs if available, NO Lightning.
 - Parts: whole-dataset groups, LPT on the cost table (`campaign.partition`, `--cost-table` from the projection
   basis). Proposed part size ~2.5 process-h, so one part fits a Colab job (wall 3 h) and a Kaggle session runs 4
-  lanes x 4 parts in sequence (~10 h < 11 h timeout): S 40 ~500 parts, S 60 ~610. This needs a lane option in
+  lanes x 4 parts in sequence (~10 h < 11 h timeout): S 40 ~200 parts, S 60 ~250. This needs a lane option in
   `campaign._cloud_cmd` (today all parts of a chunk start at once); without it, Kaggle 4 parts per session.
 - Order: (1) R-55 calibration block, owned and run by xm-citests (`scratchpad/xmethod/exp_c_timing.py calib`: 6
   anchors x n 500 / 1000 / 4000 (mscr <= 1000), E2 R2, DEV seeds 3_000_000-002 = 3 repeats; Kaggle + each Colab CPU
@@ -52,15 +62,21 @@ Units and cost (DEV costs; tune = DEV tune seeds re-run, R-34; E4 R3 / R4 C3 rea
 ## B. Gating inputs (all must be in before the freeze)
 
 1. pmrt_nl_eq DEV run on the T1 cells (R-43; Kaggle xm-dev-pmrtnl-k1) merged into results/dev/.
-2. cdl full DEV run (R-51) merged; its report = T5, its max cost at n 8000 / 24000 = T3.
+2. cdl DEV run at n <= 4000 (R-51, R-58(7)) merged; its report = T5; the parts at n > 4000 do not gate the freeze
+   (descriptive).
 3. aud1's power calculation (T1) on the T1 input incl. both runs -> S = clip(S_power, 40, 60) (T6 cap 60, R-56);
    if S_power > 60, the achieved power at 60 is reported (`t1` output `min_power_at_S`).
-4. T3 cost pilot for pmrt_nl_eq at n 8000 / 24000 (no DEV cost there; DEV seeds 3_000_000-002, 3 costliest
-   (world, regime); est. max ~1 000 CPU-s at n 24000).
-5. R-55 calibration block (xm-citests) run on Kaggle and on each Colab CPU model -> f and e by host type (T3).
-6. campaign.py (xm/dev-runs) R-55 changes, audited: per-record CPU model (/proc/cpuinfo), loadavg, concurrent
-   processes; 1 process per vCPU in the launchers; the lane option (A). Tests pass.
-7. Questions: Q1-Q4 answered (R-55 details by the orchestrator, R-56); none open.
+4. DONE: T3 cost pilot for pmrt_nl_eq at n 8000 / 24000 (dev-runs, Kaggle xm-dev-cdl-p1-040214 / -p2-040523):
+   max 1148 CPU-s (E2 R1 n 24000), E4 R3 n 24000 ~100: feasible; R-58(3) fallback not triggered (user). Records
+   merged on xm/dev-runs dea0091 (results/dev/pmrt_nl_cost/merged_{e2,e4r3}.jsonl.gz; sha in FREEZE_NOTE, T3).
+5. R-55 calibration block (xm-citests) run on Kaggle, on each Colab CPU model and on the VPS (R-57) -> f and e
+   by host type (T3).
+6. campaign.py (xm/dev-runs) R-55 / R-57 changes, audited: EVAL_PYTHON = "3.12.14" with pin_check on the patch
+   release; per-record CPU model (/proc/cpuinfo), loadavg, concurrent processes; 1 process per vCPU in the launchers
+   (VPS 7); the lane option (A); a VPS target in the dispatcher. Tests pass.
+7. Spec generated by `freeze/r58_spec.py` (R-58; `--e4r3-fallback` only if R-58(3) is ever triggered, then
+   re-simulate the C3 F_max and T9 on 16 cells).
+8. Open questions in `status/r58-trim.md`.
 
 ## C. Freeze steps (in order, on feat/v2 after merging xm/freeze-prep)
 
