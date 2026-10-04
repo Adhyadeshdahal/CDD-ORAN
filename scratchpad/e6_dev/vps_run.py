@@ -241,7 +241,7 @@ cd {jd}/b
 [ -x {pyx} ] || {{ echo "missing {pyx}: run setup"; exit 3; }}
 if [ ! -f {vd}/.complete ]; then
   rm -rf {vd}
-  uv venv --python {pyx} {vd}
+  uv venv --managed-python --python {PYTHON} {vd}      # patch request: uv pins home to the exact patch dir
   nice -n 19 ionice -c3 uv pip install --python {vd}/bin/python --require-hashes --no-deps -r {lock_install}
   {torch}
   touch {vd}/.complete
@@ -249,6 +249,8 @@ fi
 ln -sfn {vd} {jd}/venv
 v=$(py --version 2>&1); echo "$v"; [ "$v" = "Python {PYTHON}" ] || {{ echo "interpreter mismatch: $v != {PYTHON}"; exit 4; }}
 grep '^home' {vd}/pyvenv.cfg
+grep -q '^home = {BASE}/python/cpython-{PYTHON}-' {vd}/pyvenv.cfg || {{ echo "venv home is not the {PYTHON} patch dir \
+(floating minor link?)"; exit 5; }}
 {f"PYTHONPATH=. py {pincheck_cmd} > {jd}/out/pin_check.json 2>&1; cat {jd}/out/pin_check.json" if pincheck_cmd else ""}
 du -sh {vd}
 """, timeout=3600))

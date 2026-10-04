@@ -1,0 +1,34 @@
+{
+ "version": "xm-exp-c-timing/1",
+ "block": "calib",
+ "procs": 2,
+ "cpu_quota": 2,
+ "units": 51,
+ "wall_s": 3616.2878460884094,
+ "rcs": [
+  0,
+  0
+ ],
+ "host": {
+  "platform": "colab",
+  "cpu_model": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+  "cpu_count": 2,
+  "cpu_quota": 2,
+  "node": "7819acb4822f",
+  "gpu": null,
+  "cpu_ident": {
+   "cpu family": "6",
+   "model": "79",
+   "stepping": "0",
+   "microcode": "0xffffffff",
+   "cache size": "56320 KB",
+   "flags_sha": "2d0d923561df",
+   "avx512f": false,
+   "amx": false
+  }
+ },
+ "est_cost_s_per_proc": [
+  2114.555869659375,
+  2114.4389252629758
+ ]
+}

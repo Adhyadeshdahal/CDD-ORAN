@@ -1,0 +1,28 @@
+{
+ "version": "xm-exp-c-timing/1",
+ "block": "calib",
+ "procs": 4,
+ "cpu_quota": 4,
+ "units": 51,
+ "wall_s": 1634.3835351467133,
+ "rcs": [
+  0,
+  0,
+  0,
+  0
+ ],
+ "host": {
+  "platform": "kaggle",
+  "cpu_model": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+  "cpu_count": 4,
+  "cpu_quota": 4,
+  "node": "d396361b4039",
+  "gpu": null
+ },
+ "est_cost_s_per_proc": [
+  1057.2189153835905,
+  1057.3369542757846,
+  1057.1985260087004,
+  1057.2403992542754
+ ]
+}

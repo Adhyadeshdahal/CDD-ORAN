@@ -1,0 +1,1666 @@
+{
+ "version": "xm-exp-c/1",
+ "generated_utc": "2026-10-04T00:40:32Z",
+ "ref_host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+ "budget_cpu_s": 7200.0,
+ "n_grid": [
+  500,
+  1000,
+  4000,
+  8000,
+  24000
+ ],
+ "inputs": {
+  "files": [
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-k1\\res_0.jsonl",
+    "sha256": "92c1e925da73b0e2ef062fdb865cf626919f4bad5810c2fbd49fd0e18a5bf117",
+    "lines": 14
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-k1\\res_1.jsonl",
+    "sha256": "cea993e5795b83dcd1afa701fb919f64c3c429a166104881d52ce2bed08edb90",
+    "lines": 13
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-k1\\res_2.jsonl",
+    "sha256": "07281ac2d830a5100302a75da209523053f407bbd9b8a65affbd9f8bb728d3a9",
+    "lines": 12
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-k1\\res_3.jsonl",
+    "sha256": "b837329a52f6e6aca0c19520de534c47449cbc4345bb344290b5544f9c5a7371",
+    "lines": 12
+   }
+  ],
+  "lines": 51,
+  "duplicates": 0,
+  "conflicts": 0
+ },
+ "spec_names": [
+  "exp_c_calib"
+ ],
+ "commits": [
+  "cbfbdad8e77a9e82f498e5382f664aca05137429"
+ ],
+ "hosts": [
+  {
+   "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+   "n_units": 51
+  }
+ ],
+ "factors": [],
+ "observational_factors_all": [],
+ "table": [
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 34.21858472633335,
+    "median": 35.131436570999995,
+    "min": 29.599770857000067,
+    "max": 37.92454675099998
+   },
+   "cost_raw": {
+    "mean": 34.21858472633335,
+    "median": 35.131436570999995,
+    "min": 29.599770857000067,
+    "max": 37.92454675099998
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n500|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 37.92454675099998
+   },
+   "cost_ref_hi_max": 37.92454675099998,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 34.21858472633335,
+     "median": 35.131436570999995,
+     "min": 29.599770857000067,
+     "max": 37.92454675099998
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 0.75
+   },
+   "peak_rss_mb": {
+    "median": 506.140625,
+    "max": 506.796875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 34.29114781366669,
+   "gen_cpu_s_mean": 0.016160986333261462,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0020328932710576,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 37.92454675099998,
+    "budget_share": 0.005267298159861108,
+    "max_cost_hi": 37.92454675099998,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 66.94014122033325,
+    "median": 65.87319675799995,
+    "min": 64.37451756999985,
+    "max": 70.57270933299992
+   },
+   "cost_raw": {
+    "mean": 66.94014122033325,
+    "median": 65.87319675799995,
+    "min": 64.37451756999985,
+    "max": 70.57270933299992
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n1000|s3000001",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 70.57270933299992
+   },
+   "cost_ref_hi_max": 70.57270933299992,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 66.94014122033325,
+     "median": 65.87319675799995,
+     "min": 64.37451756999985,
+     "max": 70.57270933299992
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 0.75
+   },
+   "peak_rss_mb": {
+    "median": 506.0546875,
+    "max": 506.70703125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 67.08969055499999,
+   "gen_cpu_s_mean": 0.02475500699991547,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.002156644522204,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 70.57270933299992,
+    "budget_share": 0.009801765185138879,
+    "max_cost_hi": 70.57270933299992,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 408.68101416666667,
+    "median": 413.347409462,
+    "min": 398.040726326,
+    "max": 414.65490671200007
+   },
+   "cost_raw": {
+    "mean": 408.68101416666667,
+    "median": 413.347409462,
+    "min": 398.040726326,
+    "max": 414.65490671200007
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n4000|s3000002",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 414.65490671200007
+   },
+   "cost_ref_hi_max": 414.65490671200007,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 408.68101416666667,
+     "median": 413.347409462,
+     "min": 398.040726326,
+     "max": 414.65490671200007
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 388.16015625,
+    "max": 388.9375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 412.5736834943334,
+   "gen_cpu_s_mean": 0.1372856096666434,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0093223304411552,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 414.65490671200007,
+    "budget_share": 0.05759095926555557,
+    "max_cost_hi": 414.65490671200007,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "mscr_eq_min",
+   "method": "mscr",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 357.444031328,
+    "median": 362.96596297900004,
+    "min": 345.78348046400004,
+    "max": 363.58265054099996
+   },
+   "cost_raw": {
+    "mean": 357.444031328,
+    "median": 362.96596297900004,
+    "min": 345.78348046400004,
+    "max": 363.58265054099996
+   },
+   "max_unit": {
+    "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000001",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 363.58265054099996
+   },
+   "cost_ref_hi_max": 363.58265054099996,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 357.444031328,
+     "median": 362.96596297900004,
+     "min": 345.78348046400004,
+     "max": 363.58265054099996
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 100.61328125,
+    "max": 100.6796875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 361.1117897723334,
+   "gen_cpu_s_mean": 0.02731703699999714,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0098957186671214,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 363.58265054099996,
+    "budget_share": 0.05049759035291666,
+    "max_cost_hi": 363.58265054099996,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "mscr_eq_min",
+   "method": "mscr",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 781.1991371119999,
+    "median": 780.428003511,
+    "min": 778.792105397,
+    "max": 784.377302428
+   },
+   "cost_raw": {
+    "mean": 781.1991371119999,
+    "median": 780.428003511,
+    "min": 778.792105397,
+    "max": 784.377302428
+   },
+   "max_unit": {
+    "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 784.377302428
+   },
+   "cost_ref_hi_max": 784.377302428,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 781.1991371119999,
+     "median": 780.428003511,
+     "min": 778.792105397,
+     "max": 784.377302428
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 100.859375,
+    "max": 102.1875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 789.23959695,
+   "gen_cpu_s_mean": 0.05358742499999999,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.010307613086168,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 784.377302428,
+    "budget_share": 0.10894129200388888,
+    "max_cost_hi": 784.377302428,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 0.07774362766667764,
+    "median": 0.07765243800008648,
+    "min": 0.076644688999977,
+    "max": 0.07893375599996943
+   },
+   "cost_raw": {
+    "mean": 0.07774362766667764,
+    "median": 0.07765243800008648,
+    "min": 0.076644688999977,
+    "max": 0.07893375599996943
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n500|s3000001",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 0.07893375599996943
+   },
+   "cost_ref_hi_max": 0.07893375599996943,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.07774362766667764,
+     "median": 0.07765243800008648,
+     "min": 0.076644688999977,
+     "max": 0.07893375599996943
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.25,
+    "max": 0.5
+   },
+   "peak_rss_mb": {
+    "median": 639.28125,
+    "max": 640.328125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.07779459999998532,
+   "gen_cpu_s_mean": 0.009755485666649596,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0007980489364865,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.07893375599996943,
+    "budget_share": 1.0963021666662422e-05,
+    "max_cost_hi": 0.07893375599996943,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 0.11881918433338494,
+    "median": 0.11887307699998928,
+    "min": 0.11851794700010032,
+    "max": 0.1190665290000652
+   },
+   "cost_raw": {
+    "mean": 0.11881918433338494,
+    "median": 0.11887307699998928,
+    "min": 0.11851794700010032,
+    "max": 0.1190665290000652
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 0.1190665290000652
+   },
+   "cost_ref_hi_max": 0.1190665290000652,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.11881918433338494,
+     "median": 0.11887307699998928,
+     "min": 0.11851794700010032,
+     "max": 0.1190665290000652
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 0.75
+   },
+   "peak_rss_mb": {
+    "median": 635.21484375,
+    "max": 635.21484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.11884493066660677,
+   "gen_cpu_s_mean": 0.01786430866665493,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0001966551259882,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.1190665290000652,
+    "budget_share": 1.6537017916675723e-05,
+    "max_cost_hi": 0.1190665290000652,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 0.5051574769999357,
+    "median": 0.5522304869998607,
+    "min": 0.4085834589998285,
+    "max": 0.5546584850001182
+   },
+   "cost_raw": {
+    "mean": 0.5051574769999357,
+    "median": 0.5522304869998607,
+    "min": 0.4085834589998285,
+    "max": 0.5546584850001182
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000002",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 0.5546584850001182
+   },
+   "cost_ref_hi_max": 0.5546584850001182,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.5051574769999357,
+     "median": 0.5522304869998607,
+     "min": 0.4085834589998285,
+     "max": 0.5546584850001182
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 553.69140625,
+    "max": 635.21484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.5055912793332785,
+   "gen_cpu_s_mean": 0.10618644133319322,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.000471055123048,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.5546584850001182,
+    "budget_share": 7.703590069446085e-05,
+    "max_cost_hi": 0.5546584850001182,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 40.938342869333304,
+    "median": 43.211282127000004,
+    "min": 31.42188367499989,
+    "max": 48.18186280600003
+   },
+   "cost_raw": {
+    "mean": 40.938342869333304,
+    "median": 43.211282127000004,
+    "min": 31.42188367499989,
+    "max": 48.18186280600003
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000001",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 48.18186280600003
+   },
+   "cost_ref_hi_max": 48.18186280600003,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 40.938342869333304,
+     "median": 43.211282127000004,
+     "min": 31.42188367499989,
+     "max": 48.18186280600003
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 520.53125,
+    "max": 654.31640625,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 41.129686121,
+   "gen_cpu_s_mean": 0.016642634333417543,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0026066133300315,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 48.18186280600003,
+    "budget_share": 0.006691925389722226,
+    "max_cost_hi": 48.18186280600003,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 65.047762315,
+    "median": 67.00790414799985,
+    "min": 57.15891680100003,
+    "max": 70.97646599600012
+   },
+   "cost_raw": {
+    "mean": 65.047762315,
+    "median": 67.00790414799985,
+    "min": 57.15891680100003,
+    "max": 70.97646599600012
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000002",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 70.97646599600012
+   },
+   "cost_ref_hi_max": 70.97646599600012,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 65.047762315,
+     "median": 67.00790414799985,
+     "min": 57.15891680100003,
+     "max": 70.97646599600012
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 0.75
+   },
+   "peak_rss_mb": {
+    "median": 557.98828125,
+    "max": 558.609375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 65.18186186666655,
+   "gen_cpu_s_mean": 0.032513961999939056,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0020496995160044,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 70.97646599600012,
+    "budget_share": 0.00985784249944446,
+    "max_cost_hi": 70.97646599600012,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 207.10161879133338,
+    "median": 205.89209593200007,
+    "min": 192.304570259,
+    "max": 223.10819018300003
+   },
+   "cost_raw": {
+    "mean": 207.10161879133338,
+    "median": 205.89209593200007,
+    "min": 192.304570259,
+    "max": 223.10819018300003
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000001",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 223.10819018300003
+   },
+   "cost_ref_hi_max": 223.10819018300003,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 207.10161879133338,
+     "median": 205.89209593200007,
+     "min": 192.304570259,
+     "max": 223.10819018300003
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 600.73828125,
+    "max": 601.35546875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 207.56166871000005,
+   "gen_cpu_s_mean": 0.10399502533330936,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.002021622847946,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 223.10819018300003,
+    "budget_share": 0.030987248636527784,
+    "max_cost_hi": 223.10819018300003,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 1.0503845993333318,
+    "median": 0.9086984329999268,
+    "min": 0.8686150610001278,
+    "max": 1.3738403039999412
+   },
+   "cost_raw": {
+    "mean": 1.0503845993333318,
+    "median": 0.9086984329999268,
+    "min": 0.8686150610001278,
+    "max": 1.3738403039999412
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n500|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 1.3738403039999412
+   },
+   "cost_ref_hi_max": 1.3738403039999412,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 1.0503845993333318,
+     "median": 0.9086984329999268,
+     "min": 0.8686150610001278,
+     "max": 1.3738403039999412
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 639.04296875,
+    "max": 640.1328125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 1.051367831333285,
+   "gen_cpu_s_mean": 0.013226852333370212,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0004022533622938,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 1.3738403039999412,
+    "budget_share": 0.00019081115333332516,
+    "max_cost_hi": 1.3738403039999412,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 1.7838727863333286,
+    "median": 1.766295479000064,
+    "min": 1.766181811000024,
+    "max": 1.8191410689998975
+   },
+   "cost_raw": {
+    "mean": 1.7838727863333286,
+    "median": 1.766295479000064,
+    "min": 1.766181811000024,
+    "max": 1.8191410689998975
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 1.8191410689998975
+   },
+   "cost_ref_hi_max": 1.8191410689998975,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 1.7838727863333286,
+     "median": 1.766295479000064,
+     "min": 1.766181811000024,
+     "max": 1.8191410689998975
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.75,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 634.96875,
+    "max": 634.96875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 1.78762706766679,
+   "gen_cpu_s_mean": 0.032987651333314716,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0017355657852773,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 1.8191410689998975,
+    "budget_share": 0.0002526584818055413,
+    "max_cost_hi": 1.8191410689998975,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 3.3185549073333127,
+    "median": 2.887370359999977,
+    "min": 2.8184369040000092,
+    "max": 4.249857457999951
+   },
+   "cost_raw": {
+    "mean": 3.3185549073333127,
+    "median": 2.887370359999977,
+    "min": 2.8184369040000092,
+    "max": 4.249857457999951
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000002",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 4.249857457999951
+   },
+   "cost_ref_hi_max": 4.249857457999951,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 3.3185549073333127,
+     "median": 2.887370359999977,
+     "min": 2.8184369040000092,
+     "max": 4.249857457999951
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5,
+    "max": 0.75
+   },
+   "peak_rss_mb": {
+    "median": 639.02734375,
+    "max": 640.08203125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 3.3220159773333457,
+   "gen_cpu_s_mean": 0.08576948966674536,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.000386428022704,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 4.249857457999951,
+    "budget_share": 0.000590257980277771,
+    "max_cost_hi": 4.249857457999951,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 2.7789459606666846,
+    "median": 2.2163774670000294,
+    "min": 2.154190731999961,
+    "max": 3.966269683000064
+   },
+   "cost_raw": {
+    "mean": 2.7789459606666846,
+    "median": 2.2163774670000294,
+    "min": 2.154190731999961,
+    "max": 3.966269683000064
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n500|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 3.966269683000064
+   },
+   "cost_ref_hi_max": 3.966269683000064,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 2.7789459606666846,
+     "median": 2.2163774670000294,
+     "min": 2.154190731999961,
+     "max": 3.966269683000064
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 639.04296875,
+    "max": 640.1328125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 2.8014862479999465,
+   "gen_cpu_s_mean": 0.01303739500000726,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0007948381610783,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 3.966269683000064,
+    "budget_share": 0.0005508707893055644,
+    "max_cost_hi": 3.966269683000064,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 4.5118320413333395,
+    "median": 3.633587436000198,
+    "min": 3.60725735799997,
+    "max": 6.294651329999851
+   },
+   "cost_raw": {
+    "mean": 4.5118320413333395,
+    "median": 3.633587436000198,
+    "min": 3.60725735799997,
+    "max": 6.294651329999851
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n1000|s3000002",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 6.294651329999851
+   },
+   "cost_ref_hi_max": 6.294651329999851,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 4.5118320413333395,
+     "median": 3.633587436000198,
+     "min": 3.60725735799997,
+     "max": 6.294651329999851
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 628.796875,
+    "max": 630.45703125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 4.532364346666706,
+   "gen_cpu_s_mean": 0.023686572000087835,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0006652098077642,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 6.294651329999851,
+    "budget_share": 0.000874257129166646,
+    "max_cost_hi": 6.294651329999851,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 0.0,
+   "hosts": {
+    "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [],
+   "cost_ref": {
+    "mean": 21.024574377333312,
+    "median": 22.006535907999933,
+    "min": 18.77908534800008,
+    "max": 22.288101875999928
+   },
+   "cost_raw": {
+    "mean": 21.024574377333312,
+    "median": 22.006535907999933,
+    "min": 18.77908534800008,
+    "max": 22.288101875999928
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n4000|s3000000",
+    "host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "cost_raw": 22.288101875999928
+   },
+   "cost_ref_hi_max": 22.288101875999928,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 21.024574377333312,
+     "median": 22.006535907999933,
+     "min": 18.77908534800008,
+     "max": 22.288101875999928
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 340.90625,
+    "max": 623.43359375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 21.18951136433331,
+   "gen_cpu_s_mean": 0.13772247633338944,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.007827190781874,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 22.288101875999928,
+    "budget_share": 0.00309556970499999,
+    "max_cost_hi": 22.288101875999928,
+    "provisional": false
+   }
+  }
+ ],
+ "feasibility": {
+  "cdl": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 37.92454675099998,
+     "budget_share": 0.005267298159861108,
+     "max_cost_hi": 37.92454675099998,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 70.57270933299992,
+     "budget_share": 0.009801765185138879,
+     "max_cost_hi": 70.57270933299992,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 414.65490671200007,
+     "budget_share": 0.05759095926555557,
+     "max_cost_hi": 414.65490671200007,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "mscr_eq_min": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 363.58265054099996,
+     "budget_share": 0.05049759035291666,
+     "max_cost_hi": 363.58265054099996,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 784.377302428,
+     "budget_share": 0.10894129200388888,
+     "max_cost_hi": 784.377302428,
+     "provisional": false
+    },
+    "4000": {
+     "status": "no DEV cost"
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "pcorr_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 0.07893375599996943,
+     "budget_share": 1.0963021666662422e-05,
+     "max_cost_hi": 0.07893375599996943,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 0.1190665290000652,
+     "budget_share": 1.6537017916675723e-05,
+     "max_cost_hi": 0.1190665290000652,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 0.5546584850001182,
+     "budget_share": 7.703590069446085e-05,
+     "max_cost_hi": 0.5546584850001182,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "pmrt_nl_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 48.18186280600003,
+     "budget_share": 0.006691925389722226,
+     "max_cost_hi": 48.18186280600003,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 70.97646599600012,
+     "budget_share": 0.00985784249944446,
+     "max_cost_hi": 70.97646599600012,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 223.10819018300003,
+     "budget_share": 0.030987248636527784,
+     "max_cost_hi": 223.10819018300003,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "rcot2_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 1.3738403039999412,
+     "budget_share": 0.00019081115333332516,
+     "max_cost_hi": 1.3738403039999412,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 1.8191410689998975,
+     "budget_share": 0.0002526584818055413,
+     "max_cost_hi": 1.8191410689998975,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 4.249857457999951,
+     "budget_share": 0.000590257980277771,
+     "max_cost_hi": 4.249857457999951,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "shap_dag": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 3.966269683000064,
+     "budget_share": 0.0005508707893055644,
+     "max_cost_hi": 3.966269683000064,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 6.294651329999851,
+     "budget_share": 0.000874257129166646,
+     "max_cost_hi": 6.294651329999851,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 22.288101875999928,
+     "budget_share": 0.00309556970499999,
+     "max_cost_hi": 22.288101875999928,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  }
+ },
+ "by_world_regime": [
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 34.21858472633335,
+   "median": 35.131436570999995,
+   "min": 29.599770857000067,
+   "max": 37.92454675099998
+  },
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 66.94014122033325,
+   "median": 65.87319675799995,
+   "min": 64.37451756999985,
+   "max": 70.57270933299992
+  },
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 408.68101416666667,
+   "median": 413.347409462,
+   "min": 398.040726326,
+   "max": 414.65490671200007
+  },
+  {
+   "arm": "mscr_eq_min",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 357.444031328,
+   "median": 362.96596297900004,
+   "min": 345.78348046400004,
+   "max": 363.58265054099996
+  },
+  {
+   "arm": "mscr_eq_min",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 781.1991371119999,
+   "median": 780.428003511,
+   "min": 778.792105397,
+   "max": 784.377302428
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 0.07774362766667764,
+   "median": 0.07765243800008648,
+   "min": 0.076644688999977,
+   "max": 0.07893375599996943
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 0.11881918433338494,
+   "median": 0.11887307699998928,
+   "min": 0.11851794700010032,
+   "max": 0.1190665290000652
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 0.5051574769999357,
+   "median": 0.5522304869998607,
+   "min": 0.4085834589998285,
+   "max": 0.5546584850001182
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 40.938342869333304,
+   "median": 43.211282127000004,
+   "min": 31.42188367499989,
+   "max": 48.18186280600003
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 65.047762315,
+   "median": 67.00790414799985,
+   "min": 57.15891680100003,
+   "max": 70.97646599600012
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 207.10161879133338,
+   "median": 205.89209593200007,
+   "min": 192.304570259,
+   "max": 223.10819018300003
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 1.0503845993333318,
+   "median": 0.9086984329999268,
+   "min": 0.8686150610001278,
+   "max": 1.3738403039999412
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 1.7838727863333286,
+   "median": 1.766295479000064,
+   "min": 1.766181811000024,
+   "max": 1.8191410689998975
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 3.3185549073333127,
+   "median": 2.887370359999977,
+   "min": 2.8184369040000092,
+   "max": 4.249857457999951
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 2.7789459606666846,
+   "median": 2.2163774670000294,
+   "min": 2.154190731999961,
+   "max": 3.966269683000064
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 4.5118320413333395,
+   "median": 3.633587436000198,
+   "min": 3.60725735799997,
+   "max": 6.294651329999851
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 21.024574377333312,
+   "median": 22.006535907999933,
+   "min": 18.77908534800008,
+   "max": 22.288101875999928
+  }
+ ],
+ "spec_t3_fields": {}
+}

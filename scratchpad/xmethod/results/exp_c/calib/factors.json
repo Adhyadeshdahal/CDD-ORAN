@@ -1,0 +1,1348 @@
+{
+ "version": "xm-exp-c/1",
+ "ref_host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+ "source": "r55_calibration_block",
+ "factors": {
+  "cdl": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 1.0478856009362179,
+    "f_lo": 0.802401208811989,
+    "f_hi": 1.078213203806936,
+    "f_by_n": {
+     "500": 0.802401208811989,
+     "1000": 1.032059422611716,
+     "4000": 1.078213203806936
+    },
+    "f_by_session": {
+     "7819acb4822f": 1.0237381010714122,
+     "910473e3c88c": 1.073199781938315
+    },
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 413.347409462,
+      "host_cost": 373.1336563295,
+      "host_costs": {
+       "910473e3c88c": 365.2252803860001,
+       "7819acb4822f": 381.0420322729999
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 65.87319675799995,
+      "host_cost": 57.31058272249993,
+      "host_costs": {
+       "910473e3c88c": 57.03894557700005,
+       "7819acb4822f": 57.58221986799981
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 398.040726326,
+      "host_cost": 391.89097624349995,
+      "host_costs": {
+       "910473e3c88c": 376.49415470899976,
+       "7819acb4822f": 407.28779777800014
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 70.57270933299992,
+      "host_cost": 57.45871579850018,
+      "host_costs": {
+       "910473e3c88c": 56.67113694599993,
+       "7819acb4822f": 58.246294651000426
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 37.92454675099998,
+      "host_cost": 47.31696609549999,
+      "host_costs": {
+       "910473e3c88c": 46.94725070499999,
+       "7819acb4822f": 47.686681486
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 35.131436570999995,
+      "host_cost": 47.37887823349979,
+      "host_costs": {
+       "910473e3c88c": 46.80211793299986,
+       "7819acb4822f": 47.95563853399972
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 414.65490671200007,
+      "host_cost": 372.08168199550005,
+      "host_costs": {
+       "910473e3c88c": 363.6434425389998,
+       "7819acb4822f": 380.5199214520003
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 64.37451756999985,
+      "host_cost": 79.81293120449982,
+      "host_costs": {
+       "910473e3c88c": 79.11012501799996,
+       "7819acb4822f": 80.51573739099967
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 29.599770857000067,
+      "host_cost": 33.239848004999885,
+      "host_costs": {
+       "910473e3c88c": 33.26278576999994,
+       "7819acb4822f": 33.216910239999834
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 2.3072967058842684,
+    "f_lo": 1.7155235900845882,
+    "f_hi": 2.5094946075975475,
+    "f_by_n": {
+     "500": 1.7920853808889918,
+     "1000": 1.7155235900845882,
+     "4000": 2.5094946075975475
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 413.347409462,
+      "host_cost": 164.67631853,
+      "host_costs": {
+       "bishal": 164.67631853
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 65.87319675799995,
+      "host_cost": 38.442529871999966,
+      "host_costs": {
+       "bishal": 38.442529871999966
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 398.040726326,
+      "host_cost": 165.10414561,
+      "host_costs": {
+       "bishal": 165.10414561
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 70.57270933299992,
+      "host_cost": 39.346936212999935,
+      "host_costs": {
+       "bishal": 39.346936212999935
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 37.92454675099998,
+      "host_cost": 18.95755391999998,
+      "host_costs": {
+       "bishal": 18.95755391999998
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 35.131436570999995,
+      "host_cost": 19.261539339000024,
+      "host_costs": {
+       "bishal": 19.261539339000024
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 414.65490671200007,
+      "host_cost": 158.781272071,
+      "host_costs": {
+       "bishal": 158.781272071
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 64.37451756999985,
+      "host_cost": 39.271252183,
+      "host_costs": {
+       "bishal": 39.271252183
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "cdl|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 29.599770857000067,
+      "host_cost": 19.06375457499999,
+      "host_costs": {
+       "bishal": 19.06375457499999
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "mscr_eq_min": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 1.1035137976774125,
+    "f_lo": 1.0955185956155826,
+    "f_hi": 1.107211112405782,
+    "f_by_n": {
+     "500": 1.0955185956155826,
+     "1000": 1.107211112405782
+    },
+    "f_by_session": {
+     "7819acb4822f": 1.1006629183087784,
+     "910473e3c88c": 1.1063794837941712
+    },
+    "source": "r55_calibration_block",
+    "n_units": 6,
+    "n_same_dataset": 6,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 784.377302428,
+      "host_cost": 706.6649097315,
+      "host_costs": {
+       "910473e3c88c": 706.195556866,
+       "7819acb4822f": 707.134262597
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 778.792105397,
+      "host_cost": 707.8134160685,
+      "host_costs": {
+       "910473e3c88c": 707.451309554,
+       "7819acb4822f": 708.1755225830001
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 780.428003511,
+      "host_cost": 702.188843701,
+      "host_costs": {
+       "910473e3c88c": 699.8375201529999,
+       "7819acb4822f": 704.540167249
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 362.96596297900004,
+      "host_cost": 331.62787922699994,
+      "host_costs": {
+       "910473e3c88c": 330.3382981389999,
+       "7819acb4822f": 332.91746031499997
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 363.58265054099996,
+      "host_cost": 328.71439156149995,
+      "host_costs": {
+       "910473e3c88c": 328.40778449000004,
+       "7819acb4822f": 329.02099863299986
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 345.78348046400004,
+      "host_cost": 318.4928656259999,
+      "host_costs": {
+       "910473e3c88c": 315.25402897899994,
+       "7819acb4822f": 321.7317022729999
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 2.8095614901146426,
+    "f_lo": 2.7451829616726893,
+    "f_hi": 2.840036224197883,
+    "f_by_n": {
+     "500": 2.7451829616726893,
+     "1000": 2.840036224197883
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 6,
+    "n_same_dataset": 6,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 784.377302428,
+      "host_cost": 272.90504553100004,
+      "host_costs": {
+       "bishal": 272.90504553100004
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 778.792105397,
+      "host_cost": 276.687971838,
+      "host_costs": {
+       "bishal": 276.687971838
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 780.428003511,
+      "host_cost": 275.606813312,
+      "host_costs": {
+       "bishal": 275.606813312
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 362.96596297900004,
+      "host_cost": 130.10228618000002,
+      "host_costs": {
+       "bishal": 130.10228618000002
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 363.58265054099996,
+      "host_cost": 130.215266049,
+      "host_costs": {
+       "bishal": 130.215266049
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 345.78348046400004,
+      "host_cost": 130.305626246,
+      "host_costs": {
+       "bishal": 130.305626246
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "pcorr_eq": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 0.9595697476014761,
+    "f_lo": 0.8153679905723826,
+    "f_hi": 0.9928904146153387,
+    "f_by_n": {
+     "500": 0.8153679905723826,
+     "1000": 0.9928904146153387,
+     "4000": 0.9784782252710403
+    },
+    "f_by_session": {
+     "7819acb4822f": 0.9635933749849797,
+     "910473e3c88c": 0.9555795829977327
+    },
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 0.4085834589998285,
+      "host_cost": 0.41235719749988675,
+      "host_costs": {
+       "910473e3c88c": 0.4037427459998071,
+       "7819acb4822f": 0.4209716489999664
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 0.1190665290000652,
+      "host_cost": 0.12421298950016535,
+      "host_costs": {
+       "910473e3c88c": 0.12980491200005417,
+       "7819acb4822f": 0.11862106700027653
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 0.11851794700010032,
+      "host_cost": 0.1188406930000383,
+      "host_costs": {
+       "910473e3c88c": 0.12030004600001121,
+       "7819acb4822f": 0.11738134000006539
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 0.11887307699998928,
+      "host_cost": 0.11595628250006484,
+      "host_costs": {
+       "910473e3c88c": 0.1162196860000222,
+       "7819acb4822f": 0.1156928790001075
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 0.07765243800008648,
+      "host_cost": 0.08669173099997352,
+      "host_costs": {
+       "910473e3c88c": 0.07746061999978338,
+       "7819acb4822f": 0.09592284200016366
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 0.076644688999977,
+      "host_cost": 0.07825246850006806,
+      "host_costs": {
+       "910473e3c88c": 0.07686849700030507,
+       "7819acb4822f": 0.07963643999983105
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 0.07893375599996943,
+      "host_cost": 0.12109950799981561,
+      "host_costs": {
+       "910473e3c88c": 0.12077781499965567,
+       "7819acb4822f": 0.12142120099997555
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 0.5522304869998607,
+      "host_cost": 0.5668252219998067,
+      "host_costs": {
+       "910473e3c88c": 0.5767828399998507,
+       "7819acb4822f": 0.5568676039997627
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 0.5546584850001182,
+      "host_cost": 0.5696230539997487,
+      "host_costs": {
+       "910473e3c88c": 0.5810627689998,
+       "7819acb4822f": 0.5581833389996973
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 1.9149052613528257,
+    "f_lo": 1.5786339302423464,
+    "f_hi": 2.0850918916505794,
+    "f_by_n": {
+     "500": 1.5786339302423464,
+     "1000": 1.5856679376449307,
+     "4000": 2.0850918916505794
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 0.4085834589998285,
+      "host_cost": 0.23793289799999684,
+      "host_costs": {
+       "bishal": 0.23793289799999684
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 0.1190665290000652,
+      "host_cost": 0.07420417999998108,
+      "host_costs": {
+       "bishal": 0.07420417999998108
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 0.11851794700010032,
+      "host_cost": 0.07535330500002146,
+      "host_costs": {
+       "bishal": 0.07535330500002146
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 0.11887307699998928,
+      "host_cost": 0.07524213700003202,
+      "host_costs": {
+       "bishal": 0.07524213700003202
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 0.07765243800008648,
+      "host_cost": 0.04829300400001557,
+      "host_costs": {
+       "bishal": 0.04829300400001557
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 0.076644688999977,
+      "host_cost": 0.04898389999999608,
+      "host_costs": {
+       "bishal": 0.04898389999999608
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 0.07893375599996943,
+      "host_cost": 0.05046531700003243,
+      "host_costs": {
+       "bishal": 0.05046531700003243
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 0.5522304869998607,
+      "host_cost": 0.23926561799999035,
+      "host_costs": {
+       "bishal": 0.23926561799999035
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 0.5546584850001182,
+      "host_cost": 0.24961474199994882,
+      "host_costs": {
+       "bishal": 0.24961474199994882
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "pmrt_nl_eq": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 0.9883523633633113,
+    "f_lo": 0.9397713067067099,
+    "f_hi": 1.1225075009510623,
+    "f_by_n": {
+     "500": 1.1225075009510623,
+     "1000": 1.040528173618168,
+     "4000": 0.9509111614047265
+    },
+    "f_by_session": {
+     "7819acb4822f": 0.9397713067067099,
+     "910473e3c88c": 1.0422299749715387
+    },
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 192.304570259,
+      "host_cost": 241.34246723800004,
+      "host_costs": {
+       "910473e3c88c": 229.322807088,
+       "7819acb4822f": 253.3621273880001
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 67.00790414799985,
+      "host_cost": 55.90816693800002,
+      "host_costs": {
+       "910473e3c88c": 55.137349405999885,
+       "7819acb4822f": 56.67898447000016
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 43.211282127000004,
+      "host_cost": 33.30377947699981,
+      "host_costs": {
+       "910473e3c88c": 32.86005049099958,
+       "7819acb4822f": 33.74750846300003
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 223.10819018300003,
+      "host_cost": 176.51551807100032,
+      "host_costs": {
+       "910473e3c88c": 159.30468553400033,
+       "7819acb4822f": 193.7263506080003
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 57.15891680100003,
+      "host_cost": 76.49980460799975,
+      "host_costs": {
+       "910473e3c88c": 74.67161349499975,
+       "7819acb4822f": 78.32799572099975
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 205.89209593200007,
+      "host_cost": 235.52046011400012,
+      "host_costs": {
+       "910473e3c88c": 221.834894716,
+       "7819acb4822f": 249.20602551200022
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 70.97646599600012,
+      "host_cost": 55.134559154000044,
+      "host_costs": {
+       "910473e3c88c": 53.85761008899999,
+       "7819acb4822f": 56.4115082190001
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 31.42188367499989,
+      "host_cost": 29.46131649950007,
+      "host_costs": {
+       "910473e3c88c": 29.010060566999982,
+       "7819acb4822f": 29.91257243200016
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 48.18186280600003,
+      "host_cost": 46.64622510949994,
+      "host_costs": {
+       "910473e3c88c": 45.206223493999914,
+       "7819acb4822f": 48.08622672499996
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 2.2802000525650805,
+    "f_lo": 2.2456013065659937,
+    "f_hi": 2.3140499936041747,
+    "f_by_n": {
+     "500": 2.3140499936041747,
+     "1000": 2.2456013065659937,
+     "4000": 2.284649808358286
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 192.304570259,
+      "host_cost": 90.080391814,
+      "host_costs": {
+       "bishal": 90.080391814
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 67.00790414799985,
+      "host_cost": 30.108045874,
+      "host_costs": {
+       "bishal": 30.108045874
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 43.211282127000004,
+      "host_cost": 18.91944624399997,
+      "host_costs": {
+       "bishal": 18.91944624399997
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 223.10819018300003,
+      "host_cost": 91.94535454300001,
+      "host_costs": {
+       "bishal": 91.94535454300001
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 57.15891680100003,
+      "host_cost": 27.961899015,
+      "host_costs": {
+       "bishal": 27.961899015
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 205.89209593200007,
+      "host_cost": 89.92177667300001,
+      "host_costs": {
+       "bishal": 89.92177667300001
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 70.97646599600012,
+      "host_cost": 28.830292643999996,
+      "host_costs": {
+       "bishal": 28.830292643999996
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 31.42188367499989,
+      "host_cost": 16.941163452000012,
+      "host_costs": {
+       "bishal": 16.941163452000012
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 48.18186280600003,
+      "host_cost": 17.213018336000005,
+      "host_costs": {
+       "bishal": 17.213018336000005
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "rcot2_eq": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 0.9841562765648452,
+    "f_lo": 0.8232967507629767,
+    "f_hi": 1.154893531263849,
+    "f_by_n": {
+     "500": 0.8232967507629767,
+     "1000": 1.154893531263849,
+     "4000": 0.9671092802740003
+    },
+    "f_by_session": {
+     "7819acb4822f": 0.9937640029312669,
+     "910473e3c88c": 0.9747325466241482
+    },
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 4.249857457999951,
+      "host_cost": 3.0248694114998216,
+      "host_costs": {
+       "910473e3c88c": 2.923211371999969,
+       "7819acb4822f": 3.1265274509996743
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 1.8191410689998975,
+      "host_cost": 1.452324530000169,
+      "host_costs": {
+       "910473e3c88c": 1.7087140270000418,
+       "7819acb4822f": 1.1959350330002962
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 1.766181811000024,
+      "host_cost": 1.3331525375001547,
+      "host_costs": {
+       "910473e3c88c": 1.4596955390002222,
+       "7819acb4822f": 1.2066095360000872
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 2.887370359999977,
+      "host_cost": 2.9349571415000355,
+      "host_costs": {
+       "910473e3c88c": 2.9122615599999335,
+       "7819acb4822f": 2.9576527230001375
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 0.8686150610001278,
+      "host_cost": 1.4478489464997892,
+      "host_costs": {
+       "910473e3c88c": 1.4122069009999905,
+       "7819acb4822f": 1.483490991999588
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 2.8184369040000092,
+      "host_cost": 4.334423460999915,
+      "host_costs": {
+       "910473e3c88c": 4.2978943769999205,
+       "7819acb4822f": 4.370952544999909
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 0.9086984329999268,
+      "host_cost": 0.9212782309998602,
+      "host_costs": {
+       "910473e3c88c": 0.9224669830000494,
+       "7819acb4822f": 0.920089478999671
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 1.766295479000064,
+      "host_cost": 1.8483858940001028,
+      "host_costs": {
+       "910473e3c88c": 1.8285393720002503,
+       "7819acb4822f": 1.8682324159999553
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 1.3738403039999412,
+      "host_cost": 1.4583551915000044,
+      "host_costs": {
+       "910473e3c88c": 1.4719346110000515,
+       "7819acb4822f": 1.4447757719999572
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 1.98747045789247,
+    "f_lo": 1.8417162120705575,
+    "f_hi": 2.4552639532055234,
+    "f_by_n": {
+     "500": 1.8513268690989393,
+     "1000": 2.4552639532055234,
+     "4000": 1.8417162120705575
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 4.249857457999951,
+      "host_cost": 1.7622167559999866,
+      "host_costs": {
+       "bishal": 1.7622167559999866
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 1.8191410689998975,
+      "host_cost": 0.7570301199999676,
+      "host_costs": {
+       "bishal": 0.7570301199999676
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 1.766181811000024,
+      "host_cost": 0.7026028719999999,
+      "host_costs": {
+       "bishal": 0.7026028719999999
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 2.887370359999977,
+      "host_cost": 1.8302393839999809,
+      "host_costs": {
+       "bishal": 1.8302393839999809
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 0.8686150610001278,
+      "host_cost": 0.5615199370000141,
+      "host_costs": {
+       "bishal": 0.5615199370000141
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 2.8184369040000092,
+      "host_cost": 1.8131892339999922,
+      "host_costs": {
+       "bishal": 1.8131892339999922
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 0.9086984329999268,
+      "host_cost": 0.5509481820000133,
+      "host_costs": {
+       "bishal": 0.5509481820000133
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 1.766295479000064,
+      "host_cost": 0.7200179380000691,
+      "host_costs": {
+       "bishal": 0.7200179380000691
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "rcot2_eq|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 1.3738403039999412,
+      "host_cost": 0.589637463000031,
+      "host_costs": {
+       "bishal": 0.589637463000031
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "shap_dag": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 0.994635040474228,
+    "f_lo": 0.7693530869806556,
+    "f_hi": 1.0962167915473668,
+    "f_by_n": {
+     "500": 0.7693530869806556,
+     "1000": 0.7947822952438118,
+     "4000": 1.0962167915473668
+    },
+    "f_by_session": {
+     "7819acb4822f": 0.9910625521269034,
+     "910473e3c88c": 0.9982333775332711
+    },
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 18.77908534800008,
+      "host_cost": 14.095368785500114,
+      "host_costs": {
+       "910473e3c88c": 13.979177929999878,
+       "7819acb4822f": 14.211559641000349
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 3.60725735799997,
+      "host_cost": 6.318573537999782,
+      "host_costs": {
+       "910473e3c88c": 6.311798737999652,
+       "7819acb4822f": 6.3253483379999125
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 2.154190731999961,
+      "host_cost": 3.116948903000093,
+      "host_costs": {
+       "910473e3c88c": 2.7211898049999945,
+       "7819acb4822f": 3.512708001000192
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 3.633587436000198,
+      "host_cost": 4.183152372500217,
+      "host_costs": {
+       "910473e3c88c": 4.658444132000113,
+       "7819acb4822f": 3.707860613000321
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 2.2163774670000294,
+      "host_cost": 3.8553505234999648,
+      "host_costs": {
+       "910473e3c88c": 3.8601034789999176,
+       "7819acb4822f": 3.850597568000012
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 22.288101875999928,
+      "host_cost": 21.68628523450002,
+      "host_costs": {
+       "910473e3c88c": 21.502076475000194,
+       "7819acb4822f": 21.870493993999844
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 22.006535907999933,
+      "host_cost": 21.755982347499867,
+      "host_costs": {
+       "910473e3c88c": 21.71134474900009,
+       "7819acb4822f": 21.800619945999642
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 6.294651329999851,
+      "host_cost": 6.528719036499979,
+      "host_costs": {
+       "910473e3c88c": 6.511676175000048,
+       "7819acb4822f": 6.54576189799991
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 3.966269683000064,
+      "host_cost": 3.8638667280001755,
+      "host_costs": {
+       "910473e3c88c": 3.840578849999929,
+       "7819acb4822f": 3.887154606000422
+      },
+      "same_dataset": true
+     }
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 2.303396504310291,
+    "f_lo": 1.9050113825324744,
+    "f_hi": 2.4821617264710767,
+    "f_by_n": {
+     "500": 1.9109791542693564,
+     "1000": 1.9050113825324744,
+     "4000": 2.4821617264710767
+    },
+    "f_by_session": {},
+    "source": "r55_calibration_block",
+    "n_units": 9,
+    "n_same_dataset": 9,
+    "n_different_dataset": 0,
+    "units": [
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000002",
+      "n": 4000,
+      "ref_cost": 18.77908534800008,
+      "host_cost": 8.279384563999969,
+      "host_costs": {
+       "bishal": 8.279384563999969
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000000",
+      "n": 1000,
+      "ref_cost": 3.60725735799997,
+      "host_cost": 2.3790655710000124,
+      "host_costs": {
+       "bishal": 2.3790655710000124
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000001",
+      "n": 500,
+      "ref_cost": 2.154190731999961,
+      "host_cost": 1.4222356160000231,
+      "host_costs": {
+       "bishal": 1.4222356160000231
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000001",
+      "n": 1000,
+      "ref_cost": 3.633587436000198,
+      "host_cost": 2.3604428409999514,
+      "host_costs": {
+       "bishal": 2.3604428409999514
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000002",
+      "n": 500,
+      "ref_cost": 2.2163774670000294,
+      "host_cost": 1.4511596419999933,
+      "host_costs": {
+       "bishal": 1.4511596419999933
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000000",
+      "n": 4000,
+      "ref_cost": 22.288101875999928,
+      "host_cost": 8.688040040000033,
+      "host_costs": {
+       "bishal": 8.688040040000033
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n4000|s3000001",
+      "n": 4000,
+      "ref_cost": 22.006535907999933,
+      "host_cost": 8.443378591999931,
+      "host_costs": {
+       "bishal": 8.443378591999931
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n1000|s3000002",
+      "n": 1000,
+      "ref_cost": 6.294651329999851,
+      "host_cost": 2.365696443000047,
+      "host_costs": {
+       "bishal": 2.365696443000047
+      },
+      "same_dataset": true
+     },
+     {
+      "key": "shap_dag|E2|R2|k0.25|n500|s3000000",
+      "n": 500,
+      "ref_cost": 3.966269683000064,
+      "host_cost": 1.4892048589999831,
+      "host_costs": {
+       "bishal": 1.4892048589999831
+      },
+      "same_dataset": true
+     }
+    ]
+   }
+  },
+  "*": {
+   "colab|Intel(R) Xeon(R) CPU @ 2.20GHz": {
+    "f": 1.0674308002889132,
+    "f_lo": 0.9595697476014761,
+    "f_hi": 1.1035137976774125,
+    "f_by_session": {
+     "7819acb4822f": 1.0502704742532267,
+     "910473e3c88c": 1.0851612045300247
+    },
+    "source": "r55_calibration_block (pooled anchors)",
+    "n_units": 51,
+    "arms": [
+     "cdl",
+     "mscr_eq_min",
+     "pcorr_eq",
+     "pmrt_nl_eq",
+     "rcot2_eq",
+     "shap_dag"
+    ]
+   },
+   "vps|AMD EPYC-Rome Processor": {
+    "f": 2.5622066607923912,
+    "f_lo": 1.9149052613528257,
+    "f_hi": 2.8095614901146426,
+    "f_by_session": {},
+    "source": "r55_calibration_block (pooled anchors)",
+    "n_units": 51,
+    "arms": [
+     "cdl",
+     "mscr_eq_min",
+     "pcorr_eq",
+     "pmrt_nl_eq",
+     "rcot2_eq",
+     "shap_dag"
+    ]
+   }
+  }
+ },
+ "missing": []
+}

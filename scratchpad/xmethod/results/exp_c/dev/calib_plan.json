@@ -1,0 +1,2435 @@
+{
+ "version": "xm-exp-c/1",
+ "ref_host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+ "seeds": [
+  3000000,
+  3000001,
+  3000002
+ ],
+ "arms": {
+  "corr": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "corr|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.2496111579
+    },
+    {
+     "key": "corr|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.2496111579
+    },
+    {
+     "key": "corr|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.2496111579
+    },
+    {
+     "key": "corr|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.24646236122499995
+    },
+    {
+     "key": "corr|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.24646236122499995
+    },
+    {
+     "key": "corr|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.24646236122499995
+    },
+    {
+     "key": "corr|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.1529237518
+    },
+    {
+     "key": "corr|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.1529237518
+    },
+    {
+     "key": "corr|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.1529237518
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "granger_eq": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "granger_eq|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 6.6600773292
+    },
+    {
+     "key": "granger_eq|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 6.6600773292
+    },
+    {
+     "key": "granger_eq|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 6.6600773292
+    },
+    {
+     "key": "granger_eq|E3|R1|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 4.776239056350001
+    },
+    {
+     "key": "granger_eq|E3|R1|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 4.776239056350001
+    },
+    {
+     "key": "granger_eq|E3|R1|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 4.776239056350001
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "granger_native": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "granger_native|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.392584765725
+    },
+    {
+     "key": "granger_native|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.392584765725
+    },
+    {
+     "key": "granger_native|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.392584765725
+    },
+    {
+     "key": "granger_native|E3|R1|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.38946874705
+    },
+    {
+     "key": "granger_native|E3|R1|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.38946874705
+    },
+    {
+     "key": "granger_native|E3|R1|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.38946874705
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "mscr_eq": {
+   "n": 1000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "mscr_eq|E2|R2|k0.25|n1000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 186.49159959893754
+    },
+    {
+     "key": "mscr_eq|E2|R2|k0.25|n1000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 186.49159959893754
+    },
+    {
+     "key": "mscr_eq|E2|R2|k0.25|n1000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 186.49159959893754
+    },
+    {
+     "key": "mscr_eq|E2|R1|k0.25|n1000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 147.27002861870002
+    },
+    {
+     "key": "mscr_eq|E2|R1|k0.25|n1000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 147.27002861870002
+    },
+    {
+     "key": "mscr_eq|E2|R1|k0.25|n1000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 147.27002861870002
+    },
+    {
+     "key": "mscr_eq|E3|R2|k0.25|n1000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 93.42610013847916
+    },
+    {
+     "key": "mscr_eq|E3|R2|k0.25|n1000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 93.42610013847916
+    },
+    {
+     "key": "mscr_eq|E3|R2|k0.25|n1000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 93.42610013847916
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "mscr_eq_min": {
+   "n": 1000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 705.7437538820626
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 705.7437538820626
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 705.7437538820626
+    },
+    {
+     "key": "mscr_eq_min|E3|R2|k0.25|n1000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 245.37998052199998
+    },
+    {
+     "key": "mscr_eq_min|E3|R2|k0.25|n1000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 245.37998052199998
+    },
+    {
+     "key": "mscr_eq_min|E3|R2|k0.25|n1000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 245.37998052199998
+    },
+    {
+     "key": "mscr_eq_min|E5|R2|k0.25|n1000|s3000000",
+     "world": "E5",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 189.35483015433334
+    },
+    {
+     "key": "mscr_eq_min|E5|R2|k0.25|n1000|s3000001",
+     "world": "E5",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 189.35483015433334
+    },
+    {
+     "key": "mscr_eq_min|E5|R2|k0.25|n1000|s3000002",
+     "world": "E5",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 189.35483015433334
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "mscr_native": {
+   "n": 1000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "mscr_native|E2|R2|k0.25|n1000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 66.94342771956251
+    },
+    {
+     "key": "mscr_native|E2|R2|k0.25|n1000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 66.94342771956251
+    },
+    {
+     "key": "mscr_native|E2|R2|k0.25|n1000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 66.94342771956251
+    },
+    {
+     "key": "mscr_native|E2|R1|k0.25|n1000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 66.51497085349999
+    },
+    {
+     "key": "mscr_native|E2|R1|k0.25|n1000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 66.51497085349999
+    },
+    {
+     "key": "mscr_native|E2|R1|k0.25|n1000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 66.51497085349999
+    },
+    {
+     "key": "mscr_native|E3|R2|k0.25|n1000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 38.79945797
+    },
+    {
+     "key": "mscr_native|E3|R2|k0.25|n1000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 38.79945797
+    },
+    {
+     "key": "mscr_native|E3|R2|k0.25|n1000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 1000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 38.79945797
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "notears": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "notears|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 13.317848707824998
+    },
+    {
+     "key": "notears|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 13.317848707824998
+    },
+    {
+     "key": "notears|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 13.317848707824998
+    },
+    {
+     "key": "notears|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 10.365753712625
+    },
+    {
+     "key": "notears|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 10.365753712625
+    },
+    {
+     "key": "notears|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 10.365753712625
+    },
+    {
+     "key": "notears|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 9.87968325505
+    },
+    {
+     "key": "notears|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 9.87968325505
+    },
+    {
+     "key": "notears|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 9.87968325505
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "pc_eq": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pc_eq|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 62.96075138
+    },
+    {
+     "key": "pc_eq|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 62.96075138
+    },
+    {
+     "key": "pc_eq|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 62.96075138
+    },
+    {
+     "key": "pc_eq|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 16.550934886900002
+    },
+    {
+     "key": "pc_eq|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 16.550934886900002
+    },
+    {
+     "key": "pc_eq|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 16.550934886900002
+    },
+    {
+     "key": "pc_eq|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 11.33887112535
+    },
+    {
+     "key": "pc_eq|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 11.33887112535
+    },
+    {
+     "key": "pc_eq|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 11.33887112535
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "pc_native": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pc_native|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 8.28950117535
+    },
+    {
+     "key": "pc_native|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 8.28950117535
+    },
+    {
+     "key": "pc_native|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 8.28950117535
+    },
+    {
+     "key": "pc_native|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 3.4260865154
+    },
+    {
+     "key": "pc_native|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 3.4260865154
+    },
+    {
+     "key": "pc_native|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 3.4260865154
+    },
+    {
+     "key": "pc_native|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 2.639991494975
+    },
+    {
+     "key": "pc_native|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 2.639991494975
+    },
+    {
+     "key": "pc_native|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 2.639991494975
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "pcorr_eq": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 5.29678388655
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 5.29678388655
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 5.29678388655
+    },
+    {
+     "key": "pcorr_eq|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 3.4822539466875
+    },
+    {
+     "key": "pcorr_eq|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 3.4822539466875
+    },
+    {
+     "key": "pcorr_eq|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 3.4822539466875
+    },
+    {
+     "key": "pcorr_eq|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 1.5399594741764706
+    },
+    {
+     "key": "pcorr_eq|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 1.5399594741764706
+    },
+    {
+     "key": "pcorr_eq|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 1.5399594741764706
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_eq_min": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_eq_min|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 4.266158667725
+    },
+    {
+     "key": "pcorr_eq_min|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 4.266158667725
+    },
+    {
+     "key": "pcorr_eq_min|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 4.266158667725
+    },
+    {
+     "key": "pcorr_eq_min|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 1.2029745638823528
+    },
+    {
+     "key": "pcorr_eq_min|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 1.2029745638823528
+    },
+    {
+     "key": "pcorr_eq_min|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 1.2029745638823528
+    },
+    {
+     "key": "pcorr_eq_min|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 1.002512620875
+    },
+    {
+     "key": "pcorr_eq_min|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 1.002512620875
+    },
+    {
+     "key": "pcorr_eq_min|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 1.002512620875
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_hac": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_hac|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.43633570545
+    },
+    {
+     "key": "pcorr_hac|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.43633570545
+    },
+    {
+     "key": "pcorr_hac|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.43633570545
+    },
+    {
+     "key": "pcorr_hac|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.1134020840000005
+    },
+    {
+     "key": "pcorr_hac|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.1134020840000005
+    },
+    {
+     "key": "pcorr_hac|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.1134020840000005
+    },
+    {
+     "key": "pcorr_hac|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 1.9850372675588237
+    },
+    {
+     "key": "pcorr_hac|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 1.9850372675588237
+    },
+    {
+     "key": "pcorr_hac|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 1.9850372675588237
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_hac_eq_min": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_hac_eq_min|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.40004489684375
+    },
+    {
+     "key": "pcorr_hac_eq_min|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.40004489684375
+    },
+    {
+     "key": "pcorr_hac_eq_min|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.40004489684375
+    },
+    {
+     "key": "pcorr_hac_eq_min|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.367403508900002
+    },
+    {
+     "key": "pcorr_hac_eq_min|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.367403508900002
+    },
+    {
+     "key": "pcorr_hac_eq_min|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.367403508900002
+    },
+    {
+     "key": "pcorr_hac_eq_min|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 2.0982409334705885
+    },
+    {
+     "key": "pcorr_hac_eq_min|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 2.0982409334705885
+    },
+    {
+     "key": "pcorr_hac_eq_min|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 2.0982409334705885
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_hac_fb": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_hac_fb|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.31195768403125
+    },
+    {
+     "key": "pcorr_hac_fb|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.31195768403125
+    },
+    {
+     "key": "pcorr_hac_fb|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.31195768403125
+    },
+    {
+     "key": "pcorr_hac_fb|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 6.88340826685
+    },
+    {
+     "key": "pcorr_hac_fb|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 6.88340826685
+    },
+    {
+     "key": "pcorr_hac_fb|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 6.88340826685
+    },
+    {
+     "key": "pcorr_hac_fb|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 2.9642072582647057
+    },
+    {
+     "key": "pcorr_hac_fb|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 2.9642072582647057
+    },
+    {
+     "key": "pcorr_hac_fb|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 2.9642072582647057
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_hac_fb_eq_min": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.1120027319375
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.1120027319375
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.1120027319375
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 7.10116685735
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 7.10116685735
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 7.10116685735
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 3.0599564725882353
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 3.0599564725882353
+    },
+    {
+     "key": "pcorr_hac_fb_eq_min|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 3.0599564725882353
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pcorr_native": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pcorr_native|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.75988416228125
+    },
+    {
+     "key": "pcorr_native|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.75988416228125
+    },
+    {
+     "key": "pcorr_native|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.75988416228125
+    },
+    {
+     "key": "pcorr_native|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.725679153725
+    },
+    {
+     "key": "pcorr_native|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.725679153725
+    },
+    {
+     "key": "pcorr_native|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.725679153725
+    },
+    {
+     "key": "pcorr_native|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 0.33705260714705887
+    },
+    {
+     "key": "pcorr_native|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 0.33705260714705887
+    },
+    {
+     "key": "pcorr_native|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 0.33705260714705887
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "pmrt_eq": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pmrt_eq|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 48.48683747169999
+    },
+    {
+     "key": "pmrt_eq|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 48.48683747169999
+    },
+    {
+     "key": "pmrt_eq|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 48.48683747169999
+    },
+    {
+     "key": "pmrt_eq|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 36.082553333075
+    },
+    {
+     "key": "pmrt_eq|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 36.082553333075
+    },
+    {
+     "key": "pmrt_eq|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 36.082553333075
+    },
+    {
+     "key": "pmrt_eq|E4|R3|lam0.5|k0.25|n24000|s3000000",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 33.896768618325
+    },
+    {
+     "key": "pmrt_eq|E4|R3|lam0.5|k0.25|n24000|s3000001",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 33.896768618325
+    },
+    {
+     "key": "pmrt_eq|E4|R3|lam0.5|k0.25|n24000|s3000002",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 33.896768618325
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "pmrt_r3": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "pmrt_r3|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 46.170642734524996
+    },
+    {
+     "key": "pmrt_r3|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 46.170642734524996
+    },
+    {
+     "key": "pmrt_r3|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 46.170642734524996
+    },
+    {
+     "key": "pmrt_r3|E4|R3|lam0.5|k0.25|n24000|s3000000",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 33.89009677695
+    },
+    {
+     "key": "pmrt_r3|E4|R3|lam0.5|k0.25|n24000|s3000001",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 33.89009677695
+    },
+    {
+     "key": "pmrt_r3|E4|R3|lam0.5|k0.25|n24000|s3000002",
+     "world": "E4",
+     "regime": "R3",
+     "lam": 0.5,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 33.89009677695
+    },
+    {
+     "key": "pmrt_r3|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 32.881615700024994
+    },
+    {
+     "key": "pmrt_r3|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 32.881615700024994
+    },
+    {
+     "key": "pmrt_r3|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 32.881615700024994
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "rcot2_eq": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 24.37804884395
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 24.37804884395
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 24.37804884395
+    },
+    {
+     "key": "rcot2_eq|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 24.330498282531252
+    },
+    {
+     "key": "rcot2_eq|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 24.330498282531252
+    },
+    {
+     "key": "rcot2_eq|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 24.330498282531252
+    },
+    {
+     "key": "rcot2_eq|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 11.966489843470589
+    },
+    {
+     "key": "rcot2_eq|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 11.966489843470589
+    },
+    {
+     "key": "rcot2_eq|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 11.966489843470589
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "rcot2_eq_min": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "rcot2_eq_min|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 21.3035255428125
+    },
+    {
+     "key": "rcot2_eq_min|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 21.3035255428125
+    },
+    {
+     "key": "rcot2_eq_min|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 21.3035255428125
+    },
+    {
+     "key": "rcot2_eq_min|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 19.339740195025
+    },
+    {
+     "key": "rcot2_eq_min|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 19.339740195025
+    },
+    {
+     "key": "rcot2_eq_min|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 19.339740195025
+    },
+    {
+     "key": "rcot2_eq_min|E3|R2|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 10.92803534967647
+    },
+    {
+     "key": "rcot2_eq_min|E3|R2|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 10.92803534967647
+    },
+    {
+     "key": "rcot2_eq_min|E3|R2|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 10.92803534967647
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "rcot2_native": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "rcot2_native|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 20.8483217264375
+    },
+    {
+     "key": "rcot2_native|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 20.8483217264375
+    },
+    {
+     "key": "rcot2_native|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 20.8483217264375
+    },
+    {
+     "key": "rcot2_native|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 20.40378749675
+    },
+    {
+     "key": "rcot2_native|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 20.40378749675
+    },
+    {
+     "key": "rcot2_native|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 20.40378749675
+    },
+    {
+     "key": "rcot2_native|E3|R1|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 10.8290933828
+    },
+    {
+     "key": "rcot2_native|E3|R1|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 10.8290933828
+    },
+    {
+     "key": "rcot2_native|E3|R1|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 10.8290933828
+    }
+   ],
+   "hosts_needing_factor": [
+    "colab|AMD EPYC 7B12",
+    "colab|Intel(R) Xeon(R) CPU @ 2.20GHz",
+    "lightning|Intel(R) Xeon(R) Platinum 8488C"
+   ]
+  },
+  "shap_dag": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "shap_dag|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 145.467083226475
+    },
+    {
+     "key": "shap_dag|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 145.467083226475
+    },
+    {
+     "key": "shap_dag|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 145.467083226475
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 137.075105353725
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 137.075105353725
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 137.075105353725
+    },
+    {
+     "key": "shap_dag|E3|R1|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 118.22632869987501
+    },
+    {
+     "key": "shap_dag|E3|R1|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 118.22632869987501
+    },
+    {
+     "key": "shap_dag|E3|R1|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 118.22632869987501
+    }
+   ],
+   "hosts_needing_factor": []
+  },
+  "two_tower": {
+   "n": 24000,
+   "cost_from": "reference host",
+   "units": [
+    {
+     "key": "two_tower|E2|R2|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 145.5518207841
+    },
+    {
+     "key": "two_tower|E2|R2|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 145.5518207841
+    },
+    {
+     "key": "two_tower|E2|R2|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R2",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 145.5518207841
+    },
+    {
+     "key": "two_tower|E2|R1|k0.25|n24000|s3000000",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 143.944840209475
+    },
+    {
+     "key": "two_tower|E2|R1|k0.25|n24000|s3000001",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 143.944840209475
+    },
+    {
+     "key": "two_tower|E2|R1|k0.25|n24000|s3000002",
+     "world": "E2",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 143.944840209475
+    },
+    {
+     "key": "two_tower|E3|R1|k0.25|n24000|s3000000",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000000,
+     "in_records": true,
+     "cell_mean_cost": 93.10442566565
+    },
+    {
+     "key": "two_tower|E3|R1|k0.25|n24000|s3000001",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000001,
+     "in_records": true,
+     "cell_mean_cost": 93.10442566565
+    },
+    {
+     "key": "two_tower|E3|R1|k0.25|n24000|s3000002",
+     "world": "E3",
+     "regime": "R1",
+     "lam": null,
+     "kappa": 0.25,
+     "n": 24000,
+     "seed": 3000002,
+     "in_records": true,
+     "cell_mean_cost": 93.10442566565
+    }
+   ],
+   "hosts_needing_factor": []
+  }
+ }
+}

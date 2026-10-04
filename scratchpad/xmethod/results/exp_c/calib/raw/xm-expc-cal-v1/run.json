@@ -1,0 +1,44 @@
+{
+ "version": "xm-exp-c-timing/1",
+ "block": "calib",
+ "procs": 7,
+ "cpu_quota": 7,
+ "units": 51,
+ "wall_s": 635.1229827404022,
+ "rcs": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "host": {
+  "platform": "vps",
+  "cpu_model": "AMD EPYC-Rome Processor",
+  "cpu_count": 8,
+  "cpu_quota": 7,
+  "node": "bishal",
+  "gpu": null,
+  "cpu_ident": {
+   "cpu family": "23",
+   "model": "49",
+   "stepping": "0",
+   "microcode": "0x1000065",
+   "cache size": "512 KB",
+   "flags_sha": "f55dbb0e9058",
+   "avx512f": false,
+   "amx": false
+  }
+ },
+ "est_cost_s_per_proc": [
+  709.5418086469238,
+  709.5418086469238,
+  709.5418086469238,
+  525.031291319251,
+  525.0993159091922,
+  525.1694712763608,
+  525.0692904767756
+ ]
+}

@@ -1,0 +1,2339 @@
+{
+ "version": "xm-exp-c/1",
+ "generated_utc": "2026-10-04T08:11:36Z",
+ "ref_host": "kaggle|Intel(R) Xeon(R) CPU @ 2.20GHz",
+ "budget_cpu_s": 7200.0,
+ "n_grid": [
+  500,
+  1000,
+  4000,
+  8000,
+  24000
+ ],
+ "inputs": {
+  "files": [
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_0.jsonl",
+    "sha256": "59795a55d2e65cd2b2ec3fba74ec9efb909316b8f7664a13c24f23fef5760b8d",
+    "lines": 1
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_1.jsonl",
+    "sha256": "865621ee1a595fb79cfc2e075d41d977e6c75b688b5b988c42173c1b873ca00c",
+    "lines": 1
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_2.jsonl",
+    "sha256": "022de3fe16559a7eb6c728ff744c3fbf7f14490f6c22fa0eea2fe54abae05f23",
+    "lines": 1
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_3.jsonl",
+    "sha256": "9d7eb8243eb0e86d9e6c130b2fd8a66e37f9e4c4548c1cde767339adfd91f350",
+    "lines": 11
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_4.jsonl",
+    "sha256": "90ffb9e8e2f6a0d2c32ef40b5da67df4dfc5071f18a9dcbbfd1b09dfa95d9ffa",
+    "lines": 11
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_5.jsonl",
+    "sha256": "6f972feb4b75cd72ac5aada8d13b70e47f0d55877bf3756318881bf95e70c978",
+    "lines": 12
+   },
+   {
+    "path": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-citests\\scratchpad\\xmethod\\results\\exp_c\\calib\\raw\\xm-expc-cal-v2\\res_6.jsonl",
+    "sha256": "d880eb05dd615bfeda950f0ba08c453bab4425cfd5c10893a79dc211a0ff1131",
+    "lines": 14
+   }
+  ],
+  "lines": 51,
+  "duplicates": 0,
+  "conflicts": 0
+ },
+ "spec_names": [
+  "exp_c_calib"
+ ],
+ "commits": [
+  "1b33ca16b12b57cea2c87af36695bf19e69284b5"
+ ],
+ "hosts": [
+  {
+   "host": "vps|AMD EPYC-Rome Processor",
+   "n_units": 51
+  }
+ ],
+ "factors": [
+  {
+   "arm": "cdl",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 2.3072967058842684,
+   "f_lo": 1.7155235900845882,
+   "f_hi": 2.5094946075975475,
+   "f_by_n": {
+    "500": 1.7920853808889918,
+    "1000": 1.7155235900845882,
+    "4000": 2.5094946075975475
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 9,
+   "n_same_dataset": 9,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "cdl|E2|R2|k0.25|n4000|s3000000",
+     "n": 4000,
+     "ref_cost": 413.347409462,
+     "host_cost": 164.67631853,
+     "host_costs": {
+      "bishal": 164.67631853
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 65.87319675799995,
+     "host_cost": 38.442529871999966,
+     "host_costs": {
+      "bishal": 38.442529871999966
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n4000|s3000001",
+     "n": 4000,
+     "ref_cost": 398.040726326,
+     "host_cost": 165.10414561,
+     "host_costs": {
+      "bishal": 165.10414561
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 70.57270933299992,
+     "host_cost": 39.346936212999935,
+     "host_costs": {
+      "bishal": 39.346936212999935
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 37.92454675099998,
+     "host_cost": 18.95755391999998,
+     "host_costs": {
+      "bishal": 18.95755391999998
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 35.131436570999995,
+     "host_cost": 19.261539339000024,
+     "host_costs": {
+      "bishal": 19.261539339000024
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n4000|s3000002",
+     "n": 4000,
+     "ref_cost": 414.65490671200007,
+     "host_cost": 158.781272071,
+     "host_costs": {
+      "bishal": 158.781272071
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 64.37451756999985,
+     "host_cost": 39.271252183,
+     "host_costs": {
+      "bishal": 39.271252183
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "cdl|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 29.599770857000067,
+     "host_cost": 19.06375457499999,
+     "host_costs": {
+      "bishal": 19.06375457499999
+     },
+     "same_dataset": true
+    }
+   ]
+  },
+  {
+   "arm": "mscr_eq_min",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 2.8095614901146426,
+   "f_lo": 2.7451829616726893,
+   "f_hi": 2.840036224197883,
+   "f_by_n": {
+    "500": 2.7451829616726893,
+    "1000": 2.840036224197883
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 6,
+   "n_same_dataset": 6,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 784.377302428,
+     "host_cost": 272.90504553100004,
+     "host_costs": {
+      "bishal": 272.90504553100004
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 778.792105397,
+     "host_cost": 276.687971838,
+     "host_costs": {
+      "bishal": 276.687971838
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 780.428003511,
+     "host_cost": 275.606813312,
+     "host_costs": {
+      "bishal": 275.606813312
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 362.96596297900004,
+     "host_cost": 130.10228618000002,
+     "host_costs": {
+      "bishal": 130.10228618000002
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 363.58265054099996,
+     "host_cost": 130.215266049,
+     "host_costs": {
+      "bishal": 130.215266049
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 345.78348046400004,
+     "host_cost": 130.305626246,
+     "host_costs": {
+      "bishal": 130.305626246
+     },
+     "same_dataset": true
+    }
+   ]
+  },
+  {
+   "arm": "pcorr_eq",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 1.9149052613528257,
+   "f_lo": 1.5786339302423464,
+   "f_hi": 2.0850918916505794,
+   "f_by_n": {
+    "500": 1.5786339302423464,
+    "1000": 1.5856679376449307,
+    "4000": 2.0850918916505794
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 9,
+   "n_same_dataset": 9,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000001",
+     "n": 4000,
+     "ref_cost": 0.4085834589998285,
+     "host_cost": 0.23793289799999684,
+     "host_costs": {
+      "bishal": 0.23793289799999684
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 0.1190665290000652,
+     "host_cost": 0.07420417999998108,
+     "host_costs": {
+      "bishal": 0.07420417999998108
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 0.11851794700010032,
+     "host_cost": 0.07535330500002146,
+     "host_costs": {
+      "bishal": 0.07535330500002146
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 0.11887307699998928,
+     "host_cost": 0.07524213700003202,
+     "host_costs": {
+      "bishal": 0.07524213700003202
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 0.07765243800008648,
+     "host_cost": 0.04829300400001557,
+     "host_costs": {
+      "bishal": 0.04829300400001557
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 0.076644688999977,
+     "host_cost": 0.04898389999999608,
+     "host_costs": {
+      "bishal": 0.04898389999999608
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 0.07893375599996943,
+     "host_cost": 0.05046531700003243,
+     "host_costs": {
+      "bishal": 0.05046531700003243
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000000",
+     "n": 4000,
+     "ref_cost": 0.5522304869998607,
+     "host_cost": 0.23926561799999035,
+     "host_costs": {
+      "bishal": 0.23926561799999035
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000002",
+     "n": 4000,
+     "ref_cost": 0.5546584850001182,
+     "host_cost": 0.24961474199994882,
+     "host_costs": {
+      "bishal": 0.24961474199994882
+     },
+     "same_dataset": true
+    }
+   ]
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 2.2802000525650805,
+   "f_lo": 2.2456013065659937,
+   "f_hi": 2.3140499936041747,
+   "f_by_n": {
+    "500": 2.3140499936041747,
+    "1000": 2.2456013065659937,
+    "4000": 2.284649808358286
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 9,
+   "n_same_dataset": 9,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000000",
+     "n": 4000,
+     "ref_cost": 192.304570259,
+     "host_cost": 90.080391814,
+     "host_costs": {
+      "bishal": 90.080391814
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 67.00790414799985,
+     "host_cost": 30.108045874,
+     "host_costs": {
+      "bishal": 30.108045874
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 43.211282127000004,
+     "host_cost": 18.91944624399997,
+     "host_costs": {
+      "bishal": 18.91944624399997
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000001",
+     "n": 4000,
+     "ref_cost": 223.10819018300003,
+     "host_cost": 91.94535454300001,
+     "host_costs": {
+      "bishal": 91.94535454300001
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 57.15891680100003,
+     "host_cost": 27.961899015,
+     "host_costs": {
+      "bishal": 27.961899015
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000002",
+     "n": 4000,
+     "ref_cost": 205.89209593200007,
+     "host_cost": 89.92177667300001,
+     "host_costs": {
+      "bishal": 89.92177667300001
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 70.97646599600012,
+     "host_cost": 28.830292643999996,
+     "host_costs": {
+      "bishal": 28.830292643999996
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 31.42188367499989,
+     "host_cost": 16.941163452000012,
+     "host_costs": {
+      "bishal": 16.941163452000012
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 48.18186280600003,
+     "host_cost": 17.213018336000005,
+     "host_costs": {
+      "bishal": 17.213018336000005
+     },
+     "same_dataset": true
+    }
+   ]
+  },
+  {
+   "arm": "rcot2_eq",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 1.98747045789247,
+   "f_lo": 1.8417162120705575,
+   "f_hi": 2.4552639532055234,
+   "f_by_n": {
+    "500": 1.8513268690989393,
+    "1000": 2.4552639532055234,
+    "4000": 1.8417162120705575
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 9,
+   "n_same_dataset": 9,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000002",
+     "n": 4000,
+     "ref_cost": 4.249857457999951,
+     "host_cost": 1.7622167559999866,
+     "host_costs": {
+      "bishal": 1.7622167559999866
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 1.8191410689998975,
+     "host_cost": 0.7570301199999676,
+     "host_costs": {
+      "bishal": 0.7570301199999676
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 1.766181811000024,
+     "host_cost": 0.7026028719999999,
+     "host_costs": {
+      "bishal": 0.7026028719999999
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000000",
+     "n": 4000,
+     "ref_cost": 2.887370359999977,
+     "host_cost": 1.8302393839999809,
+     "host_costs": {
+      "bishal": 1.8302393839999809
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 0.8686150610001278,
+     "host_cost": 0.5615199370000141,
+     "host_costs": {
+      "bishal": 0.5615199370000141
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000001",
+     "n": 4000,
+     "ref_cost": 2.8184369040000092,
+     "host_cost": 1.8131892339999922,
+     "host_costs": {
+      "bishal": 1.8131892339999922
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 0.9086984329999268,
+     "host_cost": 0.5509481820000133,
+     "host_costs": {
+      "bishal": 0.5509481820000133
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 1.766295479000064,
+     "host_cost": 0.7200179380000691,
+     "host_costs": {
+      "bishal": 0.7200179380000691
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "rcot2_eq|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 1.3738403039999412,
+     "host_cost": 0.589637463000031,
+     "host_costs": {
+      "bishal": 0.589637463000031
+     },
+     "same_dataset": true
+    }
+   ]
+  },
+  {
+   "arm": "shap_dag",
+   "host": "vps|AMD EPYC-Rome Processor",
+   "f": 2.303396504310291,
+   "f_lo": 1.9050113825324744,
+   "f_hi": 2.4821617264710767,
+   "f_by_n": {
+    "500": 1.9109791542693564,
+    "1000": 1.9050113825324744,
+    "4000": 2.4821617264710767
+   },
+   "f_by_session": {},
+   "source": "r55_calibration_block",
+   "n_units": 9,
+   "n_same_dataset": 9,
+   "n_different_dataset": 0,
+   "units": [
+    {
+     "key": "shap_dag|E2|R2|k0.25|n4000|s3000002",
+     "n": 4000,
+     "ref_cost": 18.77908534800008,
+     "host_cost": 8.279384563999969,
+     "host_costs": {
+      "bishal": 8.279384563999969
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n1000|s3000000",
+     "n": 1000,
+     "ref_cost": 3.60725735799997,
+     "host_cost": 2.3790655710000124,
+     "host_costs": {
+      "bishal": 2.3790655710000124
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n500|s3000001",
+     "n": 500,
+     "ref_cost": 2.154190731999961,
+     "host_cost": 1.4222356160000231,
+     "host_costs": {
+      "bishal": 1.4222356160000231
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n1000|s3000001",
+     "n": 1000,
+     "ref_cost": 3.633587436000198,
+     "host_cost": 2.3604428409999514,
+     "host_costs": {
+      "bishal": 2.3604428409999514
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n500|s3000002",
+     "n": 500,
+     "ref_cost": 2.2163774670000294,
+     "host_cost": 1.4511596419999933,
+     "host_costs": {
+      "bishal": 1.4511596419999933
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n4000|s3000000",
+     "n": 4000,
+     "ref_cost": 22.288101875999928,
+     "host_cost": 8.688040040000033,
+     "host_costs": {
+      "bishal": 8.688040040000033
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n4000|s3000001",
+     "n": 4000,
+     "ref_cost": 22.006535907999933,
+     "host_cost": 8.443378591999931,
+     "host_costs": {
+      "bishal": 8.443378591999931
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n1000|s3000002",
+     "n": 1000,
+     "ref_cost": 6.294651329999851,
+     "host_cost": 2.365696443000047,
+     "host_costs": {
+      "bishal": 2.365696443000047
+     },
+     "same_dataset": true
+    },
+    {
+     "key": "shap_dag|E2|R2|k0.25|n500|s3000000",
+     "n": 500,
+     "ref_cost": 3.966269683000064,
+     "host_cost": 1.4892048589999831,
+     "host_costs": {
+      "bishal": 1.4892048589999831
+     },
+     "same_dataset": true
+    }
+   ]
+  }
+ ],
+ "observational_factors_all": [],
+ "table": [
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 44.05617537035266,
+    "median": 43.98573813268363,
+    "min": 43.74070171123935,
+    "max": 44.442086267135004
+   },
+   "cost_raw": {
+    "mean": 19.09428261133333,
+    "median": 19.06375457499999,
+    "min": 18.95755391999998,
+    "max": 19.261539339000024
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n500|s3000002",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 19.261539339000024
+   },
+   "cost_ref_hi_max": 48.33672910524859,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 44.05617537035266,
+     "median": 43.98573813268363,
+     "min": 43.74070171123935,
+     "max": 44.442086267135004
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 442.5078125,
+    "max": 442.671875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 19.109861587484676,
+   "gen_cpu_s_mean": 0.00917162433331479,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0006745268918926,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 44.442086267135004,
+    "budget_share": 0.006172511981546528,
+    "max_cost_hi": 48.33672910524859,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 90.0312698827342,
+    "median": 90.6104307977863,
+    "min": 88.6983225395231,
+    "max": 90.78505631089318
+   },
+   "cost_raw": {
+    "mean": 39.020239422666634,
+    "median": 39.271252183,
+    "min": 38.442529871999966,
+    "max": 39.346936212999935
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n1000|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 39.346936212999935
+   },
+   "cost_ref_hi_max": 98.740924252008,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 90.0312698827342,
+     "median": 90.6104307977863,
+     "min": 88.6983225395231,
+     "max": 90.78505631089318
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.14285714285714285,
+    "max": 0.14285714285714285
+   },
+   "peak_rss_mb": {
+    "median": 347.3359375,
+    "max": 347.3359375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 39.022012731681265,
+   "gen_cpu_s_mean": 0.012370395666645587,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0000468233459985,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 90.78505631089318,
+    "budget_share": 0.012609035598735165,
+    "max_cost_hi": 98.740924252008,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "cdl",
+   "method": "cdl",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 375.75229486024637,
+    "median": 379.9571272814175,
+    "min": 366.35550600553205,
+    "max": 380.9442512937896
+   },
+   "cost_raw": {
+    "mean": 162.85391207033334,
+    "median": 164.67631853,
+    "min": 158.781272071,
+    "max": 165.10414561
+   },
+   "max_unit": {
+    "key": "cdl|E2|R2|k0.25|n4000|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 165.10414561
+   },
+   "cost_ref_hi_max": 414.3279631002953,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 375.75229486024637,
+     "median": 379.9571272814175,
+     "min": 366.35550600553205,
+     "max": 380.9442512937896
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 347.3359375,
+    "max": 347.3359375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 162.99058922504386,
+   "gen_cpu_s_mean": 0.0462238913333431,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0004323460581859,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 380.9442512937896,
+    "budget_share": 0.05290892379080411,
+    "max_cost_hi": 414.3279631002953,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "mscr_eq_min",
+   "method": "mscr",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 365.8266131298463,
+    "median": 365.8477969163031,
+    "min": 365.53037302720253,
+    "max": 366.10166944603344
+   },
+   "cost_raw": {
+    "mean": 130.20772615833334,
+    "median": 130.215266049,
+    "min": 130.10228618000002,
+    "max": 130.305626246
+   },
+   "max_unit": {
+    "key": "mscr_eq_min|E2|R2|k0.25|n500|s3000002",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 130.305626246
+   },
+   "cost_ref_hi_max": 370.0726987554304,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 365.8266131298463,
+     "median": 365.8477969163031,
+     "min": 365.53037302720253,
+     "max": 366.10166944603344
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 95.87890625,
+    "max": 96.0078125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 130.265904776752,
+   "gen_cpu_s_mean": 0.01700471866666668,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.000448348551318,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 366.10166944603344,
+    "budget_share": 0.050847454089726865,
+    "max_cost_hi": 370.0726987554304,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "mscr_eq_min",
+   "method": "mscr",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 772.8165553101538,
+    "median": 774.3342890946108,
+    "min": 766.7435063818808,
+    "max": 777.3718704539696
+   },
+   "cost_raw": {
+    "mean": 275.066610227,
+    "median": 275.606813312,
+    "min": 272.90504553100004,
+    "max": 276.687971838
+   },
+   "max_unit": {
+    "key": "mscr_eq_min|E2|R2|k0.25|n1000|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 276.687971838
+   },
+   "cost_ref_hi_max": 785.8038628197637,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 772.8165553101538,
+     "median": 774.3342890946108,
+     "min": 766.7435063818808,
+     "max": 777.3718704539696
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 96.3515625,
+    "max": 96.35546875,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 275.1777621358633,
+   "gen_cpu_s_mean": 0.021877876333333334,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0004025618991836,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 777.3718704539696,
+    "budget_share": 0.10796831534082911,
+    "max_cost_hi": 785.8038628197637,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 0.09430411877231211,
+    "median": 0.09379952783157318,
+    "min": 0.09247652744616287,
+    "max": 0.09663630103920029
+   },
+   "cost_raw": {
+    "mean": 0.0492474070000147,
+    "median": 0.04898389999999608,
+    "min": 0.04829300400001557,
+    "max": 0.05046531700003243
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n500|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 0.05046531700003243
+   },
+   "cost_ref_hi_max": 0.10522482328634376,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.09430411877231211,
+     "median": 0.09379952783157318,
+     "min": 0.09247652744616287,
+     "max": 0.09663630103920029
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.42857142857142855,
+    "max": 0.5714285714285714
+   },
+   "peak_rss_mb": {
+    "median": 541.58203125,
+    "max": 541.58203125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.04924703389406204,
+   "gen_cpu_s_mean": 0.006690795666694764,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 0.9999929378664124,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.09663630103920029,
+    "budget_share": 1.3421708477666706e-05,
+    "max_cost_hi": 0.10522482328634376,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 0.14348999297266418,
+    "median": 0.14408156401679142,
+    "min": 0.1420939746963359,
+    "max": 0.1442944402048653
+   },
+   "cost_raw": {
+    "mean": 0.07493320733334485,
+    "median": 0.07524213700003202,
+    "min": 0.07420417999998108,
+    "max": 0.07535330500002146
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n1000|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 0.07535330500002146
+   },
+   "cost_ref_hi_max": 0.15711856526461782,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.14348999297266418,
+     "median": 0.14408156401679142,
+     "min": 0.1420939746963359,
+     "max": 0.1442944402048653
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.2857142857142857,
+    "max": 0.42857142857142855
+   },
+   "peak_rss_mb": {
+    "median": 541.859375,
+    "max": 541.859375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.07493736719091733,
+   "gen_cpu_s_mean": 0.011783682666684095,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 0.999996120539294,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.1442944402048653,
+    "budget_share": 2.0040894472897956e-05,
+    "max_cost_hi": 0.15711856526461782,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pcorr_eq",
+   "method": "pcorr",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 0.46392617725502205,
+    "median": 0.4581709907690169,
+    "min": 0.4556189582291192,
+    "max": 0.4779885827669301
+   },
+   "cost_raw": {
+    "mean": 0.24227108599997868,
+    "median": 0.23926561799999035,
+    "min": 0.23793289799999684,
+    "max": 0.24961474199994882
+   },
+   "max_unit": {
+    "key": "pcorr_eq|E2|R2|k0.25|n4000|s3000002",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 0.24961474199994882
+   },
+   "cost_ref_hi_max": 0.5204696745805446,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 0.46392617725502205,
+     "median": 0.4581709907690169,
+     "min": 0.4556189582291192,
+     "max": 0.4779885827669301
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5714285714285714,
+    "max": 0.5714285714285714
+   },
+   "peak_rss_mb": {
+    "median": 473.625,
+    "max": 544.89453125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.2422833355764548,
+   "gen_cpu_s_mean": 0.04497601833332965,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0000615756942217,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 0.4779885827669301,
+    "budget_share": 6.638730316207362e-05,
+    "max_cost_hi": 0.5204696745805446,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 40.33949647612863,
+    "median": 39.2491253145509,
+    "min": 38.629241793764045,
+    "max": 43.14012232007095
+   },
+   "cost_raw": {
+    "mean": 17.691209343999997,
+    "median": 17.213018336000005,
+    "min": 16.941163452000012,
+    "max": 18.91944624399997
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n500|s3000002",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 18.91944624399997
+   },
+   "cost_ref_hi_max": 43.78054445992266,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 40.33949647612863,
+     "median": 39.2491253145509,
+     "min": 38.629241793764045,
+     "max": 43.14012232007095
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 458.05078125,
+    "max": 569.6484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 17.694594123711187,
+   "gen_cpu_s_mean": 0.00715446533335277,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0001166418659255,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 43.14012232007095,
+    "budget_share": 0.0059916836555654095,
+    "max_cost_hi": 43.78054445992266,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 66.0499753968882,
+    "median": 65.73883480231545,
+    "min": 63.758723603822475,
+    "max": 68.65236778452665
+   },
+   "cost_raw": {
+    "mean": 28.96674584433333,
+    "median": 28.830292643999996,
+    "min": 27.961899015,
+    "max": 30.108045874
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n1000|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 30.108045874
+   },
+   "cost_ref_hi_max": 69.6715233621639,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 66.0499753968882,
+     "median": 65.73883480231545,
+     "min": 63.758723603822475,
+     "max": 68.65236778452665
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 247.21484375,
+    "max": 251.01953125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 28.982997231185436,
+   "gen_cpu_s_mean": 0.01234972766667397,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.000611872319356,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 68.65236778452665,
+    "budget_share": 0.009535051081184256,
+    "max_cost_hi": 69.6715233621639,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "method": "pmrt_core",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 206.6982521026498,
+    "median": 205.40131414936585,
+    "min": 205.03963989652004,
+    "max": 209.65380226206358
+   },
+   "cost_raw": {
+    "mean": 90.64917434333334,
+    "median": 90.080391814,
+    "min": 89.92177667300001,
+    "max": 91.94535454300001
+   },
+   "max_unit": {
+    "key": "pmrt_nl_eq|E2|R2|k0.25|n4000|s3000001",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 91.94535454300001
+   },
+   "cost_ref_hi_max": 212.76614709216275,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 206.6982521026498,
+     "median": 205.40131414936585,
+     "min": 205.03963989652004,
+     "max": 209.65380226206358
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 1.0,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 289.56640625,
+    "max": 290.30078125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 90.75842554246385,
+   "gen_cpu_s_mean": 0.04470717766666136,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.001165477643946,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 209.65380226206358,
+    "budget_share": 0.02911858364750883,
+    "max_cost_hi": 212.76614709216275,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 1.1276281868129951,
+    "median": 1.116004286305169,
+    "min": 1.0949932355545904,
+    "max": 1.171887038579226
+   },
+   "cost_raw": {
+    "mean": 0.5673685273333527,
+    "median": 0.5615199370000141,
+    "min": 0.5509481820000133,
+    "max": 0.589637463000031
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n500|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 0.589637463000031
+   },
+   "cost_ref_hi_max": 1.4477156083635314,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 1.1276281868129951,
+     "median": 1.116004286305169,
+     "min": 1.0949932355545904,
+     "max": 1.171887038579226
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.2857142857142857,
+    "max": 0.42857142857142855
+   },
+   "peak_rss_mb": {
+    "median": 541.20703125,
+    "max": 541.484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.5674306067327658,
+   "gen_cpu_s_mean": 0.0076921366666624635,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.00005971527496,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 1.171887038579226,
+    "budget_share": 0.00016276208869155917,
+    "max_cost_hi": 1.4477156083635314,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 1.4439972772976402,
+    "median": 1.4310143809277893,
+    "min": 1.3964024517304043,
+    "max": 1.504574999234727
+   },
+   "cost_raw": {
+    "mean": 0.7265503100000122,
+    "median": 0.7200179380000691,
+    "min": 0.7026028719999999,
+    "max": 0.7570301199999676
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n1000|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 0.7570301199999676
+   },
+   "cost_ref_hi_max": 1.8587087651267722,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 1.4439972772976402,
+     "median": 1.4310143809277893,
+     "min": 1.3964024517304043,
+     "max": 1.504574999234727
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.5714285714285714,
+    "max": 0.5714285714285714
+   },
+   "peak_rss_mb": {
+    "median": 300.625,
+    "max": 540.76953125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 0.7266636329392592,
+   "gen_cpu_s_mean": 0.012324866999999054,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.00017211697993,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 1.504574999234727,
+    "budget_share": 0.0002089687498937121,
+    "max_cost_hi": 1.8587087651267722,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "rcot2_eq",
+   "method": "rcot2",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 3.581186828889338,
+    "median": 3.6036600371436616,
+    "min": 3.5023537429530767,
+    "max": 3.6375467065712743
+   },
+   "cost_raw": {
+    "mean": 1.8018817913333198,
+    "median": 1.8131892339999922,
+    "min": 1.7622167559999866,
+    "max": 1.8302393839999809
+   },
+   "max_unit": {
+    "key": "rcot2_eq|E2|R2|k0.25|n4000|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 1.8302393839999809
+   },
+   "cost_ref_hi_max": 4.493720785272235,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 3.581186828889338,
+     "median": 3.6036600371436616,
+     "min": 3.5023537429530767,
+     "max": 3.6375467065712743
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.42857142857142855,
+    "max": 0.5714285714285714
+   },
+   "peak_rss_mb": {
+    "median": 541.20703125,
+    "max": 541.484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 1.802323582271735,
+   "gen_cpu_s_mean": 0.04342640833332704,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.000085667146009,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 3.6375467065712743,
+    "budget_share": 0.0005052148203571215,
+    "max_cost_hi": 4.493720785272235,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 500,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 3.3495992864004887,
+    "median": 3.342596046578958,
+    "min": 3.275972546200047,
+    "max": 3.430229266422461
+   },
+   "cost_raw": {
+    "mean": 1.4542000389999998,
+    "median": 1.4511596419999933,
+    "min": 1.4222356160000231,
+    "max": 1.4892048589999831
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n500|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 1.4892048589999831
+   },
+   "cost_ref_hi_max": 3.6964473038845145,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 3.3495992864004887,
+     "median": 3.342596046578958,
+     "min": 3.275972546200047,
+     "max": 3.430229266422461
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.2857142857142857,
+    "max": 0.42857142857142855
+   },
+   "peak_rss_mb": {
+    "median": 541.20703125,
+    "max": 541.484375,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 1.454340120156606,
+   "gen_cpu_s_mean": 0.007337243999984366,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0001139846362608,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 3.430229266422461,
+    "budget_share": 0.00047642073144756405,
+    "max_cost_hi": 3.6964473038845145,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 1000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 5.4553680084718446,
+    "median": 5.449136917065598,
+    "min": 5.4370357885835405,
+    "max": 5.479931319766395
+   },
+   "cost_raw": {
+    "mean": 2.368401618333337,
+    "median": 2.365696443000047,
+    "min": 2.3604428409999514,
+    "max": 2.3790655710000124
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n1000|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 2.3790655710000124
+   },
+   "cost_ref_hi_max": 5.9052255051012885,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 5.4553680084718446,
+     "median": 5.449136917065598,
+     "min": 5.4370357885835405,
+     "max": 5.479931319766395
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.42857142857142855,
+    "max": 0.42857142857142855
+   },
+   "peak_rss_mb": {
+    "median": 530.609375,
+    "max": 539.51953125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 2.3685580951472125,
+   "gen_cpu_s_mean": 0.012062885999985914,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0000582447642903,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 5.479931319766395,
+    "budget_share": 0.0007611015721897771,
+    "max_cost_hi": 5.9052255051012885,
+    "provisional": false
+   }
+  },
+  {
+   "arm": "shap_dag",
+   "method": "shap_dag",
+   "n": 4000,
+   "cost_field": "cpu_s",
+   "budget": 7200.0,
+   "n_units": 3,
+   "n_ok": 3,
+   "n_infeasible": 0,
+   "n_errors": 0,
+   "n_no_cost": 0,
+   "roles": {
+    "timing": 3
+   },
+   "share_non_ref": 1.0,
+   "hosts": {
+    "vps|AMD EPYC-Rome Processor": 3
+   },
+   "n_unconverted": 0,
+   "factor_sources": [
+    "r55_calibration_block"
+   ],
+   "cost_ref": {
+    "mean": 19.510385084461006,
+    "median": 19.44844873338099,
+    "min": 19.070705462558113,
+    "max": 20.012001057443918
+   },
+   "cost_raw": {
+    "mean": 8.470267731999977,
+    "median": 8.443378591999931,
+    "min": 8.279384563999969,
+    "max": 8.688040040000033
+   },
+   "max_unit": {
+    "key": "shap_dag|E2|R2|k0.25|n4000|s3000000",
+    "host": "vps|AMD EPYC-Rome Processor",
+    "cost_raw": 8.688040040000033
+   },
+   "cost_ref_hi_max": 21.565120465336324,
+   "cost_ref_by_role": {
+    "timing": {
+     "mean": 19.510385084461006,
+     "median": 19.44844873338099,
+     "min": 19.070705462558113,
+     "max": 20.012001057443918
+    }
+   },
+   "procs_per_vcpu": {
+    "median": 0.14285714285714285,
+    "max": 1.0
+   },
+   "peak_rss_mb": {
+    "median": 536.3828125,
+    "max": 537.0078125,
+    "scope": [
+     "job"
+    ]
+   },
+   "wall_s_mean": 8.47163655857245,
+   "gen_cpu_s_mean": 0.04447946333337427,
+   "gpu_s_mean": null,
+   "n_multi_thread": 0,
+   "n_contended": 0,
+   "wall_cpu_ratio_median": 1.0000556617491188,
+   "infeasible_units": [],
+   "t3": {
+    "status": "feasible",
+    "max_cost": 20.012001057443918,
+    "budget_share": 0.0027794445913116553,
+    "max_cost_hi": 21.565120465336324,
+    "provisional": false
+   }
+  }
+ ],
+ "feasibility": {
+  "cdl": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 44.442086267135004,
+     "budget_share": 0.006172511981546528,
+     "max_cost_hi": 48.33672910524859,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 90.78505631089318,
+     "budget_share": 0.012609035598735165,
+     "max_cost_hi": 98.740924252008,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 380.9442512937896,
+     "budget_share": 0.05290892379080411,
+     "max_cost_hi": 414.3279631002953,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "mscr_eq_min": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 366.10166944603344,
+     "budget_share": 0.050847454089726865,
+     "max_cost_hi": 370.0726987554304,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 777.3718704539696,
+     "budget_share": 0.10796831534082911,
+     "max_cost_hi": 785.8038628197637,
+     "provisional": false
+    },
+    "4000": {
+     "status": "no DEV cost"
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "pcorr_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 0.09663630103920029,
+     "budget_share": 1.3421708477666706e-05,
+     "max_cost_hi": 0.10522482328634376,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 0.1442944402048653,
+     "budget_share": 2.0040894472897956e-05,
+     "max_cost_hi": 0.15711856526461782,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 0.4779885827669301,
+     "budget_share": 6.638730316207362e-05,
+     "max_cost_hi": 0.5204696745805446,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "pmrt_nl_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 43.14012232007095,
+     "budget_share": 0.0059916836555654095,
+     "max_cost_hi": 43.78054445992266,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 68.65236778452665,
+     "budget_share": 0.009535051081184256,
+     "max_cost_hi": 69.6715233621639,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 209.65380226206358,
+     "budget_share": 0.02911858364750883,
+     "max_cost_hi": 212.76614709216275,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "rcot2_eq": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 1.171887038579226,
+     "budget_share": 0.00016276208869155917,
+     "max_cost_hi": 1.4477156083635314,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 1.504574999234727,
+     "budget_share": 0.0002089687498937121,
+     "max_cost_hi": 1.8587087651267722,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 3.6375467065712743,
+     "budget_share": 0.0005052148203571215,
+     "max_cost_hi": 4.493720785272235,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  },
+  "shap_dag": {
+   "first_infeasible_n": null,
+   "first_infeasible_cost": null,
+   "by_n": {
+    "500": {
+     "status": "feasible",
+     "max_cost": 3.430229266422461,
+     "budget_share": 0.00047642073144756405,
+     "max_cost_hi": 3.6964473038845145,
+     "provisional": false
+    },
+    "1000": {
+     "status": "feasible",
+     "max_cost": 5.479931319766395,
+     "budget_share": 0.0007611015721897771,
+     "max_cost_hi": 5.9052255051012885,
+     "provisional": false
+    },
+    "4000": {
+     "status": "feasible",
+     "max_cost": 20.012001057443918,
+     "budget_share": 0.0027794445913116553,
+     "max_cost_hi": 21.565120465336324,
+     "provisional": false
+    },
+    "8000": {
+     "status": "no DEV cost"
+    },
+    "24000": {
+     "status": "no DEV cost"
+    }
+   }
+  }
+ },
+ "by_world_regime": [
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 44.05617537035266,
+   "median": 43.98573813268363,
+   "min": 43.74070171123935,
+   "max": 44.442086267135004
+  },
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 90.0312698827342,
+   "median": 90.6104307977863,
+   "min": 88.6983225395231,
+   "max": 90.78505631089318
+  },
+  {
+   "arm": "cdl",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 375.75229486024637,
+   "median": 379.9571272814175,
+   "min": 366.35550600553205,
+   "max": 380.9442512937896
+  },
+  {
+   "arm": "mscr_eq_min",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 365.8266131298463,
+   "median": 365.8477969163031,
+   "min": 365.53037302720253,
+   "max": 366.10166944603344
+  },
+  {
+   "arm": "mscr_eq_min",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 772.8165553101538,
+   "median": 774.3342890946108,
+   "min": 766.7435063818808,
+   "max": 777.3718704539696
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 0.09430411877231211,
+   "median": 0.09379952783157318,
+   "min": 0.09247652744616287,
+   "max": 0.09663630103920029
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 0.14348999297266418,
+   "median": 0.14408156401679142,
+   "min": 0.1420939746963359,
+   "max": 0.1442944402048653
+  },
+  {
+   "arm": "pcorr_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 0.46392617725502205,
+   "median": 0.4581709907690169,
+   "min": 0.4556189582291192,
+   "max": 0.4779885827669301
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 40.33949647612863,
+   "median": 39.2491253145509,
+   "min": 38.629241793764045,
+   "max": 43.14012232007095
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 66.0499753968882,
+   "median": 65.73883480231545,
+   "min": 63.758723603822475,
+   "max": 68.65236778452665
+  },
+  {
+   "arm": "pmrt_nl_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 206.6982521026498,
+   "median": 205.40131414936585,
+   "min": 205.03963989652004,
+   "max": 209.65380226206358
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 1.1276281868129951,
+   "median": 1.116004286305169,
+   "min": 1.0949932355545904,
+   "max": 1.171887038579226
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 1.4439972772976402,
+   "median": 1.4310143809277893,
+   "min": 1.3964024517304043,
+   "max": 1.504574999234727
+  },
+  {
+   "arm": "rcot2_eq",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 3.581186828889338,
+   "median": 3.6036600371436616,
+   "min": 3.5023537429530767,
+   "max": 3.6375467065712743
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 500,
+   "n_units": 3,
+   "mean": 3.3495992864004887,
+   "median": 3.342596046578958,
+   "min": 3.275972546200047,
+   "max": 3.430229266422461
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 1000,
+   "n_units": 3,
+   "mean": 5.4553680084718446,
+   "median": 5.449136917065598,
+   "min": 5.4370357885835405,
+   "max": 5.479931319766395
+  },
+  {
+   "arm": "shap_dag",
+   "world": "E2",
+   "regime": "R2",
+   "n": 4000,
+   "n_units": 3,
+   "mean": 19.510385084461006,
+   "median": 19.44844873338099,
+   "min": 19.070705462558113,
+   "max": 20.012001057443918
+  }
+ ],
+ "spec_t3_fields": {}
+}
