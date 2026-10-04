@@ -80,3 +80,14 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
 - 07:00 NST Exp B pilot done 144/144; P1 GO (1 Kaggle slot at a time, yields to EVAL); over-budget cdl units measured (R-13). Calibration k1 + pmrt_nl k1 COMPLETE (pull asked). Requeue launch hit a slug collision; aud1 fixing.
 - 09:06 NST user: keep R-56 split votes as decided; Lightning GO for remaining credits (aud1: last cdl parts 60-63 on one cpu-4 studio). Paperspace probe proposed (key to be stored by user in env/config, not chat).
 - 11:06 NST R-58 EVAL scope trim (user GO after 4-reviewer panel): ~1 243 -> ~360-450 CPU-h; freeze no longer waits for large-n cdl DEV.
+
+## 2026-10-04 afternoon/evening: freeze + EVAL launch (user approved launch; cloud only)
+- DEV done: final T1 S_power 14 -> S = 40 (41d6c37). Exp B done (6ee82f4). Exp C calib block merged (12748be).
+- Freeze checklist failures F1 (calib block missing) -> merged; F2 (no campaign.py audit) -> independent audit by
+  the exp-b worker: FAIL (spec-sha stamp never matched eval_analysis -> every EVAL record PROVISIONAL; 2x-cap breach
+  recorded error vs protocol "infeasible"). Rulings R-59 (code follows pre-registered text; F3-F9 safeguards),
+  fixed by aud1 (campaign/vps_run) + xm-harness (eval_analysis), re-audit PASS-WITH-NOTES (5a4ef0f).
+- xm-harness notes ruled: pkgs_lock torch '2.10.0+cpu' (what records stamp); uncalibrated EPYC 7B12 hosts =
+  provisional T3 read (margin >= 26.8x); _ref/ kept as DEV provenance, outside the manifest; PROTOCOL_A s.11 stamp
+  field renamed (R-59). Re-audit N1: every EVAL relaunch uses --skip-complete-from; infeasible+ok key check at merge.
+- Freeze merged: 93856c2 (tree = xm/freeze 22d85c3). EVAL launch GO to aud1 (Kaggle + VPS, Colab if granted).
