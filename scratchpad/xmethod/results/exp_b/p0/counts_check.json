@@ -1,0 +1,22 @@
+{
+ "schema": "xm-expb-counts/1",
+ "source": "tables",
+ "counts": {
+  "s60_0": {
+   "carrier": 1935,
+   "sleep": 279,
+   "ptx": 1502,
+   "prot_min": 5064
+  },
+  "placebo": {
+   "carrier": 670,
+   "sleep": 123,
+   "ptx": 678,
+   "prot_min": 3633
+  }
+ },
+ "check": {
+  "against": "scratchpad/xmethod/specs/exp_b/counts_v4.json",
+  "mismatches": {}
+ }
+}

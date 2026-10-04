@@ -1,0 +1,36 @@
+{
+ "n_expected": 1328,
+ "n_records": 1328,
+ "n_ok": 1316,
+ "missing": [],
+ "errors": [],
+ "infeasible": [
+  "cdl|E6|carrier|k0|n10094|s60000600",
+  "cdl|E6|carrier|k0|n10182|s60000610",
+  "cdl|E6|carrier|k0|n20276|s60000000",
+  "cdl|E6|prot_min|k0|n10094|s60000433",
+  "cdl|E6|prot_min|k0|n10265|s60000423",
+  "cdl|E6|prot_min|k0|n10296|s60000443",
+  "cdl|E6|prot_min|k0|n10325|s60000413",
+  "cdl|E6|prot_min|k0|n25197|s60000603",
+  "cdl|E6|prot_min|k0|n25534|s60000613",
+  "cdl|E6|prot_min|k0|n50731|s60000003",
+  "cdl|E6|prot_min|k0|n9751|s60000403",
+  "cdl|E6|ptx|k0|n14988|s60000002"
+ ],
+ "unexpected": [],
+ "lines": 1328,
+ "bad_lines": 0,
+ "duplicates": 0,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "219bf0b16db8d64bfd89239b78830960e701b4e9",
+  "9bbeeb466422f14fb559ae466f90cf14b048f2de",
+  "9f54800ac8789762c986f27f8da7c0e0cf501690",
+  "bd031326b3ae65f4483e49e6dedd3b78969b09d9"
+ ],
+ "dirty_records": 0
+}

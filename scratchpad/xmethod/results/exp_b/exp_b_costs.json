@@ -1,0 +1,333 @@
+{
+ "schema": "xm-expb-costs/1",
+ "reference": "kaggle",
+ "factors_file": "scratchpad/xmethod/results/exp_b/factors_vps_py3.12.13.json",
+ "factors_sha256": "1aa2fab42d2411b88cc55917226115fe45e14b54220f2c1096d567cb7599a646",
+ "budget_cpu_s": 7200.0,
+ "arms": {
+  "cdl": {
+   "n": 76,
+   "ok": 64,
+   "infeasible": 12,
+   "ref_cpu_s": 193354.7888388907,
+   "max_ref_cpu_s": 7200.0,
+   "raw_cpu_s": {
+    "vps": 41150.922810403004,
+    "kaggle": 93328.42461597499
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "cdl",
+     "f": 2.368341823677435
+    }
+   }
+  },
+  "corr": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 7.444726244786617,
+   "max_ref_cpu_s": 0.255528832,
+   "raw_cpu_s": {
+    "vps": 1.310158918,
+    "kaggle": 3.9241612159999995
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "granger_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 246.08355698365628,
+   "max_ref_cpu_s": 46.594339440999995,
+   "raw_cpu_s": {
+    "vps": 32.713137544999995,
+    "kaggle": 158.179161234
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "granger_native": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 7.787778367084601,
+   "max_ref_cpu_s": 0.45398942899999994,
+   "raw_cpu_s": {
+    "vps": 1.4204920360000006,
+    "kaggle": 3.9707341009999992
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "mscr_eq": {
+   "n": 18,
+   "ok": 18,
+   "infeasible": 0,
+   "ref_cpu_s": 4202.084435565971,
+   "max_ref_cpu_s": 385.145332118,
+   "raw_cpu_s": {
+    "kaggle": 3014.001487778,
+    "vps": 442.138536468
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "mscr_native": {
+   "n": 18,
+   "ok": 18,
+   "infeasible": 0,
+   "ref_cpu_s": 3939.7326888856287,
+   "max_ref_cpu_s": 363.139369516,
+   "raw_cpu_s": {
+    "kaggle": 2826.364442874,
+    "vps": 414.333871013
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "notears": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 46481.81456434142,
+   "max_ref_cpu_s": 5071.479700778,
+   "raw_cpu_s": {
+    "vps": 7697.777732743997,
+    "kaggle": 25796.898625563
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pc_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 19958.28218480416,
+   "max_ref_cpu_s": 4700.987189443001,
+   "raw_cpu_s": {
+    "vps": 2205.8744257890007,
+    "kaggle": 14030.814719115
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pc_native": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 7075.245731810218,
+   "max_ref_cpu_s": 345.301775938,
+   "raw_cpu_s": {
+    "vps": 1363.9244976049995,
+    "kaggle": 3410.2056956719994
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pcorr_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 118.455968820928,
+   "max_ref_cpu_s": 18.363104067,
+   "raw_cpu_s": {
+    "vps": 21.693708507000004,
+    "kaggle": 75.61809187100003
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "pcorr_eq",
+     "f": 1.9746682286297557
+    }
+   }
+  },
+  "pcorr_hac_fb": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 297.4653580893769,
+   "max_ref_cpu_s": 35.638172912,
+   "raw_cpu_s": {
+    "vps": 49.42489263399999,
+    "kaggle": 164.654333283
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pcorr_native": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 112.76630055927323,
+   "max_ref_cpu_s": 15.296297810999999,
+   "raw_cpu_s": {
+    "vps": 18.487893633,
+    "kaggle": 63.086959460999985
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pmrt_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 229.52183349511404,
+   "max_ref_cpu_s": 34.148036339,
+   "raw_cpu_s": {
+    "vps": 37.767053452,
+    "kaggle": 128.036917584
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "pmrt_nl_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 14589.332040681866,
+   "max_ref_cpu_s": 677.698842459,
+   "raw_cpu_s": {
+    "vps": 3098.24783727,
+    "kaggle": 7368.629961018999
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "pmrt_nl_eq",
+     "f": 2.3305760090597993
+    }
+   }
+  },
+  "pmrt_r3": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 229.0930519036736,
+   "max_ref_cpu_s": 33.141325077000005,
+   "raw_cpu_s": {
+    "vps": 36.654186081999995,
+    "kaggle": 130.59855333100003
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "rcot2_eq": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 124.9848560760417,
+   "max_ref_cpu_s": 11.904605155999999,
+   "raw_cpu_s": {
+    "vps": 25.08407638,
+    "kaggle": 75.02030343999999
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "rcot2_eq",
+     "f": 1.9918832919787843
+    }
+   }
+  },
+  "rcot2_native": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 136.47714924551323,
+   "max_ref_cpu_s": 11.216962425,
+   "raw_cpu_s": {
+    "vps": 24.647200212999994,
+    "kaggle": 70.24696149099998
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  },
+  "shap_dag": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 457.63856042598997,
+   "max_ref_cpu_s": 44.779024869000004,
+   "raw_cpu_s": {
+    "vps": 83.88015163799996,
+    "kaggle": 261.34178893000006
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "shap_dag",
+     "f": 2.3402052531228628
+    }
+   }
+  },
+  "two_tower": {
+   "n": 76,
+   "ok": 76,
+   "infeasible": 0,
+   "ref_cpu_s": 3728.8458639117566,
+   "max_ref_cpu_s": 523.266699729,
+   "raw_cpu_s": {
+    "vps": 600.1426906809999,
+    "kaggle": 2116.185491139
+   },
+   "factor": {
+    "vps|AMD EPYC-Rome Processor": {
+     "from": "*",
+     "f": 2.687128241023521
+    }
+   }
+  }
+ },
+ "total_ref_core_h": 82.02717930252867
+}

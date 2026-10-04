@@ -1,0 +1,56 @@
+{
+ "eval": {
+  "n_units": 89067,
+  "n_episodes": 600,
+  "seed_range": [
+   188100,
+   188699
+  ],
+  "complete": true,
+  "subs": [
+   "v4"
+  ],
+  "by_family": {
+   "carrier": 20276,
+   "sleep": 3072,
+   "ptx": 14988,
+   "prot_min": 50731
+  },
+  "pi0_rows": [
+   [
+    0.5,
+    0.0,
+    0.5,
+    0.0
+   ]
+  ],
+  "file": "e6units_eval.npz"
+ },
+ "placebo": {
+  "n_units": 5104,
+  "n_episodes": 40,
+  "seed_range": [
+   188700,
+   188739
+  ],
+  "complete": true,
+  "subs": [
+   "v4"
+  ],
+  "by_family": {
+   "carrier": 670,
+   "sleep": 123,
+   "ptx": 678,
+   "prot_min": 3633
+  },
+  "pi0_rows": [
+   [
+    0.5,
+    0.0,
+    0.5,
+    0.0
+   ]
+  ],
+  "file": "e6units_placebo.npz"
+ }
+}

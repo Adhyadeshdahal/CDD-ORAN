@@ -1,0 +1,20 @@
+{
+ "n_expected": 144,
+ "n_records": 144,
+ "n_ok": 144,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 144,
+ "bad_lines": 0,
+ "duplicates": 0,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "9f54800ac8789762c986f27f8da7c0e0cf501690"
+ ],
+ "dirty_records": 0
+}
