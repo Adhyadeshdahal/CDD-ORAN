@@ -1,0 +1,1301 @@
+{
+ "arms": {
+  "cmi_knn_eq": {
+   "kind": "GPU wall-h (T4)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 8000,
+   "over_budget_cells": {
+    "8000": [
+     "E2|R2",
+     "E3|R1",
+     "E3|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 25.386872580677778,
+     "registry_h": 25.386872580677778,
+     "max_cell_s": 282.1794223359998,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 88.22142011949074,
+     "registry_h": 88.22142011949074,
+     "max_cell_s": 675.6927033185002,
+     "basis": [
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 392.4658847496048,
+     "registry_h": 392.4658847496048,
+     "max_cell_s": 5401.2010212660025,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 482.6176361306961,
+     "registry_h": 0.0,
+     "max_cell_s": 23571.390508621098,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 831.5145487115535,
+     "registry_h": 0.0,
+     "max_cell_s": 262016.7565575765,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1820.206362292023,
+   "registry_h": 506.07417744977334
+  },
+  "cmi_knn_eq_min": {
+   "kind": "GPU wall-h (T4)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 8000,
+   "over_budget_cells": {
+    "8000": [
+     "E2|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 28.618201907344453,
+     "registry_h": 28.618201907344453,
+     "max_cell_s": 283.6865775524998,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 97.32360003339257,
+     "registry_h": 97.32360003339257,
+     "max_cell_s": 591.6628695794998,
+     "basis": [
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 320.26187231302913,
+     "registry_h": 320.26187231302913,
+     "max_cell_s": 3536.0210052386524,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 462.40820043218264,
+     "registry_h": 0.0,
+     "max_cell_s": 11039.359131188783,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 833.4015465929798,
+     "registry_h": 0.0,
+     "max_cell_s": 67080.35111103472,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1742.0134212789285,
+   "registry_h": 446.20367425376617
+  },
+  "cmi_knn_native": {
+   "kind": "GPU wall-h (T4)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 8000,
+   "over_budget_cells": {
+    "8000": [
+     "E2|R2",
+     "E3|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 28.855482150377785,
+     "registry_h": 28.855482150377785,
+     "max_cell_s": 290.5912388034999,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 103.50542794916107,
+     "registry_h": 103.50542794916107,
+     "max_cell_s": 614.7825725395014,
+     "basis": [
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 397.21934162751165,
+     "registry_h": 397.21934162751165,
+     "max_cell_s": 6550.353146642582,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 470.00658407200063,
+     "registry_h": 0.0,
+     "max_cell_s": 24557.440760308593,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 848.0827949400327,
+     "registry_h": 0.0,
+     "max_cell_s": 199444.57717421954,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1847.669630739084,
+   "registry_h": 529.5802517270505
+  },
+  "mscr_eq": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 8000,
+   "over_budget_cells": {
+    "8000": [
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "24000": [
+     "E2|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 7.512702270855556,
+     "registry_h": 7.512702270855556,
+     "max_cell_s": 88.30228023149999,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 43.62189047361397,
+     "registry_h": 43.62189047361397,
+     "max_cell_s": 196.4219031975,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 509.5203311847502,
+     "registry_h": 509.5203311847502,
+     "max_cell_s": 2291.8832136618907,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 1029.3507379240405,
+     "registry_h": 0.0,
+     "max_cell_s": 11039.797008541591,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1185.3028850437468,
+     "registry_h": 0.0,
+     "max_cell_s": 133390.13816672016,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 2775.308546897007,
+   "registry_h": 560.6549239292198
+  },
+  "mscr_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 8000,
+   "over_budget_cells": {
+    "8000": [
+     "E2|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "24000": [
+     "E2|R2",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 15.323958884016665,
+     "registry_h": 15.323958884016665,
+     "max_cell_s": 341.909771398,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 83.55204547740952,
+     "registry_h": 83.55204547740952,
+     "max_cell_s": 780.2984879585001,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 1131.9006831383072,
+     "registry_h": 1131.9006831383072,
+     "max_cell_s": 4971.095332167163,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 1096.5393620420264,
+     "registry_h": 0.0,
+     "max_cell_s": 32440.948896919046,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1219.8616022138413,
+     "registry_h": 0.0,
+     "max_cell_s": 634263.485369995,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 3547.177651755601,
+   "registry_h": 1230.7766874997333
+  },
+  "mscr_native": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 24000,
+   "over_budget_cells": {
+    "24000": [
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 2.986286156761111,
+     "registry_h": 2.986286156761111,
+     "max_cell_s": 31.989960280000002,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 18.096163631625434,
+     "registry_h": 18.096163631625434,
+     "max_cell_s": 74.432949785,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 245.64000681679883,
+     "registry_h": 245.64000681679883,
+     "max_cell_s": 1118.4459048739673,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 796.8667947474204,
+     "registry_h": 796.8667947474204,
+     "max_cell_s": 5743.559187362196,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1066.7355509114966,
+     "registry_h": 0.0,
+     "max_cell_s": 76807.16772714071,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 2130.3248022641023,
+   "registry_h": 1063.5892513526057
+  },
+  "pcorr_eq": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.026929973283333335,
+     "registry_h": 0.026929973283333335,
+     "max_cell_s": 0.26164237,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.08424789759378463,
+     "registry_h": 0.08424789759378463,
+     "max_cell_s": 0.35077097700000004,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.2143924399380713,
+     "registry_h": 0.2143924399380713,
+     "max_cell_s": 0.8844906913911381,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.28271240265291075,
+     "registry_h": 0.28271240265291075,
+     "max_cell_s": 1.86984865688834,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.8692528151409218,
+     "registry_h": 0.8692528151409218,
+     "max_cell_s": 6.124895332612062,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.4775355286090217,
+   "registry_h": 1.4775355286090217
+  },
+  "pcorr_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.027285278327777777,
+     "registry_h": 0.027285278327777777,
+     "max_cell_s": 0.273044317,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.08278330835267583,
+     "registry_h": 0.08278330835267583,
+     "max_cell_s": 0.34567005775,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.1997924154562034,
+     "registry_h": 0.1997924154562034,
+     "max_cell_s": 0.8272949470010715,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.257722991787792,
+     "registry_h": 0.257722991787792,
+     "max_cell_s": 1.7116640935700482,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.7665931120940715,
+     "registry_h": 0.7665931120940715,
+     "max_cell_s": 5.418553889184775,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.3341771060185206,
+   "registry_h": 1.3341771060185206
+  },
+  "pcorr_hac": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.026929973283333335,
+     "registry_h": 0.026929973283333335,
+     "max_cell_s": 0.26164237,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.08424789759378463,
+     "registry_h": 0.08424789759378463,
+     "max_cell_s": 0.35077097700000004,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.2143924399380713,
+     "registry_h": 0.2143924399380713,
+     "max_cell_s": 0.8844906913911381,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.28271240265291075,
+     "registry_h": 0.28271240265291075,
+     "max_cell_s": 1.86984865688834,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.8692528151409218,
+     "registry_h": 0.8692528151409218,
+     "max_cell_s": 6.124895332612062,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.4775355286090217,
+   "registry_h": 1.4775355286090217
+  },
+  "pcorr_hac_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.027285278327777777,
+     "registry_h": 0.027285278327777777,
+     "max_cell_s": 0.273044317,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.08278330835267583,
+     "registry_h": 0.08278330835267583,
+     "max_cell_s": 0.34567005775,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.1997924154562034,
+     "registry_h": 0.1997924154562034,
+     "max_cell_s": 0.8272949470010715,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.257722991787792,
+     "registry_h": 0.257722991787792,
+     "max_cell_s": 1.7116640935700482,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.7665931120940715,
+     "registry_h": 0.7665931120940715,
+     "max_cell_s": 5.418553889184775,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.3341771060185206,
+   "registry_h": 1.3341771060185206
+  },
+  "pcorr_hac_fb": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.31773115325555557,
+     "registry_h": 0.31773115325555557,
+     "max_cell_s": 1.3909272,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.5008732968074404,
+     "registry_h": 0.5008732968074404,
+     "max_cell_s": 1.4708567424999999,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.4324784358387947,
+     "registry_h": 0.4324784358387947,
+     "max_cell_s": 1.8972996918039369,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.3167504461939592,
+     "registry_h": 0.3167504461939592,
+     "max_cell_s": 2.1548582974503376,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.3656875270203283,
+     "registry_h": 0.3656875270203283,
+     "max_cell_s": 2.636573301761321,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.9335208591160782,
+   "registry_h": 1.9335208591160782
+  },
+  "pcorr_hac_fb_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.31742562942777774,
+     "registry_h": 0.31742562942777774,
+     "max_cell_s": 1.456198868,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.5023372804381947,
+     "registry_h": 0.5023372804381947,
+     "max_cell_s": 1.4696818845000001,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.42977369784570896,
+     "registry_h": 0.42977369784570896,
+     "max_cell_s": 1.7647298034049466,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.3119185203490141,
+     "registry_h": 0.3119185203490141,
+     "max_cell_s": 1.9695900840366316,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.3574325232588845,
+     "registry_h": 0.3574325232588845,
+     "max_cell_s": 2.3440928070222737,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.91888765131958,
+   "registry_h": 1.91888765131958
+  },
+  "pcorr_native": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.026929973283333335,
+     "registry_h": 0.026929973283333335,
+     "max_cell_s": 0.26164237,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.08424789759378463,
+     "registry_h": 0.08424789759378463,
+     "max_cell_s": 0.35077097700000004,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 0.2143924399380713,
+     "registry_h": 0.2143924399380713,
+     "max_cell_s": 0.8844906913911381,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 0.28271240265291075,
+     "registry_h": 0.28271240265291075,
+     "max_cell_s": 1.86984865688834,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 0.8692528151409218,
+     "registry_h": 0.8692528151409218,
+     "max_cell_s": 6.124895332612062,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 1.4775355286090217,
+   "registry_h": 1.4775355286090217
+  },
+  "pdcor_eq": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 4000,
+   "over_budget_cells": {
+    "4000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "8000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 88.33342565188333,
+     "registry_h": 88.33342565188333,
+     "max_cell_s": 993.1472328570001,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 851.7617660419165,
+     "registry_h": 851.7617660419165,
+     "max_cell_s": 4126.05116150325,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2160.0,
+     "registry_h": 0.0,
+     "max_cell_s": 323793.16651043174,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 4301259.33613255,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 259434843.64914986,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 5980.0951916938,
+   "registry_h": 940.0951916937998
+  },
+  "pdcor_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 4000,
+   "over_budget_cells": {
+    "4000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "8000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 86.80715454127223,
+     "registry_h": 86.80715454127223,
+     "max_cell_s": 974.7157456734999,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 842.550618053924,
+     "registry_h": 842.550618053924,
+     "max_cell_s": 4161.77581650925,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2160.0,
+     "registry_h": 0.0,
+     "max_cell_s": 327832.67366616824,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 4407177.544511591,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 270896816.32716244,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 5969.357772595196,
+   "registry_h": 929.3577725951963
+  },
+  "pdcor_native": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": 4000,
+   "over_budget_cells": {
+    "4000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "8000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ],
+    "24000": [
+     "E1|R1",
+     "E1|R2",
+     "E2|R1",
+     "E2|R2",
+     "E3|R1",
+     "E3|R2",
+     "E4|R1",
+     "E4|R2",
+     "E4|R3",
+     "E4|R4",
+     "E5|R1",
+     "E5|R2"
+    ]
+   },
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 99.82137903947778,
+     "registry_h": 99.82137903947778,
+     "max_cell_s": 1162.5548833115,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 962.5248793825959,
+     "registry_h": 962.5248793825959,
+     "max_cell_s": 5543.506895977333,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2160.0,
+     "registry_h": 0.0,
+     "max_cell_s": 370949.1722287969,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 5079072.34507981,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 1440.0,
+     "registry_h": 0.0,
+     "max_cell_s": 321400627.447832,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 6102.346258422073,
+   "registry_h": 1062.3462584220738
+  },
+  "rcot2_eq": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.13031957121666665,
+     "registry_h": 0.13031957121666665,
+     "max_cell_s": 1.6168696565,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.478442813277219,
+     "registry_h": 0.478442813277219,
+     "max_cell_s": 1.93331001,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2.5373517813988813,
+     "registry_h": 2.5373517813988813,
+     "max_cell_s": 10.777069014256615,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 4.94990871694703,
+     "registry_h": 4.94990871694703,
+     "max_cell_s": 33.39024317304828,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 29.132588232526352,
+     "registry_h": 29.132588232526352,
+     "max_cell_s": 200.45858029334644,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 37.22861111536615,
+   "registry_h": 37.22861111536615
+  },
+  "rcot2_eq_min": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.12349467513888888,
+     "registry_h": 0.12349467513888888,
+     "max_cell_s": 1.471780947,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.4527596379587726,
+     "registry_h": 0.4527596379587726,
+     "max_cell_s": 1.8434674095,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2.3995097508707035,
+     "registry_h": 2.3995097508707035,
+     "max_cell_s": 10.195631444351282,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 4.6680099996053945,
+     "registry_h": 4.6680099996053945,
+     "max_cell_s": 31.485826161160045,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 27.330411543513822,
+     "registry_h": 27.330411543513822,
+     "max_cell_s": 188.04974975247353,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 34.974185607087584,
+   "registry_h": 34.974185607087584
+  },
+  "rcot2_native": {
+   "kind": "CPU-h (Kaggle core)",
+   "budget_s": 7200.0,
+   "infeasible_from_n": null,
+   "over_budget_cells": {},
+   "by_n": {
+    "500": {
+     "units": 1080,
+     "capped_h": 0.12354463538333332,
+     "registry_h": 0.12354463538333332,
+     "max_cell_s": 1.498327656,
+     "basis": [
+      "measured"
+     ]
+    },
+    "1000": {
+     "units": 1480,
+     "capped_h": 0.44903517751422134,
+     "registry_h": 0.44903517751422134,
+     "max_cell_s": 1.7977011760000001,
+     "basis": [
+      "extrapolated",
+      "measured"
+     ]
+    },
+    "4000": {
+     "units": 1080,
+     "capped_h": 2.3810789790950513,
+     "registry_h": 2.3810789790950513,
+     "max_cell_s": 10.138031884915554,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "8000": {
+     "units": 720,
+     "capped_h": 4.6413268941203105,
+     "registry_h": 4.6413268941203105,
+     "max_cell_s": 31.34280094727555,
+     "basis": [
+      "extrapolated"
+     ]
+    },
+    "24000": {
+     "units": 720,
+     "capped_h": 27.243305957835616,
+     "registry_h": 27.243305957835616,
+     "max_cell_s": 187.5259194839162,
+     "basis": [
+      "extrapolated"
+     ]
+    }
+   },
+   "capped_h": 34.83829164394853,
+   "registry_h": 34.83829164394853
+  }
+ },
+ "budget_s": 7200,
+ "CPU_total": {
+  "capped_h": 26622.60468130248,
+  "registry_h": 5904.814543167331,
+  "registry_units_run": 70120
+ },
+ "GPU_total": {
+  "capped_h": 5409.889414310035,
+  "registry_h": 1481.85810343059,
+  "registry_units_run": 10920
+ },
+ "n_units": 96520,
+ "proxy_costs": {
+  "pcorr_eq": "pcorr_hac",
+  "pcorr_native": "pcorr_hac",
+  "pcorr_eq_min": "pcorr_hac_eq_min"
+ }
+}

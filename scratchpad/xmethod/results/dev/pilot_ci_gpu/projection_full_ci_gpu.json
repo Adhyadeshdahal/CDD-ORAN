@@ -1,0 +1,57 @@
+{
+ "n_units": 96520,
+ "n_datasets": 5080,
+ "cpu_h_total": 0.04561619525185215,
+ "gpu_wall_h_total": 5409.889414309975,
+ "cpu_h_by_arm": {},
+ "gpu_wall_h_by_arm": {
+  "cmi_knn_eq": 1820.2063622920562,
+  "cmi_knn_eq_min": 1742.0134212789296,
+  "cmi_knn_native": 1847.6696307389893
+ },
+ "cpu_h_by_n": {},
+ "cpu_h_by_role": {},
+ "cpu_h_generation": 0.04561619525185215,
+ "arms_without_cost": [
+  "mscr_eq",
+  "mscr_eq_min",
+  "mscr_native",
+  "pcorr_eq",
+  "pcorr_eq_min",
+  "pcorr_hac",
+  "pcorr_hac_eq_min",
+  "pcorr_hac_fb",
+  "pcorr_hac_fb_eq_min",
+  "pcorr_native",
+  "pdcor_eq",
+  "pdcor_eq_min",
+  "pdcor_native",
+  "rcot2_eq",
+  "rcot2_eq_min",
+  "rcot2_native"
+ ],
+ "cost_basis_by_arm": {
+  "cmi_knn_eq": [
+   "extrapolated",
+   "measured"
+  ],
+  "cmi_knn_eq_min": [
+   "extrapolated",
+   "measured"
+  ],
+  "cmi_knn_native": [
+   "extrapolated",
+   "measured"
+  ]
+ },
+ "measured_infeasible": {},
+ "units_infeasible_not_run": {},
+ "units_capped_at_budget": {
+  "cmi_knn_eq|n24000": 280,
+  "cmi_knn_eq_min|n24000": 240,
+  "cmi_knn_native|n24000": 320,
+  "cmi_knn_eq|n8000": 120,
+  "cmi_knn_eq_min|n8000": 40,
+  "cmi_knn_native|n8000": 80
+ }
+}

@@ -133,8 +133,12 @@ json.dump({"name": NAME, "cmd": CMD, "rc": rc, "wall_s": wall, "pin": PIN, "have
 
 
 def k(*args, cwd=None, timeout=900):
-    r = subprocess.run([KAGGLE, *args], cwd=cwd, capture_output=True, text=True, timeout=timeout)
-    return (r.stdout + r.stderr).strip()
+    # utf-8 + replace: under Task Scheduler the console code page is cp1252 and the CLI's progress output can hold
+    # bytes it cannot decode (the reader thread died, stdout came back None, and the launch failed after the
+    # dataset upload; 2026-10-04)
+    r = subprocess.run([KAGGLE, *args], cwd=cwd, capture_output=True, text=True, timeout=timeout, encoding="utf-8",
+                       errors="replace", env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    return ((r.stdout or "") + (r.stderr or "")).strip()
 
 
 def _files(extra) -> dict:
@@ -257,6 +261,11 @@ def pull(a):
 
 
 def main(argv=None):
+    for st in (sys.stdout, sys.stderr):                 # a cp1252 pipe (Task Scheduler) cannot print the CLI's
+        try:                                            # progress characters: utf-8 with replacement
+            st.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="op", required=True)
     la = sp.add_parser("launch")

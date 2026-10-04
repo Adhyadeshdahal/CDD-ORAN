@@ -1,0 +1,30 @@
+{
+ "mode": "dev",
+ "n_expected": 12,
+ "n_records": 12,
+ "n_ok": 12,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 12,
+ "bad_lines": 0,
+ "duplicates": 0,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "96d3a578f47192327e95ac7bb8389703be6eee7f"
+ ],
+ "dirty_records": 0,
+ "platforms": [
+  "kaggle"
+ ],
+ "protocol_sha256": [
+  "None"
+ ],
+ "spec_sha256": [
+  "e7db8cc710cf1c4a08f943ccc9852a624351a237e4604aac13cbe660fa58a184"
+ ]
+}

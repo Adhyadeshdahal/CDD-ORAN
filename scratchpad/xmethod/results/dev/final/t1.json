@@ -1,0 +1,197 @@
+{
+ "S": 40,
+ "focal": "pmrt_nl_eq",
+ "S_power": 14,
+ "cap": 60,
+ "cap_binds": false,
+ "n_pairs": 115,
+ "largest": [
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "pc_eq",
+   "n_seeds": 60,
+   "sd_d": 0.18248820787604447,
+   "seeds_needed": 14,
+   "mdg_at_S": 0.08291537054037867,
+   "power_at_S": 0.9990551139115382
+  },
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "notears",
+   "n_seeds": 60,
+   "sd_d": 0.16186588575654667,
+   "seeds_needed": 12,
+   "mdg_at_S": 0.07354540905167435,
+   "power_at_S": 0.9999122180648083
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "pc_eq",
+   "n_seeds": 20,
+   "sd_d": 0.1555503340811216,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.07067587400922122,
+   "power_at_S": 0.9999660352782028
+  },
+  {
+   "cell": "E5|R1|k0.25|n500",
+   "arm": "pc_eq",
+   "n_seeds": 20,
+   "sd_d": 0.15672078199387576,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.0712076789050759,
+   "power_at_S": 0.9999591046330808
+  },
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "cdl",
+   "n_seeds": 60,
+   "sd_d": 0.16003766035123362,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.07271473627189763,
+   "power_at_S": 0.9999324520198187
+  },
+  {
+   "cell": "E5|R1|k0.25|n500",
+   "arm": "notears",
+   "n_seeds": 20,
+   "sd_d": 0.14584899665257015,
+   "seeds_needed": 10,
+   "mdg_at_S": 0.06626797282487745,
+   "power_at_S": 0.999994017640948
+  },
+  {
+   "cell": "E2|R2|k0.25|n1000",
+   "arm": "pcorr_eq",
+   "n_seeds": 60,
+   "sd_d": 0.13540715959673807,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06152361811460127,
+   "power_at_S": 0.9999994314529624
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "mscr_eq",
+   "n_seeds": 20,
+   "sd_d": 0.13545461681454152,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06154518078347059,
+   "power_at_S": 0.9999994245461485
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "shap_dag",
+   "n_seeds": 20,
+   "sd_d": 0.13355245153100528,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.0606809126691134,
+   "power_at_S": 0.999999649267628
+  },
+  {
+   "cell": "E5|R2|k0.25|n1000",
+   "arm": "notears",
+   "n_seeds": 60,
+   "sd_d": 0.13890772000400342,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06311413328621465,
+   "power_at_S": 0.9999986637651742
+  },
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "pcorr_eq",
+   "n_seeds": 60,
+   "sd_d": 0.13935890339265108,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06331913304092096,
+   "power_at_S": 0.9999985158076338
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "cdl",
+   "n_seeds": 20,
+   "sd_d": 0.12419330339509911,
+   "seeds_needed": 8,
+   "mdg_at_S": 0.05642848866504808,
+   "power_at_S": 0.9999999789373757
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "corr",
+   "n_seeds": 20,
+   "sd_d": 0.12681431837544704,
+   "seeds_needed": 8,
+   "mdg_at_S": 0.05761937343955937,
+   "power_at_S": 0.9999999503858891
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "notears",
+   "n_seeds": 20,
+   "sd_d": 0.1221158495108411,
+   "seeds_needed": 8,
+   "mdg_at_S": 0.05548457639477796,
+   "power_at_S": 0.9999999897720543
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "pcorr_eq",
+   "n_seeds": 20,
+   "sd_d": 0.12681431837544704,
+   "seeds_needed": 8,
+   "mdg_at_S": 0.05761937343955937,
+   "power_at_S": 0.9999999503858891
+  }
+ ],
+ "max_mdg_at_S": 0.08291537054037867,
+ "min_power_at_S": 0.9990551139115382,
+ "inputs": {
+  "spec": [
+   [
+    "scratchpad/xmethod/specs/dev/full.json",
+    "5ed77b4d3c7edeeb5cac9d72daa00c971b70052d71dbfffe558b046539233cc6"
+   ],
+   [
+    "scratchpad/xmethod/specs/dev/ci_c.json",
+    "4bce54235d15c5dd001350a9518ece4ba961de0569fb5fa8ff177418d95e8572"
+   ],
+   [
+    "scratchpad/xmethod/specs/dev/pmrt_nl.json",
+    "68e18a32ef86e0e1b56012863adad95f3d66d6fa352ffcd4919fb158f0f1a4e6"
+   ],
+   [
+    "scratchpad/xmethod/specs/dev/cdl.json",
+    "66df72c517e33e3b832db4a426d88e2b3ecfe9423a87eeaf9b53b47b806b16fb"
+   ]
+  ],
+  "merged": [
+   [
+    "scratchpad/xmethod/results/dev/full/merged.jsonl.gz",
+    "6a74cb85e3ebb1f6e49c904a045c015e72b6f4c6deae66e79363345b2dc76f2a"
+   ],
+   [
+    "scratchpad/xmethod/results/dev/ci_c/merged.jsonl.gz",
+    "1b0484798f5dfd2f765656c07efce384737e6c981957c9fcd918266352f4d350"
+   ],
+   [
+    "scratchpad/xmethod/results/dev/pmrt_nl/merged.jsonl.gz",
+    "d8894fd3a1dee29f359a0ee3d16f653c8f1c6be28a8fb023e30f47a6c36f71d7"
+   ],
+   [
+    "scratchpad/xmethod/results/dev/cdl/merged.jsonl.gz",
+    "be57d2421826185d43d126a6ee7b04b527e8414865090cac0655213f16f35630"
+   ]
+  ],
+  "eval_spec_fields": "scratchpad/xmethod/_ref/eval_full_feat_v2.json",
+  "eval_analysis": "xm-eval-analysis/5",
+  "eval_analysis_file": [
+   "scratchpad/xmethod/_ref/eval_analysis_feat_v2.py",
+   "2034c027b395b87624c0d85a75ce377afb13ab7d65f61104aa5b02fe23fd0533"
+  ]
+ },
+ "screen": {
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "duplicates": 0,
+  "n_used": 106840
+ }
+}

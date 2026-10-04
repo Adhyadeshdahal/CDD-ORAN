@@ -1,0 +1,34 @@
+{
+ "mode": "dev",
+ "n_expected": 58480,
+ "n_records": 58480,
+ "n_ok": 58480,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 58519,
+ "bad_lines": 0,
+ "duplicates": 39,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 36,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "3a251c677c7ec15734e5a8ad3875b9d2305e2134",
+  "9fd845b4eba6bae70f12ffd57283b80a8d7524df",
+  "e8c7ceda3e27142d97672c04db052e864af83265"
+ ],
+ "dirty_records": 17176,
+ "platforms": [
+  "colab",
+  "kaggle",
+  "lightning"
+ ],
+ "protocol_sha256": [
+  "None"
+ ],
+ "spec_sha256": [
+  "139515a7f28483fd7c41b8d3b8840b63af84d37982648345e6690d7238b5041c"
+ ]
+}

@@ -1,0 +1,152 @@
+{
+ "S": 40,
+ "S_power": 14,
+ "cap": 100,
+ "cap_binds": false,
+ "n_pairs": 70,
+ "largest": [
+  {
+   "cell": "E3|R2|k0.25|n1000",
+   "arm": "granger_eq",
+   "n_seeds": 60,
+   "sd_d": 0.18116657441044642,
+   "seeds_needed": 14,
+   "mdg_at_S": 0.08231487295319725
+  },
+  {
+   "cell": "E5|R2|k0.25|n1000",
+   "arm": "notears",
+   "n_seeds": 60,
+   "sd_d": 0.17969336370382877,
+   "seeds_needed": 14,
+   "mdg_at_S": 0.08164550470718858
+  },
+  {
+   "cell": "E5|R2|k0.25|n500",
+   "arm": "notears",
+   "n_seeds": 60,
+   "sd_d": 0.1761875676889851,
+   "seeds_needed": 13,
+   "mdg_at_S": 0.08005261068410084
+  },
+  {
+   "cell": "E5|R2|k0.25|n1000",
+   "arm": "pc_eq",
+   "n_seeds": 60,
+   "sd_d": 0.1628566394006129,
+   "seeds_needed": 12,
+   "mdg_at_S": 0.07399556803163311
+  },
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "notears",
+   "n_seeds": 60,
+   "sd_d": 0.16807316136320355,
+   "seeds_needed": 12,
+   "mdg_at_S": 0.0763657477626655
+  },
+  {
+   "cell": "E5|R2|k0.25|n500",
+   "arm": "two_tower",
+   "n_seeds": 60,
+   "sd_d": 0.16572237200374806,
+   "seeds_needed": 12,
+   "mdg_at_S": 0.07529764274333171
+  },
+  {
+   "cell": "E3|R2|k0.25|n1000",
+   "arm": "pc_eq",
+   "n_seeds": 60,
+   "sd_d": 0.15144082023648153,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.06880867465900022
+  },
+  {
+   "cell": "E5|R2|k0.25|n1000",
+   "arm": "two_tower",
+   "n_seeds": 60,
+   "sd_d": 0.1533267827962931,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.06966558090128343
+  },
+  {
+   "cell": "E5|R2|k0.25|n4000",
+   "arm": "shap_dag",
+   "n_seeds": 60,
+   "sd_d": 0.1547277543497019,
+   "seeds_needed": 11,
+   "mdg_at_S": 0.07030212655439391
+  },
+  {
+   "cell": "E2|R2|k0.25|n500",
+   "arm": "two_tower",
+   "n_seeds": 60,
+   "sd_d": 0.14404676441691794,
+   "seeds_needed": 10,
+   "mdg_at_S": 0.06544911030571447
+  },
+  {
+   "cell": "E3|R2|k0.25|n500",
+   "arm": "granger_eq",
+   "n_seeds": 60,
+   "sd_d": 0.14427639434814588,
+   "seeds_needed": 10,
+   "mdg_at_S": 0.06555344499701604
+  },
+  {
+   "cell": "E2|R2|k0.25|n500",
+   "arm": "shap_dag",
+   "n_seeds": 60,
+   "sd_d": 0.132619968873725,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.060257229703782354
+  },
+  {
+   "cell": "E3|R2|k0.25|n4000",
+   "arm": "granger_eq",
+   "n_seeds": 60,
+   "sd_d": 0.13393227059728596,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06085348731919905
+  },
+  {
+   "cell": "E3|R2|k0.25|n4000",
+   "arm": "pc_eq",
+   "n_seeds": 60,
+   "sd_d": 0.13393227059728596,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06085348731919905
+  },
+  {
+   "cell": "E5|R1|k0.25|n1000",
+   "arm": "two_tower",
+   "n_seeds": 20,
+   "sd_d": 0.1375963245803161,
+   "seeds_needed": 9,
+   "mdg_at_S": 0.06251828745734964
+  }
+ ],
+ "max_mdg_at_S": 0.08231487295319725,
+ "inputs": {
+  "spec": [
+   [
+    "scratchpad/xmethod/specs/dev/full.json",
+    "5ed77b4d3c7edeeb5cac9d72daa00c971b70052d71dbfffe558b046539233cc6"
+   ]
+  ],
+  "merged": [
+   [
+    "scratchpad/xmethod/results/dev/full/merged.jsonl.gz",
+    "6a74cb85e3ebb1f6e49c904a045c015e72b6f4c6deae66e79363345b2dc76f2a"
+   ]
+  ],
+  "eval_spec_fields": "D:\\academia\\major-project\\CDD-ORAN-wt\\xm-pmrt\\scratchpad\\xmethod\\specs\\eval\\full.json",
+  "eval_analysis": "xm-eval-analysis/2"
+ },
+ "screen": {
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "duplicates": 0,
+  "n_used": 41840
+ }
+}

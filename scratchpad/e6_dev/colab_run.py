@@ -795,13 +795,13 @@ def _finish(name, meta, info, alive=True):
         if alive:
             stop(name)
         else:
-            t0, n, out = time.time(), None, ""
+            t0, n, out, ok = time.time(), None, "", False
             while time.time() - t0 < 600:
-                n, out = active_assignments()
-                if n == 0:
+                ok, n, out = _gone(name)
+                if ok:
                     break
                 time.sleep(20)
-            if n:
+            if not ok:
                 raise SystemExit(f"STILL {n} ACTIVE COLAB ASSIGNMENT(S)")
     except SystemExit as e:
         tick_log(name, "stop-failed", {"err": str(e)})               # stays scheduled: the next tick retries
@@ -1515,20 +1515,30 @@ def config(name, *kv):
     print({k: meta.get(k) for k in ("auto_resume", "max_resumes", "resumes", "task", "every_min")})
 
 
+def _gone(name):
+    """(this session is gone, assignments, output): gone = not listed by `colab sessions` and no more assignments
+    than the OTHER listed sessions (concurrent jobs, 2026-10-03; before, finishing waited for 0 assignments, so a
+    finished job never got finished_utc while another job ran)."""
+    n, out = active_assignments()
+    ses = colab("sessions", timeout=120, check=False)
+    others = sum(1 for ln in ses.splitlines() if ln.lstrip().startswith("[") and f"[{name}]" not in ln)
+    return f"[{name}]" not in ses and n <= others, n, out
+
+
 def stop(name, wait_s=600):                                            # unassign shows in usage after ~3 min
     try:
         print(colab("stop", "-s", name, timeout=300, check=False)[-400:], flush=True)
     finally:
-        t0, n, out = time.time(), None, ""
+        t0, n, out, ok = time.time(), None, "", False
         while time.time() - t0 < wait_s:
-            n, out = active_assignments()
-            if n == 0:
+            ok, n, out = _gone(name)
+            if ok:
                 break
             time.sleep(15)
         print(out, flush=True)
-        if n != 0:
+        if not ok:
             raise SystemExit(f"STILL {n} ACTIVE COLAB ASSIGNMENT(S): stop them by hand (colab --auth adc sessions)")
-        print("verified: 0 active assignments", flush=True)
+        print(f"verified: {name} unassigned ({n} other assignment(s))", flush=True)
 
 
 def probe(name, ns="1,4,8,12,16,24"):
