@@ -1,4 +1,4 @@
-# dev-runs status (2026-10-04): ALL DEV RUNS DONE (10 arms, CI, pmrt_nl, cdl); final T1 S = 40; EVAL mode + R-57 + VPS lane DONE
+# dev-runs status (2026-10-04): READY-TO-MERGE (R-59): campaign.py + vps_run.py audit fixes F2-F9 done
 
 Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files only from feat/v2 5a811de. Never pushed.
 
@@ -33,27 +33,25 @@ Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files on
   declarations .09-.21; confounded placebo <= .08); R-53's F4 "primary family VALID" does not carry to these DEV
   cells. E2 R2 / E5 R2 VALID at n <= 4000. Reported, not tuned on. CPU-s max 1654 (n 24000) << 7200.
   LIGHTNING l1 (parts 60-63, user GO): 2.77 studio-h, ~0.42 credits used, ~0.10 left (est.; API stale at .5168).
-- pmrt_nl_eq T3 cost pilot DONE (checklist B; p1-040214 96d3a57 + p2-040523 900725c; results/dev/pmrt_nl_cost/,
-  cited by the xm-harness freeze): per dataset n 8000 E2 471-500, n 24000 E2 1049-1148 CPU-s; E4 R3 n 8000 33-37,
-  n 24000 94-103: feasible at every n; R-58(3) fallback not triggered.
-- R-43 pmrt_nl_eq DEV run DONE: Kaggle xm-dev-pmrtnl-k1 (e645167), specs/dev/pmrt_nl.json (gbm, T1 cells):
-  1440 / 1440 ok, clean; results/dev/pmrt_nl/. Overrun 7.9 h vs ~3.5 h = costlier units (35 / 53 / 143 CPU-s mean
-  at n 500 / 1000 / 4000 vs <= 57 est.), not contention.
+- pmrt_nl_eq T3 cost pilot DONE (results/dev/pmrt_nl_cost/, in the freeze): max 1148 CPU-s (E2 n 24000); E4 R3 <= 103.
+- R-43 pmrt_nl_eq DEV run DONE (xm-dev-pmrtnl-k1, 1440 / 1440 ok; results/dev/pmrt_nl/).
+- R-59 DONE (feat/v2 d48cc69 merged in; audit results/audit/campaign_eval_audit.md): F2 EVAL 2x-cap breach =
+  infeasible with cpu_s, never re-run (OOM / other signals stay error); F3 --skip-complete-from applies the merge's
+  accept_rule (mode, protocol sha, EVAL spec sha; dispatcher done-keys keep run_mode + spec sha); F4 integrity
+  stamps cost_table_sha256, part, parts; EVAL merge refuses mixed cost table / part count; F5 each part writes
+  rc_<i>.txt, session status non-zero if any part failed (gate-safe; vps_run exit_code + status show it); F6 EVAL
+  refuses --budget != spec, F7 refuses non-isolated runs; isolation, budget, cap factor stamped, per-record limits;
+  F8 vps_run scope CPUQuota = procs x 100 %; F9 merge summary sets python / lock / spec_file sha (+ isolation,
+  budget, cost table, parts). 7 new tests (EVAL via run_units, child stand-in); campaign + eval_analysis + exp_b +
+  exp_c tests pass (2 Linux-only skips). DEV behaviour unchanged (records gain stamps). F1 = xm-harness.
 - R-55 DONE (2a0cb02; proc count fixed 21607d4): records log load {start, end}; EVAL <= 1 process per vCPU.
-- R-57 DONE: EVAL_PYTHON = "3.12.14" exact; EVAL preconditions and pin_check(python=...) refuse any other
-  patch ("python" mismatch) before data, on every platform (check runs in campaign run); EVAL setup installs
-  3.12.14 exactly (uv). DEV unchanged. Tests updated + pin_check test; file 47 + 2 Linux-only pass.
+- R-57 DONE: EVAL_PYTHON = "3.12.14" exact; pin_check(python=...) refuses another patch on every platform.
 ## QUESTIONS
-- Q1-Q8 ANSWERED (Q5: flag a cell only with >= 10 measure seeds; Q6 torch version pin; Q7 Py 3.12 EVAL).
-- Q9 ANSWERED (pmrt-diag; reserve seeds 3_000_160-189 unused). feat/v2 pmrt_core adds only the nonlinear
-  statistics (v2): pmrt_eq / pmrt_r3 DEV rows stand (linear path v1 unchanged). R-43 run DONE (above).
+- Q1-Q9 ANSWERED (Q5 >= 10 measure seeds per flag; Q6 torch pin; Q7 Py 3.12 EVAL; Q9 reserve seeds unused).
 - Q10 ANSWERED (user): plan C (+ R-48, R-49). Q11 ANSWERED (user) = R-54: mscr stays in Study A as a
   reported-INVALID arm; EVAL runs mscr at n <= 1000 only; never in C2b (mscr R2 null raw .93-1.00).
 - R-51 ANSWERED (user GO): cdl DONE above. Freeze: needs campaign.py + dev_power.py + every adapter (item 2).
-- VPS lane DONE (daded38): campaign vps = vps_run.py (xm/exp-c, CLI v1) push + venv (Py 3.12.14, exact pin
-  check) + launch (<= 7 procs, systemd scope); dispatcher lane (init --vps): 1 job of 7 parts at a time, pulled
-  each tick, requeue-able, 30 min backoff on a safety refusal. cpu_quota now reads the process's own cgroup
-  (the scope's 700 %), not only the root.
+- VPS lane DONE (daded38): campaign vps (push, venv Py 3.12.14, launch in the scope); dispatcher init --vps / --only.
 - VPS LIVE SMOKE PASSED (b8b33d6; xm-citests gave the slot): queue xm-vps-smoke (init --only vps, new) -> tick launched
   xm-vps-smoke-v1-041259 (specs/dev/vps_smoke.json, 4 DEV units, 2 procs, vps_run 1b33ca1 venv Py 3.12.14, 0 pin mismatches)
   -> exit 0 in < 1 min -> tick pulled + checked (0 incomplete). Records: 4 / 4 ok, clean, host vps AMD EPYC-Rome, cpu_quota 7; nothing left running.

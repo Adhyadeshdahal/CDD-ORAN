@@ -96,7 +96,10 @@ def check_job(a, st, j) -> list[int]:
     for f in _outputs(j):
         with open(os.path.join(dd, f"{j['job']}__{os.path.basename(f)}"), "w", encoding="utf-8", newline="\n") as fo:
             for r in C.iter_jsonl(f):
-                fo.write(json.dumps({"key": r.get("key"), "status": r.get("status"), "error": r.get("error")}) + "\n")
+                fo.write(json.dumps({"key": r.get("key"), "status": r.get("status"), "error": r.get("error"),
+                                     "run_mode": r.get("run_mode"),          # R-59 F3: skip-from accept rule
+                                     "integrity": {"spec_sha256": (r.get("integrity") or {}).get("spec_sha256")}})
+                         + "\n")
     if j.get("spec"):                                      # a priority job of another spec: report only
         sp = json.load(open(os.path.join(ROOT, j["spec"]), encoding="utf-8"))
         ups = C.partition(C.expand(sp), j["nparts"], None)

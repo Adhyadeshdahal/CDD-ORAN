@@ -39,10 +39,13 @@ the spec's CONSTANT ``protocol_sha256`` (the frozen PROTOCOL_A blob) is verified
 live file, the git blob at ``freeze_commit``, or the launcher's bundled frozen copy) and the live PROTOCOL_A says
 'FROZEN: yes'. Measure blocks use EVAL seeds only, tune blocks DEV seeds (re-run). A run also needs a clean, known
 code commit and every uv.lock pin installed (``pin_check``; launchers install the full lock export). Every record
-carries ``integrity`` (code commit / dirty, protocol sha, spec sha, python, lock sha). EVAL budget = safety cap
-(2x; a breach is an error); feasibility comes from the spec (arm "infeasible_n" = DEV T3 cost); a child killed below
-its CPU limit (OOM) is an error in both modes. EVAL and DEV shard files never mix (``run`` refuses, ``merge`` drops
-the other mode); merge keeps each dataset's arms on one platform where possible and reports the rest.
+carries ``integrity`` (code commit / dirty, protocol sha, spec sha, python, lock sha, isolation, budget, cost-table
+sha, part index / count) and its ``limits``. EVAL budget = the spec's (no CLI override), safety cap 2x: a unit over it
+is infeasible with its CPU-s, never re-run (PROTOCOL_A s.7, R-59); EVAL runs isolated only; feasibility comes from
+the spec (arm "infeasible_n" = DEV T3 cost); a child killed below its CPU limit (OOM) is an error in both modes.
+EVAL and DEV shard files never mix (``run`` refuses, ``merge`` and --skip-complete-from drop the other mode / spec);
+merge keeps each dataset's arms on one platform where possible, reports the rest and the integrity sets, and
+refuses an EVAL run mixing cost tables or part counts. A session's exit status is non-zero if any part failed.
 """
 from __future__ import annotations
 
@@ -697,16 +700,19 @@ def read_registry(path: str | None) -> dict[str, tuple[int, float, str]]:
 
 def run_units(spec: dict, units: list[Unit], out: str, budget: float | None = None, isolate: bool | None = None,
               log=print, spec_file_sha256: str | None = None, skip_keys: set[str] | None = None,
-              eval_rules: bool | None = None, registry: str | None = None) -> int:
+              eval_rules: bool | None = None, registry: str | None = None, stamp: dict | None = None) -> int:
     """Run ``units`` (sorted dataset-major) appending one record each to ``out``; skips done keys and
     ``skip_keys``. Budgets per arm (``arm_budgets``): CPU-s via RLIMIT_CPU, wall-s (GPU arms, R-41) by the parent.
     DEV rules: a unit over its budget is "infeasible" with its measured cost; larger n of that (arm, cell) in this
     part are recorded infeasible unrun, and with ``registry`` (a file shared by the processes of a session) every
     unit of that ARM at n >= the infeasible n, in any cell, is recorded infeasible unrun (T3 is per (arm, n)).
     EVAL rules (R-35; ``eval_rules`` defaults to ``is_eval(spec)``): feasibility comes only from the spec (arm
-    "infeasible_n" = DEV T3 cost), the budget is a safety cap (EVAL_CAP_FACTOR x budget) whose breach is an
-    ERROR, and nothing propagates. Either way a child killed below its limits (OOM) is an error, and arm
-    "infeasible_n" units are recorded unrun."""
+    "infeasible_n" = DEV T3 cost), the budget is a safety cap (EVAL_CAP_FACTOR x budget): a unit over it is
+    recorded infeasible with its CPU-s and never re-run (PROTOCOL_A s.7, R-59 F2), and nothing propagates. EVAL
+    also refuses a budget other than the spec's (F6) and non-isolated runs (F7). Either way a child killed below
+    its limits (OOM, other signals) is an error (re-run), and arm "infeasible_n" units are recorded unrun.
+    ``stamp``: run-level integrity fields of the caller (run_part: cost-table sha, part index / count, F4); the
+    isolation mode, budget and cap factor are stamped too, and each record carries its effective ``limits``."""
     ev = is_eval(spec) if eval_rules is None else eval_rules
     if ev:
         registry = None
@@ -718,6 +724,13 @@ def run_units(spec: dict, units: list[Unit], out: str, budget: float | None = No
     if is_eval(spec):
         check_eval_preconditions(spec, code, pins)
         check_one_per_cpu(campaign_procs(), cpu_quota())
+        budget = spec.get("budget_cpu_s") if budget is None else budget
+        if budget != spec.get("budget_cpu_s"):                    # R-59 F6: the cap is the spec's, never a CLI's
+            raise ValueError(f"EVAL refused: --budget {budget} differs from the spec budget_cpu_s "
+                             f"{spec.get('budget_cpu_s')} (R-59 F6)")
+        if not isolate:                                            # R-59 F7: RLIMIT_CPU + one dataset copy per arm
+            raise ValueError("EVAL refused: units must run isolated (fork + RLIMIT_CPU); --no-isolate or no fork "
+                             "on this platform (R-59 F7)")
     want = (mode["mode"], mode["protocol_sha256"] if mode["mode"] == "eval" else None)
     other = _out_modes(out) - {want}
     if other:
@@ -727,7 +740,9 @@ def run_units(spec: dict, units: list[Unit], out: str, budget: float | None = No
                  "protocol_sha256": spec.get("protocol_sha256"), "spec_sha256": spec_sha256(spec),
                  "spec_file_sha256": spec_file_sha256, "python": platform.python_version(),
                  "lock_sha256": pins.get("lock_sha256"), "pin_mismatches": pins.get("mismatches"),
-                 "torch_build": pins.get("torch_build")}
+                 "torch_build": pins.get("torch_build"), "isolation": "fork+rlimit" if isolate else "in-process",
+                 "budget_cpu_s": budget, "cap_factor": EVAL_CAP_FACTOR if ev else 1.0,
+                 "cost_table_sha256": None, "part": None, "parts": None, **(stamp or {})}
     done = R._done_keys(out) | _infeasible_keys(out) | set(skip_keys or ())
     methods: dict[str, Any] = {}
     over: dict[tuple, tuple[int, float, str]] = {}                 # DEV: (arm, w, r, lam, kappa) -> (n, cost, kind)
@@ -799,6 +814,7 @@ def run_units(spec: dict, units: list[Unit], out: str, budget: float | None = No
                                                  "kind": rec["cost_kind"], "key": u.key}) + "\n")
             rec.setdefault("status", "ok" if rec.get("error") is None else "error")
             rec.update(arm=u.arm, role=u.role, code=code, run_mode=mode, integrity=integrity, pkgs=pkgs, host=host,
+                       limits={"cpu_s": limit, "wall_s": wlimit},
                        load={"start": load0, "end": load_info()}, campaign=CAMPAIGN_VERSION,
                        spec_name=spec.get("name"))
             fh.write(json.dumps(R._clean(rec), allow_nan=False) + "\n")
@@ -810,12 +826,13 @@ def run_units(spec: dict, units: list[Unit], out: str, budget: float | None = No
 
 def _over(u: Unit, cfg: dict, cost: float, rss: float | None, budget: float | None, limit: float, ev: bool,
           kind: str, cpu: float | None = None) -> dict:
-    """Record of a unit over its budget: EVAL = error (safety cap); DEV = infeasible with the measured cost
-    (``cost`` in ``kind`` units: CPU-s, or wall-s for a GPU arm; ``cpu`` = its CPU-s then)."""
+    """Record of a unit over its budget, infeasible with the measured cost (``cost`` in ``kind`` units: CPU-s, or
+    wall-s for a GPU arm; ``cpu`` = its CPU-s then). EVAL: over the safety cap, never re-run, its cell infeasible
+    (PROTOCOL_A s.7, R-59 F2); DEV: over the budget (T3)."""
     if ev:
-        rec = _failed(u, cfg, cost if kind == "CPU-s" else cpu,
-                      f"EVAL safety cap {limit:.0f} {kind} ({EVAL_CAP_FACTOR:g} x budget {budget}) exceeded "
-                      f"(measured {cost:.0f}); feasibility is fixed from DEV (T3)", rss)
+        rec = _infeasible(u, cfg, cost if kind == "CPU-s" else cpu,
+                          f"EVAL safety cap {limit:.0f} {kind} ({EVAL_CAP_FACTOR:g} x budget {budget}) exceeded "
+                          f"(measured {cost:.0f}): infeasible, never re-run (PROTOCOL_A s.7)", rss)
     else:
         rec = _infeasible(u, cfg, cost if kind == "CPU-s" else cpu,
                           f"exceeded the budget {budget} {kind} (measured {cost:.0f})", rss)
@@ -838,13 +855,18 @@ def _infeasible_keys(path: str) -> set[str]:
     return out
 
 
-def complete_dataset_keys(units: list[Unit], paths: list[str]) -> set[str]:
+def complete_dataset_keys(units: list[Unit], paths: list[str], accept=None) -> set[str]:
     """Keys of the units whose WHOLE dataset (every arm of it in ``units``) has a final record (ok / infeasible)
     in ``paths``. A relaunch on another platform skips those and re-runs every arm of the incomplete datasets, so
-    each dataset's arms come from one platform (R-35)."""
-    fin: set[str] = set()
-    for p in paths:
-        fin |= R._done_keys(p) | _infeasible_keys(p)
+    each dataset's arms come from one platform (R-35). ``accept`` (record -> bool; run_part: the merge's
+    ``accept_rule``, R-59 F3) drops records of another run mode / protocol / spec before anything is skipped."""
+    if accept is None:
+        fin: set[str] = set()
+        for p in paths:
+            fin |= R._done_keys(p) | _infeasible_keys(p)
+    else:
+        fin = {r["key"] for p in paths for r in iter_jsonl(p)
+               if r.get("key") and _status(r) in ("ok", "infeasible") and accept(r)}
     groups: dict[tuple, list[str]] = defaultdict(list)
     for u in units:
         groups[u.dataset].append(u.key)
@@ -856,9 +878,25 @@ def run_part(spec: dict, part: int, parts: int, out: str, budget: float | None =
              spec_file_sha256: str | None = None, skip_complete_from: list[str] | None = None,
              registry: str | None = None) -> int:
     units = partition(expand(spec), parts, cost_table)[part]
-    skip = complete_dataset_keys(units, skip_complete_from) if skip_complete_from else None
+    skip = (complete_dataset_keys(units, skip_complete_from, accept_rule(spec)) if skip_complete_from else None)
+    stamp = {"cost_table_sha256": spec_sha256(cost_table) if cost_table else None, "part": part, "parts": parts}
     return run_units(spec, units, out, budget if budget is not None else spec.get("budget_cpu_s"), isolate, log,
-                     spec_file_sha256, skip, registry=registry)
+                     spec_file_sha256, skip, registry=registry, stamp=stamp)
+
+
+def accept_rule(spec: dict):
+    """The records a run of ``spec`` may use (merge, and --skip-complete-from, R-59 F3): EVAL = EVAL records of
+    the spec's protocol AND of this spec (canonical sha); DEV = DEV records (R-35: the two never mix, e.g. on the
+    shared tune-seed keys; DEV done-key files carry no stamps)."""
+    if is_eval(spec):
+        psha, ssha = spec.get("protocol_sha256"), spec_sha256(spec)
+
+        def acc(r):
+            rm = r.get("run_mode") or {}
+            return (rm.get("mode") == "eval" and rm.get("protocol_sha256") == psha
+                    and (r.get("integrity") or {}).get("spec_sha256") == ssha)
+        return acc
+    return lambda r: (r.get("run_mode") or {}).get("mode", "dev") == "dev"
 
 
 # ================================================================================================ merge
@@ -976,23 +1014,20 @@ def merge_records(paths: list[str], accept=None) -> tuple[dict[str, dict], dict]
             fh.close()
 
 
+MERGE_SETS = ("python", "lock_sha256", "spec_file_sha256", "isolation", "budget_cpu_s", "cost_table_sha256", "parts")
+
+
 def merge(spec: dict, inputs: list[str], out: str) -> dict:
     """Merge shard files for ``spec`` into ``out`` (key-sorted; ``.gz`` = gzip), streaming: only the index is held
     in memory. EVAL specs keep only EVAL records of the spec's protocol; DEV specs drop EVAL records (R-35: the
     two never mix, e.g. on the shared tune-seed keys)."""
     import gzip
-    ev, sha = is_eval(spec), spec.get("protocol_sha256")
-
-    def accept(r):
-        rm = r.get("run_mode") or {}
-        if ev:
-            return rm.get("mode") == "eval" and rm.get("protocol_sha256") == sha
-        return rm.get("mode", "dev") == "dev"
-
-    best, stats = merge_index(inputs, accept)
+    ev = is_eval(spec)
+    best, stats = merge_index(inputs, accept_rule(spec))
     want = {u.key for u in expand(spec)}
     by: dict[str, list[str]] = defaultdict(list)
     commits, dirty, plats, psha, ssha = set(), 0, set(), set(), set()
+    seen = defaultdict(set)                                # R-59 F9 / F4: integrity values over the merged records
     fhs = [open(p, "rb") for p in inputs]
     op = gzip.open if out.endswith(".gz") else open
     try:
@@ -1006,6 +1041,8 @@ def merge(spec: dict, inputs: list[str], out: str) -> dict:
                 plats.add(str(_platform(r)))
                 psha.add(str((r.get("integrity") or {}).get("protocol_sha256")))
                 ssha.add(str((r.get("integrity") or {}).get("spec_sha256")))
+                for f in MERGE_SETS:
+                    seen[f].add(str((r.get("integrity") or {}).get(f)))
     finally:
         for fh in fhs:
             fh.close()
@@ -1013,9 +1050,15 @@ def merge(spec: dict, inputs: list[str], out: str) -> dict:
                "n_ok": len(by["ok"]), "missing": sorted(want - set(best)), "errors": sorted(by["error"]),
                "infeasible": sorted(by["infeasible"]), "unexpected": sorted(set(best) - want), **stats,
                "commits": sorted(commits), "dirty_records": dirty, "platforms": sorted(plats),
-               "protocol_sha256": sorted(psha), "spec_sha256": sorted(ssha)}
+               "protocol_sha256": sorted(psha), "spec_sha256": sorted(ssha),
+               **{f: sorted(seen[f]) for f in MERGE_SETS}}
     sp = (out[:-3] if out.endswith(".gz") else out) + ".summary.json"
     json.dump(summary, open(sp, "w", encoding="utf-8"), indent=1)
+    mixed = [f for f in ("cost_table_sha256", "parts") if len(seen[f]) > 1]
+    if ev and mixed:                                       # R-59 F4: one partition per EVAL run
+        os.remove(out)
+        raise ValueError(f"merge refused: EVAL records mix {', '.join(f'{f} {sorted(seen[f])}' for f in mixed)} "
+                         f"(one cost table and part count per EVAL run; summary kept at {sp})")
     return summary
 
 
@@ -1376,10 +1419,15 @@ def _cloud_cmd(spec_rel: str, part_ids: list[int], parts: int, out_dir: str, pla
     if one_per_cpu:
         pre += ('NP=$(python -c "from cdd_oran.xmethod.campaign import cpu_quota; print(cpu_quota())"); '
                 f'echo "vCPU quota $NP" > {out_dir}/cpu_quota.txt; ')
-    runs = " ".join(f"{gate}{gpu_env(i)}{env} timeout {wall_s} python -u -m cdd_oran.xmethod.campaign run --spec "
+    runs = " ".join(f"{gate}( {gpu_env(i)}{env} timeout {wall_s} python -u -m cdd_oran.xmethod.campaign run --spec "
                     f"{spec_rel} --part {i}/{parts} --out {out_dir}/{prefix}_{i}.jsonl{ct}{reg} > {out_dir}/log_{i}.txt "
-                    "2>&1 &" for i in part_ids)
-    return f"mkdir -p {out_dir} && {pre}{runs} wait; tail -n 3 {out_dir}/log_*.txt"
+                    f"2>&1; echo $? > {out_dir}/rc_{i}.txt ) &" for i in part_ids)
+    # R-59 F5: each part's exit status in rc_<i>.txt (robust to the gate's `wait -n` reaping); the command's own
+    # status (the session's / vps_run's exit_code) is non-zero if any part failed or left no status
+    ids = " ".join(map(str, part_ids))
+    check = (f"RC=0; for i in {ids}; do r=$(cat {out_dir}/rc_$i.txt 2>/dev/null || echo none); "
+             f'[ "$r" = 0 ] || {{ echo "[xm-c] part $i exit $r"; RC=1; }}; done; [ $RC -eq 0 ]')
+    return f"mkdir -p {out_dir} && {pre}{runs} wait; tail -n 3 {out_dir}/log_*.txt; {check}"
 
 
 def _setup_cmd(out_dir: str, selftest: bool, torch_version: str | None, venv_python: str | None = None,

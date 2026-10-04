@@ -4,7 +4,7 @@ systemd scope. The VPS runs PRODUCTION docker services, so every rule below is a
   * Touch nothing outside BASE = /opt/cdd-xm: no docker / containers / services / packages / firewall / users / cron.
     Every remote command runs with HOME, XDG_*, UV_* (cache, Python installs, tools) and TMPDIR inside BASE.
   * Only uv (static release binary, sha256-checked) and Python 3.12 via uv, both inside BASE.
-  * Compute only as `systemd-run --scope --unit cdd-xm-<job> -p CPUQuota=700% -p MemoryMax=11G -p MemorySwapMax=0
+  * Compute only as `systemd-run --scope --unit cdd-xm-<job> -p CPUQuota=<procs x 100>% -p MemoryMax=11G -p MemorySwapMax=0
     nice -n 19 ionice -c3 ...`, at most MAX_PROCS = 7 single-threaded processes, ONE active cdd-xm job at a time.
   * Before every launch: refuse if MemAvailable < 12 GB or the 1-min load from others (load minus our running
     processes) > 1.
@@ -50,7 +50,15 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 HOST = "root@vps.brihatech.com"
 BASE = "/opt/cdd-xm"
 MAX_PROCS = 7
-LIMITS = ("-p", "CPUQuota=700%", "-p", "MemoryMax=11G", "-p", "MemorySwapMax=0")
+LIMITS = ("-p", "CPUQuota=700%", "-p", "MemoryMax=11G", "-p", "MemorySwapMax=0")   # the 7-process scope
+
+
+def scope_limits(procs: int) -> tuple[str, ...]:
+    """systemd scope limits of a job of ``procs`` processes: CPUQuota = procs x 100 % (R-59 F8), so the EVAL
+    one-process-per-vCPU gate (campaign.cpu_quota() reads this scope) runs exactly ``procs`` at once."""
+    if not 1 <= procs <= MAX_PROCS:
+        raise SystemExit(f"--procs must be 1..{MAX_PROCS}")
+    return ("-p", f"CPUQuota={100 * procs}%", *LIMITS[2:])
 MIN_MEM_AVAILABLE_KB = 12 * 1024 * 1024                      # 12 GB
 MAX_OTHER_LOAD = 1.0
 UNIT_PREFIX = "cdd-xm-"
@@ -286,7 +294,7 @@ XM_EOF
 chmod 0755 {jd}/run.sh
 rm -f {jd}/exit_code
 cd {jd}
-nohup setsid systemd-run --scope --quiet --unit {unit} {' '.join(LIMITS)} nice -n 19 ionice -c3 {jd}/run.sh \
+nohup setsid systemd-run --scope --quiet --unit {unit} {' '.join(scope_limits(procs))} nice -n 19 ionice -c3 {jd}/run.sh \
   >> {jd}/run.out 2>&1 < /dev/null &
 sleep 5
 systemctl is-active {unit}.scope || (echo NOT-ACTIVE; tail -20 {jd}/run.out; exit 1)
@@ -296,7 +304,8 @@ systemctl show {unit}.scope -p CPUQuotaPerSecUSec -p MemoryMax -p MemorySwapMax
         print(remote)
         return
     print(ssh(remote, timeout=300))
-    json.dump({"name": name, "unit": unit, "cmd": full, "procs": procs, "commit": code["commit"],
+    json.dump({"name": name, "unit": unit, "cmd": full, "procs": procs, "limits": scope_limits(procs),
+               "commit": code["commit"],
                "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "preflight": st},
               open(os.path.join(runs_dir(name), "launch.json"), "w"), indent=1)
 
@@ -308,6 +317,7 @@ def status(name: str) -> None:
 echo "scope: $(systemctl is-active {unit}.scope 2>/dev/null || true)"
 [ -f {jd}/exit_code ] && echo "exit_code: $(cat {jd}/exit_code)" || echo "exit_code: none"
 for f in {jd}/out/res_*.jsonl; do [ -f "$f" ] && echo "$(basename $f) $(wc -l < $f)"; done
+for f in {jd}/out/rc_*.txt; do [ -f "$f" ] && echo "$(basename $f .txt) exit $(cat $f)"; done
 tail -n 3 {jd}/run.out 2>/dev/null || true
 for f in {jd}/out/log_*.txt; do [ -f "$f" ] && echo "-- $(basename $f): $(tail -n 1 $f)"; done
 """, timeout=120, check=False))

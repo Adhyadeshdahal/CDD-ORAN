@@ -506,7 +506,7 @@ def test_classify_kill():
     assert C.classify_kill(11, 12.0, 100.0) == "killed"
 
 
-def test_eval_rules_cap_is_error_no_propagation_and_t3(tmp_path, monkeypatch):
+def test_eval_rules_cap_is_infeasible_no_propagation_and_t3(tmp_path, monkeypatch):
     real = C.R.run_one
     monkeypatch.setattr(C.R, "run_one", lambda *a, **k: {**real(*a, **k), "cpu_s": 5.0})
     spec = _small_spec()
@@ -514,8 +514,10 @@ def test_eval_rules_cap_is_error_no_propagation_and_t3(tmp_path, monkeypatch):
     out = tmp_path / "e.jsonl"
     C.run_units(spec, units, str(out), budget=2.0, isolate=False, log=lambda *_: None, eval_rules=True)
     recs = C.load_jsonl(str(out))
-    assert len(recs) == len(units) and all(r["status"] == "error" for r in recs)   # cap 4 s < 5 s, every unit run
-    assert all("safety cap 4" in r["error"] for r in recs)
+    # R-59 F2 (PROTOCOL_A s.7): over the 2x cap = infeasible with its CPU-s; every unit run (nothing propagates)
+    assert len(recs) == len(units) and all(r["status"] == "infeasible" and r["cpu_s"] == 5.0 for r in recs)
+    assert all("safety cap 4" in r["reason"] and "never re-run" in r["reason"] for r in recs)
+    assert C.run_units(spec, units, str(out), budget=2.0, isolate=False, log=lambda *_: None, eval_rules=True) == 0
     out2 = tmp_path / "e2.jsonl"
     C.run_units(spec, units, str(out2), budget=3.0, isolate=False, log=lambda *_: None, eval_rules=True)
     assert all(r["status"] == "ok" for r in C.load_jsonl(str(out2)))     # 5 s < cap 6 s: fine in EVAL
@@ -902,3 +904,156 @@ def test_vps_launch_steps(capsys, monkeypatch):
     with pytest.raises(SystemExit, match="one process per part"):
         C.main(["vps", "--spec", sp, "--name", "xm-t-v2", "--parts", "14", "--part-set", "0,1,2,3,4,5,6,7",
                 "--dry-run"])
+
+
+# ------------------------------------------------------------------------------------- R-59 (EVAL audit fixes)
+def _eval_run(tmp_path, monkeypatch, budget=100.0):
+    """A real EVAL spec run through campaign.run_units on any OS: frozen protocol fixture, preconditions passed
+    (tested above), and the forked child replaced by an in-process stand-in with _run_isolated's return contract;
+    ``kill[key] = (signal, cpu_s)`` makes that unit's child die."""
+    sha = _protocol(tmp_path, monkeypatch, frozen=True)
+    spec = _eval_spec(sha)
+    spec["budget_cpu_s"] = budget
+    monkeypatch.setattr(C, "check_eval_preconditions", lambda *a, **k: None)
+    monkeypatch.setattr(C, "campaign_procs", lambda *a, **k: 1)
+    monkeypatch.setattr(C, "cpu_quota", lambda *a, **k: 4)
+    kill = {}
+
+    def child(method, ds, truth, cfg, gen_s, key, limit_s, wall_s=None):
+        if key in kill:
+            sig, cpu = kill[key]
+            return None, cpu, 50.0, sig, cpu, False
+        rec = C.R.run_one(method, ds, truth, cfg, gen_s, key)
+        return rec, rec.get("cpu_s") or 0.0, 50.0, None, rec.get("wall_s") or 0.0, False
+    monkeypatch.setattr(C, "_run_isolated", child)
+    return spec, kill
+
+
+def test_r59_f2_eval_cap_breach_is_infeasible_never_rerun_oom_is_error(tmp_path, monkeypatch):
+    spec, kill = _eval_run(tmp_path, monkeypatch)
+    units = C.expand(spec)[:3]
+    kill[units[0].key] = (24, 201.0)                                   # SIGXCPU at the 2 x 100 CPU-s cap
+    kill[units[1].key] = (9, 12.0)                                     # SIGKILL far below it: OOM
+    out = tmp_path / "e.jsonl"
+    assert C.run_units(spec, units, str(out), isolate=True, log=lambda *_: None) == 3
+    r = {x["key"]: x for x in C.load_jsonl(str(out))}
+    cap, oom, ok = r[units[0].key], r[units[1].key], r[units[2].key]
+    assert cap["status"] == "infeasible" and cap["cpu_s"] == 201.0 and "never re-run" in cap["reason"]
+    assert oom["status"] == "error" and "signal 9" in oom["error"] and ok["status"] == "ok"
+    assert C.run_units(spec, units, str(out), isolate=True, log=lambda *_: None) == 1   # only the OOM unit again
+    assert [x["status"] for x in C.load_jsonl(str(out))].count("infeasible") == 1
+    # F6 / F7 stamps: the effective cap per record, isolation and budget per run
+    assert cap["limits"] == {"cpu_s": 200.0, "wall_s": None}
+    assert {k: ok["integrity"][k] for k in ("isolation", "budget_cpu_s", "cap_factor")} == {
+        "isolation": "fork+rlimit", "budget_cpu_s": 100.0, "cap_factor": 2.0}
+
+
+def test_r59_f6_f7_eval_refuses_cli_budget_and_no_isolation(tmp_path, monkeypatch):
+    spec, _ = _eval_run(tmp_path, monkeypatch)
+    units = C.expand(spec)[:2]
+    out = tmp_path / "e.jsonl"
+    with pytest.raises(ValueError, match="F6"):                         # e.g. a copied DEV --budget 2784
+        C.run_units(spec, units, str(out), budget=2784.0, isolate=True, log=lambda *_: None)
+    with pytest.raises(ValueError, match="F6"):
+        C.run_part(spec, 0, 1, str(out), budget=50.0, isolate=True, log=lambda *_: None)
+    with pytest.raises(ValueError, match="F7"):
+        C.run_units(spec, units, str(out), budget=100.0, isolate=False, log=lambda *_: None)
+    assert not out.exists()                                            # refused before any data
+    dev = _small_spec()                                                # DEV unchanged: any budget, in-process
+    d = tmp_path / "d.jsonl"
+    C.run_units(dev, C.expand(dev)[:2], str(d), budget=7.0, isolate=False, log=lambda *_: None)
+    rec = C.load_jsonl(str(d))[0]
+    assert rec["status"] == "ok" and rec["integrity"]["isolation"] == "in-process"
+    assert rec["integrity"]["budget_cpu_s"] == 7.0 and rec["limits"]["cpu_s"] == 7.0
+
+
+def test_r59_f3_eval_skip_from_applies_the_merge_accept_rule(tmp_path, monkeypatch):
+    spec, _ = _eval_run(tmp_path, monkeypatch)
+    n_all = len(C.expand(spec))
+    dev = tmp_path / "dev.jsonl"                                       # DEV shard: same tune keys, other mode
+    C.run_part(_small_spec(), 0, 1, str(dev), isolate=False, log=lambda *_: None)
+    ev1 = tmp_path / "ev1.jsonl"
+    assert C.run_part(spec, 0, 1, str(ev1), isolate=True, log=lambda *_: None, skip_complete_from=[str(dev)]) == n_all
+    other = dict(spec, name="another EVAL spec")                       # same protocol, other spec sha
+    assert C.run_part(other, 0, 1, str(tmp_path / "o.jsonl"), isolate=True, log=lambda *_: None,
+                      skip_complete_from=[str(ev1)]) == len(C.expand(other))
+    slim = tmp_path / "done.jsonl"                                     # xm_dispatch done-key format
+    slim.write_text("".join(json.dumps({"key": r["key"], "status": r["status"], "error": r["error"],
+                                        "run_mode": r["run_mode"],
+                                        "integrity": {"spec_sha256": r["integrity"]["spec_sha256"]}}) + "\n"
+                            for r in C.load_jsonl(str(ev1))))
+    assert C.run_part(spec, 0, 1, str(tmp_path / "ev2.jsonl"), isolate=True, log=lambda *_: None,
+                      skip_complete_from=[str(slim)]) == 0
+
+
+def test_r59_f4_f9_partition_stamps_merge_sets_and_mixed_refusal(tmp_path, monkeypatch):
+    spec, _ = _eval_run(tmp_path, monkeypatch)
+    ct = {f"{u.arm}|{u.world}|{u.regime}|n{u.n}": float(u.n) for u in C.expand(spec)}
+    a, b, c = (tmp_path / f"{x}.jsonl" for x in "abc")
+    C.run_part(spec, 0, 2, str(a), cost_table=ct, isolate=True, log=lambda *_: None, spec_file_sha256="f" * 64)
+    C.run_part(spec, 1, 2, str(b), cost_table=ct, isolate=True, log=lambda *_: None, spec_file_sha256="f" * 64)
+    C.run_part(spec, 1, 2, str(c), cost_table=None, isolate=True, log=lambda *_: None, spec_file_sha256="f" * 64)
+    ra = C.load_jsonl(str(a))[0]["integrity"]
+    assert (ra["part"], ra["parts"], ra["cost_table_sha256"]) == (0, 2, C.spec_sha256(ct))
+    s = C.merge(spec, [str(a), str(b)], str(tmp_path / "m.jsonl"))
+    assert s["n_records"] == s["n_expected"] and not s["missing"]
+    assert s["parts"] == ["2"] and s["cost_table_sha256"] == [C.spec_sha256(ct)]
+    assert s["python"] and s["lock_sha256"] and s["spec_file_sha256"] == ["f" * 64]
+    assert s["isolation"] == ["fork+rlimit"] and s["budget_cpu_s"] == ["100.0"]
+    with pytest.raises(ValueError, match="merge refused: EVAL records mix cost_table_sha256"):
+        C.merge(spec, [str(a), str(c)], str(tmp_path / "x.jsonl"))
+    assert not (tmp_path / "x.jsonl").exists()
+    dev = _small_spec()                                                # DEV: reported, never refused
+    d0, d1 = tmp_path / "d0.jsonl", tmp_path / "d1.jsonl"
+    C.run_part(dev, 0, 2, str(d0), cost_table=None, isolate=False, log=lambda *_: None)
+    C.run_part(dev, 1, 2, str(d1), cost_table=ct, isolate=False, log=lambda *_: None)
+    assert len(C.merge(dev, [str(d0), str(d1)], str(tmp_path / "dm.jsonl"))["cost_table_sha256"]) == 2
+
+
+def _git_bash():
+    import os
+    import shutil
+    if os.name == "nt":                                                # not WSL's System32 bash
+        p = r"C:\Program Files\Git\bin\bash.exe"
+        return p if os.path.exists(p) else None
+    return shutil.which("bash")
+
+
+@pytest.mark.parametrize("gate", [False, True])
+def test_r59_f5_session_exit_nonzero_if_any_part_fails(tmp_path, gate):
+    import subprocess
+    bash = _git_bash()
+    if not bash:
+        pytest.skip("no bash")
+    code = {"commit": "abc", "dirty": False}
+    od = tmp_path.as_posix()
+
+    def run(fail):
+        cmd = C._cloud_cmd("spec.json", [0, 1, 2], 3, od, "kaggle", None, 60, code, one_per_cpu=gate)
+        cmd = cmd.replace("python -u -m cdd_oran.xmethod.campaign run",   # stand-in part: $4 = "<i>/3"
+                          "bash -c 'case \"$4\" in " + ("1/*) exit 3;; " if fail else "") + "*) exit 0;; esac' x")
+        cmd = cmd.replace('NP=$(python -c "from cdd_oran.xmethod.campaign import cpu_quota; print(cpu_quota())")',
+                          "NP=1")                                      # the gate reaps with wait -n
+        return subprocess.run([bash, "-c", cmd], capture_output=True, text=True, timeout=120)
+    r = run(fail=True)
+    assert r.returncode != 0 and "[xm-c] part 1 exit 3" in r.stdout
+    assert [(tmp_path / f"rc_{i}.txt").read_text().strip() for i in range(3)] == ["0", "3", "0"]
+    assert run(fail=False).returncode == 0
+
+
+def test_r59_f8_vps_scope_cpuquota_follows_procs():
+    import importlib.util
+    import inspect
+    import os
+    import shutil
+    p = os.path.join(C.R.ROOT, "scratchpad", "e6_dev", "vps_run.py")
+    if not os.path.exists(p):
+        pytest.skip("cloud bundle without vps_run.py")
+    sp = importlib.util.spec_from_file_location("vps_run_t", p)
+    V = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(V)
+    assert V.scope_limits(4) == ("-p", "CPUQuota=400%", "-p", "MemoryMax=11G", "-p", "MemorySwapMax=0")
+    assert "CPUQuota=700%" in V.scope_limits(7)
+    with pytest.raises(SystemExit):
+        V.scope_limits(8)
+    assert "scope_limits(procs)" in inspect.getsource(V.launch)
