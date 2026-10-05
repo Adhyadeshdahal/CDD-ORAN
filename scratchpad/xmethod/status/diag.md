@@ -21,22 +21,13 @@ WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compac
   - Step 2: specs x5_fail (failing cells (lam 0, n 8000), (lam .5, n 8000), (lam 1, n 24000)) and x5_adj (the other
     lambdas at the same n); pmrt_eq + pmrt_r3; 2000 seeds per cell. Primary test: one-sided exact binomial, Holm over
     the 3 failing pairs; outcomes EXCESS / CHANCE / UNRESOLVED.
-  - Step 3: E4 R3 has no setpoints, so step 3 = pmrt_r3 on the same data (tested). Exact McNemar, only if an EXCESS
-    occurs.
-- X6 (Colab): spec x6_gbm, E1 R2 n 1000, 200 seeds, 15 arms.
-  - Told-width grid .5 / .8 / 1 / 1.25 / 1.5 / 2, for GBM and Lin.
-  - 2 x 2 ablation at told x2: arms `.w200` (TT), `.w200_Tt`, `.w200_tT`, `.w200_tt`.
-  - Bias log `x6` in each GBM record.
-  - Predictions P1-P4; outcomes SUPPORTED / REFUTED / PARTIAL.
+  - Step 3 = pmrt_r3 on the same data (E4 R3 has no setpoints; tested); exact McNemar only if EXCESS.
+- X6 (Colab): x6_gbm, E1 R2 n 1000, 200 seeds, 15 arms: width grid .5-2 (GBM + Lin); 2 x 2 at x2 (.w200 = TT,
+  _Tt / _tT / _tt); bias log x6 per GBM record; P1-P4 -> SUPPORTED / REFUTED / PARTIAL.
 
 ## Built (d897cbe)
-- `cdd_oran/xmethod/extras.py`:
-  - X5 / X6 experiments with their own seed guard (XMETHOD_DIAG);
-  - `x6_hooks` (pmrt_nl.design_law / gbm_profiles / GbmStat wrapped during an X6 gbm unit, restored after) and
-    `_x6_run_one`;
-  - spec builders; `diag_cost_agg.json` (dev_cost_agg.json unchanged).
-- Specs in `scratchpad/xmethod/specs/extras/`: x5_fail.json, x5_adj.json, x6_gbm.json, diag_cost_agg.json. The X2 / X3
-  spec files are unchanged.
+- `extras.py`: X5 / X6 + XMETHOD_DIAG seed guard; `x6_hooks` (pmrt_nl.design_law / gbm_profiles / GbmStat,
+  restored after) + `_x6_run_one`; specs x5_fail / x5_adj / x6_gbm + diag_cost_agg.json (X2 / X3 files unchanged).
 - Tests `tests/test_xmethod_extras.py`:
   - X5 / X6 specs and seeds; r3 = eq minus lagged actions; X6 TT / exact p-values = frozen; c = 0; hooks restored.
   - On xm/diag (Windows): all pass except `test_freeze_manifest_still_valid`.
