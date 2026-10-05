@@ -117,3 +117,13 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   campaign / methods / analysis / spec byte-identical. PROTOCOL_A s.11 allows records "from the freeze commit or an
   amendment listing its key" -> Amendment A-1 (all 150 960 keys), disclosed in the report. Rejected: reporting
   PROVISIONAL for a launcher-only deviation; and passing --freeze-commit 5a95186 (would hide a manifest-file edit).
+
+## 2026-10-05 morning: EVAL verdicts + paper files
+- EVAL report FINAL, claim SUPPORTED (6f04f02): C1 5/6 design-blind fail (4/5 w/o MSCR); C2a PMRT-GBM null .045,
+  placebo .048 (also Lin, R3 valid); C2b pcorr_eq .048, granger_eq .050 (+ R-56 sensitivity with rcot2_eq: SUPPORTED);
+  C3 PMRT-GBM valid, pcorr_eq too (not specific to PMRT). Disclosed: rcot2_eq named; PMRT-Lin NOT SUPPORTED in C3
+  (3 INVALID vs F_max 2); MSCR invalid; A-1.
+- 3-reviewer naming panel -> PAPER_TERMS_DECISIONS.md D1-D7 (1f710b9). Applied by xm-harness to TERMINOLOGY.md
+  (211 -> 296 lines) and WRITING_AGENT_PROMPT.md (51 -> 67), all tagged [PROVISIONAL 2026-10-05]; backups *.bak.
+  For you: D5 CDL [DECIDE] (TERMINOLOGY s.10 conflict); names PMRT (frozen E6-P) / PMRT-GBM / PMRT-Lin; Study 4 main
+  section + bridging analysis; pmrt_nl_eq low E6 recall reported openly.
