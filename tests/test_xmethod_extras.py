@@ -253,7 +253,9 @@ def test_x5_x6_specs_seeds_and_registry():
         cells = {(lam, b["ns"][0]) for b in sp["blocks"] for lam in b["e4_lams"]["R3"]}
         want = X.X5_FAIL if name == "x5_fail" else X.X5_ADJ
         assert cells == {(lam, n) for n, lams in want.items() for lam in lams}
-        assert all(len(X.seed_list(b["seeds"], "X5")) == 2000 for b in sp["blocks"])
+        want_n = 2000 if name == "x5_fail" else 1000           # x5_adj trimmed before any run (amendment)
+        assert all(len(X.seed_list(b["seeds"], "X5")) == want_n for b in sp["blocks"])
+    assert set(X.seed_list(X.X5_ADJ_SEEDS, "X5")) < set(X.seed_list(X.X5_SEEDS, "X5"))
     assert {(lam, n) for lam, n, _ in X.X5_PRIMARY} == {(lam, n) for n, ls in X.X5_FAIL.items() for lam in ls}
     x6 = specs["x6_gbm"]
     assert len(x6["arms"]) == 15 and len(X.seed_list(x6["blocks"][0]["seeds"], "X6")) == 200

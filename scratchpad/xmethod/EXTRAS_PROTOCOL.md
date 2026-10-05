@@ -339,6 +339,14 @@ P_placebo_conf -> K0, measurement-role records only. Reported:
 - One cdd-xm job at a time, coordinated with xm-citests (X4, then X7).
 - A preflight refusal stops the lane and is reported.
 
+**Pre-run amendment (2026-10-05, orchestrator ruling; nothing of X5 had run, no step-1 p-value had been read).**
+- `x5_adj` is trimmed to 1000 seeds per cell: 3_300_000-3_300_999, the first half of the X5 block (still common random
+  numbers with `x5_fail`). SE about .007 at .05, which still separates .05 from .08.
+- `x5_fail` keeps 2000 seeds per cell. The primary test, outcomes and step 3 are unchanged (the primary pairs are all in
+  `x5_fail`); the adjacent cells' secondary CIs are wider.
+- Cost: x5_adj 29.5 VPS CPU-h (about 4.3 h on 7 processes); X5 total 57.5 VPS CPU-h.
+- Order on the VPS: x5_fail after xm-citests' X7, then x5_adj.
+
 ### 2026-10-05: X6, PMRT-GBM under a wider told dither: the centring mechanism (advisor question C)
 
 **POST HOC, EXPLORATORY (R-60).** Same authorship and rules as X5. In X3, pmrt_nl_eq told the dither x2 had a pooled

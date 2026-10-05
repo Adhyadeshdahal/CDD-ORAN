@@ -56,7 +56,8 @@ X2_MEASURE = [3_200_020, 3_200_059]
 X3_MEASURE = [3_200_060, 3_200_119]                 # 3_200_120-199 unassigned (a new use needs a new declaration)
 # X5 / X6: post hoc diagnostics (EXTRAS_PROTOCOL.md Amendments, 2026-10-05), own seed block XMETHOD_DIAG
 X5_SEEDS = [3_300_000, 3_301_999]                   # E4 R3 re-run (2000 datasets per cell, shared seed numbers)
-X6_SEEDS = [3_302_000, 3_302_199]                   # E1 R2 told-width ablation (200 datasets)
+X5_ADJ_SEEDS = [3_300_000, 3_300_999]               # x5_adj: first 1000 of X5_SEEDS (pre-run amendment, 2026-10-05)
+X6_SEEDS = [3_302_000, 3_302_199]                 # E1 R2 told-width ablation (200 datasets)
 DIAG_SEEDS = {"X5": range(X5_SEEDS[0], X5_SEEDS[1] + 1), "X6": range(X6_SEEDS[0], X6_SEEDS[1] + 1)}
 SEED_BLOCK = {"X2": "XMETHOD_EXTRAS", "X3": "XMETHOD_EXTRAS", "X5": "XMETHOD_DIAG", "X6": "XMETHOD_DIAG"}
 PROTOCOL_REL = "scratchpad/xmethod/EXTRAS_PROTOCOL.md"
@@ -497,15 +498,16 @@ def build_specs() -> dict[str, dict]:
         "arms": x3,
         "blocks": [_block("measure", ["E1", "E2"], ["R2"], [X3_N], X3_MEASURE, dith),
                    _block("measure", ["E4"], ["R3"], [X3_N], X3_MEASURE, logd, lams={"R3": [1.0]})]}
-    for name, cells, what in (("x5_fail", X5_FAIL, "the 3 E4 R3 cells where pmrt_eq was INVALID in EVAL"),
-                              ("x5_adj", X5_ADJ, "the other lambdas at the same n (adjacent passing cells)")):
+    for name, cells, seeds, what in (
+            ("x5_fail", X5_FAIL, X5_SEEDS, "the 3 E4 R3 cells where pmrt_eq was INVALID in EVAL"),
+            ("x5_adj", X5_ADJ, X5_ADJ_SEEDS, "the other lambdas at the same n (adjacent passing cells)")):
         out[name] = {
             "name": f"extras_{name}", "budget_cpu_s": budget,
             "note": (f"X5 (POST HOC, EXPLORATORY; changes no frozen verdict): fresh-data re-run of {what}; frozen arms; "
                      f"declared in {PROTOCOL_REL} (Amendments, 2026-10-05)"),
             "extras": {"experiment": "X5", "design": None, "protocol": PROTOCOL_REL},
             "arms": {a: _arm(arms, a) for a in X5_ARMS},
-            "blocks": [_block("measure", ["E4"], ["R3"], [n], X5_SEEDS, X5_ARMS, lams={"R3": list(lams)})
+            "blocks": [_block("measure", ["E4"], ["R3"], [n], seeds, X5_ARMS, lams={"R3": list(lams)})
                        for n, lams in cells.items()]}
     x6 = {"pmrt_nl_eq": _arm(arms, "pmrt_nl_eq"), "pmrt_eq": _arm(arms, "pmrt_eq")}
     for tag, c in X6_WIDTHS.items():
