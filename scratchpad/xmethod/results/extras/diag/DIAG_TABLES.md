@@ -9,6 +9,8 @@ Label probability at exactly .05 (S = 300, 10000 sims): P(INVALID) = 0.0099, P(V
 - pmrt_eq: 3 INVALID of 40 E4 R3 C3 rates; expected 0.40; P(>= observed | independent) = 0.007
 - pmrt_r3: 1 INVALID of 40 E4 R3 C3 rates; expected 0.40; P(>= observed | independent) = 0.328
 
+Dependence-aware (frozen `fmax_simulate`, added after the declaration): F_max 2, P(cell INVALID) 0.0205, count distribution {'0': 1483, '1': 328, '2': 115, '3': 48, '4': 16, '5': 6, '6': 4} (nsim 2000); P(count >= observed): pmrt_eq 0.0370, pmrt_r3 0.2585
+
 | arm | lam | n | kind | rate | label | KS D | KS p | q.01 | q.05 | rej .01 o/e | rej .025 o/e | rej .05 o/e | rej .10 o/e |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | pmrt_eq | 0 | 500 | plac | 0.037 | VALID | 0.064 | 0.163 | 0.008 | 0.068 | 1.33 | 0.67 | 0.73 | 0.87 |
@@ -161,3 +163,27 @@ Across the 4 lambdas at one n (EVAL lambdas share each seed's streams):
 | pmrt_r3 | 8000 | conf | [23, 21, 13, 11] | 20 (5.2) | 8 (0.2) |
 | pmrt_r3 | 24000 | plac | [19, 20, 25, 23] | 26 (8.5) | 19 (0.4) |
 | pmrt_r3 | 24000 | conf | [13, 20, 15, 10] | 17 (3.9) | 9 (0.1) |
+
+## X6 (E1 R2 n 1000, 200 seeds)
+
+Checks: `{"duplicates": 0, "provenance": {"datasets": 200, "differ_from_frozen": 0, "equal_to_frozen": 200, "expected": "equal", "ok": true}, "records": 3000, "role_mismatch": 0, "unexpected": 0}`
+
+| arm | width | centring | redraw | truth-null raw [boot CI] | label | P_placebo raw [CI] | mean z_bias null [CI] | rej bottom / top tercile | top - bottom [CI] | mean c |
+|---|---|---|---|---|---|---|---|---|---|---|
+| pmrt_eq.w050 | 0.5 | told | told | 0.322 (773/2400) [0.303, 0.342] | INVALID | 0.316 (253/800) [0.285, 0.347] | | | | |
+| pmrt_eq.w080 | 0.8 | told | told | 0.112 (268/2400) [0.098, 0.125] | INVALID | 0.113 (90/800) [0.090, 0.136] | | | | |
+| pmrt_eq.w125 | 1.25 | told | told | 0.012 (28/2400) [0.007, 0.016] | VALID | 0.020 (16/800) [0.009, 0.033] | | | | |
+| pmrt_eq.w150 | 1.5 | told | told | 0.003 (8/2400) [0.001, 0.006] | VALID | 0.009 (7/800) [0.001, 0.019] | | | | |
+| pmrt_eq.w200 | 2 | told | told | 0.000 (0/2400) [0.000, 0.000] | VALID | 0.000 (0/800) [0.000, 0.000] | | | | |
+| pmrt_eq | 1 | exact | exact | 0.052 (126/2400) [0.044, 0.062] | VALID | 0.052 (42/800) [0.034, 0.071] | | | | |
+| pmrt_nl_eq.w050 | 0.5 | told | told | 0.156 (374/2400) [0.142, 0.170] | INVALID | 0.174 (139/800) [0.150, 0.200] | 0.237 [0.200, 0.271] | 0.024 / 0.339 | 0.315 [0.282, 0.350] | -0.0000 |
+| pmrt_nl_eq.w080 | 0.8 | told | told | 0.083 (198/2400) [0.072, 0.093] | INVALID | 0.094 (75/800) [0.074, 0.114] | 0.099 [0.084, 0.114] | 0.036 / 0.149 | 0.112 [0.085, 0.140] | -0.0000 |
+| pmrt_nl_eq.w125 | 1.25 | told | told | 0.038 (92/2400) [0.031, 0.046] | VALID | 0.034 (27/800) [0.022, 0.046] | -0.036 [-0.050, -0.022] | 0.016 / 0.066 | 0.050 [0.031, 0.072] | -0.0000 |
+| pmrt_nl_eq.w150 | 1.5 | told | told | 0.048 (114/2400) [0.040, 0.055] | VALID | 0.044 (35/800) [0.029, 0.059] | -0.012 [-0.036, 0.013] | 0.007 / 0.106 | 0.099 [0.075, 0.123] | -0.0000 |
+| pmrt_nl_eq.w200_Tt | 2 | told | true | 0.046 (110/2400) [0.038, 0.054] | VALID | 0.046 (37/800) [0.032, 0.060] | 0.090 [0.051, 0.130] | 0.049 / 0.041 | -0.007 [-0.028, 0.013] | -0.0000 |
+| pmrt_nl_eq.w200_tT | 2 | true | told | 0.038 (92/2400) [0.031, 0.047] | VALID | 0.036 (29/800) [0.022, 0.051] | -0.448 [-0.506, -0.390] | 0.000 / 0.105 | 0.105 [0.083, 0.128] | -0.0000 |
+| pmrt_nl_eq.w200_tt | 2 | true | true | 0.045 (109/2400) [0.038, 0.053] | VALID | 0.041 (33/800) [0.028, 0.055] | -0.448 [-0.506, -0.390] | 0.051 / 0.037 | -0.014 [-0.035, 0.007] | -0.0000 |
+| pmrt_nl_eq.w200 | 2 | told | told | 0.079 (190/2400) [0.068, 0.090] | INVALID | 0.077 (62/800) [0.059, 0.095] | 0.090 [0.051, 0.130] | 0.004 / 0.210 | 0.206 [0.177, 0.234] | -0.0000 |
+| pmrt_nl_eq | 1 | exact | exact | 0.043 (103/2400) [0.035, 0.051] | VALID | 0.050 (40/800) [0.036, 0.064] | 0.000 [0.000, 0.000] | 0.043 / NA | NA [NA, NA] | 0.0000 |
+
+Predictions: `{"P1": true, "P2": true, "P3": true, "P4": false, "P4a": true, "P4b": true, "P4c": false, "outcome": "PARTIAL (failed: P4)"}`

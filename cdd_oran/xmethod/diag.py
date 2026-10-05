@@ -274,7 +274,8 @@ def x5(fail_merged: str, adj_merged: str | None) -> dict:
     for lam, n, key in X.X5_PRIMARY:
         kind = key.split("_")[0]
         c = next((r for r in out["cells"] if r["arm"] == "pmrt_eq" and r["lam"] == lam and r["n"] == n), None)
-        prim_rows.append({"lam": lam, "n": n, "rate_key": key, **({} if c is None else c[kind])})
+        prim_rows.append({"lam": lam, "n": n, "rate_key": key,
+                          **({} if c is None else {("n_" if k == "n" else k): v for k, v in c[kind].items()})})
     have = [r for r in prim_rows if r.get("p_binom_gt05") is not None]
     adj = holm([r["p_binom_gt05"] for r in have]) if len(have) == len(prim_rows) else None
     for i, r in enumerate(prim_rows):

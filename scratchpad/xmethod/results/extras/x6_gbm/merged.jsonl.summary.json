@@ -1,0 +1,53 @@
+{
+ "mode": "dev",
+ "n_expected": 3000,
+ "n_records": 3000,
+ "n_ok": 3000,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 3030,
+ "bad_lines": 0,
+ "duplicates": 30,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "3628f5768753fe710ecd18cb2eac1f080d2c4901",
+  "4348ab4d55e431424f98d4bb8130bd33850fc0c7"
+ ],
+ "dirty_records": 0,
+ "platforms": [
+  "colab"
+ ],
+ "protocol_sha256": [
+  "None"
+ ],
+ "spec_sha256": [
+  "a56ee939ddbc60274c9b1831fedc839eca07fd19343f8c45e328e41988eeb37f"
+ ],
+ "python": [
+  "3.12.14"
+ ],
+ "lock_sha256": [
+  "9141f639dc3a0044695a1fa0e883f4b1b345e595169189ffd75c3496e7015f4a"
+ ],
+ "spec_file_sha256": [
+  "9f1f55e20ab3e8ee5fbef479e3240cf2f53b3c2af9258b49038e82c650e85c06"
+ ],
+ "isolation": [
+  "fork+rlimit"
+ ],
+ "budget_cpu_s": [
+  "7200"
+ ],
+ "cost_table_sha256": [
+  "636949296c9489594697bbca7bde501d3ea685abd5156cf3b2baf45c1dac1490"
+ ],
+ "parts": [
+  "2",
+  "4"
+ ]
+}
