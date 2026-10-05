@@ -33,8 +33,9 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
 ## X6 session loss (2026-10-05)
 - xm-diag-x6 (TPU host, 4 parts, code 3628f57) was job-lost at 14:44:47Z: "session gone before the exit code was
   pulled". All 4 parts were affected. The last pull was at 14:35Z.
-- Kept (campaign merge rule): 1470 ok records, 0 broken lines, 96 complete datasets plus 4 partial ones. They are in
-  results/extras/x6_gbm/session_a.jsonl.gz (+ .summary.json).
+- Kept (campaign merge rule): 1470 ok records, 0 broken lines, 96 complete datasets plus 4 partial ones, in
+  results/extras/x6_gbm/session_a.jsonl.gz. The file is local only; it was untracked in b052a4f (disk / repo rule:
+  only reports and tables in git). The raw shards were deleted.
 - Relaunch of the missing units only, via `--skip-complete-from session_a` (R-35: every arm of the 4 partial
   datasets is re-run).
   - TPU v5e-1 assignment returned "Service Unavailable" twice (xm-diag-x6b, x6c; nothing was assigned).
@@ -44,7 +45,8 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
 
 ## Running
 - X6 relaunch xm-diag-x6d, Colab CPU runtime, 104 datasets left: GBM about 38 s per unit, ETA about 20:05Z; pulls to
-  scratchpad/e6_dev/runs/xm-diag-x6d/.
+  scratchpad/e6_dev/runs/xm-diag-x6d/. 15:58:22Z exec-error (pull "Unavailable"): transient, one of 3 allowed;
+  the job was alive at 16:05Z.
 - VPS: xm-citests' X7 (xm-x7-v1, about 14:1xZ, ETA about 2.5-3 h). xm-citests will message when it has exited and
   been pulled.
 
@@ -52,9 +54,7 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
 1. When X7 is out: `uv run python -m cdd_oran.xmethod.extras vps --spec scratchpad/xmethod/specs/extras/x5_fail.json
    --parts 7 --procs 7 --cost-table scratchpad/xmethod/specs/extras/diag_cost_agg.json` (about 4 h), then the same
    for x5_adj (about 4.3 h). A preflight refusal stops the lane.
-2. X6 done: merge session_a + x6d shards into results/extras/x6_gbm/merged.jsonl.gz, then `diag x6 --merged ... --out
-   scratchpad/xmethod/results/extras/diag`.
-3. X5 done: merge, then `diag x5 --fail ... --adj ...`, then `diag tables`.
-4. Write results/extras/DIAG_REPORT.md (+ diag_tables.json), commit, and set line 1 to READY-TO-MERGE.
-
+2. X6 done: merge session_a + x6d shards (local, untracked), then `diag x6`; then delete the shards.
+3. X5 done: merge, then `diag x5 --fail ... --adj ...`, then `diag tables`. Merged records stay local, not in git.
+4. Commit only results/extras/DIAG_REPORT.md + diag tables (JSON / md); then set line 1 to READY-TO-MERGE.
 ## Questions: none open
