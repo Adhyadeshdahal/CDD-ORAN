@@ -43,7 +43,7 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
     code is unchanged.
 
 ## Running
-- X6 relaunch xm-diag-x6d on a Colab CPU runtime (104 datasets left); ticks every 10 min pull to
+- X6 relaunch xm-diag-x6d, Colab CPU runtime, 104 datasets left: GBM about 38 s per unit, ETA about 20:05Z; pulls to
   scratchpad/e6_dev/runs/xm-diag-x6d/.
 - VPS: xm-citests' X7 (xm-x7-v1, about 14:1xZ, ETA about 2.5-3 h). xm-citests will message when it has exited and
   been pulled.
