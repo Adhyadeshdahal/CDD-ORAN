@@ -249,3 +249,79 @@ scale (R, retention, guard ratios, eligibility)? It is a reference point for MG:
   descriptive reading.
 - **Never:** a verdict, a claim, or a change to Study 3's E / D1-D3 / S1.
 - Missing or failed jobs are reported as such, never dropped. A failed job is re-run (resume by key).
+
+### 2026-10-05: X7, are the associational referees the static subset rule sub:ES+PowerES? (Study 3 / E6-P certsafe)
+
+**POST HOC, DESCRIPTIVE** (advisor question D; orchestrator brief, user GO). X7 was added after the Study 3 results
+were known. In those results the associational referees had R about -10 to -11 and deferred about 100 % of prot_min,
+as the Gate A anchor sub:ES+PowerES does; so far only the totals and CIs had been compared.
+- No hypothesis, no criterion. No frozen file, artifact or verdict of Study 1-3 is changed.
+- The commit that adds this entry is the declaration and precedes every X7 episode.
+- Author: worker exp-c, branch xm/x7 cut from feat/v2 0fe4eb3.
+
+**Arms compared.**
+- Associational referees: the four frozen certsafe-artifact jobs named in the brief:
+  - CS:granger@dev ("granger")
+  - CS:granger_by
+  - CS:two_tower@dev ("two_tower")
+  - CS:shap_gbdt@dev ("shap")
+  - Each is `DirectionalUnitArbiter(CertSafeMapGateV2(M, uncertified))`, built by `e6p_certsafe.make_arbiter`
+    from `docs/benchmark/artifacts/E6P_CERTSAFE.json`.
+  - The @plc variants alias to noarb (accept-all) in the artifact and are not compared.
+- Reference: the Gate A anchor sub:ES+PowerES (`e6p_screen.make_arbiter` -> `baselines.subset`).
+- Seeds and plant: the 160 Study 3 EVAL seeds 191100-191259 and the Study 3 plant, as X4.
+
+**A1. Code check** (no run). The report states, with file:line:
+- what a static-rule rejection and a referee deferral do to a request (decision value, ACK / NACK, re-queue);
+- when each acts (warm-up);
+- how the xApp re-submits;
+- the unit / direction mechanics of the referees.
+
+**A2. Per-request agreement**, logged by re-running with decision logging. The stored records have counts only.
+- **(i) Reference stream (primary).**
+  - One job per seed runs sub:ES+PowerES (its decisions applied).
+  - At every second the four referees are queried in shadow on a deep copy of the same obs. Their decisions are
+    logged, not applied, so each referee's internal state evolves on the reference's request stream.
+  - The episode must be bit-identical to the stored sub:ES+PowerES record (checked).
+- **(ii) Own stream (secondary).**
+  - Each referee re-runs as itself (decisions applied). The subset rule is evaluated in shadow on the same requests.
+  - The episode must be bit-identical to the stored referee record (checked).
+- **Agreement** = share of requests (each request reaching the referee = one request unit) with the same decision
+  (accept vs reject). Reported:
+  - overall and per control parameter (prot_min, ptx, carrier, sleep), and per direction;
+  - all t and the scored window (t >= 120 s) separately;
+  - with the 2 x 2 decision counts.
+  - CI: seed-cluster percentile bootstrap, 2000 reps, `default_rng([20261005, 7])`.
+
+**A3. Attribution** (replays). Per referee, two arms:
+- `X7:<ref>|pm`: the referee's own decisions, with every deferral of a non-prot_min request replaced by accept.
+- `X7:<ref>|other`: every prot_min deferral replaced by accept.
+- The override acts on the output only. The arbiter's internal state (units, duty counters) is the frozen code's,
+  unaware of it.
+- 8 arms x 160 seeds. Per arm: V, R, R*, retention, guard ratios (svr, nonprot_embb_viol, ll_viol, rlf),
+  eligibility, 90 % CIs.
+
+**A4. Paired differences.**
+- R and V of each referee and attribution arm minus sub:ES+PowerES, with 90 % CIs, on the paired seed bootstrap.
+- Also: the number of seeds whose stored referee record is bit-identical to sub:ES+PowerES in every outcome field,
+  and the per-seed dV distribution.
+
+**Scoring.** As X4: the Study 3 code unchanged.
+- `e6p_conf_analyze.arm_stats_multi` on the stored 26 arms plus the X7 arms.
+- N_BOOT 10 000, `default_rng([6624, 20, 160])`.
+- Stored arms must reproduce `cs_eval.json`.
+- dV uses the same index matrix (pooled V per resample).
+
+**Run.**
+- New file `scratchpad/e6_dev/x7_subset_check.py` plus its test; it edits no frozen code.
+- VPS via vps_run (`/opt/cdd-xm`, capped scope with 7 processes, Python 3.12.14, same pins), one cdd-xm job at a
+  time, coordinated with cdl's X5. Not Kaggle.
+- Jobs: 160 (A2 i) + 640 (A2 ii) + 1280 (A3) = 2080. At about 31 VPS CPU-s each, about 18 VPS CPU-h, about 2.6 h
+  wall.
+- Missing or failed jobs are reported, never dropped. A failed job is re-run (resume by key).
+
+**Output.**
+- `scratchpad/xmethod/results/extras/x7/` (x7_tables.json, records) and
+  `scratchpad/xmethod/results/extras/X7_REPORT.md`.
+- The report gives the numbers, one suggested Discussion sentence (descriptive analogy or not) and a stated
+  confidence. Never a verdict.

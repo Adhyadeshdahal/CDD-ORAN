@@ -1,0 +1,112 @@
+{
+ "what": "frozen driver e6p_certsafe.arm_job re-run on the VPS (job xm-x7-prov, commit c332cec), no X7 wrapper",
+ "psvr_order": [
+  "frozen VPS",
+  "X7 VPS",
+  "stored Kaggle"
+ ],
+ "pairs": [
+  {
+   "seed": 191104,
+   "arm": "sub:ES+PowerES",
+   "vs_x7_vps_rerun_diff_fields": [],
+   "x7_policy_counts_equal": null,
+   "vs_stored_kaggle_diff_fields": [
+    "embb_viol",
+    "energy_j",
+    "energy_kwh",
+    "nonprot_embb_viol",
+    "prot_viol",
+    "psvr",
+    "st_rej",
+    "st_req",
+    "svr",
+    "viol_ue_s"
+   ],
+   "psvr": [
+    646.6451612903226,
+    646.6451612903226,
+    647.0322580645161
+   ]
+  },
+  {
+   "seed": 191104,
+   "arm": "CS:granger@dev",
+   "vs_x7_vps_rerun_diff_fields": [],
+   "x7_policy_counts_equal": true,
+   "vs_stored_kaggle_diff_fields": [
+    "embb_viol",
+    "energy_j",
+    "energy_kwh",
+    "nonprot_embb_viol",
+    "prot_viol",
+    "psvr",
+    "st_rej",
+    "st_req",
+    "svr",
+    "viol_ue_s"
+   ],
+   "psvr": [
+    646.6451612903226,
+    646.6451612903226,
+    647.0322580645161
+   ]
+  },
+  {
+   "seed": 191106,
+   "arm": "sub:ES+PowerES",
+   "vs_x7_vps_rerun_diff_fields": [],
+   "x7_policy_counts_equal": null,
+   "vs_stored_kaggle_diff_fields": [
+    "embb_viol",
+    "nonprot_embb_viol",
+    "svr",
+    "viol_ue_s"
+   ],
+   "psvr": [
+    821.0909090909091,
+    821.0909090909091,
+    821.0909090909091
+   ]
+  },
+  {
+   "seed": 191145,
+   "arm": "sub:ES+PowerES",
+   "vs_x7_vps_rerun_diff_fields": [],
+   "x7_policy_counts_equal": null,
+   "vs_stored_kaggle_diff_fields": [
+    "embb_viol",
+    "nonprot_embb_viol",
+    "prot_viol",
+    "psvr",
+    "svr",
+    "viol_ue_s"
+   ],
+   "psvr": [
+    728.7428571428571,
+    728.7428571428571,
+    728.9142857142857
+   ]
+  },
+  {
+   "seed": 191108,
+   "arm": "CS:shap_gbdt@dev",
+   "vs_x7_vps_rerun_diff_fields": [],
+   "x7_policy_counts_equal": true,
+   "vs_stored_kaggle_diff_fields": [
+    "embb_viol",
+    "prot_viol",
+    "psvr",
+    "st_rej",
+    "st_req",
+    "svr",
+    "viol_ue_s"
+   ],
+   "psvr": [
+    1019.8461538461538,
+    1019.8461538461538,
+    1020.1538461538462
+   ]
+  }
+ ]
+}
