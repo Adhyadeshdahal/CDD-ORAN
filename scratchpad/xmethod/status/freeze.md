@@ -1,46 +1,40 @@
-READY-TO-MERGE
-# freeze status (2026-10-04): Study A EVAL freeze, S = 40 (PROTOCOL_A FROZEN; R-59 fixes in; re-audit PASS-WITH-NOTES)
+READY-TO-MERGE (EVAL report)
+# freeze status (2026-10-05): Study A EVAL analysed with the frozen eval_analysis + eval_report, FINAL
 
-Branch xm/freeze = feat/v2 5a4ef0f + xm/vps-factors + xm/anchor-note + R-59 F1 (853392e, 581317a) + the freeze
-commit "xmethod: Study A EVAL freeze, re-hashed after R-59" (its tip is in the orchestrator report). Local only, not
-pushed. EVAL NOT launched; no EVAL unit run.
+Branch xm/freeze = feat/v2 db644e0 (6b720a6; SEED_REGISTRY taken from feat/v2) + A-1 (65cef51) + the EVAL report.
+Local only, not pushed. No frozen file edited (LF sha256 at run time = FREEZE_NOTE, all seven checked).
 
-## Freeze (FREEZE_CHECKLIST C)
-- C1: xm/dev-runs on feat/v2 (41d6c37); calib block 12748be; VPS smoke 9e91a4c; R-59 0542a99; re-audit 5a4ef0f.
-- C2 spec:
-  - Seeds: S 40 -> [3100000, 3100039], half [.., 3100019]; E4 R3 readers 300.
-  - pkgs_lock = uv.lock versions of campaign.PKGS, torch '2.10.0+cpu' (confirmed); status FROZEN.
-  - tbd notes FILLED; `tbd.driver` now says integrity.spec_file_sha256 (re-audit N4).
-- C3 PROTOCOL_A:
-  - FROZEN: yes (2026-10-04).
-  - T1 40; T3 f / e by host type (uncalibrated hosts provisional, accepted); T4 (iii); T5 final REPORT; T6; s.7
-    counts.
-  - s.11 stamp wording integrity.spec_file_sha256 (R-59 F1, confirmed).
-- C4: spec protocol_sha256 = c5f7a4fe...fa22 = LF sha of PROTOCOL_A; campaign.eval_authorised(spec) True.
-- C5:
-  - Full xmethod test set (14 files, `uv run --group citests`): all pass. Skips: campaign 2 (Linux-only fork tests),
-    eval_analysis 1 (the [eval] stamp case needs fork; the re-audit ran it on Linux: pass).
-  - `campaign list` on the frozen spec: mode eval, 150 960 units, 11 000 datasets, 40 520 tune.
-  - Estimand check (R-36): all 18 cells PASS; its json sha is unchanged (SCM code is unchanged, see the manifest).
-- C6 FREEZE_NOTE.md:
-  - Every LF sha256 recomputed. Changed: PROTOCOL_A, spec, eval_analysis, eval_report, campaign.py. These equal
-    the re-audit's N5 except the spec (N4 text).
-  - Every T-register input unchanged. FREEZE_MANIFEST.sha256 = 301 code files (`_ref/` excluded); FREEZE_CALIB.sha256
-    = 36 calibration files, unchanged.
-  - Both audits with path, LF sha256 and verdict (FAIL -> R-59; re-audit PASS-WITH-NOTES).
-  - Re-audit N1 operational rule: every EVAL relaunch passes --skip-complete-from over ALL prior EVAL shards. Before
-    eval_analysis, list keys with both an infeasible and an ok record across raw shards (report; none expected).
-  - Re-audit N6 noted (test hygiene).
-- C7: SEED_REGISTRY: 3100000-3100299 used + claimed_by XMETHOD_EVAL for E1-E5.
-- Projection at S 40 with the R-55 factors: 509 CPU-h; ~14 h on all platforms / ~17 h on Kaggle + VPS / ~32 h on
-  Kaggle only.
+## Amendment A-1 (orchestrator ruling Q1 (a))
+- docs/xmethod/PROTOCOL_A_AMENDMENTS.md + specs/eval/amendments.json (A-1, commit 5a95186, 150 960 keys; LF sha
+  43be9758...). Written and committed before the analysis ran.
 
-## Next (orchestrator)
-- C8: merge (one squash = the freeze commit on feat/v2), then the launch GO. EVAL launches from a clean checkout of
-  that commit; records must stamp it, dirty false.
-- Never after the freeze: edit PROTOCOL_A (amendments file only), the spec, eval_analysis.py, eval_report.py,
-  campaign.py or any adapter.
+## Run
+- `eval_report.py --spec specs/eval/full.json --merged results/eval/merged.jsonl.gz --freeze-commit 93856c2...
+  --amendments specs/eval/amendments.json --dev-merged results/dev/{full,ci_c,pmrt_nl,cdl}/merged.jsonl.gz
+  --out results/eval` (chunked path of eval_analysis; ~3 GB RAM free, so not the one-shot CLI). Exit 0.
+- Outputs: results/eval/REPORT.md, report.json, csv/ (10 files), n1_check.json.
+
+## Results (pre-registered wording only)
+- V11 FINAL, failed checks none: 150 960 / 150 960 used; commit violations 0 (A-1 listed); clean; stamps ok;
+  0 missing / unexpected / role / duplicates / errors / infeasible; dataset hash equal across arms; one platform per
+  dataset; one pkgs set; BY re-check 114 960 / 114 960 agree.
+- Claim SUPPORTED: C1, C2a, C2b, C3 all SUPPORTED.
+  - C1: 5 of 6 assessable D arms FAILURE; rcot2_native INVALID IN R1 (6/25 R1, F_max 2); pcorr_hac_fb (set D HAC)
+    FAILURE. R-56 without mscr_native: SUPPORTED (4 of 5).
+  - C2a: pmrt_nl_eq 1 INVALID / 50 (F_max 3), null_raw .045, plac_raw .048 VALID. pmrt_eq, pmrt_r3 also pass.
+  - C2b: granger_eq, pcorr_eq SUPPORTED. mscr_eq excluded (R-40), NOT SUPPORTED. R-56 named arm rcot2_eq (R2 .292,
+    R1 .061, both INVALID); sensitivity with rcot2_eq added: SUPPORTED (2 of 3).
+  - C3: pmrt_nl_eq 0 INVALID / 20 (F_max 2), VALID. pcorr_eq also passes -> wording "so do pcorr_eq; the property
+    is not specific to PMRT", PMRT "by construction". pmrt_eq (secondary) NOT SUPPORTED (3 > 2), no effect.
+- N1: raw shards (21 jobs, 192 files) list 0 keys with both infeasible and ok (0 infeasible at all).
+- T3: 0 infeasible units; max CPU-s per dataset pmrt_nl_eq 1380 (n 24000) < 7200. 12 680 units ran on the
+  uncalibrated Kaggle AMD EPYC 7B12 (N2), none near the cap.
+- T6: EVAL used 316 host CPU-h (projection 509 Kaggle-ref CPU-h); kaggle 85 199 units, vps 65 761.
+
+## Unexpected (descriptive, no check fails)
+- Tune reproducibility vs DEV: dataset sha equal for 38 992 / 39 000 tune records. The 8 others are one dataset,
+  E2 R2 n 24000 seed 3000016 (8 arms), DEV commit a7b6e36, same host type (Kaggle Xeon). Declarations equal for all
+  39 000. Not investigated further (DEV side).
 
 ## Questions
-- None open. Earlier ones were answered by the orchestrator: calib block, audits, lane fallback, torch pin,
-  uncalibrated hosts, `_ref/`, s.11 wording.
+- None open. Q1 answered (orchestrator): amendment A-1.

@@ -1,0 +1,16 @@
+{
+ "root": "CDD-ORAN-wt/xm-eval/scratchpad/e6_dev/runs (raw shards, read-only; done/ = dispatcher slim copies, so 2 records per key)",
+ "jobs": 21,
+ "files": 192,
+ "records": 301920,
+ "bad_lines": 0,
+ "status": {
+  "ok": 301920
+ },
+ "run_mode": {
+  "eval": 301920
+ },
+ "distinct_keys": 150960,
+ "keys_with_infeasible": 0,
+ "keys_with_infeasible_and_ok": []
+}
