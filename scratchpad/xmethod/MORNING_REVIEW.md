@@ -112,3 +112,8 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   d05/d20 on VPS, d10/d02/b05/b80 on Kaggle (all launched; report pending). Freed VPS used for X2 (one platform
   per spec).
 - Frozen analysis GO to xm-harness (eval_analysis + eval_report, FREEZE_NOTE sha check first).
+- Ruling (no panel; the protocol prescribes the path): EVAL records carry commit 5a95186, not freeze 93856c2.
+  Diff verified launcher-only (xm_dispatch.py job accounting + pull glob; run cost table; stray _ref .pyc);
+  campaign / methods / analysis / spec byte-identical. PROTOCOL_A s.11 allows records "from the freeze commit or an
+  amendment listing its key" -> Amendment A-1 (all 150 960 keys), disclosed in the report. Rejected: reporting
+  PROVISIONAL for a launcher-only deviation; and passing --freeze-commit 5a95186 (would hide a manifest-file edit).
