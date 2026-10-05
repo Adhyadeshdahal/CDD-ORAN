@@ -1,4 +1,4 @@
-WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 step 2 queued after X7)
+WORKING (X5 step 1 done; X6 relaunch running on Colab; X5 x5_fail running on the VPS, x5_adj next)
 
 # diag status (2026-10-05 ~14:05Z): post hoc diagnostics X5 (advisor B) / X6 (advisor C), exploratory, R-60
 
@@ -47,13 +47,12 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
 - X6 relaunch xm-diag-x6d, Colab CPU runtime, 104 datasets left: GBM about 38 s per unit, ETA about 20:05Z; pulls to
   scratchpad/e6_dev/runs/xm-diag-x6d/. 15:58:22Z exec-error (pull "Unavailable"): transient, one of 3 allowed;
   the job was alive at 16:05Z.
-- VPS: xm-citests' X7 (xm-x7-v1, about 14:1xZ, ETA about 2.5-3 h). xm-citests will message when it has exited and
-  been pulled.
+- VPS: x5_fail, job xm-diag-x5f (scope cdd-xm-xm-diag-x5f, 7 procs, commit 70468c6, py 3.12.14, pins clean).
+  Started 16:35:40Z after xm-citests freed the VPS (X7 exited 16:29Z). About 4.8 s per pmrt_eq unit; ETA 20:40Z.
 
 ## Next steps
-1. When X7 is out: `uv run python -m cdd_oran.xmethod.extras vps --spec scratchpad/xmethod/specs/extras/x5_fail.json
-   --parts 7 --procs 7 --cost-table scratchpad/xmethod/specs/extras/diag_cost_agg.json` (about 4 h), then the same
-   for x5_adj (about 4.3 h). A preflight refusal stops the lane.
+1. When x5_fail exits: pull it, then `extras vps --spec .../x5_adj.json --name xm-diag-x5a --parts 7 --procs 7
+   --cost-table .../diag_cost_agg.json` (about 4.3 h). A preflight refusal stops the lane. Hash provenance on Linux.
 2. X6 done: merge session_a + x6d shards (local, untracked), then `diag x6`; then delete the shards.
 3. X5 done: merge, then `diag x5 --fail ... --adj ...`, then `diag tables`. Merged records stay local, not in git.
 4. Commit only results/extras/DIAG_REPORT.md + diag tables (JSON / md); then set line 1 to READY-TO-MERGE.
