@@ -1,60 +1,55 @@
-WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compaction)
+WORKING (X5 step 1 done; X6 running on Colab; X5 step 2 queued on the VPS after xm-citests' X7)
 
-# diag status (2026-10-05 ~14:10Z): post hoc diagnostics X5 (advisor B) / X6 (advisor C), exploratory, R-60
+# diag status (2026-10-05 ~14:05Z): post hoc diagnostics X5 (advisor B) / X6 (advisor C), exploratory, R-60
 
-## Branches
-- `xm/diag` from feat/v2 0fe4eb3 (X4 merged): 57cef93 declaration (X5 / X6 after X4, seeds); d897cbe code.
-- `xm/exp-b` was reset to 134529a (its READY-TO-MERGE X2 / X3 state). Its earlier copies of these two commits
-  (3d683c5, 8e770fb) were made before the orchestrator's branch note.
-- Not pushed. feat/v2 was not merged into xm/exp-b.
+## Branch xm/diag (from feat/v2 0fe4eb3; not pushed)
+- 57cef93 declaration + XMETHOD_DIAG seeds; d897cbe hooks / specs / tests; bc29a66 x5_adj pre-run amendment.
+- xm/exp-b stays at 134529a (X2 / X3, READY-TO-MERGE). feat/v2 not merged into either.
 
-## Declared (EXTRAS_PROTOCOL.md Amendments, before any p-value was read)
-- Before declaring, only these EVAL fields were read: cpu_s, gen_cpu_s, platform, the record structure, and the
-  published e4_by_lambda.csv.
-- Seeds: XMETHOD_DIAG in SEED_REGISTRY.json: E4 3300000-3301999 (X5), E1 3302000-3302199 (X6).
-- Registry pin check:
-  - The E6-P pin (`e6p_screen.FROZEN_SHA256`, 5ab935...) was already stale before this edit; feat/v2 is at 2e7f33...
-  - Recorded, never enforced (E6-P drivers only check their own block / tags are present): nothing breaks.
-- X5 (VPS):
-  - Step 1: EVAL records read-only. Uniformity (KS / QQ), tail, concentration, and the chance label count
-    (frozen `_boot_mult` bootstrap, 10 000 simulations).
-  - Step 2: specs x5_fail (failing cells (lam 0, n 8000), (lam .5, n 8000), (lam 1, n 24000)) and x5_adj (the other
-    lambdas at the same n); pmrt_eq + pmrt_r3; 2000 seeds per cell. Primary test: one-sided exact binomial, Holm over
-    the 3 failing pairs; outcomes EXCESS / CHANCE / UNRESOLVED.
-  - Step 3 = pmrt_r3 on the same data (E4 R3 has no setpoints; tested); exact McNemar only if EXCESS.
-- X6 (Colab): x6_gbm, E1 R2 n 1000, 200 seeds, 15 arms: width grid .5-2 (GBM + Lin); 2 x 2 at x2 (.w200 = TT,
-  _Tt / _tT / _tt); bias log x6 per GBM record; P1-P4 -> SUPPORTED / REFUTED / PARTIAL.
+## Orchestrator rulings (re-brief after compaction)
+- Q1: the post-freeze `scratchpad/e6_dev/xm_dispatch.py` change is amendment A-1 (docs/xmethod/PROTOCOL_A_AMENDMENTS.md).
+  `test_freeze_manifest_still_valid` fails only for that A-1 file; everything else passes.
+- Q2: x5_fail after X7 (X7 was already running), then x5_adj. x5_adj was trimmed to 1000 seeds per cell
+  (3300000-3300999) and declared before any X5 run (EXTRAS_PROTOCOL.md, X5 "Pre-run amendment"). X6 runs on Colab.
+  No Kaggle.
 
-## Built (d897cbe)
-- `extras.py`: X5 / X6 + XMETHOD_DIAG seed guard; `x6_hooks` (pmrt_nl.design_law / gbm_profiles / GbmStat,
-  restored after) + `_x6_run_one`; specs x5_fail / x5_adj / x6_gbm + diag_cost_agg.json (X2 / X3 files unchanged).
-- Tests `tests/test_xmethod_extras.py`:
-  - X5 / X6 specs and seeds; r3 = eq minus lagged actions; X6 TT / exact p-values = frozen; c = 0; hooks restored.
-  - On xm/diag (Windows): all pass except `test_freeze_manifest_still_valid`.
-  - That failure is NOT ours: feat/v2 db644e0 ("EVAL merged") changed the frozen `scratchpad/e6_dev/xm_dispatch.py`
-    after the freeze. Q1 below.
+## Declared (EXTRAS_PROTOCOL.md Amendments)
+- X5:
+  - Step 1 reads EVAL read-only. Step 2: x5_fail (2000 seeds per cell) and x5_adj (1000 seeds per cell).
+  - Primary: one-sided exact binomial with Holm over 3 -> EXCESS / CHANCE / UNRESOLVED.
+  - Step 3 = pmrt_r3 (McNemar) if EXCESS.
+- X6: E1 R2 n1000, 200 seeds, 15 arms; 2x2 centring x redraw at x2; width grid .5-2; bias log; P1-P4.
 
-## Cost projection
-- X5, from EVAL unit costs per platform:
-  - 87.5 VPS CPU-h (172 Kaggle-ref; DEV 203): x5_fail 28 (about 4 h at 7 procs), x5_adj 59 (about 8.5 h).
-- X6: 6.5 VPS CPU-h-eq. (about 15 Kaggle-ref; DEV 18.6); Colab 4 procs about 2 h.
+## Done
+- X5 step 1 (`cdd_oran/xmethod/diag.py x5-step1`): results/extras/diag/diag_x5_step1.json.
+  - Reproduces the frozen rates (.080 / .083 / .083).
+  - pmrt_eq has 3 INVALID among 40 rates. The declared independent approximation gives P(>= 3) = .007, but lambdas
+    share seeds, so that approximation is liberal.
+  - The frozen dependence-aware F_max null (added after the declaration, labelled as such) gives F_max 2 and
+    P(>= 3) = .037. pmrt_r3: 1 INVALID, P(>= 1) = .26.
+  - Concentration:
+    - The same seeds reject across lambdas at a given n (lambdas share streams).
+    - P_placebo and P_placebo_conf overlap is at chance.
+    - At n 24000, P_placebo has a heavier extreme tail across all lambdas (rej .01 o/e 2-3.3).
+    - pmrt_eq and pmrt_r3 look alike.
+  - Step 1 decides nothing; it is read with step 2.
 
 ## Running
-- Nothing of ours. At 13:27Z the VPS ran xm-citests' X4 (xm-x4-v1, nearly done); xm-citests runs X7 there next.
+- X6 on Colab, job xm-diag-x6 (session launched 13:54Z, 4 parts, py 3.12.14, pin_check clean, code 3628f57).
+  - About 11 s per GBM unit, so ETA about 15:25Z.
+  - Task Scheduler ticks (CDD-ORAN-colab-xm-diag-x6, every 10 min) pull to scratchpad/e6_dev/runs/xm-diag-x6/.
+  - The final tick stops the runtime.
+- VPS: xm-citests' X7 (xm-x7-v1, about 14:1xZ, ETA about 2.5-3 h). xm-citests will message when it has exited and
+  been pulled.
 
 ## Next steps
-1. Step 1 locally: write `cdd_oran/xmethod/diag.py` (analysis), run X5 step 1 on
-   `D:/academia/major-project/CDD-ORAN/scratchpad/xmethod/results/eval/merged.jsonl.gz` (feat/v2 checkout, read-only).
-2. X6 on Colab: `uv run python -m cdd_oran.xmethod.extras colab --spec scratchpad/xmethod/specs/extras/x6_gbm.json
-   --name xm-diag-x6 --parts 4 --cost-table scratchpad/xmethod/specs/extras/diag_cost_agg.json
-   --venv-python 3.12.14 --paths scratchpad/xmethod/EXTRAS_PROTOCOL.md`.
-3. X5 on the VPS (free, X7 not waiting): x5_fail then x5_adj, `extras vps --spec ... --parts 7 --procs 7
-   --cost-table ...diag_cost_agg.json`; coordinate with xm-citests; a preflight refusal stops the lane.
-4. Pull and merge into results/extras/<spec>/, then analyse (X5 tests, X6 rates + bias), then
-   results/extras/DIAG_REPORT.md + diag_tables.json, then a commit, then set line 1 to READY-TO-MERGE.
+1. When X7 is out: `uv run python -m cdd_oran.xmethod.extras vps --spec scratchpad/xmethod/specs/extras/x5_fail.json
+   --parts 7 --procs 7 --cost-table scratchpad/xmethod/specs/extras/diag_cost_agg.json` (about 4 h), then the same
+   for x5_adj (about 4.3 h). A preflight refusal stops the lane.
+2. X6 done: merge into results/extras/x6_gbm/merged.jsonl.gz, then `diag x6 --merged ... --out
+   scratchpad/xmethod/results/extras/diag`.
+3. X5 done: merge, then `diag x5 --fail ... --adj ...`, then `diag tables`.
+4. Write results/extras/DIAG_REPORT.md (+ diag_tables.json), commit, and set line 1 to READY-TO-MERGE.
 
 ## Questions
-- Q1: The freeze manifest fails on feat/v2 0fe4eb3 for `scratchpad/e6_dev/xm_dispatch.py`, which db644e0 changed
-  after the freeze. Is that expected? (Not caused by X5 / X6.)
-- Q2: VPS order: X5 x5_fail (about 4 h) before or after xm-citests' X7? Default: after X7 unless the VPS is idle and
-  X7 is not ready.
+- none open

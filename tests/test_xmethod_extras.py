@@ -323,3 +323,13 @@ def test_x6_hooks_reproduce_frozen_and_ablate(tmp_path):
     assert p(recs["pmrt_nl_eq.w200_Tt"]) != p(recs["pmrt_nl_eq.w200"])
     assert p(recs["pmrt_nl_eq.w200_tT"]) != p(recs["pmrt_nl_eq.w200"])
     assert recs["pmrt_nl_eq.w200_tT"]["x6"]["centre"] == "true"
+
+
+def test_diag_helpers():
+    from cdd_oran.xmethod import diag as D
+    lo, hi = D.cp_ci(100, 2000)
+    assert lo < 0.05 < hi and abs((lo + hi) / 2 - 0.05) < 0.002
+    assert D.cp_ci(0, 10)[0] == 0.0 and D.cp_ci(10, 10)[1] == 1.0
+    assert D.holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+    lp = D.label_prob(300, nsim=500)
+    assert 0.0 <= lp["p_invalid"] < 0.05 and lp["S"] == 300
