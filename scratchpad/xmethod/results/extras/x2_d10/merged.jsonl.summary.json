@@ -1,0 +1,51 @@
+{
+ "mode": "dev",
+ "n_expected": 2280,
+ "n_records": 2280,
+ "n_ok": 2280,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 2280,
+ "bad_lines": 0,
+ "duplicates": 0,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "aeb98d4e305595dfac208d5bddc2587d2bc6f6e9"
+ ],
+ "dirty_records": 0,
+ "platforms": [
+  "kaggle"
+ ],
+ "protocol_sha256": [
+  "None"
+ ],
+ "spec_sha256": [
+  "2c4cb29cdcc758c07023d5170b62f36e3bf2f06d9504cbf7d1ef44cd2dcc6e18"
+ ],
+ "python": [
+  "3.12.14"
+ ],
+ "lock_sha256": [
+  "9141f639dc3a0044695a1fa0e883f4b1b345e595169189ffd75c3496e7015f4a"
+ ],
+ "spec_file_sha256": [
+  "f440d10b1f54438fce851a65aad7aa01c9ce2844ffdda34a563fe41bbb50dea7"
+ ],
+ "isolation": [
+  "fork+rlimit"
+ ],
+ "budget_cpu_s": [
+  "7200"
+ ],
+ "cost_table_sha256": [
+  "56e2877ec745e84635b0a42bfb31cad96564d27ec907e5642b30c87fd7fd700b"
+ ],
+ "parts": [
+  "4"
+ ]
+}

@@ -1,0 +1,36 @@
+{
+ "about": "Provenance of x2_d10 (reproduction cell) and x3_told: record dataset hash vs the FROZEN generator (generate.py sha256 088fa7b1..., no extras hooks) at equal key. Linux = VPS /opt/cdd-xm, py 3.12.14 pinned venv (the platform family the records were generated on: Kaggle / VPS). Windows = this PC, py 3.12.14. The frozen generator itself is not bit-identical across Linux and Windows for these keys; the declared check is run on Linux.",
+ "date": "2026-10-05",
+ "x2_d10": {
+  "datasets": 360,
+  "linux": {
+   "E1 equal": 120,
+   "E2 equal": 120,
+   "E3 equal": 120
+  },
+  "windows": {
+   "E1 differ": 2,
+   "E1 equal": 118,
+   "E2 differ": 120,
+   "E3 equal": 120
+  },
+  "windows_differ_keys_E1": [
+   "[\"E1\", \"R2\", null, 1000, 3200028, 0.25]",
+   "[\"E1\", \"R2\", null, 4000, 3200028, 0.25]"
+  ]
+ },
+ "x3_told": {
+  "datasets": 180,
+  "linux": {
+   "E1 equal": 60,
+   "E2 equal": 60,
+   "E4 equal": 60
+  },
+  "windows": {
+   "E1 equal": 60,
+   "E2 differ": 60,
+   "E4 differ": 60
+  },
+  "windows_differ_keys_E1": []
+ }
+}

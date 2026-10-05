@@ -1,0 +1,101 @@
+{
+ "extras_x2_d02": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 0,
+   "differ_from_frozen": 360,
+   "expected": "differ"
+  }
+ },
+ "extras_x2_d05": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 0,
+   "differ_from_frozen": 360,
+   "expected": "differ"
+  }
+ },
+ "extras_x2_d10": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 360,
+   "differ_from_frozen": 0,
+   "expected": "equal"
+  }
+ },
+ "extras_x2_d20": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 0,
+   "differ_from_frozen": 360,
+   "expected": "differ"
+  }
+ },
+ "extras_x2_b05": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 0,
+   "differ_from_frozen": 360,
+   "expected": "differ"
+  }
+ },
+ "extras_x2_b80": {
+  "records": 2280,
+  "used": 2280,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 360,
+   "equal_to_frozen": 0,
+   "differ_from_frozen": 360,
+   "expected": "differ"
+  }
+ },
+ "extras_x3_told": {
+  "records": 4560,
+  "used": 4560,
+  "duplicates": 0,
+  "unexpected": 0,
+  "role_mismatch": 0,
+  "provenance": {
+   "ok": true,
+   "datasets": 180,
+   "equal_to_frozen": 180,
+   "differ_from_frozen": 0,
+   "expected": "equal"
+  }
+ }
+}
+rc 0
