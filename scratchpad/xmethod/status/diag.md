@@ -3,9 +3,7 @@ WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compac
 # diag status (2026-10-05 ~14:10Z): post hoc diagnostics X5 (advisor B) / X6 (advisor C), exploratory, R-60
 
 ## Branches
-- Work is on `xm/diag`, created from feat/v2 0fe4eb3 (X4 merged).
-  - 57cef93: the declaration. EXTRAS_PROTOCOL.md Amendments has X5 and X6 after X4, plus the seed block.
-  - d897cbe: code, specs and tests.
+- `xm/diag` from feat/v2 0fe4eb3 (X4 merged): 57cef93 declaration (X5 / X6 after X4, seeds); d897cbe code.
 - `xm/exp-b` was reset to 134529a (its READY-TO-MERGE X2 / X3 state). Its earlier copies of these two commits
   (3d683c5, 8e770fb) were made before the orchestrator's branch note.
 - Not pushed. feat/v2 was not merged into xm/exp-b.
@@ -16,8 +14,7 @@ WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compac
 - Seeds: XMETHOD_DIAG in SEED_REGISTRY.json: E4 3300000-3301999 (X5), E1 3302000-3302199 (X6).
 - Registry pin check:
   - The E6-P pin (`e6p_screen.FROZEN_SHA256`, 5ab935...) was already stale before this edit; feat/v2 is at 2e7f33...
-  - The pin is recorded, never enforced. The E6-P drivers only check that their own block / tags are present.
-  - So no pinned check breaks, and the block stays in the registry.
+  - Recorded, never enforced (E6-P drivers only check their own block / tags are present): nothing breaks.
 - X5 (VPS):
   - Step 1: EVAL records read-only. Uniformity (KS / QQ), tail, concentration, and the chance label count
     (frozen `_boot_mult` bootstrap, 10 000 simulations).
@@ -41,18 +38,15 @@ WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compac
 - Specs in `scratchpad/xmethod/specs/extras/`: x5_fail.json, x5_adj.json, x6_gbm.json, diag_cost_agg.json. The X2 / X3
   spec files are unchanged.
 - Tests `tests/test_xmethod_extras.py`:
-  - covered: X5 / X6 specs and seeds; r3 = eq minus lagged actions; X6 TT and exact p-values bit-identical to the
-    frozen runs; exact-arm c = 0; Tt / tT change p; hooks restored.
+  - X5 / X6 specs and seeds; r3 = eq minus lagged actions; X6 TT / exact p-values = frozen; c = 0; hooks restored.
   - On xm/diag (Windows): all pass except `test_freeze_manifest_still_valid`.
   - That failure is NOT ours: feat/v2 db644e0 ("EVAL merged") changed the frozen `scratchpad/e6_dev/xm_dispatch.py`
     after the freeze. Q1 below.
 
 ## Cost projection
 - X5, from EVAL unit costs per platform:
-  - total 87.5 VPS CPU-h (about 172 Kaggle-ref; the DEV table gives 203);
-  - x5_fail 28 VPS CPU-h, about 4 h wall at 7 procs;
-  - x5_adj 59 VPS CPU-h, about 8.5 h.
-- X6, from X3 costs: 6.5 VPS CPU-h-equivalent (about 15 Kaggle-ref; DEV table 18.6); Colab 4 procs about 2 h.
+  - 87.5 VPS CPU-h (172 Kaggle-ref; DEV 203): x5_fail 28 (about 4 h at 7 procs), x5_adj 59 (about 8.5 h).
+- X6: 6.5 VPS CPU-h-eq. (about 15 Kaggle-ref; DEV 18.6); Colab 4 procs about 2 h.
 
 ## Running
 - Nothing of ours. At 13:27Z the VPS ran xm-citests' X4 (xm-x4-v1, nearly done); xm-citests runs X7 there next.
@@ -63,11 +57,8 @@ WORKING (X5 / X6 declared + built on xm/diag; nothing run yet; paused for compac
 2. X6 on Colab: `uv run python -m cdd_oran.xmethod.extras colab --spec scratchpad/xmethod/specs/extras/x6_gbm.json
    --name xm-diag-x6 --parts 4 --cost-table scratchpad/xmethod/specs/extras/diag_cost_agg.json
    --venv-python 3.12.14 --paths scratchpad/xmethod/EXTRAS_PROTOCOL.md`.
-3. X5 on the VPS when it is free and X7 is not waiting:
-   - first x5_fail, then x5_adj;
-   - command: `extras vps --spec ... --name xm-diag-x5-fail --parts 7 --procs 7 --cost-table ...diag_cost_agg.json`;
-   - coordinate with xm-citests;
-   - preflight refusals stop the lane.
+3. X5 on the VPS (free, X7 not waiting): x5_fail then x5_adj, `extras vps --spec ... --parts 7 --procs 7
+   --cost-table ...diag_cost_agg.json`; coordinate with xm-citests; a preflight refusal stops the lane.
 4. Pull and merge into results/extras/<spec>/, then analyse (X5 tests, X6 rates + bias), then
    results/extras/DIAG_REPORT.md + diag_tables.json, then a commit, then set line 1 to READY-TO-MERGE.
 
