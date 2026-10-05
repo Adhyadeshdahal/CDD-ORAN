@@ -176,4 +176,76 @@ The launch commands are in `scratchpad/xmethod/status/extras.md`.
 
 ## Amendments
 
-(none)
+### 2026-10-05: X4, random accept / defer referee (Study 3 / E6-P certsafe baseline)
+
+**POST HOC, DESCRIPTIVE.** X4 was added on 2026-10-05, after the Study 3 results were known: the certsafe EVAL
+(`docs/benchmark/E6P_CERTSAFE_PROTOCOL.md`; verdict PARTIAL; CS:PMRT identical to never_sleep on all 160 seeds) and
+the report `reports/2026-10-02-v4-pmrt-confounded-certsafe/`. Requested by the orchestrator (user GO); author worker
+exp-c. X4 tests no hypothesis and has no criterion. It changes no frozen artifact, verdict, protocol, driver or
+analyzer of Study 1-3, and no X2 / X3 rule above. The commit that adds this entry is the declaration; it precedes
+every X4 episode (the 1-2 seed local plumbing test below is not a result).
+
+**Question.** Where does a referee that defers at random, blind to the request and to any map, land on the Study 3
+scale (R, retention, guard ratios, eligibility)? It is a reference point for MG:PMRT's deferral volume.
+
+**Policy** (`X4:rand@<p>`):
+- Each xApp request reaching the referee is deferred (decision "reject") independently with probability p and
+  accepted otherwise. Every family and direction is treated alike. No writes, no rollbacks.
+- Active from t = 0, warm-up included (as MG:PMRT and never_sleep).
+- RNG: one stream per episode, `default_rng([seed, 6640])`, one uniform u per request in arrival order
+  (obs["requests"] order within a step). Defer iff u < p. All three p share the stream (common random numbers), so the
+  three arms make nested decisions until their request streams diverge.
+- Tag 6640 is new. It was checked free against `SEED_REGISTRY.json` rng_stream_tags. The registry is not edited:
+  its sha256 is pinned in the E6-P record headers.
+
+**p, three arms:**
+- **p_PMRT = .352.** This is MG:PMRT's request-level deferral rate in the certsafe EVAL: deferred requests / requests
+  reaching the referee = 37 890 / 107 525 = .35238 (records `scratchpad/e6_dev/runs/e6p-cs-eval-1/*/res_*.jsonl`,
+  160 seeds, all t), rounded to .352.
+- For reference only: the certsafe composition of MG:PMRT counts directional units, not requests. It deferred
+  carrier 71, sleep 869, ptx 8313 and prot_min 0 units, and accepted 25 805, a unit-level rate of
+  9 253 / 35 058 = .264. X4 defers requests, so the request-level rate is the one matched.
+- **.25 and .50.**
+
+**Episodes.**
+- Seeds: the Study 3 EVAL seeds, 191100-191259 (160), cfg seed = seed. These are no new seeds; X4 claims none.
+- Plant: identical to Study 3: `e6p_screen.make_cfg(e6p_conf.PAIR, e6p_conf.STRATUM, seed, lf)`, lf = L40 from
+  `e6p_state.json`, 120 s warm-up unscored + 600 s scored.
+- Jobs: 160 seeds x 3 arms = 480. The record schema is that of the certsafe EVAL with sub "x4". Every record carries
+  p, realised deferrals per family / phase, requests, cpu_s and the platform.
+- Code: one new file, `scratchpad/e6_dev/x4_random_defer.py`, plus its test. It imports the frozen driver modules
+  and edits none of them.
+
+**Platform.**
+- Runs on the VPS (`scratchpad/e6_dev/vps_run.py`, `/opt/cdd-xm`, 7 processes in the capped systemd scope).
+  Python 3.12.14, numpy 2.4.2 / scipy 1.18.1 (uv.lock pins).
+- The stored Study 3 arms ran on Kaggle (Linux, Python 3.12.13, same numpy / scipy).
+- **Provenance check, run first in the same VPS job.** noarb and never_sleep on seeds 191100-191101, made with
+  the frozen driver's arbiters. Every outcome field is compared with the stored Kaggle record.
+  - If all are equal, the plant is bit-identical across the two platforms.
+  - Otherwise the differences are reported, and the X4 comparison is labelled cross-platform (still reported).
+- **Cost.** X4 cost is VPS CPU-h, converted to Kaggle-reference CPU-h:
+  - with `scratchpad/xmethod/results/exp_c/calib/factors.json` (pooled "*" factor, VPS Python 3.12.14);
+  - and with the direct factor of this workload: stored Kaggle cpu_s / VPS cpu_s of the four provenance jobs.
+
+**Scoring** (the Study 3 code, unchanged):
+- Inputs: the stored EVAL records (20 shards; the aliased CS arms filled from their targets as
+  `e6p_certsafe_analyze.cmd_eval` does), plus the X4 records.
+- Call: `e6p_conf_analyze.arm_stats_multi` (N_BOOT 10 000, `default_rng([6624, 20, 160])`: the same bootstrap
+  index matrix as `cs_eval.json`).
+- Hence V_AA, V_ref, the reference arm and the denominator are the stored ones. Every stored arm must reproduce
+  `cs_eval.json`; any mismatch is a harness bug, reported.
+- **Per X4 arm:** V, R, R*, retention, guard ratios (svr, nonprot_embb_viol, ll_viol, rlf), eligible (the point
+  rule, unchanged), and 90 % CIs (paired seed bootstrap). Also the realised deferral rate (deferred / requests) and
+  deferrals per family.
+- **Comparisons:** paired dR (90 % CI) to noarb (accept-all), never_sleep, MG:PMRT, CS:PMRT and CS:GT, all
+  descriptive.
+- MG:GT is not a Study 3 arm and has no record on these seeds, so the table shows CS:GT and states this.
+
+**Output.**
+- `scratchpad/xmethod/results/extras/x4/` (records mirror, `x4_tables.json`) and
+  `scratchpad/xmethod/results/extras/X4_REPORT.md`.
+- The report has one table (X4 arms next to never_sleep, MG:PMRT, CS:PMRT, CS:GT, accept-all) and a three-line
+  descriptive reading.
+- **Never:** a verdict, a claim, or a change to Study 3's E / D1-D3 / S1.
+- Missing or failed jobs are reported as such, never dropped. A failed job is re-run (resume by key).
