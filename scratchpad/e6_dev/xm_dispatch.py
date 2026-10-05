@@ -9,7 +9,7 @@ used (credits: ask first).
   .venv/Scripts/python.exe scratchpad/e6_dev/xm_dispatch.py schedule NAME [MIN] | unschedule NAME | show NAME
 
 Room: Kaggle = fewer than 5 sessions RUNNING / QUEUED on the account AND fewer than 4 of them mine (xm-dev-*;
-the 5th slot is for Exp B P1); Colab = fewer than 2 of my jobs (runs/*/colab.json without finished_utc /
+the 5th slot is for Exp B P1; init --kaggle-mine-max; EVAL jobs xm-eval-* count too); Colab = fewer than 2 of my jobs (runs/*/colab.json without finished_utc /
 lost_utc); VPS (init --vps) = no unpulled VPS job of this queue and no 30 min backoff after a vps_run safety
 refusal. Kaggle first (long unattended), then the VPS (7 parts per job), then Colab (plain CPU runtime, 2 vCPU). Jobs are named
 NAME-k<i> / NAME-c<i>; state + log in runs/NAME/ (dispatch.json, dispatch.log). All parts launched -> unschedule.
@@ -24,8 +24,10 @@ import subprocess
 import sys
 import time
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+ROOT = os.path.abspath(os.environ.get("XM_DISPATCH_ROOT")       # launch tree (e.g. a clean EVAL worktree) when the
+                       or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # dispatcher
+HERE = os.path.join(ROOT, "scratchpad", "e6_dev")                # runs another copy; runs/, kaggle_job.py, vps_run.py
+DRY = False                                                      # tick --dry-run: print launches, run nothing
 PY = os.path.join(ROOT, ".venv", "Scripts", "python.exe")
 KAGGLE = os.path.expanduser("~/.cloudtools/Scripts/kaggle.exe")
 KAGGLE_MAX, KAGGLE_MINE_MAX, COLAB_MAX = 5, 4, 2   # 4 mine; 5th Kaggle slot = Exp B P1 (2026-10-04)
@@ -62,7 +64,7 @@ def kaggle_running() -> tuple[int, int]:
                            encoding="utf-8", errors="replace").stdout
         if "RUNNING" in s or "QUEUED" in s:
             n += 1
-            mine += r.split("/")[-1].startswith("xm-dev-")
+            mine += r.split("/")[-1].startswith(("xm-dev-", "xm-eval-"))
     return n, mine
 
 
@@ -77,8 +79,11 @@ def colab_active() -> int:
 
 
 def _outputs(j) -> list[str]:
-    sub = "xm_out" if j["platform"] == "colab" else "out"            # kaggle / lightning pulls: runs/JOB/out
-    return sorted(glob.glob(os.path.join(HERE, "runs", j["job"], sub, "res_*.jsonl")))
+    """DEV res_*.jsonl (runs/JOB/out, Colab xm_out); EVAL eval_res_*.jsonl (Kaggle out/eval, VPS out, Colab
+    xm_eval_out)."""
+    subs = ("xm_out", "xm_eval_out") if j["platform"] == "colab" else ("out",)
+    return sorted(f for sub in subs
+                  for f in glob.glob(os.path.join(HERE, "runs", j["job"], sub, "**", "*res_*.jsonl"), recursive=True))
 
 
 def _done_dir(name) -> str:
@@ -129,6 +134,9 @@ def check_job(a, st, j) -> list[int]:
 
 def _launch(st, platform, ids, job, skip_from=None, pri=None):
     """``pri``: a priority job {"spec", "nparts"} (own spec, no cost table, no skip)."""
+    if DRY:
+        print(f"[dry-run] {platform} {job} parts {ids}" + (" (requeue)" if skip_from else ""))
+        return 0, "dry-run"
     if pri:
         cmd = [PY, "-m", "cdd_oran.xmethod.campaign", platform, "--spec", pri["spec"], "--parts", str(pri["nparts"]),
                "--part-set", ",".join(map(str, ids)), "--name", job, "--venv-python", "3.12", "--selftest"]
@@ -264,19 +272,32 @@ def _tick(a):
         if j.get("pulled") and "incomplete_parts" not in j:
             check_job(a, st, j)
     _save(a.name, st)
-    done = pull_finished(a, st)
+    done = True if DRY else pull_finished(a, st)
     rq = st.get("requeue") or []
     pq = st.get("priority") or []
     if st["next"] >= st.get("parts_end", st["parts"]) and not rq and not pq:
         _log(a.name, "all-launched", {"all_pulled": done})
-        if done:
+        if done and not DRY:
             unschedule(a)
         return
-    kn, km = kaggle_running()
+    kn, km = a.kaggle_now if getattr(a, "kaggle_now", None) else kaggle_running()
     ca = colab_active()
+    for _ in range(KAGGLE_MAX + 1):          # fill every free Kaggle slot this tick; any other launch ends the tick
+        if _launch_one(a, st, kn, km, ca) != "kaggle":
+            return
+        kn, km = kn + 1, km + 1
+
+
+def _launch_one(a, st, kn, km, ca) -> str | None:
+    """At most one launch (requeues first, then Kaggle, the VPS, Colab); returns its platform ("priority" for a
+    priority job), else None."""
+    rq = st.get("requeue") or []
+    pq = st.get("priority") or []
+    if st["next"] >= st.get("parts_end", st["parts"]) and not rq and not pq:
+        return None
     info = {"kaggle_running": kn, "kaggle_mine": km, "colab_active": ca, "next": st["next"], "requeue": rq}
     if pq:                                                 # priority jobs (another spec) go first, Kaggle only
-        if kn < KAGGLE_MAX and km < KAGGLE_MINE_MAX:
+        if kn < KAGGLE_MAX and km < st.get("kaggle_mine_max", KAGGLE_MINE_MAX):
             pri = pq[0]
             job = _job_name(a, st, pri.get("kind", "pilot"))
             _save(a.name, st)
@@ -289,12 +310,13 @@ def _tick(a):
                                    "nparts": pri["nparts"], "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
                 st["priority"] = pq[1:]
                 _save(a.name, st)
+                return "priority"
         else:
             _log(a.name, "no-room-priority", info)
-        return                                             # nothing else launches before it
+        return None                                        # nothing else launches before it
     vps_free = st.get("vps", False) and not any(j["platform"] == "vps" and not j.get("pulled") for j in st["jobs"])         and time.time() >= st.get("vps_backoff_until", 0)
     if rq:                                                 # resume lost / cut parts first: Kaggle, else the VPS
-        kag = kn < KAGGLE_MAX and km < KAGGLE_MINE_MAX and _allowed(st, "kaggle")   # (never Colab: ~7 h reclaim)
+        kag = kn < KAGGLE_MAX and km < st.get("kaggle_mine_max", KAGGLE_MINE_MAX) and _allowed(st, "kaggle")   # (never Colab: ~7 h reclaim)
         if kag or vps_free:
             plat = "kaggle" if kag else "vps"
             ids = rq[:st["kaggle_chunk"] if kag else VPS_CHUNK]
@@ -308,12 +330,13 @@ def _tick(a):
                                    "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
                 st["requeue"] = [i for i in rq if i not in ids]
                 _save(a.name, st)
-            return                                         # one launch per tick
+                return plat
+            return None
         if st["next"] >= st.get("parts_end", st["parts"]):
             _log(a.name, "no-room-requeue", info)
-            return
+            return None
     vps_ok = st.get("vps", False) and not any(j["platform"] == "vps" and not j.get("pulled") for j in st["jobs"])         and time.time() >= st.get("vps_backoff_until", 0)
-    for platform, ok, chunk in (("kaggle", kn < KAGGLE_MAX and km < KAGGLE_MINE_MAX, st["kaggle_chunk"]),
+    for platform, ok, chunk in (("kaggle", kn < KAGGLE_MAX and km < st.get("kaggle_mine_max", KAGGLE_MINE_MAX), st["kaggle_chunk"]),
                                 ("vps", vps_ok, VPS_CHUNK),
                                 ("colab", ca < COLAB_MAX and time.time() >= st.get("colab_backoff_until", 0),
                                  st["colab_chunk"])):
@@ -336,8 +359,10 @@ def _tick(a):
                                "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
             st["next"] = ids[-1] + 1
             _save(a.name, st)
-            return                                         # one launch per tick
+            return platform
+        return None                                        # a failed launch ends the tick
     _log(a.name, "no-room", info)
+    return None
 
 
 TASK_XML = """<?xml version="1.0" encoding="UTF-16"?>
@@ -361,7 +386,7 @@ def schedule(a):
     d = os.path.join(HERE, "runs", a.name)
     cmd, out = os.path.join(d, "dispatch.cmd"), os.path.join(d, "dispatch.out")
     open(cmd, "w", newline="\r\n").write("\n".join([
-        "@echo off", 'set "PYTHONIOENCODING=utf-8"', 'set "MSYS_NO_PATHCONV=1"', f'cd /d "{ROOT}"',
+        "@echo off", 'set "PYTHONIOENCODING=utf-8"', 'set "MSYS_NO_PATHCONV=1"', f'set "XM_DISPATCH_ROOT={ROOT}"', f'cd /d "{ROOT}"',
         f'echo ==== %DATE% %TIME% >> "{out}"', f'"{PY}" "{os.path.abspath(__file__)}" tick {a.name} >> "{out}" 2>&1'])
         + "\n")
     xml = os.path.join(d, "dispatch_task.xml")
@@ -392,6 +417,7 @@ def main() -> int:
     p.add_argument("--cost-table", required=True)
     p.add_argument("--parts", type=int, required=True)
     p.add_argument("--kaggle-chunk", type=int, default=8)
+    p.add_argument("--kaggle-mine-max", type=int, default=KAGGLE_MINE_MAX, help="my Kaggle sessions at once (<= 5)")
     p.add_argument("--colab-chunk", type=int, default=4)
     p.add_argument("--skip-complete-from", nargs="*", default=None)
     p.add_argument("--vps", action="store_true", help="also use the user VPS lane (one 7-part job at a time)")
@@ -399,12 +425,18 @@ def main() -> int:
                    help="use only these platforms (--only vps implies --vps)")
     for c in ("tick", "unschedule", "show"):
         sub.add_parser(c).add_argument("name")
+    sub.choices["tick"].add_argument("--dry-run", action="store_true", help="print launches; no pull, no launch")
+    sub.choices["tick"].add_argument("--kaggle-now", nargs=2, type=int, default=None, metavar=("RUNNING", "MINE"),
+                                     help="dry-run: assume these Kaggle counts instead of asking Kaggle")
     p = sub.add_parser("schedule")
     p.add_argument("name")
     p.add_argument("every", nargs="?", default=15)
     a = ap.parse_args()
+    global DRY
+    DRY = bool(getattr(a, "dry_run", False))
     if a.action == "init":
         _save(a.name, {"spec": a.spec, "cost_table": a.cost_table, "parts": a.parts, "kaggle_chunk": a.kaggle_chunk,
+                       "kaggle_mine_max": min(a.kaggle_mine_max, KAGGLE_MAX),
                        "colab_chunk": a.colab_chunk, "skip_from": a.skip_complete_from, "vps": a.vps or "vps" in (a.only or ()), "only": a.only, "next": 0,
                        "jobs": []})
         _log(a.name, "init", _load(a.name))

@@ -1,6 +1,17 @@
-# dev-runs status (2026-10-04): READY-TO-MERGE (R-59): campaign.py + vps_run.py audit fixes F2-F9 done
+# dev-runs status (2026-10-05): READY-TO-MERGE (EVAL merged): xm-eval-a 150 960 / 150 960 ok, 0 missing / mixed / N1
 
 Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files only from feat/v2 5a811de. Never pushed.
+
+## EVAL (Study A, freeze feat/v2 93856c2 merged = 75a8fff) - DONE, MERGED (no analysis run; eval_analysis = xm-harness)
+- Run id xm-eval-a: specs/eval/full.json (eval, 150 960 units, 11 000 datasets) from clean worktree CDD-ORAN-wt/xm-eval
+  at 5a95186 (freeze tree + dispatcher EVAL fix + cost table results/dev/eval_cost_table.json sha 9a684592...).
+- 96 LPT parts (5.25 h at Kaggle speed); 20 jobs: Kaggle k1-k14 (4 parts / session, <= 5 at once), VPS v1-v6 (7 procs).
+  Launched 10-04 15:10 UTC, last pulled 10-05 06:52 UTC; 0 requeues, 0 lost parts. Tick unscheduled (06:52).
+- MERGE results/eval/merged.jsonl.gz (+ .summary.json): 150 960 / 150 960 ok; missing 0, errors 0, infeasible 0,
+  unexpected 0, duplicates 0, conflicts 0, mixed-platform datasets 0, dirty 0. Sets (1 value each): commit 5a95186,
+  protocol c5f7a4fe, spec, spec_file, python 3.12.14, lock, isolation fork+rlimit, budget 7200, cost table, parts 96;
+  platforms kaggle + vps. N1: 96 raw shards, 150 960 lines = 150 960 keys, 0 with both infeasible and ok.
+- merged.jsonl.gz = 104 705 944 B (just under GitHub's 100 MiB file limit).
 
 ## Done
 - Steps 1-2: driver `cdd_oran/xmethod/campaign.py` + `dev_power.py` (R-12); pilot 1648 / 1648 ok. EVAL mode (R-35,
@@ -10,15 +21,8 @@ Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files on
   60. T1: S_power 14, S = 40 (floor), MDG .082. Max 156 CPU-s per dataset.
 - CI-test pilots (e89a340) -> Q10 (results/dev/pilot_ci_*; projection results/dev/pilot_ci_projection.json).
 
-- CI DEV run, plan C (Q10; R-48 pdcor, R-49 cmi_knn dropped): specs/dev/ci_c.json = pcorr x7 + rcot2 x3 full grid
-  + mscr x3 n <= 1000. Kaggle k1-k5, Colab c1b / c2 / c3, Lightning l1-l3 (stopped 13:01; rest re-run via
-  --skip-complete-from). Merge 58 480 / 58 480 ok, 0 missing / errors; 39 duplicate input lines resolved to one
-  platform per dataset (0 mixed); method code identical in all records (17 176 dirty = launcher fix only).
-  results/dev/ci_c/: REPORT.md (feat/v2 eval_analysis), dev_cells, t1, t1_pairs, agg, merged (+ summary).
-  * 1138 cells: VALID 122, INVALID 444, INCONCLUSIVE 572. mscr INVALID in every R2 cell (null raw .93-1.00) -> Q11.
-    pcorr / pcorr_hac / pcorr_hac_fb native INVALID in R2 (null raw .21-.46); their eq / eq_min arms .04-.06.
-  * T1 (10 arms + 13 CI arms, focal pmrt_eq): 108 pairs, S_power 14, S = 40 unchanged; redone with pmrt_nl_eq
-    (R-43) when its run is in. Cost: max 719 CPU-s per dataset (mscr_eq_min n 1000); nothing near the budget.
+- CI DEV run plan C (Q10, R-48, R-49): specs/dev/ci_c.json 58 480 / 58 480 ok, clean; results/dev/ci_c/ (REPORT,
+  cells, t1, agg, merged). 1138 cells: VALID 122, INVALID 444, INCONCLUSIVE 572; mscr INVALID in every R2 (Q11).
 
 - FINAL T1 + REPORT (R-58(2); R-56; focal pmrt_nl_eq): results/dev/final/ (REPORT.md, notes.txt, t1, t1_pairs,
   dev_cells) over every DEV record (10 arms + 13 CI + pmrt_nl_eq + cdl; 2086 cells, 106 840 records, 0 screen
@@ -35,15 +39,8 @@ Branch xm/dev-runs from feat/v2 dea83cf; feat/v2 acd3dfa merged in; cdl files on
   LIGHTNING l1 (parts 60-63, user GO): 2.77 studio-h, ~0.42 credits used, ~0.10 left (est.; API stale at .5168).
 - pmrt_nl_eq T3 cost pilot DONE (results/dev/pmrt_nl_cost/, in the freeze): max 1148 CPU-s (E2 n 24000); E4 R3 <= 103.
 - R-43 pmrt_nl_eq DEV run DONE (xm-dev-pmrtnl-k1, 1440 / 1440 ok; results/dev/pmrt_nl/).
-- R-59 DONE (feat/v2 d48cc69 merged in; audit results/audit/campaign_eval_audit.md): F2 EVAL 2x-cap breach =
-  infeasible with cpu_s, never re-run (OOM / other signals stay error); F3 --skip-complete-from applies the merge's
-  accept_rule (mode, protocol sha, EVAL spec sha; dispatcher done-keys keep run_mode + spec sha); F4 integrity
-  stamps cost_table_sha256, part, parts; EVAL merge refuses mixed cost table / part count; F5 each part writes
-  rc_<i>.txt, session status non-zero if any part failed (gate-safe; vps_run exit_code + status show it); F6 EVAL
-  refuses --budget != spec, F7 refuses non-isolated runs; isolation, budget, cap factor stamped, per-record limits;
-  F8 vps_run scope CPUQuota = procs x 100 %; F9 merge summary sets python / lock / spec_file sha (+ isolation,
-  budget, cost table, parts). 7 new tests (EVAL via run_units, child stand-in); campaign + eval_analysis + exp_b +
-  exp_c tests pass (2 Linux-only skips). DEV behaviour unchanged (records gain stamps). F1 = xm-harness.
+- R-59 DONE (465ae56 -> feat/v2 0542a99): F2-F9 in campaign.py / vps_run.py, 7 tests; audit
+  results/audit/campaign_eval_audit.md; re-audit PASS-WITH-NOTES (feat/v2 93856c2). F1 = xm-harness.
 - R-55 DONE (2a0cb02; proc count fixed 21607d4): records log load {start, end}; EVAL <= 1 process per vCPU.
 - R-57 DONE: EVAL_PYTHON = "3.12.14" exact; pin_check(python=...) refuses another patch on every platform.
 ## QUESTIONS

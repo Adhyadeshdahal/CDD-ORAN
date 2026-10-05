@@ -1,0 +1,52 @@
+{
+ "mode": "eval",
+ "n_expected": 150960,
+ "n_records": 150960,
+ "n_ok": 150960,
+ "missing": [],
+ "errors": [],
+ "infeasible": [],
+ "unexpected": [],
+ "lines": 150960,
+ "bad_lines": 0,
+ "duplicates": 0,
+ "foreign": 0,
+ "conflicts": [],
+ "platform_switched_datasets": 0,
+ "mixed_platform_datasets": [],
+ "commits": [
+  "5a9518680ca2d74bed0c02d5157cbd53b4b6aa6a"
+ ],
+ "dirty_records": 0,
+ "platforms": [
+  "kaggle",
+  "vps"
+ ],
+ "protocol_sha256": [
+  "c5f7a4fe4dff4bfdeef3ccebac2dcc3748dfa9c2d0c3d17f2ac9d6246379fa22"
+ ],
+ "spec_sha256": [
+  "202556807a2a92b232ec9ead6bc536a82a38b76e0f3ee5f8041896d531b397ee"
+ ],
+ "python": [
+  "3.12.14"
+ ],
+ "lock_sha256": [
+  "8ce908ed1ecc607233fdbf57d61fe7987acf299f2d9a085efff55e8dd0bc351a"
+ ],
+ "spec_file_sha256": [
+  "a02fd14833bb3a51bfb4136e78653b3b5c867bf0f494f344b3ad8abababdcc07"
+ ],
+ "isolation": [
+  "fork+rlimit"
+ ],
+ "budget_cpu_s": [
+  "7200"
+ ],
+ "cost_table_sha256": [
+  "9a68459241f5b5711ebd6768baf999e362d9e252b4bcee1bf0384b2373caf14a"
+ ],
+ "parts": [
+  "96"
+ ]
+}
