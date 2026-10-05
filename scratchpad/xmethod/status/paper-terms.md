@@ -23,3 +23,19 @@ Numbers only from results/eval/REPORT.md (s.1-5, V0, V1) and docs/xmethod/EXP_B.
 - D5 [DECIDE]: the panel's "rarely declared any edge at n <= 1000" is loose. REPORT V0 at the fixed threshold:
   recall .00 in 10/10 cells at n 500 and 7/10 at n 1000 (E1 R1 .75, E3 R1 .57, E5 R1 .27). Noted under s.12.
 - "9 of 30 cells" = 9 INVALID truth-null declaration cells (REPORT V1); all other quoted numbers match.
+## D5 + naming (user decision, 2026-10-05; tag [DECIDED 2026-10-05, user])
+- TERMINOLOGY.md (296 -> 310 lines):
+  - "How to use": CDD-ORAN is the repository's code name only.
+  - New "Paper identity" table: journal framework name and title = [TBD: journal framework name and title, team
+    decision], a new contribution that builds on and cites CDD O-RAN, never "CDD-ORAN" or an extension; conference
+    paper and method = "CDD O-RAN" (title checked in archive/xApp-Nana-Conference-2026/main.tex).
+  - s.2: "conference version" -> "conference paper (CDD O-RAN)".
+  - s.6.5: CDL -> CDD O-RAN discovery with the first-use form; "CDL" / `cdl` added to never-in-prose.
+  - s.10: [DECIDE] resolved. CDL row -> "the causal-discovery stage of CDD O-RAN [conf. ref], re-implemented here",
+    then "CDD O-RAN discovery". MLP world model / CMI discovery only for the conference paper. New row bans
+    "CDD-ORAN" as the paper name and "extension".
+  - s.12: D5 wording uses the new names. The fixed-threshold sentence is replaced by the REPORT V0 facts: no edge at
+    n 500, true edges in 3 of 10 cells at n 1000, no truth-null or placebo declaration. Never "CDD O-RAN is invalid".
+- WRITING_AGENT_PROMPT.md (67 -> 72 lines): the journal-guide line no longer says "conference extension". New first
+  evidence-boundary bullet: title / framework [TBD], new contribution citing CDD O-RAN, never "CDD-ORAN" /
+  extension, never "CDL".
