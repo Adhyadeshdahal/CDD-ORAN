@@ -224,6 +224,13 @@ def test_calib_two_host_sessions_pooled_with_spread():
     assert d["f_lo"] == pytest.approx(2.0) and d["f_hi"] == pytest.approx(3.0) and d["n_units"] == 2
 
 
+def test_t3_not_in_grid_above_spec_max_n():
+    rs = [X.slim(rec("m", n, 1, 10.0)) for n in (500, 1000)]
+    out = X.build(rs, {"files": [], "lines": 2, "duplicates": 0, "conflicts": 0}, arm_specs={"m": {"max_n": 1000}})
+    by = out["feasibility"]["m"]["by_n"]
+    assert by["1000"]["status"] == "feasible" and by["4000"]["status"] == "not in grid"
+
+
 def test_procs_per_vcpu_from_load_fields():
     r = rec("l", 500, 1, 1.0, load={"start": {"campaign_procs": 8, "cpu_quota": 4}})
     t = rec("l", 500, 2, 1.0, load={"start": {"timing_procs": 2, "cpu_quota": 2}})
@@ -249,6 +256,8 @@ def test_timing_spec_blocks():
     pap = T.units(sp, "paper")
     assert not any(u["arm"].startswith(("pdcor", "cmi_knn")) for u in pap)         # R-48, R-49
     assert {"pmrt_nl_eq", "cdl"} <= {u["arm"] for u in pap}
+    assert "mscr_eq_min" not in {u["arm"] for u in pap}                              # R-58(5), R-60 X1
+    assert len({u["arm"] for u in pap}) == 24
     assert {u["world"] for u in pap if u["arm"].startswith("granger")} == {"E3"}
     assert len({u["key"] for u in pap}) == len(pap)
 

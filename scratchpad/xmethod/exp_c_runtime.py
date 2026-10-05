@@ -307,7 +307,7 @@ def build(recs: list[dict], info: dict, *, ref: str = REF_HOST, budget: float = 
             "n_multi_thread": v["multi_thread"], "n_contended": v["contended"],
             "wall_cpu_ratio_median": float(np.median(v["wc"])) if v["wc"] else None, "infeasible_units": v["infeasible"][:10]})
 
-    feas = t3(table, n_grid)
+    feas = t3(table, n_grid, {a: (d or {}).get("max_n") for a, d in arm_specs.items()})
     for row in table:
         row["t3"] = feas[row["arm"]]["by_n"].get(str(row["n"]))
     by_wr = [{"arm": k[0], "world": k[1], "regime": k[2], "n": k[3], "n_units": len(v), **_stats(v)}
@@ -331,11 +331,12 @@ def host_counts(recs: list[dict]) -> list[dict]:
     return [{"host": h, "n_units": k} for h, k in sorted(c.items(), key=lambda kv: -kv[1])]
 
 
-def t3(table: list[dict], n_grid: tuple) -> dict:
+def t3(table: list[dict], n_grid: tuple, max_n: dict | None = None) -> dict:
     """PROTOCOL_A T3 per arm: the first n (ascending) whose max unit cost (reference seconds) exceeds the budget, or
     that has a measured infeasible unit, makes n and every larger n infeasible. R-55: a unit within the speed
     factor's error of the budget counts as over (test on cost x f_hi). Grid n without DEV cost below that are "no
-    DEV cost" (T3: a cost pilot decides)."""
+    DEV cost" (T3: a cost pilot decides); above the arm's spec max_n they are "not in grid" (pre-registered, R-58)."""
+    max_n = max_n or {}
     out = {}
     for a in sorted({r["arm"] for r in table}):
         rs = {r["n"]: r for r in table if r["arm"] == a}
@@ -355,6 +356,8 @@ def t3(table: list[dict], n_grid: tuple) -> dict:
                 st = "infeasible"
             elif first is not None and n > first:
                 st = "infeasible (smaller n infeasible)"
+            elif r is None and max_n.get(a) and n > max_n[a]:
+                st = "not in grid"
             elif r is None or r["cost_ref"]["max"] is None:
                 st = "no DEV cost"
             else:
@@ -454,8 +457,12 @@ def render_md(out: dict, title: str) -> str:
             t3s += f"; INFEASIBLE from n {fe['first_infeasible_n']} (DEV cost {_f(fe['first_infeasible_cost'])})"
         if none:
             t3s += f"; no DEV cost at n {', '.join(none)}"
+        nig = [n for n, e in fe["by_n"].items() if e["status"] == "not in grid"]
+        if nig:
+            t3s += f"; not in grid at n {', '.join(nig)} (spec max_n)"
         L.append(f"| {a} | " + " | ".join(cells) + f" | {t3s} |")
-    L += ["", "`-` = no record at that n (T3: a cost pilot decides if the n is in the arm's grid); * = some unit "
+    L += ["", "`-` = no record at that n (above the spec max_n: not in grid; else T3: a cost pilot decides if the n is "
+          "in the arm's grid); * = some unit "
           "unconverted; + = some unit converted with a provisional (observational) factor. Pooled over worlds, "
           "regimes, lambdas, kappas (the kappa sweep is at n 1000) and roles (tune + measure)."]
 

@@ -10,8 +10,8 @@ peak_rss_mb, host, load), so `exp_c_runtime.py calib` / `table` read them direct
          near-costliest DEV cell of every anchor), DEV seeds 3_000_000-002 (the T3 calibration seeds; R-55's "3
          repeats"). Run as its own job on Kaggle (reference) and Colab (CPU runtime; CPU model tagged).
   paper  Paper runtime table (R-55 (3)): every Study A arm (EVAL spec arms minus pdcor / cmi_knn, R-48 / R-49, plus
-         pmrt_nl_eq and cdl) x n grid (mscr n <= 1000), E2 R2 (granger: E3 R2), seeds 3_000_000-002, on Kaggle only.
-         Launch after EVAL is underway.
+         pmrt_nl_eq and cdl, minus mscr_eq_min: R-58(5), R-60 X1) x n grid (mscr n <= 1000), E2 R2 (granger: E3 R2),
+         seeds 3_000_000-002, on Kaggle only, one uncontended session. Launch after EVAL is underway (R-60).
 
   uv run python scratchpad/xmethod/exp_c_timing.py make-spec          # -> specs/exp_c/timing.json (from feat/v2 specs)
   uv run python scratchpad/xmethod/exp_c_timing.py lock               # -> _bundle_expc/requirements.{lock,cloud}.txt
@@ -68,6 +68,7 @@ EXTRA_ARMS = {                                                # arms not in feat
             "source": "xm/dev-runs specs/dev/cdl.json (R-50)"},
 }
 MAX_N = {"mscr_eq": 1000, "mscr_native": 1000, "mscr_eq_min": 1000}   # R-54
+PAPER_EXCLUDE = ("mscr_eq_min",)                              # R-58(5) / R-60 X1 (still a calib anchor)
 N_GRID = [500, 1000, 4000, 8000, 24000]
 SEEDS = [3_000_000, 3_000_001, 3_000_002]
 
@@ -90,7 +91,8 @@ def make_spec() -> dict:
             "source": f"arms from {EVAL_SPEC_REL} (feat/v2) minus {list(DROPPED)}, plus {sorted(EXTRA_ARMS)}",
             "arms": dict(sorted(arms.items())),
             "blocks": {"calib": {"arms": list(CALIB_ANCHORS), "ns": [500, 1000, 4000], "cell": ["E2", "R2"]},
-                       "paper": {"arms": "all", "ns": N_GRID, "cell": ["E2", "R2"], "cell_E3_only": ["E3", "R2"]}},
+                       "paper": {"arms": "all", "exclude": list(PAPER_EXCLUDE), "ns": N_GRID, "cell": ["E2", "R2"],
+                                 "cell_E3_only": ["E3", "R2"]}},
             "est_cost_s": est}
 
 
@@ -110,7 +112,7 @@ def est_cost(spec: dict, arm: str, w: str, r: str, n: int) -> float:
 
 def units(spec: dict, block: str) -> list[dict]:
     b = spec["blocks"][block]
-    arms = list(spec["arms"]) if b["arms"] == "all" else b["arms"]
+    arms = [a for a in spec["arms"] if a not in b.get("exclude", [])] if b["arms"] == "all" else b["arms"]
     out = []
     for a in arms:
         d = spec["arms"][a]

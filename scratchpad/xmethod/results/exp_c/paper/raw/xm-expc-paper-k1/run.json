@@ -1,0 +1,38 @@
+{
+ "version": "xm-exp-c-timing/1",
+ "block": "paper",
+ "procs": 4,
+ "cpu_quota": 4,
+ "units": 342,
+ "wall_s": 4162.476800441742,
+ "rcs": [
+  0,
+  0,
+  0,
+  0
+ ],
+ "host": {
+  "platform": "kaggle",
+  "cpu_model": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+  "cpu_count": 4,
+  "cpu_quota": 4,
+  "node": "c34f60d22782",
+  "gpu": null,
+  "cpu_ident": {
+   "cpu family": "6",
+   "model": "79",
+   "stepping": "0",
+   "microcode": "0xffffffff",
+   "cache size": "56320 KB",
+   "flags_sha": "868738ad4a20",
+   "avx512f": false,
+   "amx": false
+  }
+ },
+ "est_cost_s_per_proc": [
+  3980.8894034232208,
+  3980.8794143418168,
+  3980.9075309176333,
+  3980.881897089047
+ ]
+}
