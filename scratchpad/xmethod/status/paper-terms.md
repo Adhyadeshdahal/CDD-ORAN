@@ -1,59 +1,60 @@
 READY-TO-MERGE
-# paper-terms (2026-10-05): PAPER_TERMS_DECISIONS D1-D7 (feat/v2 1f710b9) applied outside the repo, for user review
-Files: D:/academia/major-project/TERMINOLOGY.md (211 -> 296 lines), WRITING_AGENT_PROMPT.md (51 -> 67); .bak untouched. Every new or changed entry is tagged [PROVISIONAL 2026-10-05]. Manuscript not touched.
-Numbers only from results/eval/REPORT.md (s.1-5, V0, V1) and docs/xmethod/EXP_B.md s.9, cited by section.
-## TERMINOLOGY.md
-- Header: Study 4 / bridging sources of truth (PROTOCOL_A, EVAL REPORT, EXP_B s.9, the decisions file).
-- s.2 (D7): E1-E5 row rewritten from PROTOCOL_A s.2 ("controlled diagnostic environments", Study 4; drops "E4
-  scaffolded only" and "open decision"). New row: regimes R1-R4.
-- s.6.1 (D1): "PMRT" alone = frozen E6-P test. New table: PMRT-GBM, PMRT-Lin, PMRT-Lin R3 covariates. Mandatory sentence.
-- s.6.2: MSCR row says Study 4 design-blind, n <= 1000, reported invalid arm.
-- New s.6.5 (D1, D4): families (design-based / design-adjusted / design-blind) with members; method set; dropped
-  arms; never-in-prose list.
-- s.8: rows for cell validity, F_max, Study 4 verdict labels, amendment A-1.
-- s.9 (D2): Study 4 and bridging-analysis rows, main / Appendix A / B placement, never-write list extended.
-- s.10 (D6): 8 do-not-use rows. The CDL row is marked [DECIDE] (D5).
-- New s.12: D3 claim (exact) + disclosures with numbers, PMRT-GBM E6-P recall sentence (D2), bridging rules (D2),
-  D5 CDL wording as [DECIDE].
-## WRITING_AGENT_PROMPT.md
-- READ FIRST item 7: REPORT, PROTOCOL_A, EXP_B and the TERMINOLOGY sections.
-- Evidence boundary: Study 4 and bridging bullets (structure, mandatory sentence); the "do NOT claim" bullet now
-  also lists D6; allowed number sources now include REPORT and EXP_B.
-## For the user (morning review)
-- D5 [DECIDE]: the panel's "rarely declared any edge at n <= 1000" is loose. REPORT V0 at the fixed threshold:
-  recall .00 in 10/10 cells at n 500 and 7/10 at n 1000 (E1 R1 .75, E3 R1 .57, E5 R1 .27). Noted under s.12.
-- "9 of 30 cells" = 9 INVALID truth-null declaration cells (REPORT V1); all other quoted numbers match.
-## D5 + naming (user decision, 2026-10-05; tag [DECIDED 2026-10-05, user])
-- TERMINOLOGY.md (296 -> 310 lines):
-  - "How to use": CDD-ORAN is the repository's code name only.
-  - New "Paper identity" table: journal framework name and title = [TBD: journal framework name and title, team
-    decision], a new contribution that builds on and cites CDD O-RAN, never "CDD-ORAN" or an extension; conference
-    paper and method = "CDD O-RAN" (title checked in archive/xApp-Nana-Conference-2026/main.tex).
-  - s.2: "conference version" -> "conference paper (CDD O-RAN)".
-  - s.6.5: CDL -> CDD O-RAN discovery with the first-use form; "CDL" / `cdl` added to never-in-prose.
-  - s.10: [DECIDE] resolved. CDL row -> "the causal-discovery stage of CDD O-RAN [conf. ref], re-implemented here",
-    then "CDD O-RAN discovery". MLP world model / CMI discovery only for the conference paper. New row bans
-    "CDD-ORAN" as the paper name and "extension".
-  - s.12: D5 wording uses the new names. The fixed-threshold sentence is replaced by the REPORT V0 facts: no edge at
-    n 500, true edges in 3 of 10 cells at n 1000, no truth-null or placebo declaration. Never "CDD O-RAN is invalid".
-- WRITING_AGENT_PROMPT.md (67 -> 72 lines): the journal-guide line no longer says "conference extension". New first
-  evidence-boundary bullet: title / framework [TBD], new contribution citing CDD O-RAN, never "CDD-ORAN" /
-  extension, never "CDL".
-## Study 4 layout (user GO, 2026-10-05; tag [DECIDED 2026-10-05, user])
-- TERMINOLOGY.md s.9: the D2 "~1 page" paragraph is replaced by the decided layout.
-  - After Studies 1-3, framed "why the design-based test is the right instrument", ~1.5-2 pages.
-  - Sections 4.1 (purpose + pre-registration, C1-C3 up front; "pre-registered" only with freeze hashes, s.8), 4.2
-    (design), 4.3 (E4 worked example), 4.4 (results by claim), 4.5 (verdict grid + limits, the 3 named exceptions),
-    4.6 (bridging; tables and cost in Appendix B).
-  - Appendix A: one page per environment, fixed template; recall-vs-n, kappa sweep and R4 rows there.
-- WRITING_AGENT_PROMPT.md: the Study 4 bullet's "~1 page" layout is replaced by a one-line pointer to TERMINOLOGY s.9.
-## Journal title (user decision, 2026-10-05; tag [DECIDED 2026-10-05, user])
-- TERMINOLOGY.md "Paper identity":
-  - The [TBD] row is replaced by: title "Design-Based Causal Maps for xApp Conflict Mitigation in O-RAN".
-  - It notes that the abstract's first sentences must define "design-based" as "valid because the actions in the logs
-    were randomized by a known logging design (design-based inference)".
-  - Running title: [DECIDE], proposal "Design-Based Causal Maps for xApp Conflicts" (not set).
-  - New row: framework name = none (no acronym); "PMRT" remains the method name.
-  - The s.10 "CDD-ORAN / extension" row now points to the title instead of [TBD]. No [TBD] remains in either file.
-- WRITING_AGENT_PROMPT.md: title line set to the decided title, no framework name, pointer for the definition and the
-  running title. Manuscript .tex not touched.
+# paper-terms (2026-10-05): paper wording decisions recorded outside the repo (TERMINOLOGY, WRITING_AGENT_PROMPT, PAPER_PLAN)
+Files in D:/academia/major-project/ (no git there). .bak files untouched; manuscript .tex never edited. ASCII, LF.
+Numbers only from results/eval/REPORT.md and docs/xmethod/EXP_B.md s.9, cited by section.
+
+## 1. D1-D7 panel decisions (feat/v2 1f710b9), tag [PROVISIONAL 2026-10-05]
+- TERMINOLOGY:
+  - header sources; s.2 E1-E5 row ("controlled diagnostic environments") + regimes R1-R4;
+  - s.6.1 PMRT-GBM / PMRT-Lin / PMRT-Lin R3 + mandatory sentence; s.6.2 MSCR row; new s.6.5 families + method set;
+  - s.8 validity / F_max / verdict labels / A-1; s.9 Study 4 + bridging rows; s.10 eight do-not-use rows;
+  - new s.12 claim, disclosures, recall sentence, bridging rules.
+- WRITING_AGENT_PROMPT: read-first item 7, Study 4 / bridging bullets, do-not-claim list, number sources.
+- D5 check: REPORT V0 contradicts the panel's "rarely declared any edge at n <= 1000" (n 1000 recall > 0 in 3 / 10).
+
+## 2. D5 naming (user), tag [DECIDED 2026-10-05, user]
+- Conference method = "CDD O-RAN" (title checked in archive/xApp-Nana-Conference-2026/main.tex).
+- Study 4 arm = "the causal-discovery stage of CDD O-RAN [conf. ref], re-implemented here", then "CDD O-RAN discovery".
+- "CDL" = code name, never in prose; s.10 [DECIDE] resolved; s.12 wording keeps the recall correction.
+- "CDD-ORAN" = repository code name only; the journal is a new contribution, never an extension.
+
+## 3. Study 4 layout (user GO) and title (user), tag [DECIDED 2026-10-05, user]
+- TERMINOLOGY s.9: 4.1-4.6 + Appendix A (one page per environment); WRITING_AGENT_PROMPT points to it.
+- Title "Design-Based Causal Maps for xApp Conflict Mitigation in O-RAN"; no framework name; "design-based" defined
+  in the abstract's first sentences.
+
+## 4. PAPER_PLAN.md s.6 answers (user), tag [DECIDED 2026-10-05, user]
+- PAPER_PLAN s.6: Q1-Q12 and Q14 marked RESOLVED with the answer (question text kept after "Was:"); Q13 PENDING
+  (panel); Q15-Q19 open.
+- Q1 running title "Design-Based Causal Maps for xApp Conflicts": TERMINOLOGY title row, WRITING_AGENT_PROMPT.
+- Q2 "control parameter (NCP)" only, never "knob". Q3 "referee" (code: arbiter / UnitArbiter). TERMINOLOGY s.1
+  [DECIDE] removed, s.10 rows added.
+- Q4 "the system-level simulator", no "E6-P" in prose:
+  - TERMINOLOGY s.2 row (E6-P now the internal label), s.3 heading, s.6.1, s.9, s.12 sentences, never-in-prose list.
+  - WRITING_AGENT_PROMPT 5 places; PAPER_PLAN thesis, s.3 / s.6 titles, 7.6, P3, B.1, claims table, figure row,
+    guardrails.
+  - Mandatory sentence now ends "...weighted-BY layer of the PMRT test used in Studies 1-3." The recall sentence ends
+    "...not on the simulator data of Studies 1-3." File names (fig_system_e6p) kept.
+- Q5 "map-driven referee" / "certified-safe map-driven referee": TERMINOLOGY s.7 paper terms, PAPER_PLAN contribution 2.
+- Q6:
+  - TERMINOLOGY s.8 row: one Experimental-design sentence; commit hashes only in the data and code availability
+    statement; no "pre-registered" otherwise.
+  - Section titles changed accordingly: 4.1 / 7.1 "Purpose and frozen analysis plan". PAPER_PLAN 5.1 and 7.1 no
+    longer cite hashes in prose. A-1 row: hashes in the availability statement only.
+- Q7 TERMINOLOGY s.9 heading [DECIDE] removed.
+- Q8 one global method-colour mapping (TERMINOLOGY s.11, PAPER_PLAN figure notes). Rebuild = aud1. The exact slot
+  list and the xApp / KPI slots stay [DECIDE] (not answered).
+- Q9 R-definition wording: WRITING_AGENT_PROMPT pointer, PAPER_PLAN S2.7 + guardrail, TERMINOLOGY s.10 row.
+- Q10 never mention the rename or "MSCR+": TERMINOLOGY naming rule + s.10; PAPER_PLAN disclosures (rename item removed).
+- Q11 Limitations sentence: PAPER_PLAN P5 tagged.
+- Q12 primary z -0.70 in Results, z -2.21 one labelled Discussion sentence: PAPER_PLAN P3 mechanism + claims table S2.6.
+- Q14 Appendix C: X2 / X3 figure + compact table each; PMRT time only if logged (FD:v4.timing_total_s).
+## 5. Q13 / Q15-Q19 (user), tag [DECIDED 2026-10-05, user]
+- Q13: contribution 4 removed; contribution 3 ends with the practical check + "frozen and hash-pinned"; the check is
+  repeated in the abstract (plan item 8) or the Conclusion (PAPER_PLAN, TERM s.12, WRITING_AGENT_PROMPT).
+- Q15: every [PROVISIONAL] tag becomes [DECIDED]. "outperforms" only for Study 1 (0.90 / 1.00 checked in FD:v4.P3_values).
+  E4 disclosure added; its R3 clause is qualified to lambda > 0 (csv: 15 / 15 INVALID; at lambda 0 none).
+- Q16 intro figure + kappa table in, thumbnail + e-process out. Q17 ~9 000 words (plan targets ~11 000: must shrink).
+- Q18 PAPER_PLAN Back matter + s.6: funding / availability [TBD]; no competing interests; contributions = SN template;
+  the [conf. ref] BibTeX is still to be supplied.
+- Q19: Study 4 = Section 7 (TERM s.9 now 7.1-7.6). "pre-registered" left only in rules that forbid it.
