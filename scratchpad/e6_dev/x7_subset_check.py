@@ -246,7 +246,7 @@ def agreement(recs, shadow, n_seeds):
 
 
 def _same(a: dict, b: dict) -> list:
-    return [x for x in sorted((set(a) | set(b)) - SKIP - {"policy_counts", "key", "kind", "schema"})
+    return [x for x in sorted((set(a) | set(b)) - SKIP - {"policy_counts", "key", "kind", "schema", "arm"})
             if a.get(x) != b.get(x)]
 
 
@@ -267,18 +267,33 @@ def analyse(stored: str, x7: str, out: str, n_boot: int = 10_000):
     # ---- bit identity of the re-runs with the stored records
     ident = {}
     for a, src in [(SHADOW_ARM, REF)] + [(arm_name(r, "own"), r) for r in REFS]:
-        nd, pol_eq, fields = 0, 0, {}
+        nd, pol_eq, fields, dseeds, n_have = 0, 0, {}, [], 0
         for s in seeds:
             v, k = Rx.get(s, {}).get(a), Rs[s][src]
             if v is None:
                 continue
+            n_have += 1
             d = _same(v, k)
             nd += not d
+            if d:
+                dseeds.append(s)
             for x in d:
-                fields[x] = fields.get(x, 0) + 1
+                f = fields.setdefault(x, {"seeds": 0, "max_abs": 0.0})
+                f["seeds"] += 1
+                if isinstance(v.get(x), (int, float)) and isinstance(k.get(x), (int, float)):
+                    f["max_abs"] = max(f["max_abs"], abs(v[x] - k[x]))
             pol_eq += (k.get("policy_counts") == v.get("policy_counts")) if src != REF else 1
-        ident[a] = {"source": src, "identical_outcome_seeds": nd, "policy_counts_equal_seeds": pol_eq,
-                    "diff_fields": fields}
+        ident[a] = {"source": src, "n": n_have, "identical_outcome_seeds": nd, "policy_counts_equal_seeds": pol_eq,
+                    "diff_fields": fields, "diff_seeds": dseeds}
+    # within-platform relation: is "referee == sub" the same statement on the stored (Kaggle) and VPS records?
+    rel = {}
+    for r in REFS:
+        a = arm_name(r, "own")
+        both = [s for s in seeds if a in Rx.get(s, {}) and SHADOW_ARM in Rx.get(s, {})]
+        k_eq = {s for s in both if not _same(Rs[s][r], Rs[s][REF])}
+        v_eq = {s for s in both if not _same(Rx[s][a], Rx[s][SHADOW_ARM])}
+        rel[r] = {"n": len(both), "stored_identical_to_ref": len(k_eq), "vps_identical_to_ref": len(v_eq),
+                  "relation_same": len(both) - len(k_eq ^ v_eq)}
     # ---- A2 agreement
     agr = {"stream_ref": {}, "stream_own": {}}
     if all(SHADOW_ARM in Rx.get(s, {}) for s in seeds):
@@ -292,6 +307,8 @@ def analyse(stored: str, x7: str, out: str, n_boot: int = 10_000):
     R = {s: dict(Rs[s]) for s in Rs}
     a3 = [arm_name(r, k) for r in REFS for k in ("pm", "other")]
     a3 = [a for a in a3 if all(a in Rx.get(s, {}) for s in seeds)]
+    vps = [a for a in [SHADOW_ARM] + [arm_name(r, "own") for r in REFS] if all(a in Rx.get(s, {}) for s in seeds)]
+    a3 = vps + a3
     for s in R:
         for a in a3:
             R[s][a] = Rx[s][a]
@@ -318,6 +335,18 @@ def analyse(stored: str, x7: str, out: str, n_boot: int = 10_000):
                         "per_seed_dpsvr": {"mean": float(dv_seed.mean()), "sd": float(dv_seed.std(ddof=1)),
                                            "zero": int((dv_seed == 0).sum()),
                                            "q05_q50_q95": [float(x) for x in np.quantile(dv_seed, [.05, .5, .95])]}}
+    # same-platform (VPS) differences: replays and own re-runs vs the VPS re-run of sub:ES+PowerES, replays vs own
+    same = {}
+    if SHADOW_ARM in vps:
+        pairs = [(arm_name(r, k), SHADOW_ARM) for r in REFS for k in ("own", "pm", "other")]
+        pairs += [(arm_name(r, k), arm_name(r, "own")) for r in REFS for k in ("pm", "other")]
+        pairs += [(SHADOW_ARM, REF)] + [(arm_name(r, "own"), r) for r in REFS]        # platform noise
+        for a, b in pairs:
+            if a in Vb and b in Vb:
+                ss = sum(not _same(R[s][a], R[s][b]) for s in st["seeds"])
+                same[f"{a} - {b}"] = {"dR": P[a]["R"] - P[b]["R"], "dR_ci90": D._ci(B[a]["R"] - B[b]["R"]),
+                                      "dV": P[a]["V"] - P[b]["V"], "dV_ci90": D._ci(Vb[a] - Vb[b]),
+                                      "seeds_bit_identical": int(ss)}
     # share of the referee's R reproduced by the prot_min-only replay
     share = {r: {"R_full": P[r]["R"], "R_pm": P.get(arm_name(r, "pm"), {}).get("R"),
                  "R_other": P.get(arm_name(r, "other"), {}).get("R")} for r in REFS}
@@ -330,8 +359,8 @@ def analyse(stored: str, x7: str, out: str, n_boot: int = 10_000):
            "status": "POST HOC, DESCRIPTIVE", "ref": REF, "refs": list(REFS), "n_seeds": n,
            "missing": {a: v for a, v in missing.items() if v}, "bad_lines": bad_x, "platforms": plats,
            "code_commits": sorted({str(h.get("code_commit")) for h in heads_x if h.get("driver") == "x7_subset_check"}),
-           "repro_cs_eval_mismatch": bad, "identity_reruns": ident, "agreement": agr, "rows": rows,
-           "diff_vs_ref": diffs, "attribution": share,
+           "repro_cs_eval_mismatch": bad, "identity_reruns": ident, "identity_relation": rel, "agreement": agr,
+           "rows": rows, "diff_vs_ref": diffs, "diff_same_platform": same, "attribution": share,
            "cpu": {"vps_cpu_h": cpu, "factor_star": fac["factors"]["*"].get(vk) if vk else None,
                    "kaggle_ref_cpu_h": cpu * fac["factors"]["*"][vk]["f"] if vk else None}}
     os.makedirs(out, exist_ok=True)
