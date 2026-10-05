@@ -533,5 +533,149 @@
   "n_units": 4560,
   "units_capped_at_budget": {},
   "units_infeasible_not_run": {}
+ },
+ "x5_adj": {
+  "arms_without_cost": [],
+  "cost_basis_by_arm": {
+   "pmrt_eq": [
+    "measured"
+   ],
+   "pmrt_r3": [
+    "measured"
+   ]
+  },
+  "cpu_h_by_arm": {
+   "pmrt_eq": 30.659985811070147,
+   "pmrt_r3": 30.556176551545768
+  },
+  "cpu_h_by_n": {
+   "24000": 50.000432582462736,
+   "8000": 11.21572978014855
+  },
+  "cpu_h_by_role": {
+   "measure": 61.21616236261438
+  },
+  "cpu_h_generation": 8.848390414924665,
+  "cpu_h_total": 70.06455277754058,
+  "gpu_wall_h_by_arm": {},
+  "gpu_wall_h_total": 0.0,
+  "measured_infeasible": {},
+  "n_datasets": 5000,
+  "n_units": 10000,
+  "units_capped_at_budget": {},
+  "units_infeasible_not_run": {}
+ },
+ "x5_fail": {
+  "arms_without_cost": [],
+  "cost_basis_by_arm": {
+   "pmrt_eq": [
+    "measured"
+   ],
+   "pmrt_r3": [
+    "measured"
+   ]
+  },
+  "cpu_h_by_arm": {
+   "pmrt_eq": 27.955297039419346,
+   "pmrt_r3": 27.809784242521253
+  },
+  "cpu_h_by_n": {
+   "24000": 33.333621721643425,
+   "8000": 22.431459560298418
+  },
+  "cpu_h_by_role": {
+   "measure": 55.76508128193893
+  },
+  "cpu_h_generation": 8.038708186694905,
+  "cpu_h_total": 63.80378946863551,
+  "gpu_wall_h_by_arm": {},
+  "gpu_wall_h_total": 0.0,
+  "measured_infeasible": {},
+  "n_datasets": 6000,
+  "n_units": 12000,
+  "units_capped_at_budget": {},
+  "units_infeasible_not_run": {}
+ },
+ "x6_gbm": {
+  "arms_without_cost": [],
+  "cost_basis_by_arm": {
+   "pmrt_eq": [
+    "measured"
+   ],
+   "pmrt_eq.w050": [
+    "measured"
+   ],
+   "pmrt_eq.w080": [
+    "measured"
+   ],
+   "pmrt_eq.w125": [
+    "measured"
+   ],
+   "pmrt_eq.w150": [
+    "measured"
+   ],
+   "pmrt_eq.w200": [
+    "measured"
+   ],
+   "pmrt_nl_eq": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w050": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w080": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w125": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w150": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w200": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w200_Tt": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w200_tT": [
+    "measured"
+   ],
+   "pmrt_nl_eq.w200_tt": [
+    "measured"
+   ]
+  },
+  "cpu_h_by_arm": {
+   "pmrt_eq": 0.0690456368972225,
+   "pmrt_eq.w050": 0.0690456368972225,
+   "pmrt_eq.w080": 0.0690456368972225,
+   "pmrt_eq.w125": 0.0690456368972225,
+   "pmrt_eq.w150": 0.0690456368972225,
+   "pmrt_eq.w200": 0.0690456368972225,
+   "pmrt_nl_eq": 2.0206975658874935,
+   "pmrt_nl_eq.w050": 2.0206975658874935,
+   "pmrt_nl_eq.w080": 2.0206975658874935,
+   "pmrt_nl_eq.w125": 2.0206975658874935,
+   "pmrt_nl_eq.w150": 2.0206975658874935,
+   "pmrt_nl_eq.w200": 2.0206975658874935,
+   "pmrt_nl_eq.w200_Tt": 2.0206975658874935,
+   "pmrt_nl_eq.w200_tT": 2.0206975658874935,
+   "pmrt_nl_eq.w200_tt": 2.0206975658874935
+  },
+  "cpu_h_by_n": {
+   "1000": 18.600551914370826
+  },
+  "cpu_h_by_role": {
+   "measure": 18.600551914370826
+  },
+  "cpu_h_generation": 0.0013325787137803712,
+  "cpu_h_total": 18.60188449308456,
+  "gpu_wall_h_by_arm": {},
+  "gpu_wall_h_total": 0.0,
+  "measured_infeasible": {},
+  "n_datasets": 200,
+  "n_units": 3000,
+  "units_capped_at_budget": {},
+  "units_infeasible_not_run": {}
  }
 }
