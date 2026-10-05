@@ -64,3 +64,19 @@ sources and numbers are unchanged (same report.json / csv / merged.jsonl.gz read
   fig_study4_calibration.py, _env_page.py, specimen_entities.py, specimen_heatmaps.py, specimen_methods.py.
 - Not changed: plots.py, style.py, palette.py, registry.py; the tables (tab_study4_*) and their outputs.
 - BUILD_GUIDE s.2.1 package layout does not list layout.py / checks.py yet (not edited: guide owner's call).
+
+## Update (2026-10-05, user decision): proposals merged into DESIGN.md
+- P1-P12 now live in D:/academia/major-project/DESIGN.md itself, in the existing style, each tagged [NEW 2026-10-05]
+  (19 tags; `diff DESIGN.md.bak DESIGN.md` shows every change; the .bak is untouched). DESIGN_PROPOSALS.md is deleted.
+- Where each rule went:
+  - s.2 (geometry): P10 minimum panel width 1.0 in; the two-panel bullet now points to the figure-level legend.
+  - s.3 (typography): P1 panel tags (new table row), panel-letter row names `layout.panel_header`, panel-header rule.
+  - s.4 (axes): P3 shared-axis hygiene, P7 symlog rate axis (no clipping floor), P8 anchored direct labels.
+  - s.5.3 (continuous): P12 compact value grid (no colour bar, square-root shade, "–" = no cell).
+  - s.6 (legends): P2 multi-panel figure-level legend (new table row), never-below rule, auto mark-convention entries.
+  - s.7 (marks): P4 INVALID strip, P5 dodge + staggered markevery, P6 ECDF, P9 banner rows / forest figures (new rows).
+  - s.10 (export): P11 everything on the canvas.
+  - s.13 (checklist): use the `layout.*` helpers + `finalize`; the nine `cddfig.checks` layout checks and thresholds.
+- layout.py docstrings now cite DESIGN.md sections instead of the proposal numbers.
+- Full rebuild `uv run cddfig build` (all 12 registered figures): 5 journal PDFs + 12 previews, written 2026-10-05
+  15:03:15-15:03:40. `uv run pytest -q`: 131 passed (12 figures x 9 layout checks, 9 negative checks, 14 build/style).
