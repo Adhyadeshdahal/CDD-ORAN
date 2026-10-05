@@ -103,3 +103,12 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   paper phase: Study A recall-vs-n next to Exp B slices; placebo-p QQ adjusted vs unadjusted).
 - Panel capacity estimate: EVAL ~1.75x faster than projected; Kaggle frees ~01:00 UTC, VPS ~02:10; ~160
   Kaggle-equivalent CPU-h usable before 09:00.
+
+## 2026-10-05 early morning: EVAL done
+- EVAL xm-eval-a: 96 parts (Kaggle k1-k14, VPS v1-v6) 15:10 -> 06:52 UTC; merged 150 960 / 150 960 ok, 0 missing /
+  mixed / infeasible / N1 conflicts; single commit 5a95186, protocol c5f7a4fe (= frozen), spec file a02fd148
+  (= feat/v2), python 3.12.14, one lock, fork+rlimit, budget 7200, one cost table (db644e0).
+- Supplementary (R-60): X1 runtime table done on the reference Intel host (b278d71); X3 4560/4560 (VPS); X2 specs
+  d05/d20 on VPS, d10/d02/b05/b80 on Kaggle (all launched; report pending). Freed VPS used for X2 (one platform
+  per spec).
+- Frozen analysis GO to xm-harness (eval_analysis + eval_report, FREEZE_NOTE sha check first).
