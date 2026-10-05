@@ -39,3 +39,21 @@ Numbers only from results/eval/REPORT.md (s.1-5, V0, V1) and docs/xmethod/EXP_B.
 - WRITING_AGENT_PROMPT.md (67 -> 72 lines): the journal-guide line no longer says "conference extension". New first
   evidence-boundary bullet: title / framework [TBD], new contribution citing CDD O-RAN, never "CDD-ORAN" /
   extension, never "CDL".
+## Study 4 layout (user GO, 2026-10-05; tag [DECIDED 2026-10-05, user])
+- TERMINOLOGY.md s.9: the D2 "~1 page" paragraph is replaced by the decided layout.
+  - After Studies 1-3, framed "why the design-based test is the right instrument", ~1.5-2 pages.
+  - Sections 4.1 (purpose + pre-registration, C1-C3 up front; "pre-registered" only with freeze hashes, s.8), 4.2
+    (design), 4.3 (E4 worked example), 4.4 (results by claim), 4.5 (verdict grid + limits, the 3 named exceptions),
+    4.6 (bridging; tables and cost in Appendix B).
+  - Appendix A: one page per environment, fixed template; recall-vs-n, kappa sweep and R4 rows there.
+- WRITING_AGENT_PROMPT.md: the Study 4 bullet's "~1 page" layout is replaced by a one-line pointer to TERMINOLOGY s.9.
+## Journal title (user decision, 2026-10-05; tag [DECIDED 2026-10-05, user])
+- TERMINOLOGY.md "Paper identity":
+  - The [TBD] row is replaced by: title "Design-Based Causal Maps for xApp Conflict Mitigation in O-RAN".
+  - It notes that the abstract's first sentences must define "design-based" as "valid because the actions in the logs
+    were randomized by a known logging design (design-based inference)".
+  - Running title: [DECIDE], proposal "Design-Based Causal Maps for xApp Conflicts" (not set).
+  - New row: framework name = none (no acronym); "PMRT" remains the method name.
+  - The s.10 "CDD-ORAN / extension" row now points to the title instead of [TBD]. No [TBD] remains in either file.
+- WRITING_AGENT_PROMPT.md: title line set to the decided title, no framework name, pointer for the definition and the
+  running title. Manuscript .tex not touched.
