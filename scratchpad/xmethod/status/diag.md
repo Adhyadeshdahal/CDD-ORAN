@@ -57,5 +57,4 @@ WORKING (X5 step 1 done; X6 session lost, missing units relaunched on Colab; X5 
 3. X5 done: merge, then `diag x5 --fail ... --adj ...`, then `diag tables`.
 4. Write results/extras/DIAG_REPORT.md (+ diag_tables.json), commit, and set line 1 to READY-TO-MERGE.
 
-## Questions
-- none open
+## Questions: none open
