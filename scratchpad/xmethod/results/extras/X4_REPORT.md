@@ -33,7 +33,11 @@ any X4 episode. X4 was added after the Study 3 results were known.
 **Provenance.**
 - noarb and never_sleep were re-run on the VPS on seeds 191100 and 191101 with the frozen driver's arbiters.
 - All 4 are **bit-identical** to the stored Kaggle records in every outcome field and in the decision counts.
-- So X4 and the stored arms share the plant's numerics: the comparison is not cross-platform.
+- So X4 and the stored arms share the plant's numerics on these provenance seeds.
+- **Note (2026-10-06).** The original sentence here said the comparison "is not cross-platform". That overstates it.
+  X7 later found that VPS re-runs differ from the stored Kaggle records on about 15 % of seeds by a few violations,
+  |dR| <= 4e-4 (`X7_REPORT.md`, "Deviation"). The X4 comparison with the stored arms is therefore cross-platform, but
+  the difference changes no X4 number at the reported precision. No number in this report was changed.
 
 **Scoring.**
 - The Study 3 code, unchanged: `e6p_conf_analyze.arm_stats_multi` on the stored 26 arms plus X4.
