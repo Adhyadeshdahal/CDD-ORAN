@@ -1,4 +1,4 @@
-READY-TO-MERGE (overnight 2026-10-06: PAPER_PLAN post hoc evidence incl. X5/X6, X4 note)
+READY-TO-MERGE (overnight 2026-10-06: PAPER_PLAN incl. X5/X6, X4 note, Q8 pointer)
 # paper-terms (2026-10-06 overnight): PAPER_PLAN additions + X4_REPORT softening
 Earlier change log (D1-D7, D5, layout, title, Q1-Q19): this file at ec1d79a (xm/freeze). Files outside the repo live
 in D:/academia/major-project/ (no git there). .bak files untouched; TERMINOLOGY / WRITING_AGENT_PROMPT / .tex not edited.
@@ -57,4 +57,4 @@ in D:/academia/major-project/ (no git there). .bak files untouched; TERMINOLOGY 
 ## Open (for review, not blockers)
 - Advisor's own report for A-D is missing (empty file); A rests on the worker's source reading, marked [VERIFY].
 - s.6 items 20-21 [DECIDE]; word-budget table is a proposal.
-- Still open from before: Q8 colour-slot list and xApp / KPI slots [DECIDE]; [conf. ref] BibTeX.
+- Still open: xApp / KPI entity slots [DECIDE] (DESIGN s.12); [conf. ref] BibTeX. Q8 done: PAPER_PLAN s.4 -> DESIGN s.12.
