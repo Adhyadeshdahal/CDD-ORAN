@@ -1,4 +1,4 @@
-READY-TO-MERGE (2026-10-06: user decisions 1-5 + conference citation recorded in TERM / PAPER_PLAN / WAP)
+READY-TO-MERGE (2026-10-06: decisions incl. Study 1 labels, X2 raw rates, s.4 build status)
 # paper-terms (2026-10-06): PAPER_PLAN post hoc evidence, X4 note, Q8 pointer, user decisions 1-5
 Earlier change log (D1-D7, D5, layout, title, Q1-Q19): this file at ec1d79a (xm/freeze); overnight detail: this file at
 45f8943 (xm/paper-notes). Files outside the repo: D:/academia/major-project/ (no git). Old .bak files untouched; .tex not edited.
@@ -44,6 +44,15 @@ Backups: TERMINOLOGY.md.bak4, PAPER_PLAN.md.bak4, WRITING_AGENT_PROMPT.md.bak4 (
 ## 5. CDD-ORAN
 - Branch xm-paper-notes created from feat/v2 13408ae as briefed (hyphen; the older xm/paper-notes is merged into it).
 - Only this status file changed; one commit, subject only, not pushed.
+
+## 6. Decisions 2026-10-06 (third set), [DECIDED 2026-10-06, user]; backups TERMINOLOGY.md.bak7, PAPER_PLAN.md.bak7
+- TERM s.6.1: Study 1 PMRT variant labels (fig_study1_discovery): MF loadsp_c, plain plain_c, max; wBY wby1s, BY by,
+  DAGGER dagger1s; frozen PMRT = MF + wBY (sources: E6P_DISCOVERY_PROTOCOL_V4.md, fig_study1_discovery.py). +14 lines.
+- PAPER_PLAN X.2: corr BY-declared 0.771 -> 0.514 replaced by RAW 0.823 -> 0.619 (delta .02 -> .20, 20 blocks;
+  3948/4800, 2973/4800), source EXTRAS_TABLES.md "X2 dose-response" corr null_raw = extras_tables.json x2_trend.
+- PAPER_PLAN s.4: every status cell BUILT (cddfig, 2026-10-06) except tab_study4_design (BEING BUILT; checked: the
+  only name without a file in the journal figures/ or tables/). Kept "included" / "[DECIDE] table vs inline" notes.
+  Harbor / palette.py note added; "still to build" paragraph updated; 8 s.2 "Figures/tables" lines' TO BUILD -> BUILT.
 
 ## Open (for review, not blockers)
 - Advisor's own report for A-D is missing; A rests on the worker's source reading, marked [VERIFY].
