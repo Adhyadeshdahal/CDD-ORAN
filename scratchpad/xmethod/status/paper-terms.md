@@ -1,15 +1,13 @@
-READY-TO-MERGE (overnight 2026-10-06: PAPER_PLAN post hoc evidence, X4 note)
+READY-TO-MERGE (overnight 2026-10-06: PAPER_PLAN post hoc evidence incl. X5/X6, X4 note)
 # paper-terms (2026-10-06 overnight): PAPER_PLAN additions + X4_REPORT softening
 Earlier change log (D1-D7, D5, layout, title, Q1-Q19): this file at ec1d79a (xm/freeze). Files outside the repo live
 in D:/academia/major-project/ (no git there). .bak files untouched; TERMINOLOGY / WRITING_AGENT_PROMPT / .tex not edited.
 
 ## 1. PAPER_PLAN.md (backup PAPER_PLAN.md.bak2, sha 54fe89e4..., = pre-edit file)
-- Patch: scratchpad n_patch1.py (exact-match inserts, counts asserted). 379 -> 486 lines, ASCII, LF.
-- 108 lines added, 1 line changed (B.5 caveat cell, pointer appended). Decided content not rewritten.
-- Every addition tagged [NEW 2026-10-06 overnight, review] (16 tags).
+- n_patch1.py: 379 -> 486 lines; +108, 1 changed (B.5 cell appended); decided content not rewritten; 16 [NEW] tags.
 - a. Advisor section (s.6, "Science questions"):
   - Source note: the advisor output file (tasks/a8e519e3f6836435d.output) is EMPTY (0 bytes, checked 2026-10-06).
-    No advisor wording quoted. The orchestrator session's transcript is not in ~/.claude/projects either.
+    No advisor wording quoted.
   - A ANSWERED from the sources (worker reading, [VERIFY] vs the advisor): metric scope. Study 1's 0.90 = indirect
     recall over the 10 neighbour GT-TRUE edges; bridging recall = all 29 GT-TRUE edges, INDET unscored (EXPB s.4-5).
     FD:v4.pooled.loadsp_c+wby1s (= P3_values) ov_precision .92, ov_f1 .852 -> overall recall .79 = EXPB pooled 0.79.
@@ -38,10 +36,25 @@ in D:/academia/major-project/ (no git there). .bak files untouched; TERMINOLOGY 
 - X4_REPORT.md, Provenance: "the comparison is not cross-platform" replaced by "share the plant's numerics on these
   provenance seeds" + a dated Note (2026-10-06): X7 found VPS vs Kaggle differ on about 15 % of seeds by a few
   violations, |dR| <= 4e-4 (X7_REPORT.md "Deviation"); comparison is cross-platform; no X4 number changes.
-  No number changed.
-- This status file. One commit, subject only.
+
+## 3. Task 2: X5 / X6 final answers (DIAG_REPORT.md, feat/v2 0e8d4aa); backup PAPER_PLAN.md.bak3 (sha 76cdc82c...)
+- Patch n_patch2.py: 486 -> 518 lines; removed only the two "being tested" blocks (task-1 text) + 1 source-note line;
+  S4.8 caveat cell appended. 32 [NEW 2026-10-06 overnight, review] tags in total. ASCII, LF.
+- B -> ANSWERED by X5: chance (.052 / .054 / .051, Holm p .657; adjacent 20 rates VALID .045-.058; 80/80 hashes;
+  confidence high for no excess > ~.015, moderate-high for chance; C3 verdict stands).
+- C -> ANSWERED by X6: PARTIAL (cause = told-law centring: .079 INVALID vs .038 with true centring; redraw law not the
+  cause; GBM U-shaped vs told width, Lin monotone; P4c failed, quantitative mechanism open).
+  Orchestrator's "redraw law irrelevant" written as "the redraw law is not the cause": true-law redraws (Tt .046)
+  also restore validity, by CRT construction, so "irrelevant" alone would misread that cell.
+- Claims rows X.5a-b, X.6a-c (after X.3); S4.8 pointer; source tag DIAG. Commits a23b8c8, then this one.
+- Placement: X5 sentence in 7.5 (limits, next to the PMRT-Lin R3 exception), not 7.6 (= bridging analysis in this
+  plan); X6 = Discussion P4a after the X3 limitation; tables Appendix C.4 / C.5 next to X2 / X3
+  (tab_appC_x5, tab_appC_x6, fig_appC_x6_width TO BUILD, figure list updated).
+- Sentences based on the DIAG suggestions, translated (pmrt_eq / pmrt_r3 / pmrt_nl_eq -> PMRT-Lin / PMRT-Lin R3 /
+  PMRT-GBM; P_placebo -> placebo edge; z_bias -> first-order bias term; R-30 -> cell validity labels). No new TERM term.
+- Word budget: X5 / X6 add ~130 words, taken from the reserve (350 -> 220).
 
 ## Open (for review, not blockers)
 - Advisor's own report for A-D is missing (empty file); A rests on the worker's source reading, marked [VERIFY].
-- s.6 items 20-21 [DECIDE]; word-budget table is a proposal; B / C wait for DIAG_REPORT.
+- s.6 items 20-21 [DECIDE]; word-budget table is a proposal.
 - Still open from before: Q8 colour-slot list and xApp / KPI slots [DECIDE]; [conf. ref] BibTeX.
