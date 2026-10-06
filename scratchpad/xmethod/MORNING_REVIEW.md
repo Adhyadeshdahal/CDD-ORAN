@@ -156,3 +156,9 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
 - X5 (advisor B) primary DONE: CHANCE. Fresh 2000 datasets/cell: .052 / .054 / .051 (CP upper <= .065, Holm p .66).
   C3 verdict stands. Pending: x5_adj (descriptive, ETA ~01:00Z) + Linux dataset-hash provenance on VPS.
   Report: CDD-ORAN-wt/xm-classic scratchpad/xmethod/results/extras/DIAG_REPORT.md (merge when READY).
+- 01:xxZ X5/X6 MERGED (0e8d4aa; EXTRAS_PROTOCOL conflict X7 vs X5/X6 sections resolved by keeping both).
+  x5_adj: all 20 adjacent rates valid (.045-.058); Linux provenance 80/80 hashes equal; EVAL's heavy n24000 tail
+  does not recur on fresh data. B answer = chance (high confidence: no excess > ~.015).
+- ALL experiments now merged (X1-X7). Fresh post-experiment bundle: C:/Users/bishal/backups-cdd/2026-10-06-postexp/
+  (upload to Drive too). History cleanup NOT run: waits for your go (CLEANUP_PLAN.md; you force-push).
+- xm-harness adding final B/C wording to PAPER_PLAN (bak3).
