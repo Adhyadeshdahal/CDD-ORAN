@@ -162,3 +162,4 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
 - ALL experiments now merged (X1-X7). Fresh post-experiment bundle: C:/Users/bishal/backups-cdd/2026-10-06-postexp/
   (upload to Drive too). History cleanup NOT run: waits for your go (CLEANUP_PLAN.md; you force-push).
 - xm-harness adding final B/C wording to PAPER_PLAN (bak3).
+- PAPER_PLAN: final B/C answers (X5 in 7.5, X6 Discussion P4a, App C.4/C.5), Q8 pointer to DESIGN s.12; status merged. Open [DECIDE] for you: random-deferral referee name; X4/X7 tables App B.4 vs C; xApp/KPI colour slots; word budget proposal; conf. BibTeX.
