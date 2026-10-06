@@ -12,8 +12,8 @@ Rates are raw p <= .05 over testable candidates. "boot CI" = the frozen seed-clu
 - `tests/test_xmethod_extras.py::test_freeze_manifest_still_valid` fails only for `scratchpad/e6_dev/xm_dispatch.py`,
   the post-freeze change covered by amendment A-1 (`docs/xmethod/PROTOCOL_A_AMENDMENTS.md`). The frozen file and the
   manifest were not edited.
-- `diag.py` (the analysis module) was written after the declaration. It implements the declared metrics. Two
-  additions are marked below as not declared.
+- `diag.py` (the analysis module) was written after the declaration. It implements the declared metrics. Additions
+  not in the declaration are marked "not declared" below (three: the F_max count, the P4c reading, the X5 tail check).
 
 ## X6: PMRT-GBM under a wider told dither (advisor question C)
 
@@ -102,8 +102,13 @@ Confidence:
   - x5_fail: the 3 failing cells x 2 arms x 2000 seeds = 12 000 units. Job `xm-diag-x5f`, commit 70468c6,
     16:35:40Z-20:40Z. All 7 processes returned 0. 12 000 / 12 000 ok; 0 missing, errors, duplicates or conflicts.
   - x5_adj: the 5 adjacent cells x 1000 seeds (3_300_000-3_300_999). It was trimmed by the orchestrator's pre-run
-    amendment, which was declared before any X5 run. Job `xm-diag-x5a`, commit 264d351, started 20:42:23Z
-    (projected about 4.3 h, ETA about 01:00Z). Results: see below.
+    amendment, which was declared before any X5 run. Job `xm-diag-x5a`, commit 264d351, 20:42:23Z-about 01:00Z.
+    All 7 processes returned 0. 10 000 / 10 000 ok; 0 missing, errors, duplicates or conflicts.
+  - Analysis and provenance ran on the VPS (job `xm-diag-x5q`, 1 process, commit 7ba3de3). It merged the raw shards
+    there and ran `diag x5`; that `diag_x5.json` is the committed one. A local Windows run gives the same rates,
+    tests and outcomes; its floats differ only in the last digit (about 1e-17).
+    - A first attempt (`xm-diag-x5p`) failed: the bundle lacked `scratchpad/xmethod/eval_analysis.py`. Nothing else
+      changed in the rerun.
 - **Step 3**: pmrt_r3 on the same datasets, exact McNemar, read only if a primary pair is EXCESS.
 
 **Step 1 numbers.**
@@ -137,18 +142,35 @@ Confidence:
 - The fresh data rule out an excess above about 1.5 points at these settings.
 - The frozen C3 verdict stands.
 
-**x5_adj (secondary, descriptive) and Linux provenance: PENDING.**
-- The dataset-hash provenance check run on Windows differs from the records. The records were generated on the VPS
-  (Linux), so the check must run on Linux: on the VPS after x5_adj, since one cdd-xm job runs at a time.
-- X6's E1 hashes matched on Windows. Until the Linux check passes, step 2's provenance is not confirmed.
+**Adjacent cells (x5_adj; secondary, descriptive, unadjusted; 1000 datasets each).**
+- All 20 rates (5 cells x 2 arms x 2 kinds) are R-30 VALID: .045-.058, every CP upper bound <= .074, every one-sided
+  p >= .13.
+  - pmrt_eq, P_placebo / P_placebo_conf:
+    - n 8000: lambda 1 .045 / .057; lambda 1.5 .047 / .058.
+    - n 24000: lambda 0 .054 / .048; lambda .5 .054 / .049; lambda 1.5 .054 / .052.
+  - pmrt_r3 is within .01 of pmrt_eq in every cell.
+- No excess appears at either n, so nothing points to a cell-specific or n-wide distortion.
+- Under common random numbers, several n 24000 P_placebo rates are the same 54/1000 across lambdas. This fits step 1:
+  the same seeds reject across lambdas.
+
+**Provenance.** On Linux (the VPS, where the records were generated), the first 10 datasets of each cell were
+regenerated: 80 / 80 hashes equal (30 from x5_fail, 50 from x5_adj). The same check on Windows differs, which is
+platform numerics; X6's E1 hashes do match on Windows.
+
+**Tail check (not declared; descriptive, fresh data).**
+- Step 1's heavy extreme tail at n 24000 does not recur. P_placebo's rejection o/e at .01 is .90-1.40 in the fresh
+  n 24000 cells (EVAL: 2-3.3).
+- P_placebo_conf's o/e at .01 is 1.0-1.8 in all 16 fresh rows, on average about +.3 points absolute (at most +.8).
+  This is small and well below the .05 level.
 
 **Suggested Discussion sentence.** "Re-running, on 2000 fresh datasets each, the three E4 R3 cells in which
 PMRT-Lin's measured size had been labelled INVALID gave rates of 0.052, 0.054 and 0.051 (95 % CIs within
-0.042-0.065; Holm-adjusted p = 0.66). So those labels are consistent with chance among the 40 E4 R3 rates, not with a
-size distortion."
+0.042-0.065; Holm-adjusted p = 0.66). The five adjacent cells were also within size (0.045-0.058). So those labels
+are consistent with chance among the 40 E4 R3 rates, not with a size distortion."
 
 Confidence:
-- **High** that there is no excess above about .015 in these three cells.
-- **Moderate** for "chance": step 1's dependence-aware P(>= 3 labels) was .037, and the heavy extreme tail at n 24000
-  is unexplained.
-- Provenance confirmation is pending.
+- **High** that there is no excess above about .015 in these three cells. The adjacent cells agree, and provenance
+  is confirmed.
+- **Moderate-high** for "chance" as the explanation of the EVAL labels.
+  - Step 1's dependence-aware P(>= 3 labels) was .037, which is borderline.
+  - But the EVAL extreme tail at n 24000 did not recur on fresh data.

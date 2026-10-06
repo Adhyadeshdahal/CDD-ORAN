@@ -164,6 +164,61 @@ Across the 4 lambdas at one n (EVAL lambdas share each seed's streams):
 | pmrt_r3 | 24000 | plac | [19, 20, 25, 23] | 26 (8.5) | 19 (0.4) |
 | pmrt_r3 | 24000 | conf | [13, 20, 15, 10] | 17 (3.9) | 9 (0.1) |
 
+## X5 step 2 (fresh datasets)
+
+Checks: `{"x5_adj": {"duplicates": 0, "provenance": {"checked": 50, "differ": [], "equal": 50, "ok": true}, "records": 10000, "role_mismatch": 0, "unexpected": 0}, "x5_fail": {"duplicates": 0, "provenance": {"checked": 30, "differ": [], "equal": 30, "ok": true}, "records": 12000, "role_mismatch": 0, "unexpected": 0}}`
+
+Primary (pmrt_eq, one-sided exact binomial vs .05, Holm over 3):
+
+| lam | n | rate | hits/n | CP 95 % | p one-sided | p Holm | outcome |
+|---|---|---|---|---|---|---|---|
+| 0 | 8000 | conf_raw | 105/2000 | [0.043, 0.063] | 0.3178 | 0.6568 | CHANCE |
+| 0.5 | 8000 | conf_raw | 108/2000 | [0.045, 0.065] | 0.2189 | 0.6568 | CHANCE |
+| 1 | 24000 | plac_raw | 103/2000 | [0.042, 0.062] | 0.3933 | 0.6568 | CHANCE |
+
+Answer to B: **chance**
+
+| spec | arm | lam | n | kind | hits/n | rate | CP 95 % | boot 95 % | R-30 | p one-sided |
+|---|---|---|---|---|---|---|---|---|---|---|
+| x5_fail | pmrt_eq | 0 | 8000 | plac | 81/2000 | 0.041 | [0.032, 0.050] | [0.033, 0.050] | VALID | 0.9799 |
+| x5_fail | pmrt_eq | 0 | 8000 | conf | 105/2000 | 0.052 | [0.043, 0.063] | [0.043, 0.063] | VALID | 0.3178 |
+| x5_fail | pmrt_eq | 0.5 | 8000 | plac | 77/2000 | 0.038 | [0.031, 0.048] | [0.031, 0.047] | VALID | 0.9937 |
+| x5_fail | pmrt_eq | 0.5 | 8000 | conf | 108/2000 | 0.054 | [0.045, 0.065] | [0.044, 0.064] | VALID | 0.2189 |
+| x5_fail | pmrt_eq | 1 | 24000 | plac | 103/2000 | 0.051 | [0.042, 0.062] | [0.042, 0.062] | VALID | 0.3933 |
+| x5_fail | pmrt_eq | 1 | 24000 | conf | 102/2000 | 0.051 | [0.042, 0.062] | [0.042, 0.060] | VALID | 0.4329 |
+| x5_fail | pmrt_r3 | 0 | 8000 | plac | 78/2000 | 0.039 | [0.031, 0.048] | [0.032, 0.048] | VALID | 0.9914 |
+| x5_fail | pmrt_r3 | 0 | 8000 | conf | 101/2000 | 0.051 | [0.041, 0.061] | [0.041, 0.060] | VALID | 0.4734 |
+| x5_fail | pmrt_r3 | 0.5 | 8000 | plac | 79/2000 | 0.040 | [0.031, 0.049] | [0.032, 0.049] | VALID | 0.9885 |
+| x5_fail | pmrt_r3 | 0.5 | 8000 | conf | 102/2000 | 0.051 | [0.042, 0.062] | [0.041, 0.060] | VALID | 0.4329 |
+| x5_fail | pmrt_r3 | 1 | 24000 | plac | 102/2000 | 0.051 | [0.042, 0.062] | [0.042, 0.061] | VALID | 0.4329 |
+| x5_fail | pmrt_r3 | 1 | 24000 | conf | 100/2000 | 0.050 | [0.041, 0.060] | [0.041, 0.060] | VALID | 0.5143 |
+| x5_adj | pmrt_eq | 0 | 24000 | plac | 54/1000 | 0.054 | [0.041, 0.070] | [0.040, 0.068] | VALID | 0.3002 |
+| x5_adj | pmrt_eq | 0 | 24000 | conf | 48/1000 | 0.048 | [0.036, 0.063] | [0.035, 0.062] | VALID | 0.6344 |
+| x5_adj | pmrt_eq | 0.5 | 24000 | plac | 54/1000 | 0.054 | [0.041, 0.070] | [0.040, 0.068] | VALID | 0.3002 |
+| x5_adj | pmrt_eq | 0.5 | 24000 | conf | 49/1000 | 0.049 | [0.036, 0.064] | [0.036, 0.062] | VALID | 0.5780 |
+| x5_adj | pmrt_eq | 1 | 8000 | plac | 45/1000 | 0.045 | [0.033, 0.060] | [0.033, 0.057] | VALID | 0.7853 |
+| x5_adj | pmrt_eq | 1 | 8000 | conf | 57/1000 | 0.057 | [0.043, 0.073] | [0.043, 0.072] | VALID | 0.1721 |
+| x5_adj | pmrt_eq | 1.5 | 8000 | plac | 47/1000 | 0.047 | [0.035, 0.062] | [0.034, 0.059] | VALID | 0.6885 |
+| x5_adj | pmrt_eq | 1.5 | 8000 | conf | 58/1000 | 0.058 | [0.044, 0.074] | [0.044, 0.073] | VALID | 0.1389 |
+| x5_adj | pmrt_eq | 1.5 | 24000 | plac | 54/1000 | 0.054 | [0.041, 0.070] | [0.041, 0.068] | VALID | 0.3002 |
+| x5_adj | pmrt_eq | 1.5 | 24000 | conf | 52/1000 | 0.052 | [0.039, 0.068] | [0.038, 0.066] | VALID | 0.4058 |
+| x5_adj | pmrt_r3 | 0 | 24000 | plac | 54/1000 | 0.054 | [0.041, 0.070] | [0.040, 0.069] | VALID | 0.3002 |
+| x5_adj | pmrt_r3 | 0 | 24000 | conf | 51/1000 | 0.051 | [0.038, 0.067] | [0.037, 0.065] | VALID | 0.4625 |
+| x5_adj | pmrt_r3 | 0.5 | 24000 | plac | 57/1000 | 0.057 | [0.043, 0.073] | [0.043, 0.071] | VALID | 0.1721 |
+| x5_adj | pmrt_r3 | 0.5 | 24000 | conf | 47/1000 | 0.047 | [0.035, 0.062] | [0.035, 0.060] | VALID | 0.6885 |
+| x5_adj | pmrt_r3 | 1 | 8000 | plac | 46/1000 | 0.046 | [0.034, 0.061] | [0.034, 0.058] | VALID | 0.7390 |
+| x5_adj | pmrt_r3 | 1 | 8000 | conf | 55/1000 | 0.055 | [0.042, 0.071] | [0.041, 0.070] | VALID | 0.2529 |
+| x5_adj | pmrt_r3 | 1.5 | 8000 | plac | 47/1000 | 0.047 | [0.035, 0.062] | [0.035, 0.059] | VALID | 0.6885 |
+| x5_adj | pmrt_r3 | 1.5 | 8000 | conf | 56/1000 | 0.056 | [0.043, 0.072] | [0.042, 0.071] | VALID | 0.2101 |
+| x5_adj | pmrt_r3 | 1.5 | 24000 | plac | 54/1000 | 0.054 | [0.041, 0.070] | [0.040, 0.068] | VALID | 0.3002 |
+| x5_adj | pmrt_r3 | 1.5 | 24000 | conf | 55/1000 | 0.055 | [0.042, 0.071] | [0.041, 0.069] | VALID | 0.2529 |
+
+Step 3 (exact McNemar pmrt_eq vs pmrt_r3, read only if EXCESS):
+
+- lam 0 n 8000 conf_raw: paired 2000, eq only 7, r3 only 3, p 0.3438, not triggered
+- lam 0.5 n 8000 conf_raw: paired 2000, eq only 13, r3 only 7, p 0.2632, not triggered
+- lam 1 n 24000 plac_raw: paired 2000, eq only 6, r3 only 5, p 1.0000, not triggered
+
 ## X6 (E1 R2 n 1000, 200 seeds)
 
 Checks: `{"duplicates": 0, "provenance": {"datasets": 200, "differ_from_frozen": 0, "equal_to_frozen": 200, "expected": "equal", "ok": true}, "records": 3000, "role_mismatch": 0, "unexpected": 0}`
