@@ -1,4 +1,4 @@
-READY-TO-MERGE (2026-10-06: user decisions 1-5 recorded in TERM / PAPER_PLAN / WRITING_AGENT_PROMPT)
+READY-TO-MERGE (2026-10-06: user decisions 1-5 + conference citation recorded in TERM / PAPER_PLAN / WAP)
 # paper-terms (2026-10-06): PAPER_PLAN post hoc evidence, X4 note, Q8 pointer, user decisions 1-5
 Earlier change log (D1-D7, D5, layout, title, Q1-Q19): this file at ec1d79a (xm/freeze); overnight detail: this file at
 45f8943 (xm/paper-notes). Files outside the repo: D:/academia/major-project/ (no git). Old .bak files untouched; .tex not edited.
@@ -35,8 +35,10 @@ Backups: TERMINOLOGY.md.bak4, PAPER_PLAN.md.bak4, WRITING_AGENT_PROMPT.md.bak4 (
 - 4. Data and code availability item: cleanup deferred to submission (Zenodo DOI, figures / code repointed, one
   history rewrite). Worker note added: a history rewrite changes commit hashes, so the freeze hashes cited in that
   statement must be taken or mapped after the rewrite.
-- 5. [conf. ref] left as is; the user pastes the BibTeX: PAPER_PLAN back matter + item 18, TERMINOLOGY paper identity
-  row, WRITING_AGENT_PROMPT.
+- 5 + addition. Conference BibTeX is in xApp-Journal-Discover-Telecommunications/sn-bibliography.bib, key
+  dahal2026cddoran (NaNA 2026, pp. 28-34, doi 10.23919/NaNACPS00070.2026.00013; entry checked). Every [conf. ref]
+  replaced by \cite{dahal2026cddoran} (n_patch5.py): PAPER_PLAN 6, TERMINOLOGY 5, WRITING_AGENT_PROMPT 2; 0 left.
+  The "leave [conf. ref] as is" notes became "cite as" notes; back matter BibTeX item and Q18 OPEN part RESOLVED.
 - Diff vs .bak4: TERM +6 / 1 changed; WAP +4; PAPER_PLAN 520 -> 535 (changed lines only where retagged or moved).
 
 ## 5. CDD-ORAN
@@ -45,5 +47,5 @@ Backups: TERMINOLOGY.md.bak4, PAPER_PLAN.md.bak4, WRITING_AGENT_PROMPT.md.bak4 (
 
 ## Open (for review, not blockers)
 - Advisor's own report for A-D is missing; A rests on the worker's source reading, marked [VERIFY].
-- xApp / KPI entity slots [DECIDE] (DESIGN s.12); [conf. ref] BibTeX (user pastes).
+- xApp / KPI entity slots [DECIDE] (DESIGN s.12). Conference BibTeX: closed (dahal2026cddoran).
 - Freeze-hash citation vs the planned history rewrite (decision 4 note).
