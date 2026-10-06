@@ -164,7 +164,7 @@ def test_records_x2_design_and_x3_told(tmp_path):
 def test_declared_specs_match_protocol_and_frozen_arms():
     specs = X.build_specs()
     fz = X._frozen_arms()
-    assert set(specs) == {*X.X2_DESIGNS, "x3_told"}
+    assert set(specs) == {*X.X2_DESIGNS, "x3_told", "x5_fail", "x5_adj", "x6_gbm"}
     for name, spec in specs.items():
         X.validate(spec)
         on_disk = json.load(open(X._path(f"{X.SPEC_DIR_REL}/{name}.json"), encoding="utf-8"))
@@ -242,3 +242,94 @@ def test_analyse_end_to_end_provenance_and_summaries(tmp_path):
     assert res["wording"] in md and "## X3 degradation curve" in md
     assert X.trend_word([0.1, 0.1, 0.2, 0.3]) == "rises" and X.trend_word([0.3, 0.2, 0.2, 0.1]) == "falls"
     assert X.trend_word([0.1, 0.3, 0.2, 0.3]) == "is not monotone" and X.trend_word([0.1] * 4) == "does not change"
+
+
+# ================================================================================================ X5 / X6 (post hoc)
+def test_x5_x6_specs_seeds_and_registry():
+    specs = X.build_specs()
+    for name in ("x5_fail", "x5_adj"):
+        sp = specs[name]
+        assert set(sp["arms"]) == set(X.X5_ARMS)
+        cells = {(lam, b["ns"][0]) for b in sp["blocks"] for lam in b["e4_lams"]["R3"]}
+        want = X.X5_FAIL if name == "x5_fail" else X.X5_ADJ
+        assert cells == {(lam, n) for n, lams in want.items() for lam in lams}
+        want_n = 2000 if name == "x5_fail" else 1000           # x5_adj trimmed before any run (amendment)
+        assert all(len(X.seed_list(b["seeds"], "X5")) == want_n for b in sp["blocks"])
+    assert set(X.seed_list(X.X5_ADJ_SEEDS, "X5")) < set(X.seed_list(X.X5_SEEDS, "X5"))
+    assert {(lam, n) for lam, n, _ in X.X5_PRIMARY} == {(lam, n) for n, ls in X.X5_FAIL.items() for lam in ls}
+    x6 = specs["x6_gbm"]
+    assert len(x6["arms"]) == 15 and len(X.seed_list(x6["blocks"][0]["seeds"], "X6")) == 200
+    assert x6["arms"]["pmrt_nl_eq.w200_tT"]["told"] == {"width": 2.0, "centre": "true", "redraw": "told"}
+    with pytest.raises(ValueError, match="XMETHOD_DIAG"):
+        X.seed_list([3_200_020], "X5")
+    with pytest.raises(ValueError, match="XMETHOD_EXTRAS"):
+        X.seed_list([3_300_000])
+    with pytest.raises(ValueError, match="X6 only"):
+        X.validate({**_spec("X3", seeds=[S0]), "arms": {"a": X._arm(X._frozen_arms(), "pmrt_eq",
+                                                                     {"width": 2.0, "centre": "true"})}})
+    reg = json.load(open(X._path("docs/benchmark/SEED_REGISTRY.json"), encoding="utf-8"))
+    assert reg["E4"]["claimed_by"]["XMETHOD_DIAG"] == [X.X5_SEEDS]
+    assert reg["E1"]["claimed_by"]["XMETHOD_DIAG"] == [X.X6_SEEDS]
+    for w, block in reg.items():                       # disjoint from every other listed range
+        for lo, hi in (block.get("used", []) if isinstance(block, dict) else []):
+            if [lo, hi] not in (X.X5_SEEDS, X.X6_SEEDS):
+                assert hi < X.X5_SEEDS[0] or lo > X.X6_SEEDS[1], (w, lo, hi)
+
+
+def test_x5_step3_r3_is_eq_without_lagged_actions():
+    """E4 R3 has no setpoints, so the frozen r3 covariates = eq minus the lagged-action columns (X5 step 3)."""
+    from cdd_oran.xmethod.methods import pmrt_core as PC
+    ds, _ = G.generate_dataset("E4", "R3", 300, 3_300_000, lam=0.5, kappa=0.25)
+    eq = PC.PmrtCore().run(ds, {"covariates": "eq"}).notes["covariates"]["base"]
+    r3 = PC.PmrtCore().run(ds, {"covariates": "r3"}).notes["covariates"]["base"]
+    lagged = [c for c in eq if "@t-" in c]
+    assert not any(c.startswith("sp:") for c in eq) and len(lagged) == 6
+    assert r3 == [c for c in eq if c not in lagged]
+
+
+def _x6_records(tmp_path, arms):
+    fz = X._frozen_arms()
+    spec = _spec("X6", seeds=[3_302_000], arms={a: X._arm(fz, b, t) for a, (b, t) in arms.items()})
+    spec["blocks"][0]["ns"] = [400]
+    out = str(tmp_path / "x6.jsonl")
+    with X.installed(spec):
+        C.run_units(spec, C.expand(spec), out, isolate=False, log=lambda *_: None)
+    return {r["arm"]: r for r in map(json.loads, open(out, encoding="utf-8"))}
+
+
+def test_x6_hooks_reproduce_frozen_and_ablate(tmp_path):
+    from cdd_oran.xmethod.methods import pmrt_nl as NL
+    saved = NL.design_law, NL.gbm_profiles, NL.GbmStat
+    w2 = {"width": 2.0}
+    recs = _x6_records(tmp_path, {"pmrt_nl_eq": ("pmrt_nl_eq", None), "pmrt_nl_eq.w200": ("pmrt_nl_eq", w2),
+                                  "pmrt_nl_eq.w200_Tt": ("pmrt_nl_eq", {**w2, "centre": "told", "redraw": "true"}),
+                                  "pmrt_nl_eq.w200_tT": ("pmrt_nl_eq", {**w2, "centre": "true", "redraw": "told"})})
+    assert (NL.design_law, NL.gbm_profiles, NL.GbmStat) == saved and X._X6["ctx"] is None
+    assert all(r["status"] == "ok" for r in recs.values())
+    # frozen references, no hooks: the exact run and the told x2 run on the same data
+    ds, truth = G.generate_dataset("E1", "R2", 400, 3_302_000, kappa=0.25)
+    cfg = recs["pmrt_nl_eq"]["config"]
+    from cdd_oran.xmethod.methods import pmrt_core as PC
+    meth = PC.PmrtCore()
+    p = lambda r: [e["p"] for e in r["edges"]]                                       # noqa: E731
+    for arm, d in (("pmrt_nl_eq", ds), ("pmrt_nl_eq.w200", X.tell(ds, w2))):
+        ref = R.run_one(meth, d, truth, cfg, 0.0, recs[arm]["key"])
+        assert p(ref) == p(recs[arm]), f"{arm}: hooks changed the frozen p-values"
+    ex = recs["pmrt_nl_eq"]["x6"]
+    assert ex["centre"] == ex["redraw"] == "told"
+    assert all(abs(z) < 1e-9 for b in ex["bias"].values() for z in b["z_bias"] if z is not None)  # exact: c_t = 0
+    tt = recs["pmrt_nl_eq.w200"]["x6"]["bias"]
+    assert any(abs(z) > 1e-6 for b in tt.values() for z in b["z_bias"] if z is not None)
+    assert p(recs["pmrt_nl_eq.w200_Tt"]) != p(recs["pmrt_nl_eq.w200"])
+    assert p(recs["pmrt_nl_eq.w200_tT"]) != p(recs["pmrt_nl_eq.w200"])
+    assert recs["pmrt_nl_eq.w200_tT"]["x6"]["centre"] == "true"
+
+
+def test_diag_helpers():
+    from cdd_oran.xmethod import diag as D
+    lo, hi = D.cp_ci(100, 2000)
+    assert lo < 0.05 < hi and abs((lo + hi) / 2 - 0.05) < 0.002
+    assert D.cp_ci(0, 10)[0] == 0.0 and D.cp_ci(10, 10)[1] == 1.0
+    assert D.holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+    lp = D.label_prob(300, nsim=500)
+    assert 0.0 <= lp["p_invalid"] < 0.05 and lp["S"] == 300

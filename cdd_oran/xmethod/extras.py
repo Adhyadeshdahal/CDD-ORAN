@@ -39,6 +39,7 @@ import json
 import math
 import os
 import sys
+from typing import Any
 
 import numpy as np
 
@@ -53,15 +54,23 @@ SEEDS = range(3_200_000, 3_200_200)                 # XMETHOD_EXTRAS (R-60)
 X2_TUNE = [3_200_000, 3_200_019]
 X2_MEASURE = [3_200_020, 3_200_059]
 X3_MEASURE = [3_200_060, 3_200_119]                 # 3_200_120-199 unassigned (a new use needs a new declaration)
+# X5 / X6: post hoc diagnostics (EXTRAS_PROTOCOL.md Amendments, 2026-10-05), own seed block XMETHOD_DIAG
+X5_SEEDS = [3_300_000, 3_301_999]                   # E4 R3 re-run (2000 datasets per cell, shared seed numbers)
+X5_ADJ_SEEDS = [3_300_000, 3_300_999]               # x5_adj: first 1000 of X5_SEEDS (pre-run amendment, 2026-10-05)
+X6_SEEDS = [3_302_000, 3_302_199]                 # E1 R2 told-width ablation (200 datasets)
+DIAG_SEEDS = {"X5": range(X5_SEEDS[0], X5_SEEDS[1] + 1), "X6": range(X6_SEEDS[0], X6_SEEDS[1] + 1)}
+SEED_BLOCK = {"X2": "XMETHOD_EXTRAS", "X3": "XMETHOD_EXTRAS", "X5": "XMETHOD_DIAG", "X6": "XMETHOD_DIAG"}
 PROTOCOL_REL = "scratchpad/xmethod/EXTRAS_PROTOCOL.md"
 SPEC_DIR_REL = "scratchpad/xmethod/specs/extras"
 FROZEN_SPEC_REL = "scratchpad/xmethod/specs/eval/full.json"
 COST_AGG_REL = f"{SPEC_DIR_REL}/dev_cost_agg.json"
+DIAG_COST_AGG_REL = f"{SPEC_DIR_REL}/diag_cost_agg.json"
 DEV_AGGS = ("scratchpad/xmethod/results/dev/full/agg.json", "scratchpad/xmethod/results/dev/ci_c/agg.json",
             "scratchpad/xmethod/results/dev/pmrt_nl/agg.json")
 EVAL_ANALYSIS_REL = "scratchpad/xmethod/eval_analysis.py"
-EXPERIMENTS = ("X2", "X3")
+EXPERIMENTS = ("X2", "X3", "X5", "X6")
 TOLD_KEYS = ("width", "shift", "lam")
+ABLATION_KEYS = ("centre", "redraw")       # X6 only, with width: "told" | "true"
 KAPPA = 0.25
 
 # X2: arms, cells and designs (R-60); tune seeds only for the score-only (tau) arms, the p arms declare by BY
@@ -75,6 +84,15 @@ X3_DITHER = {"w050": {"width": 0.5}, "w080": {"width": 0.8}, "w125": {"width": 1
              "s02": {"shift": 0.02}, "s05": {"shift": 0.05}}
 X3_LOGGED = {"l050": {"lam": 0.5}, "l080": {"lam": 0.8}, "l125": {"lam": 1.25}, "l200": {"lam": 2.0}}
 X3_N = 1000
+# X5: the three E4 R3 cells where pmrt_eq got the INVALID label in EVAL, and the other lambdas at the same n
+X5_ARMS = ("pmrt_eq", "pmrt_r3")
+X5_FAIL = {8000: [0.0, 0.5], 24000: [1.0]}
+X5_ADJ = {8000: [1.0, 1.5], 24000: [0.0, 0.5, 1.5]}
+X5_PRIMARY = ((0.0, 8000, "conf_raw"), (0.5, 8000, "conf_raw"), (1.0, 24000, "plac_raw"))
+# X6: E1 R2 n 1000; told width grid (pmrt_nl_eq and pmrt_eq) + the 2 x 2 centring x redraw ablation at x2 (gbm)
+X6_WORLD, X6_N = "E1", 1000
+X6_WIDTHS = {"w050": 0.5, "w080": 0.8, "w125": 1.25, "w150": 1.5, "w200": 2.0}
+X6_ABLATION = {"w200_Tt": ("told", "true"), "w200_tT": ("true", "told"), "w200_tt": ("true", "true")}
 
 
 def _path(rel: str) -> str:
@@ -92,15 +110,17 @@ def is_extras(spec: dict | None) -> bool:
     return isinstance((spec or {}).get("extras"), dict)
 
 
-def seed_list(s) -> list[int]:
-    """Seeds of an extras block (campaign's [lo, hi] / list convention): XMETHOD_EXTRAS only, anything else refused
-    (the DEV block, the EVAL block and every other seed)."""
+def seed_list(s, experiment: str | None = None) -> list[int]:
+    """Seeds of an extras block (campaign's [lo, hi] / list convention): X2 / X3 XMETHOD_EXTRAS only, X5 / X6 their
+    own XMETHOD_DIAG range only; anything else refused (the DEV block, the EVAL block and every other seed)."""
     if isinstance(s, str) or any(isinstance(x, str) for x in s):
         raise ValueError(f"seeds must be numbers: {s!r}")
     seeds = list(range(int(s[0]), int(s[1]) + 1)) if (len(s) == 2 and s[1] > s[0] + 1) else [int(x) for x in s]
-    bad = [x for x in seeds if x not in SEEDS]
+    allowed = DIAG_SEEDS.get(experiment, SEEDS)
+    bad = [x for x in seeds if x not in allowed]
     if bad:
-        raise ValueError(f"extras specs use seeds 3200000-3200199 only (XMETHOD_EXTRAS, R-60): {bad[:5]}")
+        raise ValueError(f"{experiment or 'extras'} specs use seeds {allowed.start}-{allowed.stop - 1} only "
+                         f"({SEED_BLOCK.get(experiment, 'XMETHOD_EXTRAS')}): {bad[:5]}")
     return seeds
 
 
@@ -114,9 +134,17 @@ def check_design(d: dict) -> tuple[float, int]:
 
 
 def check_told(told: dict) -> tuple[str, float]:
-    if not isinstance(told, dict) or len(told) != 1 or next(iter(told)) not in TOLD_KEYS:
+    """(key, factor) of a told variant: one of TOLD_KEYS -> factor; X6 adds ``centre`` / ``redraw`` ("told" | "true")
+    to a width variant."""
+    if not isinstance(told, dict):
+        raise ValueError(f"told must be a dict: {told!r}")
+    main = {k: v for k, v in told.items() if k not in ABLATION_KEYS}
+    abl = {k: v for k, v in told.items() if k in ABLATION_KEYS}
+    if len(main) != 1 or next(iter(main)) not in TOLD_KEYS:
         raise ValueError(f"told must be one of {TOLD_KEYS} -> factor: {told!r}")
-    k, v = next(iter(told.items()))
+    if abl and (next(iter(main)) != "width" or any(v not in ("told", "true") for v in abl.values())):
+        raise ValueError(f"centre / redraw ('told' | 'true') go with a width variant only: {told!r}")
+    k, v = next(iter(main.items()))
     v = float(v)
     if not (math.isfinite(v) and v > 0.0):
         raise ValueError(f"told factor must be > 0: {told!r}")
@@ -130,18 +158,23 @@ def validate(spec: dict) -> None:
     ex = spec["extras"]
     if ex.get("experiment") not in EXPERIMENTS:
         raise ValueError(f"extras.experiment must be one of {EXPERIMENTS}")
+    exp = ex["experiment"]
     told = {a: d["told"] for a, d in spec["arms"].items() if d.get("told") is not None}
-    if ex["experiment"] == "X2":
+    if exp == "X2":
         if not ex.get("design") or told:
             raise ValueError("X2 spec: needs extras.design and no told arms")
         check_design(ex["design"])
     else:
         if ex.get("design"):
-            raise ValueError("X3 spec: the data stay as generated (no extras.design)")
+            raise ValueError(f"{exp} spec: the data stay as generated (no extras.design)")
+        if exp == "X5" and told:
+            raise ValueError("X5 spec: frozen arms only (no told arms)")
         for t in told.values():
             check_told(t)
+            if exp != "X6" and any(k in t for k in ABLATION_KEYS):
+                raise ValueError("centre / redraw are X6 only")
     for b in spec.get("blocks", []):
-        seed_list(b["seeds"])
+        seed_list(b["seeds"], exp if exp in DIAG_SEEDS else None)
 
 
 # ================================================================================================ X2 generation
@@ -216,6 +249,136 @@ def _told_run_one(orig, told_of: dict[str, dict]):
     return run_one
 
 
+# ================================================================================================ X6 ablation
+X6_GL_NODES = 64
+_X6: dict[str, Any] = {"ctx": None}                # per-unit context of an X6 gbm unit (None outside one)
+
+
+def _gl_moments(grid_law, law_v, Hraw: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Mean / variance per row and target of the profile Hraw (n, G, k), on ``grid_law``'s grid, under the uniform
+    centred law ``law_v`` (Gauss-Legendre, X6_GL_NODES nodes; profile clamped outside the grid)."""
+    from cdd_oran.xmethod.methods import pmrt_nl as NL
+    if law_v.dist != "uniform" or grid_law.dist != "uniform":
+        raise ValueError(f"X6 needs uniform dither laws, got {grid_law.dist} / {law_v.dist}")
+    xi, w = np.polynomial.legendre.leggauss(X6_GL_NODES)
+    V = np.asarray(law_v.ghi, float)[None, :] * xi[:, None]                # (Q, n) centred v
+    wq = w / 2.0
+    n, _, k = Hraw.shape
+    m, var = np.zeros((n, k)), np.zeros((n, k))
+    for kk in range(k):
+        Hn = NL._interp(grid_law, np.ascontiguousarray(Hraw[:, :, kk]), V)  # (Q, n)
+        m[:, kk] = wq @ Hn
+        var[:, kk] = np.maximum(wq @ (Hn * Hn) - m[:, kk] ** 2, 0.0)
+    return m, var
+
+
+def _finite(x) -> list:
+    return [None if not np.isfinite(v) else float(v) for v in np.asarray(x, float).ravel()]
+
+
+@contextlib.contextmanager
+def x6_hooks():
+    """pmrt_nl.design_law / gbm_profiles / GbmStat wrapped (restored after). Inside an X6 gbm unit (``_X6['ctx']``):
+    redraw from the TRUE law when ctx redraw == "true" (v, off checked equal); centring (m_t, hence h and w) under the
+    TRUE law when ctx centre == "true"; c_t = E_true[f_t] - E_told[f_t] and z_bias = sum_t c_t w_t / sd logged per
+    action and target. The grid is always the told law's. Outside a unit: the frozen functions, unchanged."""
+    from cdd_oran.xmethod.methods import pmrt_nl as NL
+    saved = NL.design_law, NL.gbm_profiles, NL.GbmStat
+    orig_dl, orig_gp, orig_gs = saved
+
+    def design_law(design, col, order, n_quad):
+        law = orig_dl(design, col, order, n_quad)
+        ctx = _X6["ctx"]
+        if ctx is None or isinstance(law, str) or id(design) not in ctx["ai_of"]:
+            return law
+        true_d = ctx["true_of"][id(design)]
+        lt = law if true_d is design else orig_dl(true_d, col, order, n_quad)
+        if isinstance(lt, str) or not (np.array_equal(lt.v, law.v) and np.array_equal(lt.off, law.off)):
+            raise ValueError("X6: the true and told laws differ in v / off (only the width may differ)")
+        if ctx["redraw"] == "true":
+            law = dataclasses.replace(law, draw=lt.draw)
+        ctx["laws"][id(law)] = (ctx["ai_of"][id(design)], law, lt)
+        return law
+
+    def gbm_profiles(Xfull, Y, laws, cols, cfg, bad_t):
+        H, Mn, info = orig_gp(Xfull, Y, laws, cols, cfg, bad_t)
+        ctx = _X6["ctx"]
+        if ctx is None:
+            return H, Mn, info
+        burn = min(int(info["burn"]), len(Y))
+        for ai, law in laws.items():
+            ent = ctx["laws"].get(id(law))
+            if ent is None:
+                continue
+            _, lw, lt = ent
+            Hraw = H[ai] + Mn[ai][:, None, :]
+            m_told, _ = _gl_moments(lw, lw, Hraw)
+            m_true, v_true = _gl_moments(lw, lt, Hraw)
+            c = m_true - m_told
+            c[:burn] = 0.0
+            ctx["c"][id(law)] = c
+            if ctx["centre"] == "true":
+                m_true[:burn], v_true[:burn] = 0.0, 0.0
+                Hn = Hraw - m_true[:, None, :]
+                Hn[:burn] = 0.0
+                H[ai], Mn[ai] = Hn, m_true
+                info["Var"][ai] = v_true
+        return H, Mn, info
+
+    class GbmStat(orig_gs):
+        def __init__(self, law, H, Var, W):
+            super().__init__(law, H, Var, W)
+            ctx = _X6["ctx"]
+            if ctx is None or id(law) not in ctx["c"]:
+                return
+            c, ai = ctx["c"][id(law)], ctx["laws"][id(law)][0]
+            post = np.any(W != 0, axis=1)
+            corr = []
+            for kk in range(W.shape[1]):
+                a, b = c[post, kk], W[post, kk]
+                corr.append(float(np.corrcoef(a, b)[0, 1]) if post.sum() > 2 and a.std() > 0 and b.std() > 0
+                            else float("nan"))
+            ctx["bias"][ai] = {"z_bias": _finite((c * W).sum(0) / self.sd),
+                               "mean_c": _finite(c[post].mean(0) if post.any() else np.zeros(W.shape[1])),
+                               "rms_c": _finite(np.sqrt((c[post] ** 2).mean(0)) if post.any()
+                                                else np.zeros(W.shape[1])),
+                               "corr_cw": _finite(corr)}
+
+    try:
+        NL.design_law, NL.gbm_profiles, NL.GbmStat = design_law, gbm_profiles, GbmStat
+        yield
+    finally:
+        NL.design_law, NL.gbm_profiles, NL.GbmStat = saved
+        _X6["ctx"] = None
+
+
+def _x6_run_one(orig, told_of: dict[str, dict], gbm_arms: set[str]):
+    """runner.run_one for X6: the told design as X3 (width), and for the gbm arms the ablation context (centre /
+    redraw, default "told" = the frozen told run) and the bias log in the record (``x6``)."""
+    def run_one(method, ds, truth, config, gen_cpu_s, key):
+        arm = key.split("|", 1)[0]
+        told = told_of.get(arm)
+        ds_t = tell(ds, told) if told else ds
+        ctx = None
+        if arm in gbm_arms:
+            ctx = {"centre": (told or {}).get("centre", "told"), "redraw": (told or {}).get("redraw", "told"),
+                   "true_of": {id(dt): d for dt, d in zip(ds_t.designs, ds.designs, strict=True)},
+                   "ai_of": {id(dt): i for i, dt in enumerate(ds_t.designs)}, "laws": {}, "c": {}, "bias": {}}
+        _X6["ctx"] = ctx
+        try:
+            rec = orig(method, ds_t, truth, config, gen_cpu_s, key)
+        finally:
+            _X6["ctx"] = None
+        if told:
+            rec["told"] = dict(told)
+            rec["dataset_sha256_generated"] = G.dataset_hash(ds)
+        if ctx is not None:
+            rec["x6"] = {"centre": ctx["centre"], "redraw": ctx["redraw"], "targets": list(ds.kpi_names),
+                         "bias": {ds.action_names[ai]: v for ai, v in sorted(ctx["bias"].items())}}
+        return rec
+    return run_one
+
+
 # ================================================================================================ campaign hooks
 @contextlib.contextmanager
 def installed(spec: dict):
@@ -224,10 +387,12 @@ def installed(spec: dict):
     and cloud sessions running this module."""
     validate(spec)
     ex = spec["extras"]
+    exp = ex["experiment"]
     design = ex.get("design")
     told_of = {a: d["told"] for a, d in spec["arms"].items() if d.get("told") is not None}
-    stamp = {"version": EXTRAS_VERSION, "experiment": ex["experiment"], "design": design,
-             "seed_block": "XMETHOD_EXTRAS", "protocol_sha256": protocol_sha256()}
+    gbm_arms = {a for a, d in spec["arms"].items() if (d.get("config") or {}).get("statistic") == "gbm"}
+    stamp = {"version": EXTRAS_VERSION, "experiment": exp, "design": design,
+             "seed_block": SEED_BLOCK[exp], "protocol_sha256": protocol_sha256()}
     names = ("is_eval", "_seed_list", "generate_dataset", "accept_rule", "run_units", "_cloud_cmd")
     saved = {k: getattr(C, k) for k in names}
     saved_run_one = R.run_one
@@ -236,7 +401,10 @@ def installed(spec: dict):
         return False if is_extras(s) else saved["is_eval"](s)
 
     def _seed_list(s, sp=None):
-        return seed_list(s) if is_extras(sp) else saved["_seed_list"](s, sp)
+        if not is_extras(sp):
+            return saved["_seed_list"](s, sp)
+        e = sp["extras"].get("experiment")
+        return seed_list(s, e if e in DIAG_SEEDS else None)
 
     def accept_rule(s):
         if not is_extras(s):
@@ -256,18 +424,22 @@ def installed(spec: dict):
         return cmd.replace(old, new)
 
     stamp_x = stamp
-    try:
-        C.is_eval, C._seed_list, C.accept_rule = is_eval, _seed_list, accept_rule
-        C.run_units, C._cloud_cmd = run_units, _cloud_cmd
-        if design is not None:
-            C.generate_dataset = functools.partial(generate, design=design)
-        if told_of:
-            R.run_one = _told_run_one(saved_run_one, told_of)
-        yield stamp
-    finally:
-        for k, v in saved.items():
-            setattr(C, k, v)
-        R.run_one = saved_run_one
+    with contextlib.ExitStack() as stack:
+        try:
+            C.is_eval, C._seed_list, C.accept_rule = is_eval, _seed_list, accept_rule
+            C.run_units, C._cloud_cmd = run_units, _cloud_cmd
+            if design is not None:
+                C.generate_dataset = functools.partial(generate, design=design)
+            if exp == "X6":
+                stack.enter_context(x6_hooks())
+                R.run_one = _x6_run_one(saved_run_one, told_of, gbm_arms)
+            elif told_of:
+                R.run_one = _told_run_one(saved_run_one, told_of)
+            yield stamp
+        finally:
+            for k, v in saved.items():
+                setattr(C, k, v)
+            R.run_one = saved_run_one
 
 
 # ================================================================================================ specs
@@ -326,6 +498,31 @@ def build_specs() -> dict[str, dict]:
         "arms": x3,
         "blocks": [_block("measure", ["E1", "E2"], ["R2"], [X3_N], X3_MEASURE, dith),
                    _block("measure", ["E4"], ["R3"], [X3_N], X3_MEASURE, logd, lams={"R3": [1.0]})]}
+    for name, cells, seeds, what in (
+            ("x5_fail", X5_FAIL, X5_SEEDS, "the 3 E4 R3 cells where pmrt_eq was INVALID in EVAL"),
+            ("x5_adj", X5_ADJ, X5_ADJ_SEEDS, "the other lambdas at the same n (adjacent passing cells)")):
+        out[name] = {
+            "name": f"extras_{name}", "budget_cpu_s": budget,
+            "note": (f"X5 (POST HOC, EXPLORATORY; changes no frozen verdict): fresh-data re-run of {what}; frozen arms; "
+                     f"declared in {PROTOCOL_REL} (Amendments, 2026-10-05)"),
+            "extras": {"experiment": "X5", "design": None, "protocol": PROTOCOL_REL},
+            "arms": {a: _arm(arms, a) for a in X5_ARMS},
+            "blocks": [_block("measure", ["E4"], ["R3"], [n], seeds, X5_ARMS, lams={"R3": list(lams)})
+                       for n, lams in cells.items()]}
+    x6 = {"pmrt_nl_eq": _arm(arms, "pmrt_nl_eq"), "pmrt_eq": _arm(arms, "pmrt_eq")}
+    for tag, c in X6_WIDTHS.items():
+        for a in ("pmrt_nl_eq", "pmrt_eq"):
+            x6[f"{a}.{tag}"] = _arm(arms, a, {"width": c})
+    for tag, (centre, redraw) in X6_ABLATION.items():
+        x6[f"pmrt_nl_eq.{tag}"] = _arm(arms, "pmrt_nl_eq", {"width": 2.0, "centre": centre, "redraw": redraw})
+    out["x6_gbm"] = {
+        "name": "extras_x6_gbm", "budget_cpu_s": budget,
+        "note": ("X6 (POST HOC, EXPLORATORY; changes no frozen verdict): PMRT-GBM told a wider dither; told-width grid "
+                 "(pmrt_nl_eq, pmrt_eq) + 2 x 2 centring law x redraw law at told x2 (suffix _<centre><redraw>, T = "
+                 f"told, t = true; .w200 = TT); bias log per gbm unit; declared in {PROTOCOL_REL} (Amendments)"),
+        "extras": {"experiment": "X6", "design": None, "protocol": PROTOCOL_REL},
+        "arms": x6,
+        "blocks": [_block("measure", [X6_WORLD], ["R2"], [X6_N], X6_SEEDS, list(x6))]}
     return out
 
 
@@ -358,10 +555,17 @@ def write_specs() -> list[str]:
             json.dump(spec, fh, indent=1)
             fh.write("\n")
         paths.append(p)
-    with open(_path(COST_AGG_REL), "w", encoding="utf-8", newline="\n") as fh:
-        json.dump(build_cost_agg(specs), fh, indent=1)
-        fh.write("\n")
+    for rel, exps in ((COST_AGG_REL, ("X2", "X3")), (DIAG_COST_AGG_REL, ("X5", "X6"))):
+        with open(_path(rel), "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(build_cost_agg({k: v for k, v in specs.items() if v["extras"]["experiment"] in exps}), fh,
+                      indent=1)
+            fh.write("\n")
     return paths
+
+
+def cost_rel(spec: dict) -> str:
+    """The DEV cost table of a spec: X2 / X3 dev_cost_agg.json (as launched), X5 / X6 their own diag_cost_agg.json."""
+    return DIAG_COST_AGG_REL if spec["extras"]["experiment"] in DIAG_SEEDS else COST_AGG_REL
 
 
 def load_spec(name_or_path: str) -> dict:
@@ -372,10 +576,10 @@ def load_spec(name_or_path: str) -> dict:
 def projection(spec_names: list[str] | None = None) -> dict:
     """campaign.project of every declared spec on the DEV cost table (Kaggle-reference CPU-h, an upper estimate:
     the DEV CPU-s came from oversubscribed sessions)."""
-    agg = json.load(open(_path(COST_AGG_REL), encoding="utf-8"))
     out = {}
     for name in spec_names or list(build_specs()):
         spec = load_spec(name)
+        agg = json.load(open(_path(cost_rel(spec)), encoding="utf-8"))
         with installed(spec):
             out[name] = C.project(agg, spec)
     return out

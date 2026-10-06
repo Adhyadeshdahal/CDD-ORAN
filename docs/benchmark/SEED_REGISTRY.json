@@ -1,5 +1,5 @@
 {
- "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL. Updated 2026-10-04: cross-method study (Study A) EVAL block 3100000-3100299 claimed for E1-E5 at its freeze (PROTOCOL_A FROZEN; measure seeds 3100000-3100039, E4 R3 C3 readers 3100000-3100299). Updated 2026-10-05: cross-method study supplementary experiments (R-60, exploratory) block 3200000-3200199 claimed as XMETHOD_EXTRAS for E1-E4 (split: X2 tune 3200000-3200019, X2 measure 3200020-3200059, X3 measure 3200060-3200119, 3200120-3200199 unassigned; scratchpad/xmethod/EXTRAS_PROTOCOL.md).",
+ "_about": "Seed ranges already used per world (inclusive [lo, hi]). New TEST seeds must be disjoint from their world's list; harnesses assert this and record this file's sha256. Built 2026-09-25 from a repo scan (scripts/, cdd_oran/, scratchpad/, tests/) plus frozen protocols. Sub-stream keys combined with a seed (e.g. 909090, 424242, 313131, 191919, 700002, 777001, 2999, 29990) are RNG stream tags, not env/corpus seeds, and are listed separately. A study's own TEST range is listed under its world's 'claimed_by' (and in 'used'); that study's harness excludes only its own claim when asserting disjointness. Updated 2026-09-26: Stage 0 test seeds added; E5_NOISE_DETECT claimed. Updated 2026-10-02: cross-method study DEV block 3000000-3000199 claimed for E1-E5; 3100000+ reserved for its EVAL. Updated 2026-10-04: cross-method study (Study A) EVAL block 3100000-3100299 claimed for E1-E5 at its freeze (PROTOCOL_A FROZEN; measure seeds 3100000-3100039, E4 R3 C3 readers 3100000-3100299). Updated 2026-10-05: cross-method study supplementary experiments (R-60, exploratory) block 3200000-3200199 claimed as XMETHOD_EXTRAS for E1-E4 (split: X2 tune 3200000-3200019, X2 measure 3200020-3200059, X3 measure 3200060-3200119, 3200120-3200199 unassigned; scratchpad/xmethod/EXTRAS_PROTOCOL.md). Updated 2026-10-05: post hoc diagnostics X5 / X6 (EXTRAS_PROTOCOL.md Amendments) claim XMETHOD_DIAG: E4 3300000-3301999 (X5, PMRT-Lin E4 R3 re-run), E1 3302000-3302199 (X6, PMRT-GBM told-width ablation); 3302200-3309999 not claimed.",
  "E1": {
   "used": [
    [
@@ -17,6 +17,10 @@
    [
     3200000,
     3200199
+   ],
+   [
+    3302000,
+    3302199
    ]
   ],
   "note": "E1 discovery envelopes/recovery replicates; E1 is not used by Stage 0.",
@@ -37,6 +41,12 @@
     [
      3200000,
      3200199
+    ]
+   ],
+   "XMETHOD_DIAG": [
+    [
+     3302000,
+     3302199
     ]
    ]
   }
@@ -446,6 +456,10 @@
    [
     3200000,
     3200199
+   ],
+   [
+    3300000,
+    3301999
    ]
   ],
   "claimed_by": {
@@ -466,8 +480,14 @@
      3200000,
      3200199
     ]
+   ],
+   "XMETHOD_DIAG": [
+    [
+     3300000,
+     3301999
+    ]
    ]
   },
-  "note": "E4 first registered 2026-10-02 by the cross-method study (DEV 3000000-3000199; EVAL 3100000-3100299 claimed at the 2026-10-04 freeze)."
+  "note": "E4 first registered 2026-10-02 by the cross-method study (DEV 3000000-3000199; EVAL 3100000-3100299 claimed at the 2026-10-04 freeze). 2026-10-05: XMETHOD_DIAG 3300000-3301999 (X5, post hoc diagnostic, EXTRAS_PROTOCOL.md Amendments)."
  }
 }

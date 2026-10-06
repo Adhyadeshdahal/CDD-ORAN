@@ -127,3 +127,32 @@ section 8 (R-numbers). Independent reviews / audits are in scratchpad/xmethod/co
   (211 -> 296 lines) and WRITING_AGENT_PROMPT.md (51 -> 67), all tagged [PROVISIONAL 2026-10-05]; backups *.bak.
   For you: D5 CDL [DECIDE] (TERMINOLOGY s.10 conflict); names PMRT (frozen E6-P) / PMRT-GBM / PMRT-Lin; Study 4 main
   section + bridging analysis; pmrt_nl_eq low E6 recall reported openly.
+
+## 2026-10-06 night: diagnostics, figures Q8, plan updates (user asleep; autonomous)
+- Merged before sleep: X4 random-defer referee (0fe4eb3), X7 subset-equivalence (befcb82). Backups on C:
+  (C:/Users/bishal/backups-cdd, SHA256SUMS.txt; user uploads to Drive). Worktrees cdl-ref, xm-audcit, xm-citests,
+  xm-eval removed (D: 15 -> 31 GB free; local data backed up in backups-cdd/2026-10-06-worktrees; tag xm-eval-launch).
+- Repo history cleanup (option 3): user deferred until all experiments are merged. No rewrite tonight.
+- Running: X5 (B) VPS, X6 (C) Colab (cdl, diag.md).
+- Started: Q8 global method-colour mapping (aud1, figures5.md; proposal -> panel review -> apply + rebuild Study 4).
+- Started: PAPER_PLAN additions (A-D, X4, X7, ~9k word budget) + X4 cross-platform sentence fix (xm-harness).
+- Cleanup trial on a mirror copy: pack 117.5 -> 18.2 MiB; command + steps in C:/Users/bishal/backups-cdd/CLEANUP_PLAN.md (not run on the real repo).
+- PAPER_PLAN overnight additions done (xm-harness): A answered (matches advisor), B/C pending X5/X6, D -> X7; X4/X7 evidence rows; 9k word budget (flag: s.2 page targets sum ~9.6-9.9k words). 2 new [DECIDE]: name for random-deferral referee; X4/X7 tables in App B.4 vs App C. X4 cross-platform sentence softened (merged a23b8c8).
+- Q8 colour mapping: aud1 proposal (figures5.md) -> 3-reviewer panel (design/accessibility, paper consistency,
+  skeptical reader): 3x APPROVE-WITH-CHANGES. Key decisions (yours to review):
+  - Frozen PMRT = navy hero in Studies 1-3 only; next to PMRT-GBM/Lin (Study 4 recall f, bridging) it is an INK
+    reference line (2 of 3; guardrail: Study 4 must not look like it validates frozen PMRT). Dissent: navy dotted.
+  - PMRT-GBM own filled navy glyph; PMRT-Lin light navy open; exactly one hero per figure, never "proposed" in Study 4.
+  - Validity (a) points stay ink; DESIGN s.12 + captions: hue = "uses the design", not "valid".
+  - Oracle open ink star 60 %, random map '+', CS vs MG non-hue cue, variants sharing glyph only in labelled-row
+    figures (tested), clay/teal never co-plotted (tested), design-blind bars dashed edge.
+  aud1 applying + rebuilding Study 4 (backups first).
+- Q8 applied + verified (independent check PASS a-h; figures tests 293 passed / 7 skipped; DESIGN.md.bak2, figures/_bak_2026-10-06). Note: the 2 design-adjusted tests now share teal (markers separate them). Minor polish sent to aud1 (clipped markers, touching crosses, whisker-through-triangle, merged bands env_e4, placebo node vs sand).
+- Q8 polish done (327 passed / 7 skipped; new checks for clipped markers etc.). aud1 compacted, idle. Study 4 figures final pending your visual review (figures/preview/).
+- X6 (advisor C) DONE: PARTIAL. Cause confirmed = centring on the told law (told/told .079 INVALID; true centring
+  .038 VALID; redraw law irrelevant). GBM U-shaped in told width (x.5 .156, x.8 .083, x1-1.5 valid, x2 .079);
+  Lin monotone (narrow inflates, wide conservative). The declared first-order bias term failed (P4c), so the exact
+  pathway stays open. High confidence for "centring", low for a quantitative mechanism.
+- X5 (advisor B) primary DONE: CHANCE. Fresh 2000 datasets/cell: .052 / .054 / .051 (CP upper <= .065, Holm p .66).
+  C3 verdict stands. Pending: x5_adj (descriptive, ETA ~01:00Z) + Linux dataset-hash provenance on VPS.
+  Report: CDD-ORAN-wt/xm-classic scratchpad/xmethod/results/extras/DIAG_REPORT.md (merge when READY).

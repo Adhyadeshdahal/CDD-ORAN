@@ -325,3 +325,181 @@ as the Gate A anchor sub:ES+PowerES does; so far only the totals and CIs had bee
   `scratchpad/xmethod/results/extras/X7_REPORT.md`.
 - The report gives the numbers, one suggested Discussion sentence (descriptive analogy or not) and a stated
   confidence. Never a verdict.
+
+### 2026-10-05: X5, PMRT-Lin's E4 R3 C3 failure: chance or real excess? (advisor question B)
+
+**POST HOC, EXPLORATORY (R-60).** Declared on 2026-10-05, after the EVAL results were known. Requested by the
+orchestrator (user approved); author worker exp-b. The cells were chosen *because* they failed, which is why step 2
+uses fresh data. X5 changes no frozen file, verdict (C1-C3) or EVAL output.
+
+- Step 1 reads the frozen EVAL records read-only.
+- Before writing this entry, the author read only these EVAL fields for E4 R3 pmrt_eq / pmrt_r3:
+  - `cpu_s` / `gen_cpu_s` / platform, for the cost;
+  - the record structure: one P_placebo -> K0 and one P_placebo_conf -> K0 candidate per dataset;
+  - the published `results/eval/csv/e4_by_lambda.csv` rates.
+- No p-value was read before this entry.
+
+**Question.** In EVAL, pmrt_eq got the INVALID label in three E4 R3 C3 cells:
+- (lambda 0, n 8000): P_placebo_conf raw .080;
+- (lambda .5, n 8000): P_placebo_conf raw .083;
+- (lambda 1, n 24000): P_placebo raw .083.
+
+Each rate is over 300 datasets. Are these chance (expected by multiplicity) or a real excess over .05?
+
+**Step 1: existing EVAL records (descriptive; no new run).** Inputs: every E4 R3 cell (lambda 0 / .5 / 1 / 1.5 x
+n 500 / 1000 / 4000 / 8000 / 24000), arms pmrt_eq and pmrt_r3, candidates P_placebo -> K0 and
+P_placebo_conf -> K0, measurement-role records only. Reported:
+- **(a) Uniformity.** KS distance and p against U(0, 1), and a QQ table (empirical p quantiles at .01, .025, .05, .10,
+  .20, .50). CRT p-values are discrete and slightly super-uniform, so KS is read as descriptive.
+- **(b) Tail.** Rejection rates at alpha .01, .025, .05 and .10, and observed / expected. The question is whether the
+  excess sits in the whole lower tail or only just below .05.
+- **(c) Concentration.** Do a few datasets carry the excess?
+  - Overlap of the rejecting seeds (p <= .05) between P_placebo and P_placebo_conf in a cell.
+  - Overlap across the four lambdas at the same n. EVAL seed numbers are shared across cells.
+  - Each overlap is compared with its expectation under independence.
+- **(d) Label count by chance.**
+  - Compute the probability that one C3 rate at exactly .05 gets the INVALID label. Method: the frozen seed-bootstrap
+    rule (2000 reps) applied to 300 independent Bernoulli(.05) datasets, 10 000 simulations, seed 20261005.
+  - From it: the expected number of INVALID labels among an arm's 40 E4 R3 C3 rates (20 cells x 2), and P(count >=
+    observed).
+  - Rates are treated as independent. This is an approximation: P_placebo and P_placebo_conf share each dataset.
+- Step 1 decides nothing. It is read together with step 2.
+
+**Step 2: fresh datasets.**
+- **Seeds.** 3_300_000-3_301_999 (2000; XMETHOD_DIAG, E4). The same seed numbers are used in every cell (common random
+  numbers, as in EVAL).
+- **Cells** (E4 R3, kappa .25):
+  - failing: (lambda 0, n 8000), (lambda .5, n 8000), (lambda 1, n 24000);
+  - adjacent, i.e. the other lambdas at the same n: (lambda 1, n 8000), (lambda 1.5, n 8000), (lambda 0, n 24000),
+    (lambda .5, n 24000), (lambda 1.5, n 24000).
+- **Arms.** pmrt_eq and pmrt_r3, with ref, config and declaration copied from the frozen `specs/eval/full.json`.
+- **Specs.** Two specs, run in this order: `x5_fail` (the 3 failing cells) and `x5_adj` (the 5 adjacent cells).
+- **Rates.** Per cell and arm: P_placebo raw and P_placebo_conf raw = #(p <= .05) / #testable datasets (one candidate
+  per dataset), with a 95 % Clopper-Pearson CI.
+- **Primary test.** The three (cell, rate) pairs that failed for pmrt_eq. For each: a one-sided exact binomial test of
+  H0 rate <= .05 against H1 rate > .05, Holm-adjusted over the 3 at family-wise .05. Outcome per pair:
+  - **EXCESS** if the Holm-adjusted p < .05;
+  - **CHANCE** if not EXCESS and the CP upper bound <= .075 (the R-30 VALID bound);
+  - **UNRESOLVED** otherwise.
+- **Answer to B:**
+  - "chance" if all three are CHANCE;
+  - "real excess" if at least one is EXCESS (named);
+  - else "unresolved".
+- **What each answer means.**
+  - Chance: the EVAL failure is consistent with what multiplicity over many cells produces. The frozen C3 verdict
+    stands, and the Discussion explains it.
+  - Real excess: PMRT-Lin has a genuine size distortion of the measured size in E4 R3 at that setting. The verdict
+    still stands (it is frozen), and the Discussion states the magnitude.
+  - The adjacent cells show whether an excess is specific to the cell or general at that n.
+- **Secondary (descriptive, unadjusted):** every cell x arm x rate, with CP CI, one-sided binomial p and R-30 label.
+
+**Step 3: lagged-action covariates removed.**
+- In E4 R3 there are no setpoints. Removing the lagged-action columns from the eq covariate set therefore leaves
+  exactly the frozen r3 set (lagged KPI + context). A test checks this on X5 data: pmrt_r3's covariates = pmrt_eq's
+  minus the 6 lagged-action columns.
+- So step 3 is the pmrt_r3 arm on the same datasets, and needs no extra run.
+- It is read only if some primary pair is EXCESS. In that cell, compare pmrt_eq with pmrt_r3 by an exact McNemar test
+  (paired over datasets, two-sided .05).
+  - pmrt_r3 lower and McNemar significant: the lagged-action covariates are implicated.
+  - Otherwise: they are not.
+- If nothing is EXCESS, step 3 is reported as not triggered. The pmrt_r3 numbers are still tabled.
+
+**Cost** (EVAL unit costs per platform; one generation per dataset):
+- Per seed over the 8 cells: 157.5 VPS CPU-s.
+- x5_fail: 50.5 s per seed, 28 VPS CPU-h, about 4 h on 7 processes.
+- x5_adj: 107 s per seed, 59 VPS CPU-h, about 8.5 h.
+- Total 87.5 VPS CPU-h, about 172 Kaggle-reference CPU-h.
+
+**Platform.**
+- VPS (`scratchpad/e6_dev/vps_run.py`, `/opt/cdd-xm`, 7 processes in the systemd scope), py 3.12.14 pinned venv.
+- One cdd-xm job at a time, coordinated with xm-citests (X4, then X7).
+- A preflight refusal stops the lane and is reported.
+
+**Pre-run amendment (2026-10-05, orchestrator ruling; nothing of X5 had run, no step-1 p-value had been read).**
+- `x5_adj` is trimmed to 1000 seeds per cell: 3_300_000-3_300_999, the first half of the X5 block (still common random
+  numbers with `x5_fail`). SE about .007 at .05, which still separates .05 from .08.
+- `x5_fail` keeps 2000 seeds per cell. The primary test, outcomes and step 3 are unchanged (the primary pairs are all in
+  `x5_fail`); the adjacent cells' secondary CIs are wider.
+- Cost: x5_adj 29.5 VPS CPU-h (about 4.3 h on 7 processes); X5 total 57.5 VPS CPU-h.
+- Order on the VPS: x5_fail after xm-citests' X7, then x5_adj.
+
+### 2026-10-05: X6, PMRT-GBM under a wider told dither: the centring mechanism (advisor question C)
+
+**POST HOC, EXPLORATORY (R-60).** Same authorship and rules as X5. In X3, pmrt_nl_eq told the dither x2 had a pooled
+truth-null raw rate of .100 [.090, .110], while pmrt_eq became conservative (.000).
+
+**Hypothesis** (advisor, read from `methods/pmrt_nl.py`):
+- The GBM statistic is T(V) = sum_t h_t(v_t) w_t / sd, with w_t = y_t - m_t. Here m_t is the design mean, under the
+  TOLD law, of the past-only GBM profile f_t(v).
+- Under the true design, c_t = E_true[f_t] - E_told[f_t] is not 0. Then E[w_t] is about c_t, so T_obs sits above
+  the told-law redraws by about sum_t c_t^2 / sd. This mean shift causes the inflation.
+- For PMRT-Lin, T = sum_t v_t w_t, and both laws have the same mean (symmetric, same centre), so c_t = 0. The wider
+  redraws only widen the null, which makes it conservative.
+- Shifting h_t by a per-row constant moves T_obs and every redraw alike, so the p-value depends on m_t only through
+  w_t.
+
+**Design** (trimmed to the cells that answer the question): E1 R2, n 1000, kappa .25. X3 showed the same inflation in
+E1 (.100) and E2 (.101), and E1 costs less than half as much per GBM unit.
+- **Seeds:** 3_302_000-3_302_199 (200; XMETHOD_DIAG, E1).
+- **2 x 2 ablation at told width x2.** Every dither design of the dataset, P_placebo included, is changed:
+  - profile grid: always the told law (+-2w), as in the frozen told run;
+  - centring law (told / true): the law of m_t, which is used for h and for w_t;
+  - redraw law (told / true): the law the CRT draws V from.
+- **The four cells:**
+
+  | cell | centring | redraw | note |
+  |---|---|---|---|
+  | TT | told | told | the frozen told arm `pmrt_nl_eq.w200` |
+  | Tt | told | true | |
+  | tT | true | told | |
+  | tt | true | true | on the told grid |
+
+- **How m_t is computed.** "told" uses the frozen exact formula. "true" uses the Gauss-Legendre mean (64 nodes) of the
+  told-grid profile under the true law U(-w, w).
+- **Bias log** (every GBM arm, per action and target):
+  - c_t = E_true[f_t] - E_told[f_t], both by Gauss-Legendre (64 nodes) on the told grid;
+  - z_bias = sum_t c_t w_t / sd, where sd is the frozen T's denominator, i.e. the predicted shift of T_obs over the
+    redraws in null-sd units;
+  - mean c_t, and corr(c_t, w_t) over the post-burn rows.
+  - For narrower told widths, the true support extends past the told grid, so the profile is clamped there (stated).
+- **Finer told-width grid** (frozen told runs): x .5, .8, 1 (exact), 1.25, 1.5, 2, for pmrt_nl_eq and for pmrt_eq.
+- **Hooks.** In-process overrides in `extras.py` style (`pmrt_nl.design_law` / `gbm_profiles` / `GbmStat` wrapped
+  during an X6 unit only, restored on exit). No frozen file is edited.
+  - Tests: with logging on, TT's p-values equal the frozen told run's bit-for-bit, and the exact arm's c_t is 0.
+- **Arms** (15): pmrt_nl_eq x {exact, .w050, .w080, .w125, .w150, .w200, .w200 Tt, .w200 tT, .w200 tt}, and pmrt_eq x
+  {exact, .w050, .w080, .w125, .w150, .w200}. All are BY p arms; there are no tune seeds.
+
+**Metrics.** As in section 5 (frozen eval_analysis), per arm: the truth-null raw rate (12 candidates per seed) and the
+P_placebo raw rate (4 per seed), seed-cluster bootstrap CI, R-30 label; plus the bias log.
+
+**Predictions of the hypothesis:**
+- **P1 (CRT sanity).** Tt and tt (true redraw) are not INVALID on the truth-null raw rate. A true redraw makes T_obs
+  and the redraws exchangeable whatever the statistic. A violation is a harness bug, reported.
+- **P2 (reproduction).** TT's truth-null raw rate is INVALID (CI low > .05).
+- **P3 (mechanism).** tT's truth-null raw rate has CI high <= .075 (VALID or conservative), i.e. true centring removes
+  the inflation.
+- **P4 (bias term).**
+  - In TT, the mean z_bias over (seed, truth-null candidate) is > 0, with a seed-bootstrap 95 % CI excluding 0.
+  - In TT, the rejection rate in the top z_bias tercile exceeds the bottom tercile's (seed-bootstrap CI of the
+    difference excluding 0).
+  - In tT, |mean z_bias| < 1/4 of TT's.
+
+**Outcomes:**
+- **SUPPORTED:** P1-P4 all hold.
+- **REFUTED:** P2 holds and tT is INVALID. The inflation then persists under true centring, so it does not come from
+  told-law centring.
+- **PARTIAL:** any other combination, with the failed predictions named.
+- **The finer grid is descriptive:** the rate and mean z_bias against told width, GBM next to Lin.
+
+**Cost** (X3 VPS unit costs: pmrt_nl_eq E1 n 1000 12.7 s, pmrt_eq .5 s):
+- 200 x (9 x 12.7 + 6 x .5) = 23 500 VPS CPU-s, i.e. 6.5 VPS CPU-h, about 15 Kaggle-reference CPU-h (pmrt_nl_eq factor
+  2.28).
+- Colab (TPU v5e-1 host, 4 processes): about 2 h wall.
+
+**Platform.** Colab, through the frozen campaign's colab lane (`--venv-python 3.12.14`, uv venv). Or the VPS, if it
+is free first.
+
+**Report** (both X5 and X6): `scratchpad/xmethod/results/extras/DIAG_REPORT.md` and `diag_tables.json`. Each gives:
+- what was run, and the numbers with CIs;
+- which declared outcome happened;
+- one suggested Discussion sentence, and its confidence.
