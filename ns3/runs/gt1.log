@@ -1,0 +1,13 @@
+10:32:17 done gt:204:0:140:accept rc=0 33460s
+10:46:05 done gt:204:8:158:reject rc=0 34288s
+10:49:44 done gt:204:0:140:reject rc=0 34507s
+13:09:46 done gt:205:2:104:reject rc=0 8620s
+13:24:47 done gt:204:4:249:reject rc=0 10350s
+13:57:54 done gt:205:6:213:reject rc=0 11290s
+15:56:09 done gt:206:5:91:reject rc=0 9082s
+16:15:51 done gt:205:6:233:reject rc=0 11165s
+16:28:23 done gt:206:2:144:reject rc=0 9029s
+17:36:59 done gt:207:5:131:reject rc=0 4868s
+17:42:08 done gt:206:3:227:reject rc=0 6359s
+17:56:39 done gt:207:0:180:reject rc=0 5296s
+18:58:16 done gt:207:8:218:reject rc=0 4877s

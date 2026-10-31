@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /home/adhyadesh/Documents/oran-causal/ns3/run_stage.sh /home/adhyadesh/oran-ns3-runs 3 gt:204:0:140:accept gt:204:0:140:reject gt:204:8:158:reject gt:204:4:249:reject gt:205:2:104:reject gt:205:6:213:reject gt:205:6:233:reject gt:206:5:91:reject gt:206:2:144:reject gt:206:3:227:reject gt:207:5:131:reject gt:207:0:180:reject gt:207:8:218:reject gt:209:8:118:reject gt:209:0:300:reject gt:209:1:302:reject 

@@ -1,0 +1,16 @@
+t0,cell,xapp,cur,prop,mode,applied,p_accept,p_half,p_reject
+31,5,Coverage,0,3,reject,3,0.5,0.2,0.3
+33,6,Coverage,0,3,accept,3,0.5,0.2,0.3
+36,7,Coverage,0,3,reject,3,0.5,0.2,0.3
+44,2,PowerES,-3,-6,reject,-6,0.5,0.2,0.3
+47,3,PowerES,-3,-6,reject,-6,0.5,0.2,0.3
+64,2,PowerES,-6,-9,reject,-9,0.5,0.2,0.3
+67,3,PowerES,-6,-9,accept,-9,0.5,0.2,0.3
+131,5,PowerES,3,0,accept,3,0.5,0.2,0.3
+160,0,PowerES,3,0,half,0,0.5,0.2,0.3
+171,5,PowerES,3,0,reject,0,0.5,0.2,0.3
+178,8,PowerES,0,-3,half,-3,0.5,0.2,0.3
+180,0,Coverage,0,3,accept,3,0.5,0.2,0.3
+191,5,Coverage,0,3,accept,3,0.5,0.2,0.3
+198,8,PowerES,-3,-6,reject,-6,0.5,0.2,0.3
+218,8,PowerES,-6,-9,accept,-9,0.5,0.2,0.3
